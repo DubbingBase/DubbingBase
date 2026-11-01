@@ -127,14 +127,47 @@ const dubbingProjects = Array.from({ length: sizes.dubbingProjects }, (_, index)
   ],
 }));
 
+const mediaCastWorksPerProject = dataset === "large" ? 40 : 15;
+const mediaCastProjects = Array.from(
+  { length: dataset === "large" ? 80 : 12 },
+  (_, projectIndex) => ({
+    id: projectIndex + 1,
+    language: projectIndex % 2 === 0 ? "fr-FR" : "en-US",
+    studio_data: {
+      id: 30_000 + projectIndex,
+      name: `CI audiobook studio ${projectIndex}`,
+      logo_url: null,
+    },
+    works: Array.from({ length: mediaCastWorksPerProject }, (_, workIndex) => ({
+      id: projectIndex * mediaCastWorksPerProject + workIndex + 1,
+      actor_id: 210_000 + (workIndex % 100),
+      character_name: `CI audiobook character ${projectIndex}-${workIndex}`,
+      performance: `CI audiobook performance ${projectIndex}-${workIndex}`,
+      note: `CI audiobook work note ${projectIndex}-${workIndex} `.repeat(16),
+      voice_actor: {
+        id: 80_000 + (workIndex % 100),
+        firstname: `CI fixture audiobook voice actor ${workIndex}`,
+        lastname: "Actor",
+        profile_picture: `audiobook-voice-actor-${workIndex}.jpg`,
+        voice_actor_name: `CI fixture audiobook voice actor ${workIndex} Actor`,
+      },
+    })),
+  }),
+);
+
 const episodeDubbingProjects = Array.from(
   { length: sizes.episodeDubbingProjects },
   (_, projectIndex) => ({
     id: 100_000 + projectIndex,
     language: projectIndex % 2 === 0 ? "fr-FR" : "en-US",
-    studio_data: { id: 20_000 + projectIndex, name: `CI episode studio ${projectIndex}`, logo_url: null },
+    studio_data: {
+      id: 20_000 + projectIndex,
+      name: `CI episode studio ${projectIndex}`,
+      logo_url: null,
+    },
     works: Array.from({ length: sizes.episodeWorksPerProject }, (_, workIndex) => {
-      const voiceActorId = 70_000 + ((projectIndex * sizes.episodeWorksPerProject + workIndex) % 500);
+      const voiceActorId =
+        70_000 + ((projectIndex * sizes.episodeWorksPerProject + workIndex) % 500);
       return {
         id: projectIndex * sizes.episodeWorksPerProject + workIndex + 1,
         actor_id: 200_000 + workIndex,
@@ -150,6 +183,27 @@ const episodeDubbingProjects = Array.from(
         },
       };
     }),
+  }),
+);
+
+const seasonDubbingProjects = Array.from(
+  { length: sizes.episodeDubbingProjects },
+  (_, projectIndex) => ({
+    id: 80_000 + projectIndex,
+    language: projectIndex % 2 === 0 ? "fr-FR" : "en-US",
+    studio_data: {
+      id: 90_000 + projectIndex,
+      name: `CI season studio ${projectIndex}`,
+      logo_url: null,
+    },
+    works: Array.from({ length: sizes.episodeWorksPerProject }, (_, workIndex) => ({
+      voice_actor:
+        projectIndex === 0
+          ? null
+          : {
+              id: 70_000 + (workIndex % Math.max(1, Math.floor(sizes.episodeWorksPerProject / 2))),
+            },
+    })),
   }),
 );
 
@@ -175,24 +229,118 @@ const voiceActor = {
   })),
 };
 
-const adminDubbingWorks = Array.from(
-  { length: dataset === "large" ? 2400 : 50 },
-  (_, index) => {
-    const actorIndex = Math.floor(index / 2);
-    const voiceActorId = 60_000 + actorIndex;
-    return {
-      id: index + 1,
-      actor_id: 300_000 + actorIndex,
-      voice_actor_id: voiceActorId,
-      voice_actor: {
-        id: voiceActorId,
-        firstname: `CI fixture voice actor ${actorIndex}`,
-        lastname: "Actor",
-        profile_picture: `regional-voice-actor-${actorIndex}.jpg`,
-      },
-    };
+const trendingShows = Array.from({ length: 20 }, (_, index) => ({
+  ...makeMedia(800_000 + index, "tv"),
+  name: `CI fixture trending show ${index}`,
+  original_name: `CI original trending show ${index}`,
+  adult: false,
+  origin_country: ["FR", "BE"],
+  original_language: "fr",
+  genre_ids: [18, 35, 80],
+  vote_count: 1200 + index,
+  production_companies: Array.from({ length: 8 }, (_, companyIndex) => ({
+    id: companyIndex + 1,
+    name: `CI production company ${companyIndex}`,
+    logo_path: `/company-${companyIndex}.jpg`,
+    origin_country: "FR",
+  })),
+}));
+
+const trendingGameCount = 20;
+const trendingPopularity = Array.from({ length: trendingGameCount * 2 }, (_, index) => ({
+  game_id: 900_000 + Math.floor(index / 2),
+  popularity_type: index % 2 === 0 ? 1 : 2,
+  value: 100 - Math.floor(index / 2),
+}));
+const trendingGames = Array.from({ length: trendingGameCount }, (_, index) => ({
+  id: 900_000 + index,
+  name: `CI fixture trending game ${index}`,
+  summary: "Deterministic synthetic game summary. ".repeat(24),
+  rating: 82.5,
+  rating_count: 12_000,
+  first_release_date: 1_600_000_000,
+  cover: { image_id: `trending-game-cover-${index}` },
+  genres: Array.from({ length: 8 }, (_, genreIndex) => ({ name: `Genre ${genreIndex}` })),
+  platforms: Array.from({ length: 12 }, (_, platformIndex) => ({
+    name: `Platform ${platformIndex}`,
+    slug: `platform-${platformIndex}`,
+  })),
+}));
+const trendingGameLocalizations = trendingGames.map((game) => ({
+  game: game.id,
+  name: game.name,
+  region: { identifier: "fr-FR" },
+}));
+const igdbGameArtCount = dataset === "large" ? 100 : 24;
+const igdbGame = {
+  id: 85,
+  name: "CI fixture game 85",
+  slug: "ci-fixture-game-85",
+  summary: "Deterministic IGDB game summary. ".repeat(24),
+  rating: 82.5,
+  rating_count: 12_000,
+  first_release_date: 1_600_000_000,
+  cover: { image_id: "game-cover-85" },
+  artworks: Array.from({ length: igdbGameArtCount }, (_, index) => ({
+    image_id: `game-artwork-${index}-${"unused-image-metadata-".repeat(5)}`,
+  })),
+  screenshots: Array.from({ length: igdbGameArtCount }, (_, index) => ({
+    image_id: `game-screenshot-${index}-${"unused-image-metadata-".repeat(5)}`,
+  })),
+  genres: Array.from({ length: 8 }, (_, index) => ({ id: index + 1, name: `Game genre ${index}` })),
+  platforms: Array.from({ length: 12 }, (_, index) => ({
+    id: index + 1,
+    name: `Game platform ${index}`,
+    slug: `game-platform-${index}`,
+  })),
+  involved_companies: Array.from({ length: 8 }, (_, index) => ({
+    company: { id: index + 1, name: `Game company ${index}` },
+    developer: index % 2 === 0,
+    publisher: index % 3 === 0,
+  })),
+  external_games: Array.from({ length: 20 }, (_, index) => ({
+    id: index + 1,
+    uid: `external-game-${index}`,
+    category: index,
+  })),
+  websites: Array.from({ length: 20 }, (_, index) => ({
+    url: `https://example.test/game-${index}`,
+    category: index,
+  })),
+};
+const gameCharacters = Array.from({ length: dataset === "large" ? 50 : 24 }, (_, index) => ({
+  id: 990_000 + index,
+  name: `CI fixture game character ${index}`,
+  description: "Deterministic synthetic character description. ".repeat(32),
+  species: { id: index + 1, name: `Species ${index}` },
+  gender: index % 3,
+  mug_shot: { image_id: `game-character-${index}` },
+  games: Array.from({ length: 20 }, (_, gameIndex) => 900_000 + gameIndex),
+}));
+const gameDubbingProjects = [
+  {
+    id: 1,
+    language: "fr-FR",
+    studio_data: { id: 1, name: "CI game studio", logo_url: null },
+    works: [],
   },
-);
+];
+
+const adminDubbingWorks = Array.from({ length: dataset === "large" ? 2400 : 50 }, (_, index) => {
+  const actorIndex = Math.floor(index / 2);
+  const voiceActorId = 60_000 + actorIndex;
+  return {
+    id: index + 1,
+    actor_id: 300_000 + actorIndex,
+    voice_actor_id: voiceActorId,
+    voice_actor: {
+      id: voiceActorId,
+      firstname: `CI fixture voice actor ${actorIndex}`,
+      lastname: "Actor",
+      profile_picture: `regional-voice-actor-${actorIndex}.jpg`,
+    },
+  };
+});
 
 const encodedResponses = new Map();
 function addJsonResponse(key, value) {
@@ -204,6 +352,8 @@ addJsonResponse("tmdb:/3/tv/1396", makeMedia(1396, "tv"));
 addJsonResponse("tmdb:/3/tv/1396/aggregate_credits", {
   cast: makeCast(sizes.mediaCredits, "tv"),
 });
+addJsonResponse("tmdb:/3/tv/1397", makeMedia(1397, "tv"));
+addJsonResponse("tmdb:/3/tv/1397/aggregate_credits", { id: 1397, cast: [], crew: [] });
 addJsonResponse("tmdb:/3/tv/1397/season/1/episode/1", {
   id: 1,
   name: "CI fixture episode",
@@ -214,12 +364,34 @@ addJsonResponse("tmdb:/3/tv/1397/season/1/episode/1", {
   still_path: "/episode.jpg",
   credits: { cast: makeCast(sizes.episodeCast, "episode") },
 });
+addJsonResponse("tmdb:/3/tv/31", makeMedia(31, "tv"));
+addJsonResponse("tmdb:/3/tv/31/aggregate_credits", { id: 31, cast: [], crew: [] });
+addJsonResponse("tmdb:/3/tv/31/season/1", {
+  id: 31,
+  season_number: 1,
+  name: "CI fixture season 31/1",
+  air_date: "2021-01-01",
+  episode_count: 24,
+  overview: "Deterministic local route CPU fixture.",
+  poster_path: "/season.jpg",
+  backdrop_path: "/season-backdrop.jpg",
+  vote_average: 7.5,
+  episodes: Array.from({ length: 24 }, (_, index) => ({
+    id: index + 1,
+    episode_number: index + 1,
+    name: `CI fixture season 31 episode ${index + 1}`,
+    air_date: "2021-01-01",
+    still_path: `/season-episode-${index + 1}.jpg`,
+    vote_average: 7.5,
+  })),
+});
 addJsonResponse("tmdb:/3/person/6384", actor);
 addJsonResponse("tmdb:/3/person/12001", {
   id: 12_001,
   movie_credits: { cast: makeCast(20, "movie") },
   tv_credits: { cast: makeCast(20, "tv") },
 });
+addJsonResponse("tmdb:/3/trending/tv/day", { page: 1, results: trendingShows });
 
 for (let index = 0; index < sizes.uniqueMedia; index += 1) {
   const mediaType = index % 2 === 0 ? "movie" : "tv";
@@ -245,6 +417,15 @@ const supabaseResponse = (url) => {
   if (table === "toy_metadata") return { value: searchToys, single: false };
   if (table === "dubbing_projects") {
     const query = url.searchParams;
+    if (query.get("content_type") === "eq.video_game") {
+      return { value: gameDubbingProjects, single: false };
+    }
+    if (query.get("content_id") === "eq.1397" && query.get("content_type") === "eq.audiobook") {
+      return {
+        value: query.get("id") === "eq.1" ? [mediaCastProjects[0]] : mediaCastProjects,
+        single: false,
+      };
+    }
     if (query.get("content_type") === "eq.advertisement") {
       return { value: searchAdvertisements, single: false };
     }
@@ -252,7 +433,9 @@ const supabaseResponse = (url) => {
       value:
         query.get("content_id") === "eq.1397" && query.get("content_type") === "eq.tv"
           ? episodeDubbingProjects
-          : dubbingProjects,
+          : query.get("content_id") === "eq.31" && query.get("content_type") === "eq.tv"
+            ? seasonDubbingProjects
+            : dubbingProjects,
       single: false,
     };
   }
@@ -264,6 +447,12 @@ globalThis.__routeCpuUpstreamRequests = requestCounts;
 
 globalThis.fetch = async (input, init = {}) => {
   const url = new URL(typeof input === "string" || input instanceof URL ? input : input.url);
+  const requestBody =
+    typeof init.body === "string"
+      ? init.body
+      : input instanceof Request
+        ? await input.clone().text()
+        : "";
   let key;
   let body;
 
@@ -312,12 +501,33 @@ globalThis.fetch = async (input, init = {}) => {
   } else if (url.hostname === "id.twitch.tv" && url.pathname === "/oauth2/token") {
     key = "igdb:token";
     body = JSON.stringify({ access_token: "local-route-cpu-fixture", expires_in: 7_200 });
+  } else if (url.hostname === "api.igdb.com" && url.pathname === "/v4/popularity_primitives") {
+    key = "igdb:popularity_primitives";
+    body = JSON.stringify(trendingPopularity);
+  } else if (url.hostname === "api.igdb.com" && url.pathname === "/v4/game_localizations") {
+    key = "igdb:game_localizations";
+    body = JSON.stringify(trendingGameLocalizations);
   } else if (url.hostname === "api.igdb.com" && url.pathname === "/v4/games") {
     key = "igdb:games";
-    body = JSON.stringify(searchGames);
+    body = JSON.stringify(
+      requestBody.includes("where id = 85")
+        ? [igdbGame]
+        : requestBody.includes("where id = (")
+          ? trendingGames
+          : searchGames,
+    );
+  } else if (url.hostname === "api.igdb.com" && url.pathname === "/v4/characters") {
+    key = "igdb:characters";
+    body = JSON.stringify(gameCharacters);
   } else if (url.hostname === "openlibrary.org" && url.pathname === "/search.json") {
     key = "openlibrary:search";
     body = JSON.stringify({ docs: searchBooks });
+  } else if (url.hostname === "openlibrary.org" && url.pathname === "/works/OL1397W.json") {
+    key = "openlibrary:/works/OL1397W.json";
+    body = JSON.stringify({
+      title: "CI fixture audiobook 1397",
+      description: "Synthetic audiobook fixture.",
+    });
   } else if (url.hostname === "itunes.apple.com" && url.pathname === "/search") {
     key = "itunes:search";
     body = JSON.stringify({ resultCount: searchPodcasts.length, results: searchPodcasts });

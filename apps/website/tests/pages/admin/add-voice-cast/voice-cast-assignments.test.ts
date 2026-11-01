@@ -7,7 +7,7 @@ import {
   haveAssignmentsChanged,
   isCurrentRegionalRequest,
   regionalLanguageFromQuery,
-} from "./voice-cast-assignments";
+} from "../../../../src/pages/admin/add-voice-cast/voice-cast-assignments";
 
 describe("regional voice cast assignments", () => {
   const actorIds = [101];

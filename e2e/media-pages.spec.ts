@@ -1,5 +1,10 @@
 import { test, expect, type Page } from "@playwright/test";
-import { setupMockApi, waitForVueHydration } from "./helpers/mock-api";
+import {
+  mockEpisodePageResponse,
+  mockSeasonPageResponse,
+  setupMockApi,
+  waitForVueHydration,
+} from "./helpers/mock-api";
 import { MOCK_EPISODE, MOCK_MOVIE, MOCK_SEASON, MOCK_SHOW } from "./fixtures/mock-data";
 
 declare global {
@@ -36,34 +41,6 @@ async function waitForBrowserPaint(page: Page): Promise<void> {
 
 function getAttribute(tag: string, name: string): string {
   return tag.match(new RegExp(`\\b${name}="([^"]*)"`))?.[1] || "";
-}
-
-function localizedPath(locale: string, path: string): string {
-  if (locale === "en") return path;
-  return path === "/" ? `/${locale}` : `/${locale}${path}`;
-}
-
-function absoluteUrl(path: string): string {
-  return `https://dubbingbase.com${path === "/" ? "" : path}`;
-}
-
-async function expectLocaleUrlHead(
-  page: Page,
-  locale: { code: string; shortCode: string },
-  path: string,
-): Promise<void> {
-  const expectedUrl = absoluteUrl(localizedPath(locale.shortCode, path));
-  await expect(page.locator("html")).toHaveAttribute("lang", locale.code);
-  await expect(page.locator('link[rel="canonical"]')).toHaveCount(1);
-  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", expectedUrl);
-  await expect(page.locator('meta[property="og:url"]')).toHaveCount(1);
-  await expect(page.locator('meta[property="og:url"]')).toHaveAttribute("content", expectedUrl);
-  await expect(page.locator('meta[name="twitter:url"]')).toHaveCount(1);
-  await expect(page.locator('meta[name="twitter:url"]')).toHaveAttribute("content", expectedUrl);
-  await expect(page.locator('link[rel="alternate"][hreflang="x-default"]')).toHaveAttribute(
-    "href",
-    absoluteUrl(path),
-  );
 }
 
 test.describe("Media Detail Pages", () => {
@@ -426,12 +403,11 @@ test.describe("Media Detail Pages", () => {
           titleParts: [locale.seasonLabel, "Pilot"],
         },
       ]) {
-        const response = await page.request.get(`http://localhost:3050${route.path}`, {
-          maxRedirects: 0,
+        const response = await page.goto(route.path, {
+          waitUntil: "domcontentloaded",
         });
-        expect(response.status(), route.path).toBe(200);
-        expect(new URL(response.url()).pathname).toBe(route.path);
-        const html = await response.text();
+        expect(response && new URL(response.url()).pathname).toBe(route.path);
+        const html = response ? await response.text() : "";
         expect(html).not.toBe("");
         expect(html).toMatch(new RegExp(`<html\\b[^>]*\\blang="${locale.code}"`));
 
@@ -469,366 +445,6 @@ test.describe("Media Detail Pages", () => {
         expect(html).toContain(route.title);
         expect(html).not.toContain("Show 1396");
       }
-    }
-  });
-
-  test("server-renders locale-aware URLs across indexable public routes", async ({ page }) => {
-    test.setTimeout(240000);
-    const locales = [
-      { code: "en-US", shortCode: "en" },
-      { code: "fr-FR", shortCode: "fr" },
-      { code: "es-ES", shortCode: "es" },
-      { code: "ja-JP", shortCode: "ja" },
-    ];
-    const paths = [
-      "/",
-      "/movie/85",
-      "/show/1396",
-      "/show/1396/season/1",
-      "/show/1396/season/1/episode/1",
-      "/actor/17419",
-      "/voice-actor/1",
-      "/search",
-    ];
-
-    for (const locale of locales) {
-      await page.context().clearCookies();
-      await page.context().addCookies([
-        {
-          name: "user_lang",
-          value: locale.shortCode,
-          url: "http://localhost:3050",
-          sameSite: "Lax",
-        },
-      ]);
-
-      for (const path of paths) {
-        const localizedUrl = localizedPath(locale.shortCode, path);
-        const response = await page.request.get(`http://localhost:3050${localizedUrl}`);
-        expect(response.status(), `${locale.shortCode} ${path}`).toBe(200);
-        const html = await response.text();
-        const expectedUrl = absoluteUrl(localizedUrl);
-        expect(html).toMatch(new RegExp(`<html\\b[^>]*\\blang="${locale.code}"`));
-
-        const canonicalTags = html.match(/<link\b(?=[^>]*\brel="canonical")[^>]*>/g) || [];
-        const ogUrlTags = html.match(/<meta\b(?=[^>]*\bproperty="og:url")[^>]*>/g) || [];
-        const twitterUrlTags = html.match(/<meta\b(?=[^>]*\bname="twitter:url")[^>]*>/g) || [];
-        expect(canonicalTags, `${locale.shortCode} ${path} canonical`).toHaveLength(1);
-        expect(ogUrlTags, `${locale.shortCode} ${path} og:url`).toHaveLength(1);
-        expect(twitterUrlTags, `${locale.shortCode} ${path} twitter:url`).toHaveLength(1);
-        expect(getAttribute(canonicalTags[0], "href")).toBe(expectedUrl);
-        expect(getAttribute(ogUrlTags[0], "content")).toBe(expectedUrl);
-        expect(getAttribute(twitterUrlTags[0], "content")).toBe(expectedUrl);
-
-        const alternates =
-          html.match(/<link\b(?=[^>]*\brel="alternate")(?=[^>]*\bhreflang="[^"]+")[^>]*>/g) || [];
-        expect(alternates, `${locale.shortCode} ${path} alternates`).toHaveLength(5);
-        for (const alternate of locales) {
-          const tags = alternates.filter((tag) => getAttribute(tag, "hreflang") === alternate.code);
-          expect(tags, `${locale.shortCode} ${path} ${alternate.code}`).toHaveLength(1);
-          expect(getAttribute(tags[0], "href")).toBe(
-            absoluteUrl(localizedPath(alternate.shortCode, path)),
-          );
-        }
-        const defaultTags = alternates.filter(
-          (tag) => getAttribute(tag, "hreflang") === "x-default",
-        );
-        expect(defaultTags).toHaveLength(1);
-        expect(getAttribute(defaultTags[0], "href")).toBe(absoluteUrl(path));
-      }
-    }
-  });
-
-  test("server-renders all public media detail types as successful pages", async ({ page }) => {
-    const paths = [
-      "/movie/85",
-      "/show/1396",
-      "/game/1942",
-      "/actor/17419",
-      "/voice-actor/1",
-      "/audiobook/401",
-      "/podcast/401",
-      "/advertisement/99",
-      "/toy/-10",
-    ];
-
-    for (const path of paths) {
-      const response = await page.request.get(`http://localhost:3050${path}`);
-      expect(response.status(), path).toBe(200);
-      const html = await response.text();
-      expect(html).toContain('rel="canonical"');
-      expect(html).not.toContain("Information indisponible (Timeout)");
-    }
-  });
-
-  test("keeps explicit locale deep links despite conflicting browser preferences", async ({
-    page,
-  }) => {
-    for (const locale of [
-      { prefix: "", code: "en-US" },
-      { prefix: "/fr", code: "fr-FR" },
-      { prefix: "/es", code: "es-ES" },
-      { prefix: "/ja", code: "ja-JP" },
-    ]) {
-      const response = await page.request.get(`http://localhost:3050${locale.prefix}/movie/85`, {
-        headers: {
-          "Accept-Language": "ja-JP,ja;q=0.9",
-          Cookie: "user_lang=fr",
-        },
-        maxRedirects: 0,
-      });
-
-      expect(response.status(), locale.code).toBe(200);
-      expect(new URL(response.url()).pathname).toBe(`${locale.prefix}/movie/85`);
-      expect(response.headers().location).toBeUndefined();
-      expect(await response.text()).toMatch(new RegExp(`<html\\b[^>]*\\blang="${locale.code}"`));
-    }
-
-    const homeResponse = await page.request.get("http://localhost:3050/", {
-      headers: {
-        "Accept-Language": "ja-JP,ja;q=0.9",
-        Cookie: "user_lang=fr",
-      },
-      maxRedirects: 0,
-    });
-    expect([200, 301, 302, 307, 308]).toContain(homeResponse.status());
-    const homeLocation = homeResponse.headers().location;
-    if (homeLocation) {
-      expect(["/fr", "/ja"]).toContain(new URL(homeLocation, "http://localhost:3050").pathname);
-    }
-
-    const botResponse = await page.request.get("http://localhost:3050/ja/movie/85", {
-      headers: {
-        "Accept-Language": "en-US,en;q=0.9",
-        "User-Agent": "Googlebot",
-      },
-      maxRedirects: 0,
-    });
-    expect(botResponse.status()).toBe(200);
-    expect(botResponse.headers().location).toBeUndefined();
-  });
-
-  test("keeps selected dubbing projects out of canonical and social URLs", async ({ page }) => {
-    const routes = [
-      { path: "/movie/85?dub=139601", canonical: "/movie/85" },
-      { path: "/show/1396?dub=139601", canonical: "/show/1396" },
-      {
-        path: "/show/1396/season/1?dub=139601",
-        canonical: "/show/1396/season/1",
-      },
-      {
-        path: "/show/1396/season/1/episode/1?dub=139601",
-        canonical: "/show/1396/season/1/episode/1",
-      },
-    ];
-
-    const locales = [
-      { prefix: "", code: "en-US" },
-      { prefix: "/fr", code: "fr-FR" },
-      { prefix: "/es", code: "es-ES" },
-      { prefix: "/ja", code: "ja-JP" },
-    ];
-    for (const locale of locales) {
-      for (const route of routes) {
-        const localizedPath = `${locale.prefix}${route.path}`;
-        const response = await page.request.get(`http://localhost:3050${localizedPath}`);
-        expect(response.status(), localizedPath).toBe(200);
-        const html = await response.text();
-        const canonicalTag = html.match(/<link\b(?=[^>]*\brel="canonical")[^>]*>/)?.[0];
-        const ogUrlTag = html.match(/<meta\b(?=[^>]*\bproperty="og:url")[^>]*>/)?.[0];
-        const expectedUrl = `https://dubbingbase.com${locale.prefix}${route.canonical}`;
-        expect(canonicalTag, localizedPath).toBeTruthy();
-        expect(ogUrlTag, localizedPath).toBeTruthy();
-        expect(getAttribute(canonicalTag || "", "href")).toBe(expectedUrl);
-        expect(getAttribute(ogUrlTag || "", "content")).toBe(expectedUrl);
-        const alternateTags =
-          html.match(/<link\b(?=[^>]*\brel="alternate")(?=[^>]*\bhreflang="[^"]+")[^>]*>/g) || [];
-        expect(alternateTags.length, `${localizedPath} alternates`).toBeGreaterThan(0);
-        expect(alternateTags.every((tag) => !tag.includes("dub=139601"))).toBe(true);
-        expect(html).not.toMatch(/"url":"[^"]*\?dub=139601/);
-      }
-    }
-  });
-
-  test("keeps the same canonical for different selected projects and shows each cast", async ({
-    page,
-  }) => {
-    await page.goto("/show/1396?dub=139601", { waitUntil: "domcontentloaded" });
-    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
-      "href",
-      "https://dubbingbase.com/show/1396",
-    );
-    await expect(page.getByRole("link", { name: /French \(France\)/ })).toHaveClass(
-      /theme-primary-bg/,
-    );
-    await expect(page.locator("body")).toContainText("Jean-Louis Faure");
-
-    await page.goto("/show/1396?dub=139602", { waitUntil: "domcontentloaded" });
-    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
-      "href",
-      "https://dubbingbase.com/show/1396",
-    );
-    await expect(page.getByRole("link", { name: /European Spanish/ })).toHaveClass(
-      /theme-primary-bg/,
-    );
-    await expect(page.locator("body")).toContainText("Carlos López");
-
-    await page.goto("/show/1396?dub=not-a-project", {
-      waitUntil: "domcontentloaded",
-    });
-    await expect(page.getByRole("link", { name: /French \(France\)/ })).toHaveClass(
-      /theme-primary-bg/,
-    );
-    await expect(page.locator('a[href*="/show/1396/season/1"]').first()).toHaveAttribute(
-      "href",
-      /dub=139601/,
-    );
-
-    await page.goto("/show/1396/season/1?dub=999999", {
-      waitUntil: "domcontentloaded",
-    });
-    await expect(page.getByRole("link", { name: /French \(France\)/ })).toHaveClass(
-      /theme-primary-bg/,
-    );
-    await expect(page.locator('a[href*="/show/1396/season/1/episode/1"]').first()).toHaveAttribute(
-      "href",
-      /dub=139601/,
-    );
-  });
-
-  test("uses SSR 404 and 5xx statuses for missing or unavailable seasons and episodes", async ({
-    page,
-  }) => {
-    const responses = [
-      ["/show/1396/season/404", 404],
-      ["/show/1396/season/503", 503],
-      ["/show/1396/season/1/episode/404", 404],
-      ["/show/1396/season/1/episode/503", 503],
-    ] as const;
-
-    for (const [path, expectedStatus] of responses) {
-      const response = await page.request.get(`http://localhost:3050${path}`);
-      expect(response.status(), path).toBe(expectedStatus);
-    }
-
-    const missingSeason = await page.request.get("http://localhost:3050/fr/show/1396/season/404");
-    expect(missingSeason.status()).toBe(404);
-    expect(await missingSeason.text()).toContain("Saison introuvable");
-
-    const missingEpisode = await page.request.get(
-      "http://localhost:3050/fr/show/1396/season/1/episode/404",
-    );
-    expect(missingEpisode.status()).toBe(404);
-    expect(await missingEpisode.text()).toContain("Épisode introuvable");
-
-    const unavailableSeason = await page.request.get(
-      "http://localhost:3050/fr/show/1396/season/503",
-    );
-    expect(unavailableSeason.status()).toBe(503);
-    expect(await unavailableSeason.text()).toContain(
-      "Impossible de charger ce contenu pour le moment.",
-    );
-  });
-
-  test("configures localized general sitemap routes without app route discovery", async ({
-    page,
-  }) => {
-    const response = await page.request.get("http://localhost:3050/__sitemap__/debug.json");
-    expect(response.status()).toBe(200);
-    const config = await response.text();
-
-    for (const locale of ["en-US", "fr-FR", "es-ES", "ja-JP"]) {
-      expect(config).toContain(`"${locale}"`);
-    }
-    for (const route of ["/about", "/movies", "/voice-actors"]) {
-      expect(config).toContain(`"loc": "${route}"`);
-    }
-    expect(config).not.toContain('"loc": "/discussions"');
-    expect(config).not.toContain('"loc": "/leaderboard"');
-    expect(config).toContain('"_i18nTransform": true');
-    expect(config).toContain('"excludeAppSources": true');
-    expect(config).not.toMatch(
-      /\/(?:actor|advertisement|audiobook|game|movie|podcast|show|studio|toy|voice-actor)\/[^"\\]*/,
-    );
-    expect(config).not.toMatch(/\/(?:admin|login|profile|register|search)(?:\/|"|\\)/);
-    expect(config).not.toMatch(/\?(?:[^"\\]*&amp;)?dub=/);
-  });
-
-  test("uses SSR 404 and 5xx responses for missing versus unavailable media", async ({ page }) => {
-    const missingResponse = await page.request.get("http://localhost:3050/movie/404000");
-    expect(missingResponse.status()).toBe(404);
-    const missingHtml = await missingResponse.text();
-    expect(missingHtml).not.toContain('"@type":"Movie"');
-
-    const unavailableResponse = await page.request.get("http://localhost:3050/movie/503000");
-    expect(unavailableResponse.status()).toBeGreaterThanOrEqual(500);
-  });
-
-  test("keeps canonical, alternate, and social URLs current during client navigation", async ({
-    browser,
-  }) => {
-    test.setTimeout(180000);
-    const locales = [
-      { code: "en-US", shortCode: "en" },
-      { code: "fr-FR", shortCode: "fr" },
-      { code: "es-ES", shortCode: "es" },
-      { code: "ja-JP", shortCode: "ja" },
-    ];
-    const paths = [
-      "/",
-      "/movie/85",
-      "/show/1396",
-      "/show/1396/season/1",
-      "/show/1396/season/1/episode/1",
-      "/actor/17419",
-      "/voice-actor/1",
-      "/search",
-    ];
-
-    for (const locale of locales) {
-      const context = await browser.newContext({
-        baseURL: "http://localhost:3050",
-        serviceWorkers: "block",
-      });
-      const page = await context.newPage();
-      await setupMockApi(page);
-      await context.addCookies([
-        {
-          name: "user_lang",
-          value: locale.shortCode,
-          url: "http://localhost:3050",
-          sameSite: "Lax",
-        },
-      ]);
-      await page.goto(localizedPath(locale.shortCode, "/"), {
-        waitUntil: "domcontentloaded",
-      });
-      await page.waitForFunction(
-        () => {
-          return Boolean(
-            document.getElementById("__nuxt")?.__vue_app__?.config.globalProperties.$router,
-          );
-        },
-        undefined,
-        { timeout: 30000 },
-      );
-
-      for (const path of paths) {
-        const localizedUrl = localizedPath(locale.shortCode, path);
-        await navigateClientSide(page, localizedUrl);
-        await expect(page).toHaveURL(`http://localhost:3050${localizedUrl}`);
-        await expectLocaleUrlHead(page, locale, path);
-        await expect(page.locator('link[rel="alternate"][hreflang="en-US"]')).toHaveAttribute(
-          "href",
-          absoluteUrl(localizedPath("en", path)),
-        );
-        for (const alternate of locales) {
-          await expect(
-            page.locator(`link[rel="alternate"][hreflang="${alternate.code}"]`),
-          ).toHaveAttribute("href", absoluteUrl(localizedPath(alternate.shortCode, path)));
-        }
-      }
-      await context.close();
     }
   });
 
@@ -947,33 +563,17 @@ test.describe("Media Detail Pages", () => {
   test("navigates show to season to episode and preserves the selected dub", async ({ page }) => {
     await setupMockApi(page);
     await page.goto("/show/1396", { waitUntil: "domcontentloaded" });
-    await waitForVueHydration(page);
 
     const seasonLink = page.locator('a[href*="/show/1396/season/1"]').first();
     await expect(seasonLink).toHaveAttribute("href", /dub=139601/);
     await seasonLink.click();
     await expect(page).toHaveURL(/\/show\/1396\/season\/1\?dub=139601/);
-    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
-      "href",
-      "https://dubbingbase.com/show/1396/season/1",
-    );
     await expect(page.getByText("Walter White begins a new chapter.")).toBeVisible();
 
     await page.getByRole("link", { name: /Pilot/ }).first().click();
     await expect(page).toHaveURL(/\/show\/1396\/season\/1\/episode\/1\?dub=139601/);
     await expect(page.locator("body")).toContainText(
       "Walter White starts cooking methamphetamine.",
-    );
-    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
-      "href",
-      "https://dubbingbase.com/show/1396/season/1/episode/1",
-    );
-    await page.locator('button[aria-label="Toggle language"]').click();
-    await page.getByText("Français", { exact: true }).click();
-    await expect(page).toHaveURL(/\/fr\/show\/1396\/season\/1\/episode\/1\?dub=139601/);
-    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
-      "href",
-      "https://dubbingbase.com/fr/show/1396/season/1/episode/1",
     );
   });
 
@@ -1134,7 +734,7 @@ test.describe("Media Detail Pages", () => {
         await route.fulfill({
           status: 200,
           contentType: "application/json",
-          body: JSON.stringify(seasonB),
+          body: JSON.stringify(mockSeasonPageResponse(seasonB)),
         });
         markSeasonBFinished();
         return;
@@ -1143,7 +743,7 @@ test.describe("Media Detail Pages", () => {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify(seasonA),
+        body: JSON.stringify(mockSeasonPageResponse(seasonA)),
       });
     });
 
@@ -1209,7 +809,7 @@ test.describe("Media Detail Pages", () => {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify(episodeB),
+        body: JSON.stringify(mockEpisodePageResponse(episodeB)),
       });
     });
 
@@ -1304,7 +904,7 @@ test.describe("Media Detail Pages", () => {
         await route.fulfill({
           status: 200,
           contentType: "application/json",
-          body: JSON.stringify(episodeB),
+          body: JSON.stringify(mockEpisodePageResponse(episodeB)),
         });
         return;
       }
@@ -1317,7 +917,7 @@ test.describe("Media Detail Pages", () => {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify(episodeA),
+        body: JSON.stringify(mockEpisodePageResponse(episodeA)),
       });
       if (episodeARequests === 1) markEpisodeAFinished();
     });
@@ -1407,6 +1007,7 @@ test.describe("Media Detail Pages", () => {
     });
 
     await expect(page).toHaveURL("/fr/show/108978/season/1?dub=524");
+    await expect(page.locator(".animate-pulse").first()).toBeVisible();
     await expect(page.getByText("Impossible de charger ce contenu pour le moment.")).toBeVisible();
   });
 

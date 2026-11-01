@@ -10,7 +10,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 
 const mocks = vi.hoisted(() => ({ getTopContributors: vi.fn() }));
 
-vi.mock("../utils/db/queries", () => ({
+vi.mock("../db/queries", () => ({
   getTopContributors: mocks.getTopContributors,
 }));
 
@@ -20,7 +20,7 @@ beforeAll(async () => {
   vi.stubGlobal("createError", createError);
   vi.stubGlobal("defineEventHandler", defineEventHandler);
   vi.stubGlobal("getQuery", getQuery);
-  handler = (await import("./top-contributors.get")).default;
+  handler = (await import("../../api/top-contributors.get")).default;
 });
 
 beforeEach(() => vi.clearAllMocks());

@@ -72,6 +72,8 @@
     "unlink": "Unlink",
     "confirmUnlinkTitle": "Confirm Unlink",
     "unlinkVoiceActor": "Unlink Voice Actor"
+  ,
+    "pagination": "Pagination"
   },
   "theme": {
     "light": "Light",
@@ -497,5 +499,25 @@
       "studioSaved": "Studio saved successfully",
       "failedToSave": "Failed to save studio"
     }
+  ,
+    "spreadsheet": {
+      "previous": "Previous",
+      "next": "Next",
+      "pageOf": "Page {page} of {total}"
+    }
+  }
+,
+  "footer": {
+    "search": "Search",
+    "contribute": "Contribute",
+    "resources": "Resources",
+    "about": "About",
+    "apiTerms": "API Terms"
+  }
+,
+  "browse": {
+    "title": "Browse {type}",
+    "description": "Explore {type} with dubbing credits in DubbingBase.",
+    "empty": "No {type} with dubbing credits are listed yet."
   }
 }

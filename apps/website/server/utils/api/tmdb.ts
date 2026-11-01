@@ -67,10 +67,18 @@ export class TMDBClient {
     }
   }
 
-  async getMediaWithCredits(contentType: "movie" | "tv", id: number, language?: string) {
+  async getMediaWithCredits(
+    contentType: "movie" | "tv",
+    id: number,
+    language?: string,
+    options: { includeExternalIds?: boolean } = {},
+  ) {
     return this.get(
       `${contentType}/${id}`,
-      { append_to_response: "credits,external_ids" },
+      {
+        append_to_response:
+          options.includeExternalIds === false ? "credits" : "credits,external_ids",
+      },
       language,
     );
   }

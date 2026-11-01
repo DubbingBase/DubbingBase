@@ -10,11 +10,11 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 
 const mocks = vi.hoisted(() => ({ rpc: vi.fn() }));
 
-vi.mock("../../utils/db/client", () => ({
+vi.mock("../db/client", () => ({
   useSupabaseAdmin: () => ({ rpc: mocks.rpc }),
 }));
 
-vi.mock("../../utils/urls/supabase", () => ({
+vi.mock("../urls/supabase", () => ({
   buildSupabaseImageUrl: (path: string | null) => (path ? `https://images.example/${path}` : null),
 }));
 
@@ -24,7 +24,7 @@ beforeAll(async () => {
   vi.stubGlobal("createError", createError);
   vi.stubGlobal("defineEventHandler", defineEventHandler);
   vi.stubGlobal("getQuery", getQuery);
-  handler = (await import("./voice-actors.get")).default;
+  handler = (await import("../../api/top-voice-actors.get")).default;
 });
 
 beforeEach(() => vi.clearAllMocks());
@@ -39,7 +39,7 @@ async function request(path: string): Promise<Response> {
   return toWebHandler(app)(new Request(`http://localhost${path}`));
 }
 
-describe("trending voice actors response projection", () => {
+describe("top voice actor response projection", () => {
   it("keeps the full default response for existing callers", async () => {
     mocks.rpc.mockResolvedValue({
       data: [
@@ -51,7 +51,7 @@ describe("trending voice actors response projection", () => {
             profile_picture: "ada.jpg",
             bio: "Full biography",
           },
-          work_count: 12,
+          role_count: 12,
         },
       ],
       error: null,
@@ -67,12 +67,11 @@ describe("trending voice actors response projection", () => {
         lastname: "Example",
         profile_picture: "https://images.example/ada.jpg",
         bio: "Full biography",
-        work_count: 12,
+        role_count: 12,
       },
     ]);
-    expect(mocks.rpc).toHaveBeenCalledWith("get_trending_voice_actors", {
+    expect(mocks.rpc).toHaveBeenCalledWith("get_top_voice_actors", {
       limit_param: 10,
-      months_param: 6,
     });
   });
 
@@ -87,7 +86,7 @@ describe("trending voice actors response projection", () => {
             profile_picture: "ada.jpg",
             bio: "Full biography",
           },
-          work_count: 12,
+          role_count: 12,
         },
       ],
       error: null,
@@ -102,7 +101,6 @@ describe("trending voice actors response projection", () => {
         firstname: "Ada",
         lastname: "Example",
         profile_picture: "https://images.example/ada.jpg",
-        work_count: 12,
       },
     ]);
   });

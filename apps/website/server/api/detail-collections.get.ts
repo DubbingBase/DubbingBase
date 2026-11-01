@@ -8,6 +8,7 @@ import {
 import type { IgdbCharacter } from "@app/shared-logic";
 import type { H3Event$Fetch } from "nitropack/types";
 import { paginateArray } from "../utils/pagination";
+import { getMediaPageDubbingProjects } from "../utils/db/queries";
 
 type CollectionItem = {
   id?: number | string;
@@ -227,6 +228,12 @@ async function getMediaCast(
 ): Promise<CollectionItem[]> {
   const type = queryValue(query.type) || "";
   const id = requiredId(query.id, "id");
+  if (["audiobook", "podcast", "advertisement", "toy"].includes(type)) {
+    const projectId = requiredId(query.projectId, "projectId");
+    const projects = await getMediaPageDubbingProjects(id, type, projectId);
+    return formatMediaWorkCastCards(projects[0]);
+  }
+
   const detailQuery =
     type === "episode"
       ? {
@@ -316,8 +323,7 @@ async function getCollectionItems(
       const detail = await requestFetch<DetailPayload>(`/api/get-studio-details`, {
         query: { studioId: id },
       });
-      const text = normalized(queryValue(query.query));
-      return filterDetailCollectionItems(detail.dubbedProjects || [], text);
+      return detail.dubbedProjects || [];
     }
     case "studio-voice-actors": {
       const detail = await requestFetch<DetailPayload>(`/api/get-studio-details`, {

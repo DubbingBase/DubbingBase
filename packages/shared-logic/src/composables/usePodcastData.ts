@@ -3,7 +3,7 @@ import type { PodcastResponse } from "../types";
 export async function fetchPodcastData(
   id: string | number,
   locale?: string,
-  options: { projection?: "podcast-page" } = {},
+  options: { projection?: "podcast-page" | "media-summary" } = {},
 ): Promise<PodcastResponse | null> {
   const headers: Record<string, string> = {};
   if (locale) {

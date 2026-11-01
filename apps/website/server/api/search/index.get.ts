@@ -138,6 +138,39 @@ function calculateScore(item: SearchItem, queryLower: string, now: number): numb
   return score;
 }
 
+function projectSearchResult(item: SearchItem): SearchItem {
+  const cover = item.cover;
+  const coverUrl =
+    typeof cover === "object" && cover !== null && !Array.isArray(cover)
+      ? Reflect.get(cover, "url")
+      : undefined;
+
+  return {
+    id: item.id,
+    media_type: item.media_type,
+    title: item.title,
+    name: item.name,
+    voice_actor_name: item.voice_actor_name,
+    firstname: item.firstname,
+    lastname: item.lastname,
+    profile_path: item.profile_path,
+    poster_path: item.poster_path,
+    popularity: item.popularity,
+    score: item.score,
+    release_date: item.release_date,
+    first_air_date: item.first_air_date,
+    first_release_date: item.first_release_date,
+    original_title: item.original_title,
+    original_name: item.original_name,
+    ...(typeof coverUrl === "string" ? { cover: { url: coverUrl } } : {}),
+    author_name: item.author_name,
+    brand: item.brand,
+    manufacturer: item.manufacturer,
+    product_line: item.product_line,
+    overview: item.overview,
+  };
+}
+
 export default defineEventHandler(async (event) => {
   try {
     const rawQuery = getQuery(event).query;
@@ -420,13 +453,16 @@ export default defineEventHandler(async (event) => {
 
     // Score each result once; sort and return using the same score value.
     const now = Date.now();
-    return resp
+    const results = resp
       .filter((item) => item != null)
       .map((item) => ({
         ...item,
         score: calculateScore(item, trimmedQuery, now),
       }))
       .sort((a, b) => b.score - a.score);
+    return getQuery(event).projection === "search-page"
+      ? results.map(projectSearchResult)
+      : results;
   } catch (error) {
     console.error("Error in search function:", error);
     throw createError({ statusCode: 500, message: "Internal server error" });

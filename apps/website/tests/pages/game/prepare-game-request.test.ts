@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildPrepareGameRequest } from "./prepare-game-request";
+import { buildPrepareGameRequest } from "../../../src/pages/game/prepare-game-request";
 
 describe("game admin preparation request", () => {
   it("sends the Wikipedia source and dubbing region as distinct fields", () => {

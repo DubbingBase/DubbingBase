@@ -4,10 +4,55 @@ import { getDubbingProjects, getGamePageDubbingProjects } from "../../utils/db/q
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
 import { scheduleBackgroundTask } from "../../utils/background";
-import { withMediaServiceTimeout } from "../../utils/media-request";
 import type { IgdbGame, IgdbCharacter } from "@app/shared-logic";
 
-function processIgdbGame(game: IgdbGame): IgdbGame & { media_type: "video_game" } {
+function processIgdbGame(
+  game: IgdbGame,
+  pageProjection: boolean,
+): IgdbGame & { media_type: "video_game" } {
+  const artworks = (pageProjection ? game.artworks?.slice(0, 1) : game.artworks)?.map(
+    (artwork) => ({
+      ...artwork,
+      url: buildIgdbImageUrl(artwork.image_id, "1080p"),
+    }),
+  );
+  const screenshots = (pageProjection ? game.screenshots?.slice(0, 1) : game.screenshots)?.map(
+    (screenshot) => ({
+      ...screenshot,
+      url: buildIgdbImageUrl(screenshot.image_id, "screenshot_huge"),
+    }),
+  );
+
+  const cover = game.cover
+    ? {
+        image_id: game.cover.image_id,
+        url: buildIgdbImageUrl(game.cover.image_id, "cover_big"),
+      }
+    : undefined;
+
+  if (pageProjection) {
+    return {
+      id: game.id,
+      name: game.name,
+      slug: game.slug,
+      summary: game.summary,
+      rating: game.rating,
+      first_release_date: game.first_release_date,
+      cover,
+      artworks,
+      screenshots,
+      genres: game.genres?.map(({ id, name }) => ({ id, name })),
+      platforms: game.platforms?.map(({ id, name }) => ({ id, name })),
+      involved_companies: game.involved_companies?.map((company) => ({
+        id: company.id,
+        company: { id: company.company.id, name: company.company.name },
+        developer: company.developer,
+        publisher: company.publisher,
+      })),
+      media_type: "video_game",
+    };
+  }
+
   return {
     ...game,
     media_type: "video_game",
@@ -17,27 +62,23 @@ function processIgdbGame(game: IgdbGame): IgdbGame & { media_type: "video_game" 
           url: buildIgdbImageUrl(game.cover.image_id, "cover_big"),
         }
       : undefined,
-    artworks: game.artworks?.map((a) => ({
-      ...a,
-      url: buildIgdbImageUrl(a.image_id, "1080p"),
-    })),
-    screenshots: game.screenshots?.map((s) => ({
-      ...s,
-      url: buildIgdbImageUrl(s.image_id, "screenshot_huge"),
-    })),
+    artworks,
+    screenshots,
   };
 }
 
-function processIgdbCharacter(char: IgdbCharacter) {
-  return {
-    ...char,
-    mug_shot: char.mug_shot
-      ? {
-          ...char.mug_shot,
-          url: buildIgdbImageUrl(char.mug_shot.image_id, "1080p"),
-        }
-      : undefined,
-  };
+function processIgdbCharacter(char: IgdbCharacter, pageProjection: boolean) {
+  const mugShot = char.mug_shot
+    ? {
+        ...(pageProjection ? {} : char.mug_shot),
+        image_id: char.mug_shot.image_id,
+        url: buildIgdbImageUrl(char.mug_shot.image_id, "1080p"),
+      }
+    : undefined;
+
+  return pageProjection
+    ? { id: char.id, name: char.name, mug_shot: mugShot }
+    : { ...char, mug_shot: mugShot };
 }
 
 export default defineEventHandler(async (event) => {
@@ -47,24 +88,35 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: "Missing id parameter" });
   }
 
-  const gameId = Number(id);
-  if (!Number.isSafeInteger(gameId) || gameId < 1) {
-    throw createError({ statusCode: 404, statusMessage: "Game not found" });
+  const gameId = parseInt(id, 10);
+  if (isNaN(gameId)) {
+    throw createError({ statusCode: 400, message: "Invalid id parameter" });
   }
   const igdbClient = useIgdbClient();
+  const pageProjection = getQuery(event).projection === "media-page";
 
-  const igdbGame = await withMediaServiceTimeout(() => igdbClient.getGame(gameId), "IGDB game");
-  if (!igdbGame) {
-    throw createError({ statusCode: 404, statusMessage: "Game not found" });
+  let game: (IgdbGame & { media_type: "video_game" }) | null = null;
+  let characters: ReturnType<typeof processIgdbCharacter>[] = [];
+
+  try {
+    const [igdbGame, igdbCharacters] = await Promise.all([
+      pageProjection ? igdbClient.getGame(gameId, true) : igdbClient.getGame(gameId),
+      pageProjection
+        ? igdbClient.getGameCharacters(gameId, true)
+        : igdbClient.getGameCharacters(gameId),
+    ]);
+    game = igdbGame ? processIgdbGame(igdbGame, pageProjection) : null;
+    characters = igdbCharacters.map((character) => processIgdbCharacter(character, pageProjection));
+  } catch (err) {
+    console.error(`Failed to fetch IGDB game ${gameId}:`, err);
+    game = {
+      id: gameId,
+      name: "Information indisponible (Timeout)",
+      summary: "Ce contenu n'a pas pu être chargé.",
+      media_type: "video_game",
+      cover: undefined,
+    };
   }
-  const game = processIgdbGame(igdbGame);
-  const characters = await igdbClient
-    .getGameCharacters(gameId)
-    .then((results) => results.map(processIgdbCharacter))
-    .catch((error: unknown) => {
-      console.error(`Failed to fetch IGDB game characters ${gameId}:`, error);
-      return [];
-    });
 
   const metadata = { game, characters };
 

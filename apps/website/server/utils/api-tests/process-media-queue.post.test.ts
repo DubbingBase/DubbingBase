@@ -120,6 +120,8 @@ beforeEach(() => {
     ok: true,
     changes: 1,
     creditsAdded: 1,
+    creditsOverlapped: 2,
+    creditsMismatched: 1,
   });
   routeMocks.extractGameDubbingCredits.mockResolvedValue({
     ok: true,
@@ -522,7 +524,9 @@ describe("POST /api/process-media-queue requester propagation", () => {
     expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledTimes(1);
     expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledWith(
       "Queue Item Processed [EN]",
-      expect.stringContaining("Successfully processed **Media 42**"),
+      expect.stringContaining(
+        "Existing overlaps: **2**; mismatched: **1** (existing values kept)",
+      ),
       expect.objectContaining({ queue: "wiki_extract" }),
     );
   });

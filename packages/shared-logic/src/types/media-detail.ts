@@ -9,6 +9,7 @@ export interface MediaDetailVoiceActor extends Record<string, unknown> {
 export interface MediaDetailWork extends Record<string, unknown> {
   id: number;
   actor_id: number | string | null;
+  voice_actor_id?: number | null;
   character_name?: string | null;
   performance?: string | null;
   note?: string | null;
@@ -73,6 +74,7 @@ export interface MediaDetailCharacterProfilePicture extends Record<string, unkno
 
 interface MediaDetailResponseBase {
   dubbingProjects: MediaDetailDubbingProject[];
+  voiceActors?: MediaDetailVoiceActor[];
   characterProfilePictures: MediaDetailCharacterProfilePicture[];
   tvdbId: number | null;
 }

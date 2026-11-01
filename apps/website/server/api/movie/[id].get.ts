@@ -1,11 +1,14 @@
 import type { H3Event } from "h3";
 import { useTmdbClient } from "../../utils";
 import { MediaService } from "../../utils/services/media";
-import { getDubbingProjectsForMediaEndpoint } from "../../utils/db/queries";
+import {
+  getDubbingProjectsForMediaEndpoint,
+  getMediaPageDubbingProjectData,
+} from "../../utils/db/queries";
+import { processMedia } from "../../utils/urls/tmdb";
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
 import { scheduleBackgroundTask } from "../../utils/background";
-import { withMediaServiceTimeout } from "../../utils/media-request";
 export async function fetchMovieData(event: H3Event, movieId: number) {
   const acceptLanguage = getHeader(event, "accept-language") || undefined;
 
@@ -14,28 +17,65 @@ export async function fetchMovieData(event: H3Event, movieId: number) {
 
   // ── Parallel: TMDB + DB ──────────────────────────────────────────
   const projection = getQuery(event).projection;
-  const apiDataPromise = withMediaServiceTimeout(
-    () =>
-      mediaService.getMediaWithVoiceActors("movie", movieId, {
-        includeCollection: projection !== "media-page",
-        includeCreditsCrew: projection !== "media-page",
-        ...(projection === "media-page" ? { projection: "media-page" } : {}),
-      }),
-    "TMDB movie",
-  ).then(async (result) => {
-    const { characters: characterProfilePictures, tvdbId } =
-      await mediaService.getCharacterProfilePictures("movie", movieId, result.media);
-    return {
-      movieWithImageUrls: result.media,
-      characterProfilePictures,
-      collection: result.collection,
-      tvdbId,
-    };
-  });
+  const apiDataPromise = mediaService
+    .getMediaWithVoiceActors("movie", movieId, {
+      includeCollection: projection !== "media-page",
+      includeCreditsCrew: projection !== "media-page",
+      ...(projection === "media-page" ? { projection: "media-page" } : {}),
+    })
+    .then(async (result) => {
+      const { characters: characterProfilePictures, tvdbId } =
+        await mediaService.getCharacterProfilePictures("movie", movieId, result.media);
+      return {
+        movieWithImageUrls: result.media,
+        characterProfilePictures,
+        collection: result.collection,
+        tvdbId,
+      };
+    })
+    .catch((err) => {
+      if (err instanceof Error && err.message === "TMDB API error: 404") {
+        return {
+          movieWithImageUrls: null,
+          characterProfilePictures: [],
+          collection: null,
+          tvdbId: null,
+        };
+      }
 
-  const dbDataPromise = getDubbingProjectsForMediaEndpoint(movieId, "movie", projection);
+      console.error(`Failed to fetch TMDB movie ${movieId}, using mock:`, err);
+      const mockMovie = {
+        id: movieId,
+        title: "Information indisponible (Timeout)",
+        name: "Information indisponible (Timeout)",
+        poster_path: null,
+        backdrop_path: null,
+        overview: "Ce contenu n'a pas pu être chargé car les serveurs TMDB sont inaccessibles.",
+        credits: { cast: [] },
+        release_date: "1970-01-01",
+        first_air_date: "1970-01-01",
+        external_ids: {},
+      };
+      return {
+        movieWithImageUrls: processMedia(mockMovie),
+        characterProfilePictures: [],
+        collection: null,
+        tvdbId: null,
+      };
+    });
 
-  const [apiData, dubbingProjects] = await Promise.all([apiDataPromise, dbDataPromise]);
+  const dbDataPromise =
+    projection === "media-page"
+      ? getMediaPageDubbingProjectData(movieId, "movie")
+      : getDubbingProjectsForMediaEndpoint(movieId, "movie", projection);
+
+  const [apiData, dubbingProjectData] = await Promise.all([apiDataPromise, dbDataPromise]);
+  const dubbingProjects = Array.isArray(dubbingProjectData)
+    ? dubbingProjectData
+    : dubbingProjectData.dubbingProjects;
+  const voiceActors = Array.isArray(dubbingProjectData)
+    ? undefined
+    : dubbingProjectData.voiceActors;
 
   const { movieWithImageUrls, characterProfilePictures, collection, tvdbId } = apiData;
 
@@ -90,8 +130,8 @@ export async function fetchMovieData(event: H3Event, movieId: number) {
     dubbingProjects,
     collection,
     tvdbId,
+    ...(voiceActors === undefined ? {} : { voiceActors }),
   };
-
   return baseData;
 }
 
@@ -101,9 +141,9 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: "Missing id parameter" });
   }
 
-  const movieId = Number(id);
-  if (!Number.isSafeInteger(movieId) || movieId < 1) {
-    throw createError({ statusCode: 404, statusMessage: "Movie not found" });
+  const movieId = parseInt(id, 10);
+  if (isNaN(movieId)) {
+    throw createError({ statusCode: 400, message: "Invalid id parameter" });
   }
 
   return await fetchMovieData(event, movieId);

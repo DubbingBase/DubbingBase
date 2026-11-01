@@ -1,5 +1,9 @@
 import { useToyClient } from "../../utils";
-import { getDubbingProjects, getToyPageDubbingProjects } from "../../utils/db/queries";
+import {
+  getDubbingProjects,
+  getMediaPageDubbingProjectSummaries,
+  getToyPageDubbingProjects,
+} from "../../utils/db/queries";
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
 import { scheduleBackgroundTask } from "../../utils/background";
@@ -22,9 +26,11 @@ export default defineEventHandler(async (event): Promise<ToyResponse> => {
     toyClient.getToy(toyId),
 
     // DB: dubbing projects
-    projection === "media-page"
-      ? getToyPageDubbingProjects(toyId)
-      : getDubbingProjects(toyId, "toy"),
+    projection === "media-summary"
+      ? getMediaPageDubbingProjectSummaries(toyId, "toy")
+      : projection === "media-page"
+        ? getToyPageDubbingProjects(toyId)
+        : getDubbingProjects(toyId, "toy"),
   ]);
 
   if (!toy) throw createError({ statusCode: 404, statusMessage: "Toy not found" });
