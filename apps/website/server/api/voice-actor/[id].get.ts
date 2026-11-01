@@ -29,7 +29,13 @@ export default defineEventHandler(async (event) => {
   try {
     const tmdbClient = useTmdbClient();
     const mediaService = new MediaService(tmdbClient, acceptLanguage);
-    const baseData = await mediaService.getVoiceActorWithWorkAndMedia(voiceActorId, acceptLanguage);
+    const baseData = await mediaService.getVoiceActorWithWorkAndMedia(
+      voiceActorId,
+      acceptLanguage,
+      {
+        includePotentialWikipediaUrl: !pageProjection,
+      },
+    );
     if (!pageProjection) return baseData;
 
     return {
