@@ -743,6 +743,8 @@ test.describe("Media Detail Pages", () => {
     for (const route of ["/about", "/movies", "/voice-actors"]) {
       expect(config).toContain(`"loc": "${route}"`);
     }
+    expect(config).not.toContain('"loc": "/discussions"');
+    expect(config).not.toContain('"loc": "/leaderboard"');
     expect(config).toContain('"_i18nTransform": true');
     expect(config).toContain('"excludeAppSources": true');
     expect(config).not.toMatch(

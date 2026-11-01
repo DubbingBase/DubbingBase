@@ -3,4 +3,4 @@
 "@app/shared-logic": patch
 ---
 
-Keep indexable metadata aligned with localized routes, and return accurate not-found or upstream error responses for public media pages.
+Keep localized metadata and media errors accurate, and restrict the sitemap to general public routes.
