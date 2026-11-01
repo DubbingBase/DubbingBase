@@ -152,7 +152,15 @@ const activeResultId = computed(() => {
 
 let debounceTimeout: ReturnType<typeof setTimeout> | null = null;
 let searchVersion = 0;
-const markKeyboardModality = (): void => {
+const markKeyboardModality = (event: KeyboardEvent): void => {
+  if (
+    event.isComposing ||
+    event.keyCode === 229 ||
+    !["Tab", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)
+  ) {
+    return;
+  }
+
   document.documentElement.dataset.inputModality = "keyboard";
 };
 const markPointerModality = (event: PointerEvent): void => {

@@ -93,11 +93,28 @@ describe("ToyClient", () => {
     query.or.mockReturnValue(query);
     clientMocks.useSupabaseAdmin.mockReturnValue({ from: vi.fn(() => query) });
 
-    const results = await new ToyClient().searchToys("Lunii");
+    const results = await new ToyClient().searchToys("  Lunii  ");
 
     expect(query.or).toHaveBeenCalledWith(
-      "name.ilike.%Lunii%,manufacturer.ilike.%Lunii%,product_line.ilike.%Lunii%",
+      'name.ilike."%Lunii%",manufacturer.ilike."%Lunii%",product_line.ilike."%Lunii%"',
     );
     expect(results[0]?.manufacturer).toBe("Lunii");
+  });
+
+  it("preserves punctuation while safely quoting the PostgREST search value", async () => {
+    const query = {
+      select: vi.fn(),
+      or: vi.fn(),
+      limit: vi.fn(async () => ({ data: [], error: null })),
+    };
+    query.select.mockReturnValue(query);
+    query.or.mockReturnValue(query);
+    clientMocks.useSupabaseAdmin.mockReturnValue({ from: vi.fn(() => query) });
+
+    await new ToyClient().searchToys('Fisher-Price, "Little People"');
+
+    expect(query.or).toHaveBeenCalledWith(
+      'name.ilike."%Fisher-Price, \\"Little People\\"%",manufacturer.ilike."%Fisher-Price, \\"Little People\\"%",product_line.ilike."%Fisher-Price, \\"Little People\\"%"',
+    );
   });
 });

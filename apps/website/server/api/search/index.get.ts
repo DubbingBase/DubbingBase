@@ -110,7 +110,6 @@ function calculateScore(item: SearchItem, queryLower: string, now: number): numb
     "",
     item.original_title,
     item.original_name,
-    ...(item.studio_names ?? []),
     typeof item.manufacturer === "string" ? item.manufacturer : "",
     typeof item.brand === "string" ? item.brand : "",
     typeof item.firstname === "string" && typeof item.lastname === "string" ? `${item.firstname} ${item.lastname}` : "",
