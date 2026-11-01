@@ -292,6 +292,21 @@ body {
   outline-offset: 2px;
 }
 
+#search-page-input:focus {
+  outline: 1px solid var(--app-color-border-strong);
+  outline-offset: 1px;
+}
+
+#search-page-input:focus-visible {
+  outline: 2px solid var(--app-color-focus);
+  outline-offset: 2px;
+}
+
+html[data-input-modality="touch"] #search-page-input:focus {
+  outline: 1px solid var(--app-color-border);
+  outline-offset: 1px;
+}
+
 .theme-status-success {
   background-color: var(--app-color-success-bg);
   color: var(--app-color-success-text);

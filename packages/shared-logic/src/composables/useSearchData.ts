@@ -29,22 +29,23 @@ export type SearchResult = {
   authors?: Array<{ name: string }>;
   brand?: string;
   manufacturer?: string;
+  studio_names?: string[];
   product_line?: string;
   video_id?: string | null;
   overview?: string;
 };
 
-export async function fetchSearchData(query: string): Promise<SearchResult[]> {
+export async function fetchSearchData(
+  query: string,
+  signal?: AbortSignal,
+  locale?: string,
+): Promise<SearchResult[]> {
   const trimmedQuery = query.trim();
   if (trimmedQuery.length < 2) return [];
 
-  try {
-    const data = await $fetch<SearchResult[]>("/api/search", {
-      params: { query: trimmedQuery, projection: "search-page" },
-    });
-    return data || [];
-  } catch (e) {
-    console.error("fetchSearchData error:", e);
-    return [];
-  }
+  const data = await $fetch<SearchResult[]>("/api/search", {
+    params: { query: trimmedQuery, projection: "search-page", locale },
+    signal,
+  });
+  return data || [];
 }

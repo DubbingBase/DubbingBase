@@ -58,7 +58,7 @@ export class PodcastClient {
       return podcasts;
     } catch (err) {
       console.error("iTunes podcast search failed:", err);
-      return [];
+      throw err;
     }
   }
 

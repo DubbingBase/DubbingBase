@@ -1,6 +1,7 @@
 import type { Toy } from "@app/shared-logic";
 import type { Database } from "@app/supabase/types";
 import { useSupabaseAdmin } from "../db/client";
+import { normalizeString } from "../normalize";
 
 type ToyMetadataRow = Pick<
   Database["public"]["Tables"]["toy_metadata"]["Row"],
@@ -30,7 +31,7 @@ function mapToy(row: ToyMetadataRow): Toy {
 
 export class ToyClient {
   async searchToys(query: string, limit = 15): Promise<Toy[]> {
-    const trimmedQuery = query.trim();
+    const trimmedQuery = normalizeString(query);
     if (trimmedQuery.length < 2) return [];
 
     try {
@@ -40,14 +41,16 @@ export class ToyClient {
         .select(
           "content_id, name, manufacturer, product_line, release_year, cover_url, description, updated_at",
         )
-        .ilike("name", `%${trimmedQuery}%`)
+        .or(
+          `name.ilike.%${trimmedQuery}%,manufacturer.ilike.%${trimmedQuery}%,product_line.ilike.%${trimmedQuery}%`,
+        )
         .limit(limit);
 
       if (error) throw error;
       return (data || []).map(mapToy);
     } catch (err) {
       console.error("Toy search failed:", err);
-      return [];
+      throw err;
     }
   }
 

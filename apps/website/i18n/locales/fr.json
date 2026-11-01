@@ -403,7 +403,10 @@
     "title": "Recherche",
     "description": "Rechercher des films, séries, comédiens et plus",
     "typeMore": "Tapez au moins 2 caractères...",
-    "media": "Média"
+    "media": "Média",
+    "results": "Résultats de recherche",
+    "error": "La recherche a échoué. Vérifiez votre connexion et réessayez.",
+    "retry": "Réessayer"
   },
   "auth": {
     "loginRequiredForSubscription": "Vous devez être connecté pour vous abonner",

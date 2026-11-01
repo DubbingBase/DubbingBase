@@ -70,8 +70,7 @@ export class OpenLibraryClient {
       });
 
       if (!res.ok) {
-        console.error(`OpenLibrary search failed with status: ${res.status}`);
-        return [];
+        throw new Error(`OpenLibrary search failed with status: ${res.status}`);
       }
 
       const data: { docs?: OpenLibraryDoc[] } = await res.json();
@@ -124,7 +123,7 @@ export class OpenLibraryClient {
       return books;
     } catch (err) {
       console.error("OpenLibrary search error:", err);
-      return [];
+      throw err;
     }
   }
 

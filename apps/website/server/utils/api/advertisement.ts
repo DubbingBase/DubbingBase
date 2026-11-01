@@ -11,11 +11,12 @@ export class AdvertisementClient {
     try {
       const supabase = useSupabaseAdmin();
       // Search in dubbing projects or custom ads stored in the database
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("dubbing_projects")
         .select("content_id, created_at, studios(name)")
         .eq("content_type", "advertisement")
         .limit(limit);
+      if (error) throw error;
 
       if (!data) return [];
 
@@ -27,7 +28,7 @@ export class AdvertisementClient {
       }));
     } catch (err) {
       console.error("Advertisement search failed:", err);
-      return [];
+      throw err;
     }
   }
 

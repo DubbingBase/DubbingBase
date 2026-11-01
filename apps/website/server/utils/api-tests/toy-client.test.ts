@@ -18,12 +18,14 @@ function createSupabaseMock(result: { data: unknown; error: unknown }) {
     select: vi.fn(),
     eq: vi.fn(),
     ilike: vi.fn(),
+    or: vi.fn(),
     limit: vi.fn(),
     maybeSingle: vi.fn(async () => result),
   };
   query.select.mockReturnValue(query);
   query.eq.mockReturnValue(query);
   query.ilike.mockReturnValue(query);
+  query.or.mockReturnValue(query);
   query.limit.mockReturnValue(query);
 
   const from = vi.fn(() => query);
@@ -67,5 +69,35 @@ describe("ToyClient", () => {
     createSupabaseMock({ data: null, error: null });
 
     await expect(new ToyClient().getToy(1)).resolves.toBeNull();
+  });
+
+  it("finds toys by manufacturer and product line as well as name", async () => {
+    const query = {
+      select: vi.fn(),
+      or: vi.fn(),
+      limit: vi.fn(async () => ({
+        data: [{
+          content_id: 1,
+          name: "Storyteller",
+          manufacturer: "Lunii",
+          product_line: "My Fabulous Storyteller",
+          release_year: null,
+          cover_url: null,
+          description: null,
+          updated_at: "2026-10-23T12:00:00Z",
+        }],
+        error: null,
+      })),
+    };
+    query.select.mockReturnValue(query);
+    query.or.mockReturnValue(query);
+    clientMocks.useSupabaseAdmin.mockReturnValue({ from: vi.fn(() => query) });
+
+    const results = await new ToyClient().searchToys("Lunii");
+
+    expect(query.or).toHaveBeenCalledWith(
+      "name.ilike.%Lunii%,manufacturer.ilike.%Lunii%,product_line.ilike.%Lunii%",
+    );
+    expect(results[0]?.manufacturer).toBe("Lunii");
   });
 });
