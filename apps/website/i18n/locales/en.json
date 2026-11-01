@@ -28,7 +28,12 @@
     "privacy": "Privacy Policy",
     "terms": "Terms of Service",
     "contact": "Contact Us",
-    "rights": "All rights reserved."
+    "rights": "All rights reserved.",
+    "search": "Search",
+    "contribute": "Contribute",
+    "resources": "Resources",
+    "about": "About",
+    "apiTerms": "API Terms"
   },
   "nav": {
     "home": "Home",
@@ -1412,5 +1417,10 @@
   "series": {
     "notFound": "Series not found",
     "heroDescription": "Discover the most popular TV series right now."
+  },
+  "browse": {
+    "title": "Browse {type}",
+    "description": "Explore {type} with dubbing credits in DubbingBase.",
+    "empty": "No {type} with dubbing credits are listed yet."
   }
 }

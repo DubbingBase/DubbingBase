@@ -72,6 +72,8 @@
     "unlink": "Desvincular",
     "confirmUnlinkTitle": "Confirmar desvinculación",
     "unlinkVoiceActor": "Desvincular actor de doblaje"
+  ,
+    "pagination": "Paginación"
   },
   "theme": {
     "light": "Claro",
@@ -497,6 +499,12 @@
       "studioSaved": "Estudio guardado exitosamente",
       "failedToSave": "Error al guardar el estudio"
     }
+  ,
+    "spreadsheet": {
+      "previous": "Anterior",
+      "next": "Siguiente",
+      "pageOf": "Página {page} de {total}"
+    }
   },
   "contribute": {
     "title": "Contribuir",
@@ -531,5 +539,19 @@
     "details": "Detalles",
     "detailsPlaceholder": "Proporcione detalles adicionales sobre el problema...",
     "successMessage": "Reporte enviado exitosamente"
+  }
+,
+  "footer": {
+    "search": "Buscar",
+    "contribute": "Colaborar",
+    "resources": "Recursos",
+    "about": "Acerca de",
+    "apiTerms": "Condiciones de la API"
+  }
+,
+  "browse": {
+    "title": "Explorar {type}",
+    "description": "Descubre {type} con créditos de doblaje en DubbingBase.",
+    "empty": "Aún no hay {type} con créditos de doblaje."
   }
 }
