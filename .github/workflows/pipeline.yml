@@ -270,6 +270,11 @@ jobs:
           if [ -z "$BASE_SHA" ] || [[ "$BASE_SHA" =~ ^0+$ ]]; then
             BASE_SHA="$(git rev-parse HEAD^)"
           fi
+          if ! git cat-file -e "$BASE_SHA^{commit}" 2>/dev/null; then
+            echo "::warning::Base commit $BASE_SHA is unavailable; fetching main to find the comparison base."
+            git fetch --no-tags origin main
+            BASE_SHA="$(git merge-base FETCH_HEAD HEAD)"
+          fi
           git cat-file -e "$BASE_SHA^{commit}"
 
           baseline_dir="$(mktemp -d)"
