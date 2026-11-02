@@ -2,11 +2,9 @@
 
 ## Environment Variables
 
-- `ANDROID_HOME` **required** — .env.example
 - `BENCH_CREDITS` (has default) — packages/database/benchmarks/bulk-extracted-credits.mjs
 - `BENCH_REPETITIONS` (has default) — packages/database/benchmarks/bulk-extracted-credits.mjs
-- `CI` **required** — apps/mobile/capacitor.config.ts
-- `DEV` **required** — apps/mobile/src/api/supabase.ts
+- `CI` **required** — playwright.config.ts
 - `DISCORD_ADMIN_WEBHOOK_LOG_URL` **required** — .env.example
 - `DISCORD_CHECK_WEBHOOK_URL` **required** — apps/website/server/utils/notifications/discord.ts
 - `DISCORD_DISCOVERY_WEBHOOK_URL` **required** — apps/website/server/utils/notifications/discord.ts
@@ -26,13 +24,8 @@
 - `GROQ_MODEL` (has default) — apps/website/server/utils/llm.ts
 - `IGDB_CLIENT_ID` **required** — .env.example
 - `IGDB_CLIENT_SECRET` **required** — .env.example
-- `JAVA_HOME` **required** — .env.example
 - `JWT_SECRET` (has default) — .env.example
-- `KEY_ALIAS` **required** — .env.example
-- `KEY_PASSWORD` **required** — .env.example
-- `KEYSTORE_PASSWORD` **required** — .env.example
 - `LLM_PROVIDER` (has default) — apps/website/server/utils/llm.ts
-- `NDK_HOME` **required** — .env.example
 - `NITRO_PRESET` (has default) — apps/website/nuxt.config.ts
 - `NODE_ENV` (has default) — .env.example
 - `NUXT_DISCORD_WEBHOOK_CHECK_URL` **required** — apps/website/server/utils/notifications/discord.ts
@@ -72,13 +65,8 @@
 - `SUPABASE_URL` (has default) — .env.example
 - `TMDB_API_KEY` **required** — .env.example
 - `TVDB_API_KEY` **required** — .env.example
-- `VITE_API_BASE_URL` (has default) — .env.example
-- `VITE_ONESIGNAL_APP_ID` **required** — .env.example
-- `VITE_SUPABASE_PUBLISHABLE_KEY` **required** — .env.example
-- `VITE_SUPABASE_URL` (has default) — .env.example
 - `WIKI_LANG` (has default) — scripts/discover-media.ts
 
 ## Config Files
 
 - `.env.example`
-- `apps/mobile/vite.config.ts`

@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Library inventory extracted via AST. Read the source files listed here before modifying exported functions.
 
-**114 library files** across 5 modules
+**97 library files** across 4 modules
 
 ## Website (74 files)
 
@@ -55,26 +55,6 @@
 - `packages/shared-logic/src/composables/useShowData.ts` — fetchShowData
 - `packages/shared-logic/src/composables/useToyData.ts` — fetchToyData
 - `packages/shared-logic/src/wikipedia-language.ts` — isWikipediaLanguage
-
-## Mobile (17 files)
-
-- `apps/mobile/src/composables/useVoiceActorManagement.ts` — useVoiceActorManagement, VoiceActor, WorkAndVoiceActor
-- `apps/mobile/src/utils/convert.ts` — cleanCharacterName, voiceActorToPersonData, actorToPersonData
-- `apps/mobile/src/utils/deepLinks.ts` — parseDeepLink, handleDeepLink, useDeepLinkHandler
-- `apps/mobile/src/composables/useToast.ts` — useToast, toastController
-- `apps/mobile/src/composables/useVoiceActorSubscription.ts` — useVoiceActorSubscription, fetchAllSubscriptions
-- `apps/mobile/src/stores/index.ts` — setupStores, pinia
-- `apps/mobile/src/api/mediaQueue.ts` — enqueueMedia
-- `apps/mobile/src/api/nitro.ts` — nitroRequest
-- `apps/mobile/src/composables/useDeferredCharacters.ts` — useDeferredCharacters
-- `apps/mobile/src/composables/useFF.ts` — useFeatureFlags
-- `apps/mobile/src/composables/useLanguagePreference.ts` — useLanguagePreference
-- `apps/mobile/src/composables/useOneSignal.ts` — useOneSignal
-- `apps/mobile/src/composables/usePermissions.ts` — usePermissions
-- `apps/mobile/src/composables/usePostHog.ts` — usePostHog
-- `apps/mobile/src/composables/useTheme.ts` — useTheme
-- `apps/mobile/src/utils/image.ts` — getAvatarFallbackUrl
-- `apps/mobile/src/utils/language.ts` — getLanguageDisplayName
 
 ## Og-image (2 files)
 

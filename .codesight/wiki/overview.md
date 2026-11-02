@@ -4,11 +4,11 @@
 
 **dubbing-base-monorepo** is a typescript project built with nuxt, organized as a monorepo.
 
-**Workspaces:** `@app/mobile` (`apps/mobile`), `@app/website` (`apps/website`), `@app/supabase` (`packages/database`), `@app/locales` (`packages/locales`), `@app/og-image` (`packages/og-image`), `@app/shared-logic` (`packages/shared-logic`)
+**Workspaces:** `@app/website` (`apps/website`), `@app/supabase` (`packages/database`), `@app/locales` (`packages/locales`), `@app/og-image` (`packages/og-image`), `@app/shared-logic` (`packages/shared-logic`)
 
 ## Scale
 
-86 API routes · 27 database models · 206 UI components · 114 library files · 15 middleware layers · 75 environment variables
+86 API routes · 27 database models · 109 UI components · 97 library files · 14 middleware layers · 64 environment variables
 
 ## Subsystems
 
@@ -82,9 +82,9 @@
 
 **Database:** unknown, 27 models — see [database.md](./database.md)
 
-**UI:** 206 components (vue) — see [ui.md](./ui.md)
+**UI:** 109 components (vue) — see [ui.md](./ui.md)
 
-**Libraries:** 114 files — see [libraries.md](./libraries.md)
+**Libraries:** 97 files — see [libraries.md](./libraries.md)
 
 ## High-Impact Files
 
@@ -99,9 +99,7 @@ Changes to these files have the widest blast radius across the codebase:
 
 ## Required Environment Variables
 
-- `ANDROID_HOME` — `.env.example`
-- `CI` — `apps/mobile/capacitor.config.ts`
-- `DEV` — `apps/mobile/src/api/supabase.ts`
+- `CI` — `playwright.config.ts`
 - `DISCORD_ADMIN_WEBHOOK_LOG_URL` — `.env.example`
 - `DISCORD_CHECK_WEBHOOK_URL` — `apps/website/server/utils/notifications/discord.ts`
 - `DISCORD_DISCOVERY_WEBHOOK_URL` — `apps/website/server/utils/notifications/discord.ts`
@@ -111,7 +109,9 @@ Changes to these files have the widest blast radius across the codebase:
 - `DISCORD_WEBHOOK_EXTRACT_URL` — `apps/website/server/utils/notifications/discord.ts`
 - `DISCORD_WEBHOOK_URL` — `apps/website/server/utils/notifications/discord.ts`
 - `DISCORD_WEBHOOK_URL_1` — `apps/website/server/utils/notifications/discord.ts`
-- _...38 more_
+- `DISCORD_WEBHOOK_URL_2` — `apps/website/server/utils/notifications/discord.ts`
+- `DISCORD_WEBHOOK_URL_3` — `apps/website/server/utils/notifications/discord.ts`
+- _...29 more_
 
 ---
 _Back to [index.md](./index.md) · Generated 2026-11-02_

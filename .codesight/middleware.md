@@ -1,7 +1,6 @@
 # Middleware
 
 ## auth
-- auth — `apps/mobile/src/stores/auth.ts`
 - generate-social-content.post — `apps/website/server/api/generate-social-content.post.ts`
 - auth — `apps/website/server/middleware/auth.ts`
 - auth-session.test — `apps/website/server/utils/auth-session.test.ts`

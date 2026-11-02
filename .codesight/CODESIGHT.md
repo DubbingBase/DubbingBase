@@ -1,11 +1,11 @@
 # dubbing-base-monorepo — AI Context Map
 
 > **Stack:** nuxt | none | vue | typescript
-> **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
+> **Monorepo:** @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 86 routes | 27 models | 206 components | 114 lib files | 75 env vars | 15 middleware | 46% test coverage
-> **Token savings:** this file is ~19,500 tokens. Without it, AI exploration would cost ~174,600 tokens. **Saves ~155,100 tokens per conversation.**
-> **Last scanned:** 2026-11-02 19:07 — re-run after significant changes
+> 86 routes | 27 models | 109 components | 97 lib files | 64 env vars | 14 middleware | 46% test coverage
+> **Token savings:** this file is ~15,600 tokens. Without it, AI exploration would cost ~137,000 tokens. **Saves ~121,300 tokens per conversation.**
+> **Last scanned:** 2026-11-02 19:18 — re-run after significant changes
 
 ---
 
@@ -296,103 +296,6 @@
 
 # Components
 
-- **App** [client] — `apps/mobile/src/App.vue`
-- **ActionButtons** [client] — props: hasWikidataId, hasData, isFetching, isScanning, fetchError, queueStatus, queueErrorMessage — `apps/mobile/src/components/ActionButtons.vue`
-- **ActorItem** [client] — props: actor, voiceActors, isAdmin, goToActor, goToVoiceActor, editVoiceActorLink, confirmDeleteVoiceActorLink, openVoiceActorSearch — `apps/mobile/src/components/ActorItem.vue`
-- **ActorList** [client] — props: actors, voiceActors — `apps/mobile/src/components/ActorList.vue`
-- **ActorVoiceActorItem** [client] — props: type, actor, item — `apps/mobile/src/components/ActorVoiceActorItem.vue`
-- **ActorWithVoiceActors** [client] — `apps/mobile/src/components/ActorWithVoiceActors.vue`
-- **CollectionCard** [client] — props: collection — `apps/mobile/src/components/CollectionCard.vue`
-- **CreditsReviewModal** [client] — props: isOpen, extractedCredits — `apps/mobile/src/components/CreditsReviewModal.vue`
-- **CrewList** [client] — props: groupedCrew — `apps/mobile/src/components/CrewList.vue`
-- **DubbingProjectsView** [client] — props: contentId, contentType, projects, actors, isAdmin, getVoiceActorByTmdbId, goToActor, goToVoiceActor, editVoiceActorLink, confirmDeleteVoiceActorLink — `apps/mobile/src/components/DubbingProjectsView.vue`
-- **EpisodeBanner** [client] — `apps/mobile/src/components/EpisodeBanner.vue`
-- **EpisodesList** [client] — `apps/mobile/src/components/EpisodesList.vue`
-- **JobSearchModal** [client] — props: isOpen, jobs — `apps/mobile/src/components/JobSearchModal.vue`
-- **MediaInfoCard** [client] — `apps/mobile/src/components/MediaInfoCard.vue`
-- **MediaItem** [client] — `apps/mobile/src/components/MediaItem.vue`
-- **MediaThumbnail** [client] — props: path, type, required, default — `apps/mobile/src/components/MediaThumbnail.vue`
-- **MovieCard** [client] — `apps/mobile/src/components/MovieCard.vue`
-- **NoActors** [client] — `apps/mobile/src/components/NoActors.vue`
-- **NoVoiceActor** [client] — props: actor — `apps/mobile/src/components/NoVoiceActor.vue`
-- **PersonItem** [client] — props: person, type, subtitleOverride — `apps/mobile/src/components/PersonItem.vue`
-- **PersonSearchModal** [client] — props: isOpen, mediaId, workType, linkVoiceActor — `apps/mobile/src/components/PersonSearchModal.vue`
-- **RequestVoiceActorCard** [client] — props: voiceActor — `apps/mobile/src/components/RequestVoiceActorCard.vue`
-- **SearchResultItem** [client] — `apps/mobile/src/components/SearchResultItem.vue`
-- **SeasonBanner** [client] — `apps/mobile/src/components/SeasonBanner.vue`
-- **Serie** [client] — props: value, type, required — `apps/mobile/src/components/Serie.vue`
-- **StudioCard** [client] — props: studio — `apps/mobile/src/components/StudioCard.vue`
-- **StudioSearchModal** [client] — props: isOpen — `apps/mobile/src/components/StudioSearchModal.vue`
-- **TmdbPersonSearchModal** [client] — props: isOpen, persons — `apps/mobile/src/components/TmdbPersonSearchModal.vue`
-- **VoiceActor** [client] — props: modelValue — `apps/mobile/src/components/VoiceActor.vue`
-- **VoiceActorBio** [client] — `apps/mobile/src/components/VoiceActorBio.vue`
-- **VoiceActorFetchModal** [client] — props: isOpen, voiceActor — `apps/mobile/src/components/VoiceActorFetchModal.vue`
-- **VoiceActorHeader** [client] — `apps/mobile/src/components/VoiceActorHeader.vue`
-- **VoiceActorList** [client] — props: voiceActors, actor, isAdmin, goToVoiceActor, editVoiceActorLink, confirmDeleteVoiceActorLink, openVoiceActorSearch — `apps/mobile/src/components/VoiceActorList.vue`
-- **VoiceActorWorksGrouped** [client] — `apps/mobile/src/components/VoiceActorWorksGrouped.vue`
-- **AppActionSheet** [client] — props: isOpen, header, buttons — `apps/mobile/src/components/common/AppActionSheet.vue`
-- **AppAlertContainer** [client] — `apps/mobile/src/components/common/AppAlertContainer.vue`
-- **AppAvatar** [client] — props: size — `apps/mobile/src/components/common/AppAvatar.vue`
-- **AppBackButton** [client] — `apps/mobile/src/components/common/AppBackButton.vue`
-- **AppBadge** [client] — props: color — `apps/mobile/src/components/common/AppBadge.vue`
-- **AppButton** [client] — props: fill, expand, color, shape, disabled, type — `apps/mobile/src/components/common/AppButton.vue`
-- **AppCard** [client] — props: button, clickable, href, replace — `apps/mobile/src/components/common/AppCard.vue`
-- **AppCardContent** [client] — `apps/mobile/src/components/common/AppCardContent.vue`
-- **AppChip** [client] — props: outline, color — `apps/mobile/src/components/common/AppChip.vue`
-- **AppImage** [client] — props: src, alt — `apps/mobile/src/components/common/AppImage.vue`
-- **AppInput** [client] — props: modelValue, label, labelPlacement, type, placeholder, disabled — `apps/mobile/src/components/common/AppInput.vue`
-- **AppLabel** [client] — props: wrap — `apps/mobile/src/components/common/AppLabel.vue`
-- **AppList** [client] — props: inset — `apps/mobile/src/components/common/AppList.vue`
-- **AppListItem** [client] — props: button, clickable, href, disabled, lines, detail, replace — `apps/mobile/src/components/common/AppListItem.vue`
-- **AppModal** [client] — props: isOpen, isFullScreen, maxHeight, canSwipe, overlay, breakpoints, initialBreakpoint — `apps/mobile/src/components/common/AppModal.vue`
-- **AppSearchbar** [client] — props: modelValue, placeholder, disabled, animated, debounce — `apps/mobile/src/components/common/AppSearchbar.vue`
-- **AppSkeleton** [client] — props: animated — `apps/mobile/src/components/common/AppSkeleton.vue`
-- **AppSpinner** [client] — props: name, color — `apps/mobile/src/components/common/AppSpinner.vue`
-- **AppText** [client] — props: color, tag — `apps/mobile/src/components/common/AppText.vue`
-- **AppTextarea** [client] — props: modelValue, label, labelPlacement, placeholder, disabled, rows — `apps/mobile/src/components/common/AppTextarea.vue`
-- **AppToggle** [client] — props: checked, disabled, color — `apps/mobile/src/components/common/AppToggle.vue`
-- **ConfirmDialog** [client] — `apps/mobile/src/components/common/ConfirmDialog.vue`
-- **EditableField** [client] — `apps/mobile/src/components/common/EditableField.vue`
-- **EmptyState** [client] — props: text — `apps/mobile/src/components/common/EmptyState.vue`
-- **ErrorMessage** [client] — `apps/mobile/src/components/common/ErrorMessage.vue`
-- **ImageEditorModal** [client] — props: isOpen, imageFile, aspectRatio — `apps/mobile/src/components/common/ImageEditorModal.vue`
-- **LoadingSpinner** [client] — `apps/mobile/src/components/common/LoadingSpinner.vue`
-- **AppContent** [client] — props: fullscreen — `apps/mobile/src/components/common/layout/AppContent.vue`
-- **AppHeader** [client] — `apps/mobile/src/components/common/layout/AppHeader.vue`
-- **AppPage** [client] — `apps/mobile/src/components/common/layout/AppPage.vue`
-- **AppSegment** [client] — props: modelValue, scrollable, bgColor — `apps/mobile/src/components/common/layout/AppSegment.vue`
-- **AppSegmentButton** [client] — props: value, contentId — `apps/mobile/src/components/common/layout/AppSegmentButton.vue`
-- **AppSegmentContent** [client] — props: id — `apps/mobile/src/components/common/layout/AppSegmentContent.vue`
-- **AppSegmentView** [client] — props: activeSegment — `apps/mobile/src/components/common/layout/AppSegmentView.vue`
-- **AppTitle** [client] — `apps/mobile/src/components/common/layout/AppTitle.vue`
-- **AppToolbar** [client] — `apps/mobile/src/components/common/layout/AppToolbar.vue`
-- **AddWorkModal** [client] — `apps/mobile/src/components/profile/AddWorkModal.vue`
-- **ProfileBasicInfo** [client] — `apps/mobile/src/components/profile/ProfileBasicInfo.vue`
-- **ProfilePictureEditor** [client] — `apps/mobile/src/components/profile/ProfilePictureEditor.vue`
-- **ProfileVoiceActorSelector** [client] — `apps/mobile/src/components/profile/ProfileVoiceActorSelector.vue`
-- **WorkItem** [client] — `apps/mobile/src/components/profile/WorkItem.vue`
-- **WorkList** [client] — props: canEdit — `apps/mobile/src/components/profile/WorkList.vue`
-- **about** [client] — `apps/mobile/src/views/about.vue`
-- **actor-details** [client] — `apps/mobile/src/views/actor-details.vue`
-- **advertisement-details** [client] — `apps/mobile/src/views/advertisement-details.vue`
-- **audiobook-details** [client] — `apps/mobile/src/views/audiobook-details.vue`
-- **edit-dubbing-project** [client] — `apps/mobile/src/views/edit-dubbing-project.vue`
-- **edit-studio** [client] — `apps/mobile/src/views/edit-studio.vue`
-- **game-details** [client] — `apps/mobile/src/views/game-details.vue`
-- **home** [client] — `apps/mobile/src/views/home.vue`
-- **login** [client] — `apps/mobile/src/views/login.vue`
-- **movie-details** [client] — `apps/mobile/src/views/movie-details.vue`
-- **podcast-details** [client] — `apps/mobile/src/views/podcast-details.vue`
-- **profile** [client] — `apps/mobile/src/views/profile.vue`
-- **search** [client] — `apps/mobile/src/views/search.vue`
-- **season-by-episodes** [client] — `apps/mobile/src/views/season-by-episodes.vue`
-- **season-details** [client] — `apps/mobile/src/views/season-details.vue`
-- **serie-details** [client] — `apps/mobile/src/views/serie-details.vue`
-- **settings** [client] — `apps/mobile/src/views/settings.vue`
-- **studio-details** [client] — `apps/mobile/src/views/studio-details.vue`
-- **toy-details** [client] — `apps/mobile/src/views/toy-details.vue`
-- **voice-actor-details** [client] — `apps/mobile/src/views/voice-actor-details.vue`
-- **voice-actor-profile** [client] — `apps/mobile/src/views/voice-actor-profile.vue`
 - **app** [client] — `apps/website/src/app.vue`
 - **Footer** [client] — `apps/website/src/components/Footer.vue`
 - **ForceEnqueueButton** [client] — props: mediaType, mediaId, seasonNumber, episodeNumber, wikipediaLanguage — `apps/website/src/components/ForceEnqueueButton.vue`
@@ -507,32 +410,6 @@
 
 # Libraries
 
-- `apps/mobile/src/api/mediaQueue.ts` — function enqueueMedia: (params) => Promise<void>
-- `apps/mobile/src/api/nitro.ts` — function nitroRequest: (path, options?) => Promise<
-- `apps/mobile/src/composables/useDeferredCharacters.ts` — function useDeferredCharacters: (castSource) => void
-- `apps/mobile/src/composables/useFF.ts` — function useFeatureFlags: () => void
-- `apps/mobile/src/composables/useLanguagePreference.ts` — function useLanguagePreference: () => void
-- `apps/mobile/src/composables/useOneSignal.ts` — function useOneSignal: () => void
-- `apps/mobile/src/composables/usePermissions.ts` — function usePermissions: () => void
-- `apps/mobile/src/composables/usePostHog.ts` — function usePostHog: () => void
-- `apps/mobile/src/composables/useTheme.ts` — function useTheme: () => void
-- `apps/mobile/src/composables/useToast.ts` — function useToast: () => void, const toastController
-- `apps/mobile/src/composables/useVoiceActorManagement.ts`
-  - function useVoiceActorManagement: (workType) => void
-  - interface VoiceActor
-  - interface WorkAndVoiceActor
-- `apps/mobile/src/composables/useVoiceActorSubscription.ts` — function useVoiceActorSubscription: (voiceActorId) => void, function fetchAllSubscriptions: () => void
-- `apps/mobile/src/stores/index.ts` — function setupStores, const pinia
-- `apps/mobile/src/utils/convert.ts`
-  - function cleanCharacterName
-  - function voiceActorToPersonData
-  - const actorToPersonData
-- `apps/mobile/src/utils/deepLinks.ts`
-  - function parseDeepLink: (url) => DeepLink | null
-  - function handleDeepLink: (url) => boolean
-  - function useDeepLinkHandler: () => void
-- `apps/mobile/src/utils/image.ts` — function getAvatarFallbackUrl
-- `apps/mobile/src/utils/language.ts` — function getLanguageDisplayName: (langCode, uiLocale) => string
 - `apps/website/server/api/movie/[id].get.ts` — function fetchMovieData: (event, movieId) => void
 - `apps/website/server/api/show/[id].get.ts` — function fetchShowData: (event, showId) => void
 - `apps/website/server/api/trending/games.get.ts` — function getTrendingGamesResponse: (event, language, config, igdbClient, language?) => Promise<IgdbTrendingGamesResult>;
@@ -863,11 +740,9 @@
 
 ## Environment Variables
 
-- `ANDROID_HOME` **required** — .env.example
 - `BENCH_CREDITS` (has default) — packages/database/benchmarks/bulk-extracted-credits.mjs
 - `BENCH_REPETITIONS` (has default) — packages/database/benchmarks/bulk-extracted-credits.mjs
-- `CI` **required** — apps/mobile/capacitor.config.ts
-- `DEV` **required** — apps/mobile/src/api/supabase.ts
+- `CI` **required** — playwright.config.ts
 - `DISCORD_ADMIN_WEBHOOK_LOG_URL` **required** — .env.example
 - `DISCORD_CHECK_WEBHOOK_URL` **required** — apps/website/server/utils/notifications/discord.ts
 - `DISCORD_DISCOVERY_WEBHOOK_URL` **required** — apps/website/server/utils/notifications/discord.ts
@@ -887,13 +762,8 @@
 - `GROQ_MODEL` (has default) — apps/website/server/utils/llm.ts
 - `IGDB_CLIENT_ID` **required** — .env.example
 - `IGDB_CLIENT_SECRET` **required** — .env.example
-- `JAVA_HOME` **required** — .env.example
 - `JWT_SECRET` (has default) — .env.example
-- `KEY_ALIAS` **required** — .env.example
-- `KEY_PASSWORD` **required** — .env.example
-- `KEYSTORE_PASSWORD` **required** — .env.example
 - `LLM_PROVIDER` (has default) — apps/website/server/utils/llm.ts
-- `NDK_HOME` **required** — .env.example
 - `NITRO_PRESET` (has default) — apps/website/nuxt.config.ts
 - `NODE_ENV` (has default) — .env.example
 - `NUXT_DISCORD_WEBHOOK_CHECK_URL` **required** — apps/website/server/utils/notifications/discord.ts
@@ -933,23 +803,17 @@
 - `SUPABASE_URL` (has default) — .env.example
 - `TMDB_API_KEY` **required** — .env.example
 - `TVDB_API_KEY` **required** — .env.example
-- `VITE_API_BASE_URL` (has default) — .env.example
-- `VITE_ONESIGNAL_APP_ID` **required** — .env.example
-- `VITE_SUPABASE_PUBLISHABLE_KEY` **required** — .env.example
-- `VITE_SUPABASE_URL` (has default) — .env.example
 - `WIKI_LANG` (has default) — scripts/discover-media.ts
 
 ## Config Files
 
 - `.env.example`
-- `apps/mobile/vite.config.ts`
 
 ---
 
 # Middleware
 
 ## auth
-- auth — `apps/mobile/src/stores/auth.ts`
 - generate-social-content.post — `apps/website/server/api/generate-social-content.post.ts`
 - auth — `apps/website/server/middleware/auth.ts`
 - auth-session.test — `apps/website/server/utils/auth-session.test.ts`
@@ -1014,7 +878,7 @@
 # Test Coverage
 
 > **46%** of routes and models are covered by tests
-> 132 test files found
+> 130 test files found
 
 ## Covered Routes
 
@@ -1083,7 +947,7 @@
 | Workflow | Triggers | Jobs | Deploy | Environments |
 |---|---|---|---|---|
 | codesight | push, workflow_dispatch | 1 | — | — |
-| Release and Deployment Pipeline | push, workflow_dispatch | 16 | netlify, cloudflare | — |
+| Release and Deployment Pipeline | push, workflow_dispatch | 13 | cloudflare | — |
 | Local Nuxt route CPU comparison | pull_request | 2 | — | — |
 
 ### Release and Deployment Pipeline
@@ -1123,24 +987,7 @@
   - `actions/checkout@v4`
   - `pnpm/action-setup@v4`
   - `actions/setup-node@v4`
-- **deploy-mobile-web** on `ubuntu-latest` — 6 steps (needs: detect, deploy-supabase, release-validation, e2e-tests, frontend-tests, i18n-check) → **netlify**
-  - `actions/checkout@v4`
-  - `pnpm/action-setup@v4`
-  - `actions/setup-node@v4`
-  - `nwtgck/actions-netlify@v3.0`
-- **build-android** on `ubuntu-latest` — 12 steps (needs: detect, deploy-supabase, e2e-tests, frontend-tests, i18n-check)
-  - `actions/checkout@v4`
-  - `pnpm/action-setup@v4`
-  - `actions/setup-node@v4`
-  - `actions/setup-java@v4`
-  - `android-actions/setup-android@v3`
-  - `actions/upload-artifact@v4`
-  - `actions/upload-artifact@v4`
-- **upload-play-store** on `ubuntu-latest` — 3 steps (needs: detect, build-android)
-  - `actions/checkout@v4`
-  - `actions/download-artifact@v4`
-  - `KevinRohn/github-action-upload-play-store@v1.0.1`
-- **build-website** on `ubuntu-latest` — 8 steps (needs: detect)
+- **build-website** on `ubuntu-latest` — 7 steps (needs: detect)
   - `actions/checkout@v4`
   - `pnpm/action-setup@v4`
   - `actions/setup-node@v4`
@@ -1181,21 +1028,13 @@
 - `ADMIN_EMAIL`
 - `CLOUDFLARE_ACCOUNT_ID`
 - `CLOUDFLARE_API_TOKEN`
-- `GITHUB_TOKEN`
 - `IGDB_CLIENT_ID`
 - `IGDB_CLIENT_SECRET`
-- `KEYSTORE_FILE`
-- `KEYSTORE_PASSWORD`
-- `KEY_ALIAS`
-- `KEY_PASSWORD`
-- `NETLIFY_AUTH_TOKEN`
-- `NETLIFY_MOBILE_SITE_ID`
 - `ONESIGNAL_APP_ID`
 - `ONESIGNAL_REST_API_KEY`
 - `RESEND_API_KEY`
 - `RESEND_FROM_EMAIL`
 - `RESEND_TO_EMAIL`
-- `SERVICE_ACCOUNT_JSON`
 - `SUPABASE_ACCESS_TOKEN`
 - `SUPABASE_PUBLISHABLE_KEY`
 - `SUPABASE_SECRET_KEY`
