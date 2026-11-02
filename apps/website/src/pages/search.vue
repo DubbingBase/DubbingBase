@@ -43,6 +43,9 @@
       </div>
 
       <section id="search-results" aria-live="polite" aria-atomic="false" :aria-busy="loading">
+        <div v-if="loading && filteredResults.length > 0" role="status" class="sr-only">
+          {{ t("common.searching") }}
+        </div>
         <div
           v-if="loading && filteredResults.length === 0"
           role="status"
