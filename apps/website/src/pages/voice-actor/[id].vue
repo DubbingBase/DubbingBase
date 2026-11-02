@@ -643,11 +643,11 @@ import {
 } from "../../utils/voice-actor-og-image";
 import {
   useVoiceActorData,
-  fetchVoiceActorData,
   paginateVoiceActorWorks,
   type VoiceActorWorkGroup,
   APP_LOCALES,
 } from "@app/shared-logic";
+import { fetchVoiceActorPageData } from "../../composables/useVoiceActorPageData";
 import { useRouter, useRoute } from "vue-router";
 import {
   Clapperboard as ClapperboardIcon,
@@ -715,17 +715,18 @@ function getMediaLink(contentType?: string | null, mediaId?: number | string) {
   return `/movie/${mediaId}`;
 }
 
-const voiceActorDataRequest = useAsyncData(
+const voiceActorDataRequest = await useAsyncData(
   `voice-actor-${voiceActorId}-${locale.value}`,
   () => {
     const tmdbLanguage = APP_LOCALES.find((l) => l.code === locale.value)?.language || "en-US";
-    return fetchVoiceActorData(voiceActorId, tmdbLanguage);
+    return fetchVoiceActorPageData(voiceActorId, tmdbLanguage);
   },
   {
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
 );
-const { data, pending } = voiceActorDataRequest;
+const { data, pending, error } = voiceActorDataRequest;
+if (import.meta.server && error.value) throw error.value;
 
 const voiceActorData = useVoiceActorData(data);
 const { voiceActor, profilePicture, backdropPath, loading, searchQuery, filteredEnhancedWork } =
@@ -798,7 +799,7 @@ const voiceActorPageTitle = computed(() =>
 );
 const actorDescription = computed(() => {
   if (!actorName.value) return t("seo.voiceActorDescriptionFallback");
-  const workCount = voiceActor.value?.work?.length || 0;
+  const workCount = data.value?.workCount ?? voiceActor.value?.work?.length ?? 0;
   const desc = t("seo.voiceActorDescription", {
     name: actorName.value,
     workCount,
@@ -843,7 +844,6 @@ useHead({
       }),
     },
     { property: "og:logo", content: computed(() => new URL("/logo.png", siteUrl).href) },
-    { property: "og:url", content: pageUrl },
     { property: "og:image", content: ogImageUrl },
     {
       property: "og:image:width",

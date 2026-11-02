@@ -2,12 +2,12 @@ import { useSupabaseAdmin } from "../db/client";
 import { TMDBClient } from "../api/tmdb";
 import { TVDBClient } from "../api/tvdb";
 import { processVoiceActor } from "../urls/supabase";
-import { processMedia, cleanCharacterName } from "../urls/tmdb";
-import { mediaPageMovieCredits } from "../media-page-credits";
+import { buildTmdbImageUrl, processMedia, cleanCharacterName } from "../urls/tmdb";
+import { mediaPageAggregateCredits, mediaPageMovieCredits } from "../media-page-credits";
 import { useCache, useIgdbClient, useOpenLibraryClient } from "../index";
 import { buildIgdbImageUrl } from "../api/igdb";
 import { createCacheNamespace } from "../cache";
-import { buildCacheKey } from "../cache/constants";
+import { buildCacheKey, hashCacheValue } from "../cache/constants";
 
 const WIKIPEDIA_USER_AGENT = "DubbingBase/1.0 (https://dubbingbase.com; contact@dubbingbase.com)";
 
@@ -23,7 +23,8 @@ interface WikidataClaimsResponse {
 }
 
 interface TmdbCredit {
-  backdrop_path?: string;
+  id: number;
+  backdrop_path?: string | null;
   popularity?: number;
 }
 
@@ -83,7 +84,10 @@ function omitUnusedEpisodeFields(media: unknown): unknown {
 
   const credits = { ...episode.credits };
   delete credits.crew;
-  return { ...episode, credits };
+  return {
+    ...episode,
+    credits: Array.isArray(credits.cast) ? mediaPageAggregateCredits(credits) : credits,
+  };
 }
 
 function projectSeasonForMediaPage(media: unknown): unknown {
@@ -146,38 +150,142 @@ function isMediaContentType(value: string | null | undefined): value is MediaCon
 function isTmdbCredit(value: unknown): value is TmdbCredit {
   if (!isRecord(value)) return false;
   return (
-    (value.backdrop_path === undefined || typeof value.backdrop_path === "string") &&
+    typeof value.id === "number" &&
+    (value.backdrop_path === undefined ||
+      value.backdrop_path === null ||
+      typeof value.backdrop_path === "string") &&
     (value.popularity === undefined || typeof value.popularity === "number")
   );
 }
 
-function sanitizeMediaCastForProcessing(
+function isTmdbPageCastMember(value: unknown): value is Record<string, unknown> & {
+  id: number;
+} {
+  return (
+    isRecord(value) &&
+    typeof value.id === "number" &&
+    (value.name === undefined || typeof value.name === "string") &&
+    (value.character === undefined ||
+      value.character === null ||
+      typeof value.character === "string") &&
+    (value.profile_path === undefined ||
+      value.profile_path === null ||
+      typeof value.profile_path === "string")
+  );
+}
+
+interface VoiceActorPageMedia {
+  id: number;
+  title?: string;
+  name?: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  release_date?: string | null;
+  first_air_date?: string | null;
+  popularity?: number;
+  credits: { cast: TmdbCastMember[] };
+}
+
+interface ProjectedVoiceActorPageMedia {
+  media: VoiceActorPageMedia;
+  complete: boolean;
+}
+
+interface VoiceActorPageTmdbMediaCacheValue {
+  complete: boolean;
+  medias: Record<string, VoiceActorPageMedia>;
+}
+
+interface VoiceActorPageTmdbBackdropCacheValue {
+  backdropPath: string | null;
+}
+
+export const VOICE_ACTOR_PAGE_TMDB_MEDIA_NAMESPACE =
+  createCacheNamespace<VoiceActorPageTmdbMediaCacheValue>();
+export const VOICE_ACTOR_PAGE_TMDB_BACKDROP_NAMESPACE =
+  createCacheNamespace<VoiceActorPageTmdbBackdropCacheValue>();
+
+function projectVoiceActorPageMedia(
   media: unknown,
+  contentId: number,
   relevantActorIds: ReadonlySet<number>,
-): unknown {
-  if (!isRecord(media) || !isRecord(media.credits)) return media;
+): ProjectedVoiceActorPageMedia | null {
+  if (!isRecord(media)) return null;
 
-  const cast = Array.isArray(media.credits.cast)
-    ? media.credits.cast.filter(
-        (credit) =>
-          isRecord(credit) &&
-          typeof credit.id === "number" &&
-          relevantActorIds.has(credit.id) &&
-          (credit.character === undefined ||
-            credit.character === null ||
-            typeof credit.character === "string") &&
-          (credit.profile_path === undefined ||
-            credit.profile_path === null ||
-            typeof credit.profile_path === "string"),
-      )
-    : [];
+  const value = media;
+  const credits = isRecord(value.credits) ? value.credits : {};
+  const complete =
+    value.id === contentId &&
+    isRecord(value.credits) &&
+    Array.isArray(value.credits.cast) &&
+    value.credits.cast.every(isTmdbPageCastMember);
+  const cast: TmdbCastMember[] = [];
 
-  return { ...media, credits: { ...media.credits, cast } };
+  if (Array.isArray(credits.cast)) {
+    for (const credit of credits.cast) {
+      if (!isTmdbPageCastMember(credit) || !relevantActorIds.has(credit.id)) continue;
+
+      cast.push({
+        id: credit.id,
+        ...(typeof credit.name === "string" ? { name: credit.name } : {}),
+        ...(typeof credit.character === "string"
+          ? { character: cleanCharacterName(credit.character) }
+          : credit.character === null
+            ? { character: null }
+            : {}),
+        ...(typeof credit.profile_path === "string"
+          ? { profile_path: buildTmdbImageUrl(credit.profile_path) }
+          : credit.profile_path === null
+            ? { profile_path: null }
+            : {}),
+      });
+    }
+  }
+
+  return {
+    complete,
+    media: {
+      id: typeof value.id === "number" ? value.id : contentId,
+      ...(typeof value.title === "string" ? { title: value.title } : {}),
+      ...(typeof value.name === "string" ? { name: value.name } : {}),
+      poster_path: buildTmdbImageUrl(
+        typeof value.poster_path === "string" ? value.poster_path : null,
+        "original",
+      ),
+      backdrop_path: buildTmdbImageUrl(
+        typeof value.backdrop_path === "string" ? value.backdrop_path : null,
+        "original",
+      ),
+      ...(typeof value.release_date === "string" || value.release_date === null
+        ? { release_date: value.release_date }
+        : {}),
+      ...(typeof value.first_air_date === "string" || value.first_air_date === null
+        ? { first_air_date: value.first_air_date }
+        : {}),
+      ...(typeof value.popularity === "number" ? { popularity: value.popularity } : {}),
+      credits: { cast },
+    },
+  };
 }
 
 function tmdbCastCredits(value: unknown): TmdbCredit[] {
-  if (!isRecord(value) || !Array.isArray(value.cast)) return [];
-  return value.cast.filter(isTmdbCredit);
+  if (!isRecord(value) || !Array.isArray(value.cast) || !value.cast.every(isTmdbCredit)) {
+    throw new Error("Incomplete TMDB person credits response");
+  }
+  return value.cast;
+}
+
+function voiceActorBackdropPath(personData: unknown): string | null {
+  if (!isRecord(personData)) {
+    throw new Error("Incomplete TMDB person response");
+  }
+  const allCredits = [
+    ...tmdbCastCredits(personData.movie_credits),
+    ...tmdbCastCredits(personData.tv_credits),
+  ];
+  allCredits.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+  const best = allCredits.find((credit) => credit.backdrop_path);
+  return best?.backdrop_path ? buildTmdbImageUrl(best.backdrop_path, "original") : null;
 }
 
 function indexTmdbCastByActorId(media: unknown): Map<number, TmdbCastMember> {
@@ -269,7 +377,11 @@ export class MediaService {
     private acceptLanguage?: string,
   ) {}
 
-  async getVoiceActorWithWorkAndMedia(voiceActorId: number, language?: string) {
+  async getVoiceActorWithWorkAndMedia(
+    voiceActorId: number,
+    language?: string,
+    options: { includePotentialWikipediaUrl?: boolean } = {},
+  ) {
     const supabase = useSupabaseAdmin();
 
     const { data: voiceActor, error: vaError } = await supabase
@@ -280,7 +392,15 @@ export class MediaService {
       .eq("id", voiceActorId)
       .single();
 
-    if (vaError || !voiceActor) throw new Error("Voice actor not found");
+    if (vaError?.code === "PGRST116") {
+      throw createError({ statusCode: 404, statusMessage: "Voice actor not found" });
+    }
+    if (vaError) {
+      throw createError({ statusCode: 500, statusMessage: "Failed to fetch voice actor" });
+    }
+    if (!voiceActor) {
+      throw createError({ statusCode: 404, statusMessage: "Voice actor not found" });
+    }
 
     const voiceActorWithImages = processVoiceActor(voiceActor);
     const workItems = voiceActor.work || [];
@@ -307,27 +427,71 @@ export class MediaService {
     // Serial batches stall on the slowest straggler; a pool keeps CONCURRENCY
     // requests in flight and starts the next target as soon as one finishes.
     const CONCURRENCY = 15;
+    const tmdbLanguage =
+      (language || this.acceptLanguage || "fr-FR").split(",")[0]?.trim() || "fr-FR";
+    const tmdbPersonId = voiceActor.tmdb_id;
 
     // Independent tail work (backdrop person credits, Wikipedia fallback)
     // starts now so it overlaps the media fan-out instead of running after it.
-    const tmdbPersonPromise = voiceActor.tmdb_id
-      ? this.tmdbClient
-          .get(
-            `person/${voiceActor.tmdb_id}`,
-            { append_to_response: "movie_credits,tv_credits" },
-            language,
-          )
-          .catch((e) => {
+    const tmdbPersonPromise = tmdbPersonId
+      ? (async () => {
+          const cache = useCache();
+          const cacheKey = buildCacheKey({
+            provider: "tmdb",
+            resource: "voice-actor-page-backdrop",
+            id: tmdbPersonId,
+            language: tmdbLanguage,
+          });
+          let fetchedFromTmdb = false;
+
+          try {
+            const person = await cache.getOrFetch(
+              VOICE_ACTOR_PAGE_TMDB_BACKDROP_NAMESPACE,
+              cacheKey,
+              async () => {
+                fetchedFromTmdb = true;
+                const personData = await this.tmdbClient.get(
+                  `person/${tmdbPersonId}`,
+                  { append_to_response: "movie_credits,tv_credits" },
+                  tmdbLanguage,
+                );
+                return { backdropPath: voiceActorBackdropPath(personData) };
+              },
+              { cachePolicy: "read-only" },
+            );
+            if (fetchedFromTmdb) await cache.set(cacheKey, person, "STABLE");
+            return person;
+          } catch (e) {
             console.error("Failed to compute voice actor backdrop:", e);
             return null;
-          })
+          }
+        })()
       : null;
     const wikipediaPromise =
-      !voiceActor.tmdb_id && voiceActor.firstname && voiceActor.lastname
+      options.includePotentialWikipediaUrl !== false &&
+      !voiceActor.tmdb_id &&
+      voiceActor.firstname &&
+      voiceActor.lastname
         ? fetchPotentialWikipediaUrl(voiceActor.firstname, voiceActor.lastname, useCache()).catch(
             () => null,
           )
         : Promise.resolve(null);
+
+    const fetchTmdbMedia = async ({ contentType, contentId }: MediaTarget) => {
+      try {
+        const tmdbType = contentType === "tv" ? "tv" : "movie";
+        const tmdbMedia = await this.tmdbClient.getMediaWithCredits(
+          tmdbType,
+          contentId,
+          tmdbLanguage,
+          { includeExternalIds: false },
+        );
+        return projectVoiceActorPageMedia(tmdbMedia, contentId, relevantActorIds);
+      } catch (err) {
+        console.error(`Failed to fetch TMDB ${contentType} ${contentId} for voice actor:`, err);
+        return null;
+      }
+    };
 
     const fetchTarget = async ({ contentType, contentId }: MediaTarget) => {
       if (contentType === "audiobook") {
@@ -562,50 +726,102 @@ export class MediaService {
         }
       }
 
-      try {
-        const tmdbType = contentType === "tv" ? "tv" : "movie";
-        const tmdbMedia = await this.tmdbClient.getMediaWithCredits(
-          tmdbType,
-          contentId,
-          language || this.acceptLanguage,
-        );
-
-        // ponytail: no TVDB character lookup here. It costs up to 3 slow
-        // requests per media (Wikidata + TVDB search + TVDB fetch) and resolved
-        // 0 images across 130+ sampled works. Detail pages keep their own
-        // single lookup via getCharacterProfilePictures; add a lazy endpoint
-        // if thumbnails ever matter here.
-        return {
-          key: `${contentType}:${contentId}`,
-          data: {
-            media: processMedia(sanitizeMediaCastForProcessing(tmdbMedia, relevantActorIds)),
-            characterProfilePictures: new Array<CharacterProfilePicture>(),
-            tvdbId: null,
-          },
-        };
-      } catch (err) {
-        console.error(`Failed to fetch TMDB ${contentType} ${contentId} for voice actor:`, err);
-        return {
-          key: `${contentType}:${contentId}`,
-          data: {
-            media: null,
-            characterProfilePictures: new Array<CharacterProfilePicture>(),
-            tvdbId: null,
-          },
-        };
-      }
+      // ponytail: no TVDB character lookup here. It costs up to 3 slow
+      // requests per media (Wikidata + TVDB search + TVDB fetch) and resolved
+      // 0 images across 130+ sampled works. Detail pages keep their own
+      // single lookup via getCharacterProfilePictures; add a lazy endpoint
+      // if thumbnails ever matter here.
+      return {
+        key: `${contentType}:${contentId}`,
+        data: {
+          media: (await fetchTmdbMedia({ contentType, contentId }))?.media ?? null,
+          characterProfilePictures: new Array<CharacterProfilePicture>(),
+          tvdbId: null,
+        },
+      };
     };
 
     type FetchTargetData = Awaited<ReturnType<typeof fetchTarget>>["data"];
     const fetchedResultsMap = new Map<string, FetchTargetData>();
 
+    const tmdbTargets = uniqueTargets.filter(
+      (target) => target.contentType === "movie" || target.contentType === "tv",
+    );
+    const otherTargets = uniqueTargets.filter(
+      (target) => target.contentType !== "movie" && target.contentType !== "tv",
+    );
+
+    if (tmdbTargets.length > 0) {
+      const cache = useCache();
+      const targetSignature = hashCacheValue(
+        JSON.stringify({
+          targets: tmdbTargets
+            .map(({ contentType, contentId }) => `${contentType}:${contentId}`)
+            .sort(),
+          actorIds: Array.from(relevantActorIds).sort((a, b) => a - b),
+        }),
+      );
+      const cacheKey = buildCacheKey({
+        provider: "tmdb",
+        resource: "voice-actor-page-media",
+        id: voiceActorId,
+        language: tmdbLanguage,
+        params: { targetSignature },
+      });
+      let fetchedFromTmdb = false;
+      const cachedTmdbMedia = await cache.getOrFetch(
+        VOICE_ACTOR_PAGE_TMDB_MEDIA_NAMESPACE,
+        cacheKey,
+        async () => {
+          fetchedFromTmdb = true;
+          const medias: Record<string, VoiceActorPageMedia> = {};
+          let complete = true;
+          let nextIndex = 0;
+
+          await Promise.all(
+            Array.from({ length: Math.min(CONCURRENCY, tmdbTargets.length) }, async () => {
+              while (true) {
+                const idx = nextIndex++;
+                if (idx >= tmdbTargets.length) return;
+                const target = tmdbTargets[idx];
+                if (!target) return;
+
+                const projection = await fetchTmdbMedia(target);
+                if (projection) {
+                  medias[`${target.contentType}:${target.contentId}`] = projection.media;
+                  if (!projection.complete) complete = false;
+                } else {
+                  complete = false;
+                }
+              }
+            }),
+          );
+
+          return { complete, medias };
+        },
+        { cachePolicy: "read-only" },
+      );
+
+      if (fetchedFromTmdb && cachedTmdbMedia.complete) {
+        await cache.set(cacheKey, cachedTmdbMedia, "STABLE");
+      }
+
+      for (const [key, media] of Object.entries(cachedTmdbMedia.medias)) {
+        fetchedResultsMap.set(key, {
+          media,
+          characterProfilePictures: new Array<CharacterProfilePicture>(),
+          tvdbId: null,
+        });
+      }
+    }
+
     let nextIndex = 0;
     await Promise.all(
-      Array.from({ length: Math.min(CONCURRENCY, uniqueTargets.length) }, async () => {
+      Array.from({ length: Math.min(CONCURRENCY, otherTargets.length) }, async () => {
         while (true) {
           const idx = nextIndex++;
-          if (idx >= uniqueTargets.length) return;
-          const target = uniqueTargets[idx];
+          if (idx >= otherTargets.length) return;
+          const target = otherTargets[idx];
           if (!target) return;
           const res = await fetchTarget(target);
           if (res?.data) fetchedResultsMap.set(res.key, res.data);
@@ -616,15 +832,15 @@ export class MediaService {
     // 3. Construct compact enhancedWorks on the server (avoids sending massive raw cast lists)
     const enhancedWorks = [];
     const compactMediasMap = new Map<
-      number,
+      string,
       {
         id: number;
         title: string;
         name: string;
         poster_path: string | null;
         backdrop_path: string | null;
-        release_date: string | undefined;
-        first_air_date: string | undefined;
+        release_date: string | null | undefined;
+        first_air_date: string | null | undefined;
         media_type: string;
         popularity: number;
         credits?: { cast?: TmdbCastMember[] };
@@ -707,8 +923,8 @@ export class MediaService {
         popularity: fullMedia.popularity || 0,
       };
 
-      if (!compactMediasMap.has(fullMedia.id)) {
-        compactMediasMap.set(fullMedia.id, compactMedia);
+      if (!compactMediasMap.has(mediaKey)) {
+        compactMediasMap.set(mediaKey, compactMedia);
       }
 
       const searchText =
@@ -737,17 +953,9 @@ export class MediaService {
     // (person fetch already ran concurrently with the media fan-out above)
     let backdropPath: string | null = null;
     try {
-      if (voiceActor.tmdb_id) {
-        const personData = await tmdbPersonPromise;
-        if (personData) {
-          const allCredits = [
-            ...tmdbCastCredits(personData.movie_credits),
-            ...tmdbCastCredits(personData.tv_credits),
-          ];
-          allCredits.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
-          const best = allCredits.find((c) => c.backdrop_path);
-          if (best) backdropPath = buildTmdbImageUrl(best.backdrop_path, "original");
-        }
+      if (tmdbPersonId) {
+        const personBackdrop = await tmdbPersonPromise;
+        backdropPath = personBackdrop?.backdropPath ?? null;
       } else {
         const sorted = [...enhancedWorks].sort(
           (a, b) => (b.media.popularity || 0) - (a.media.popularity || 0),

@@ -836,6 +836,20 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      page_media_catalog: {
+        Args: {
+          p_content_type: string;
+          p_page: number;
+          p_page_size: number;
+        };
+        Returns: {
+          content_ids: number[];
+          page: number;
+          page_size: number;
+          total_items: number;
+          total_pages: number;
+        }[];
+      };
       admin_link_user_voice_actor_controlled: {
         Args: {
           p_actor_id: string;

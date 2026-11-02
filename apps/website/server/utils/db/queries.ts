@@ -1,6 +1,6 @@
 import { useSupabaseAdmin } from "./client";
 import { processVoiceActor } from "../urls/supabase";
-import type { ToyDubbingProject } from "@app/shared-logic";
+import type { MediaDetailVoiceActor, ToyDubbingProject } from "@app/shared-logic";
 
 export async function getVoiceActorWithWork(id: number) {
   const supabase = useSupabaseAdmin();
@@ -91,11 +91,26 @@ const MEDIA_PAGE_DUBBING_PROJECTS_SELECT = `id,
     voice_actor:voice_actors(id, firstname, lastname, profile_picture, voice_actor_name)
   )`;
 
+const MEDIA_DETAIL_PAGE_DUBBING_PROJECTS_SELECT = `id,
+  language,
+  studio_data:studios(id, name, logo_url),
+  works:work(
+    id,
+    actor_id,
+    character_name,
+    note,
+    voice_actor:voice_actors(id, firstname, lastname, profile_picture)
+  )`;
+
 export async function getDubbingProjectsForMediaEndpoint(
   contentId: number,
   contentType: string,
   projection: unknown,
 ) {
+  if (projection === "media-summary") {
+    return await getMediaPageDubbingProjectSummaries(contentId, contentType);
+  }
+
   if (projection === "advertisement-page") {
     return await getAdvertisementPageDubbingProjects(contentId);
   }
@@ -152,13 +167,61 @@ export async function getAdvertisementPageDubbingProjects(contentId: number) {
   }));
 }
 
-export async function getMediaPageDubbingProjects(contentId: number, contentType: string) {
+export async function getMediaPageDubbingProjectData(contentId: number, contentType: string) {
   const supabase = useSupabaseAdmin();
   const { data, error } = await supabase
+    .from("dubbing_projects")
+    .select(MEDIA_DETAIL_PAGE_DUBBING_PROJECTS_SELECT)
+    .eq("content_id", contentId)
+    .eq("content_type", contentType);
+
+  if (error) return { dubbingProjects: [], voiceActors: [] };
+
+  const voiceActorsById = new Map<number, MediaDetailVoiceActor>();
+  const dubbingProjects = (data || []).map((project) => ({
+    id: project.id,
+    language: project.language,
+    studio_data: project.studio_data || null,
+    works: (project.works || []).map((work) => {
+      const voiceActorId = work.voice_actor?.id ?? null;
+      if (voiceActorId !== null && !voiceActorsById.has(voiceActorId) && work.voice_actor) {
+        const voiceActor = processVoiceActor(work.voice_actor);
+        voiceActorsById.set(voiceActorId, {
+          id: voiceActorId,
+          firstname: work.voice_actor.firstname,
+          lastname: work.voice_actor.lastname,
+          profile_picture: voiceActor.profile_picture,
+        });
+      }
+
+      return {
+        id: work.id,
+        actor_id: work.actor_id,
+        character_name: work.character_name,
+        note: work.note,
+        voice_actor_id: voiceActorId,
+      };
+    }),
+  }));
+
+  return { dubbingProjects, voiceActors: [...voiceActorsById.values()] };
+}
+
+export async function getMediaPageDubbingProjects(
+  contentId: number,
+  contentType: string,
+  projectId?: number,
+) {
+  const supabase = useSupabaseAdmin();
+  let query = supabase
     .from("dubbing_projects")
     .select(MEDIA_PAGE_DUBBING_PROJECTS_SELECT)
     .eq("content_id", contentId)
     .eq("content_type", contentType);
+
+  if (projectId !== undefined) query = query.eq("id", projectId);
+
+  const { data, error } = await query;
 
   if (error) return [];
 
@@ -171,6 +234,47 @@ export async function getMediaPageDubbingProjects(contentId: number, contentType
     studio_data: project.studio_data || null,
     crew: [],
   }));
+}
+
+export async function getMediaPageDubbingProjectSummaries(contentId: number, contentType: string) {
+  const supabase = useSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("dubbing_projects")
+    .select(
+      `id,
+      language,
+      studio_data:studios(id, name, logo_url),
+      works:work(actor_id),
+      crew:dubbing_project_crew(
+        id,
+        job:jobs(name),
+        person:voice_actors(id, firstname, lastname)
+      )`,
+    )
+    .eq("content_id", contentId)
+    .eq("content_type", contentType);
+
+  if (error) return [];
+
+  return (data || []).map((project) => {
+    const voiceActorIds = new Set(
+      (project.works || []).flatMap((work) =>
+        typeof work.actor_id === "number" ? [work.actor_id] : [],
+      ),
+    );
+    return {
+      id: project.id,
+      language: project.language,
+      studio_data: project.studio_data || null,
+      has_voice_actor: voiceActorIds.size > 0,
+      voice_actor_count: voiceActorIds.size,
+      work_count: project.works?.length || 0,
+      crew: (project.crew || []).map((member) => ({
+        ...member,
+        person: processVoiceActor(member.person),
+      })),
+    };
+  });
 }
 
 const PODCAST_PAGE_DUBBING_PROJECTS_SELECT = `id,
@@ -288,6 +392,148 @@ export async function getGamePageDubbingProjects(contentId: number) {
   }));
 }
 
+const EPISODE_PAGE_DUBBING_PROJECTS_SELECT = `id,
+  language,
+  studio_data:studios(id, name, logo_url),
+  works:work(
+    id,
+    actor_id,
+    character_name,
+    note,
+    voice_actor:voice_actors(id, firstname, lastname, profile_picture)
+  )`;
+
+export async function getEpisodePageDubbingProjectData(
+  contentId: number,
+  preferredProjectId?: number,
+  locale?: string,
+) {
+  const supabase = useSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("dubbing_projects")
+    .select(EPISODE_PAGE_DUBBING_PROJECTS_SELECT)
+    .eq("content_id", contentId)
+    .eq("content_type", "tv");
+
+  if (error) throw new Error("Failed to load episode dubbing projects");
+
+  const voiceActorsById = new Map<
+    number,
+    {
+      id: number;
+      firstname?: string | null;
+      lastname?: string | null;
+      profile_picture?: string | null;
+    }
+  >();
+  const projectsWithWorks = (data || []).map((project) => ({
+    ...project,
+    works: (project.works || []).map((work) => {
+      const voiceActorId = work.voice_actor?.id ?? null;
+      if (voiceActorId !== null && !voiceActorsById.has(voiceActorId)) {
+        const voiceActor = processVoiceActor(work.voice_actor);
+        voiceActorsById.set(voiceActor.id, {
+          id: voiceActor.id,
+          firstname: voiceActor.firstname,
+          lastname: voiceActor.lastname,
+          profile_picture: voiceActor.profile_picture,
+        });
+      }
+
+      return {
+        id: work.id,
+        actor_id: work.actor_id,
+        character_name: work.character_name,
+        note: work.note,
+        voice_actor_id: voiceActorId,
+      };
+    }),
+    studio_data: project.studio_data || null,
+  }));
+
+  const visibleProjects = projectsWithWorks
+    .map((project) => ({
+      id: project.id,
+      language: project.language,
+      studio_data: project.studio_data,
+      workCount: project.works.length,
+      voiceActorCount: new Set(
+        project.works.map((work) => work.voice_actor_id).filter((id): id is number => id !== null),
+      ).size,
+      works: project.works,
+    }))
+    .filter((project) => project.voiceActorCount > 0)
+    .sort((a, b) => {
+      const aPreferred = a.language?.toLowerCase().startsWith(locale?.toLowerCase() ?? "") ? 1 : 0;
+      const bPreferred = b.language?.toLowerCase().startsWith(locale?.toLowerCase() ?? "") ? 1 : 0;
+      return bPreferred - aPreferred || b.workCount - a.workCount;
+    });
+  const activeProject =
+    visibleProjects.find((project) => project.id === preferredProjectId) || visibleProjects[0];
+
+  return {
+    dubbingProjects: visibleProjects.map(({ works: _works, ...project }) => project),
+    activeProjectId: activeProject?.id ?? null,
+    activeProjectWorks: activeProject?.works ?? [],
+    voiceActors: activeProject
+      ? [
+          ...new Set(
+            activeProject.works.map((work) => work.voice_actor_id).filter((id) => id !== null),
+          ),
+        ]
+          .map((id) => voiceActorsById.get(id))
+          .filter((actor) => actor !== undefined)
+      : [],
+  };
+}
+
+export async function getEpisodePageProjectWorks(contentId: number, projectId: number) {
+  const supabase = useSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("dubbing_projects")
+    .select(
+      "id, works:work(id, actor_id, character_name, note, voice_actor:voice_actors(id, firstname, lastname, profile_picture))",
+    )
+    .eq("id", projectId)
+    .eq("content_id", contentId)
+    .eq("content_type", "tv")
+    .maybeSingle();
+
+  if (error) throw new Error("Failed to load episode project works");
+  if (!data) return { projectId, works: [], voiceActors: [] };
+
+  const voiceActorsById = new Map<
+    number,
+    {
+      id: number;
+      firstname?: string | null;
+      lastname?: string | null;
+      profile_picture?: string | null;
+    }
+  >();
+  const works = (data.works || []).map((work) => {
+    const voiceActorId = work.voice_actor?.id ?? null;
+    if (voiceActorId !== null && work.voice_actor && !voiceActorsById.has(voiceActorId)) {
+      const voiceActor = processVoiceActor(work.voice_actor);
+      voiceActorsById.set(voiceActorId, {
+        id: voiceActor.id,
+        firstname: voiceActor.firstname,
+        lastname: voiceActor.lastname,
+        profile_picture: voiceActor.profile_picture,
+      });
+    }
+    return {
+      id: work.id,
+      actor_id: work.actor_id,
+      character_name: work.character_name,
+      note: work.note,
+      voice_actor_id: voiceActorId,
+    };
+  });
+
+  return { projectId, works, voiceActors: [...voiceActorsById.values()] };
+}
+
 const SEASON_PAGE_DUBBING_PROJECTS_SELECT = `id,
   language,
   studio_data:studios(id, name, logo_url),
@@ -303,11 +549,27 @@ export async function getSeasonPageDubbingProjects(contentId: number, contentTyp
 
   if (error) return [];
 
-  return (data || []).map((project) => ({
-    ...project,
-    works: project.works || [],
-    studio_data: project.studio_data || null,
-  }));
+  return (data || []).map((project) => {
+    const works = project.works || [];
+    const voiceActorIds = new Set<number>();
+    let hasVoiceActor = false;
+
+    for (const work of works) {
+      if (work.voice_actor) {
+        hasVoiceActor = true;
+        if (work.voice_actor.id) voiceActorIds.add(work.voice_actor.id);
+      }
+    }
+
+    return {
+      id: project.id,
+      language: project.language,
+      studio_data: project.studio_data || null,
+      has_voice_actor: hasVoiceActor,
+      voice_actor_count: voiceActorIds.size,
+      work_count: works.length,
+    };
+  });
 }
 
 export async function getWorkVotes(

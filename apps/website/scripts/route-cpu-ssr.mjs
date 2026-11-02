@@ -57,13 +57,52 @@ const routes = [
     name: "movie",
     path: "/movie/85",
     marker: "CI fixture movie 85",
+    expectedHtml: ["English", "French", "invalid_code", "Not specified", "CI Voice 2 Actor"],
+    localeVariants: [
+      {
+        path: "/fr/movie/85",
+        expectedHtml: ["Anglais", "Français", "invalid_code", "Non spécifié"],
+      },
+    ],
     expected: ["tmdb:/3/movie/85", "supabase:dubbing_projects"],
   },
   {
     name: "show",
     path: "/show/1396",
     marker: "CI fixture show 1396",
+    expectedHtml: ["English", "French", "CI Voice 2 Actor"],
     expected: ["tmdb:/3/tv/1396", "tmdb:/3/tv/1396/aggregate_credits", "supabase:dubbing_projects"],
+  },
+  {
+    name: "episode",
+    path: "/show/1397/season/1/episode/1",
+    marker: "CI fixture episode cast 0",
+    expected: [
+      "tmdb:/3/tv/1397/season/1/episode/1",
+      "tmdb:/3/tv/1397",
+      "tmdb:/3/tv/1397/aggregate_credits",
+      "supabase:dubbing_projects",
+    ],
+  },
+  {
+    name: "season",
+    path: "/show/31/season/1",
+    marker: "CI fixture season 31/1",
+    expectedHtml: ["English", "French"],
+    expected: [
+      "tmdb:/3/tv/31/season/1",
+      "tmdb:/3/tv/31",
+      "tmdb:/3/tv/31/aggregate_credits",
+      "supabase:dubbing_projects",
+    ],
+  },
+  {
+    name: "season-api",
+    path: "/api/season?id=31&season_number=1&projection=media-page",
+    marker: "CI fixture season 31/1",
+    kind: "api",
+    semanticParity: "season-page-project-summary",
+    expected: ["tmdb:/3/tv/31/season/1", "tmdb:/3/tv/31", "supabase:dubbing_projects"],
   },
   {
     name: "actor",
@@ -78,6 +117,36 @@ const routes = [
     expected: ["tmdb:/3/person/12001", "supabase:voice_actors"],
   },
   {
+    name: "media-cast-audiobook",
+    path: "/api/detail-collections?collection=media-cast&id=1397&type=audiobook&projectId=1&page=1&pageSize=12",
+    marker: "CI fixture audiobook voice actor 0",
+    kind: "api",
+    semanticParity: "media-cast-page",
+    expected: ["supabase:dubbing_projects"],
+  },
+  {
+    name: "trending-shows",
+    path: "/api/trending/shows?lang=fr-FR&projection=card",
+    marker: "CI fixture trending show 0",
+    kind: "api",
+    semanticParity: "homepage-trending-show-cards",
+    expected: ["tmdb:/3/trending/tv/day"],
+  },
+  {
+    name: "trending-games",
+    path: "/api/trending/games?lang=fr-FR&projection=card",
+    marker: "CI fixture trending game 0",
+    kind: "api",
+    semanticParity: "homepage-trending-game-cards",
+    expected: ["igdb:token", "igdb:popularity_primitives", "igdb:games", "igdb:game_localizations"],
+  },
+  {
+    name: "game",
+    path: "/game/85",
+    marker: "CI fixture game 85",
+    expected: ["igdb:games", "igdb:characters", "supabase:dubbing_projects"],
+  },
+  {
     name: "admin-dubbing-project",
     path: "/api/admin/dubbing-project?content_id=85&content_type=movie&dubbing_language=fr-FR&projection=editor",
     marker: "CI fixture voice actor",
@@ -86,6 +155,13 @@ const routes = [
     expected: ["supabase:auth_user", "supabase:dubbing_projects", "supabase:work"],
   },
 ];
+const requestedRouteNames = process.env.ROUTE_CPU_ROUTES?.split(",").filter(Boolean);
+const measuredRoutes = requestedRouteNames
+  ? routes.filter((route) => requestedRouteNames.includes(route.name))
+  : routes;
+if (requestedRouteNames && measuredRoutes.length !== requestedRouteNames.length) {
+  throw new Error(`Unknown route CPU route: ${requestedRouteNames.join(", ")}`);
+}
 
 const profilePlugin = `
 import { appendFileSync, mkdirSync, writeFileSync } from "node:fs";
@@ -93,7 +169,7 @@ import inspector from "node:inspector";
 import { join } from "node:path";
 import { defineEventHandler, getQuery } from "h3";
 
-const pageRoutes = new Set(${JSON.stringify(routes.map((route) => route.path.split("?")[0]))});
+const pageRoutes = new Set(${JSON.stringify(measuredRoutes.map((route) => route.path.split("?")[0]))});
 
 function post(session, method, params = {}) {
   return new Promise((resolve, reject) => {
@@ -177,6 +253,21 @@ function scheduledTasksPatch(source) {
   );
 }
 
+function offlineProfilingNuxtConfig(source) {
+  let config = scheduledTasksPatch(source);
+  const fontsModule = /^    "@nuxt\/fonts",\r?\n/m;
+  const fontsConfig =
+    /^  \/\/ @ts-ignore\r?\n  fonts: \{\r?\n[\s\S]*?^  \},\r?\n\r?\n(?=  site: \{)/m;
+  if (!fontsModule.test(config) || !fontsConfig.test(config)) {
+    throw new Error(
+      "Could not find the Nuxt fonts module and configuration to disable profiling egress.",
+    );
+  }
+
+  config = config.replace(fontsModule, "").replace(fontsConfig, "");
+  return config;
+}
+
 function localBenchmarkEnvironment() {
   const environment = { ...process.env };
   delete environment.E2E_TEST;
@@ -203,7 +294,7 @@ async function buildWebsite() {
   const configBackupPath = join(tempDir, "nuxt.config.ts");
   await copyFile(nuxtConfigPath, configBackupPath);
   try {
-    await writeFile(nuxtConfigPath, scheduledTasksPatch(originalNuxtConfig));
+    await writeFile(nuxtConfigPath, offlineProfilingNuxtConfig(originalNuxtConfig));
     await writeFile(pluginPath, profilePlugin);
     await runCommand("mise", ["run", "check"], {
       cwd: repoDir,
@@ -291,8 +382,7 @@ function topUniqueApplicationCpuConsumers(frames, totalSampledMicros) {
       functionName,
       source,
       sampledMicros,
-      sampleSharePercent:
-        totalSampledMicros > 0 ? (sampledMicros / totalSampledMicros) * 100 : 0,
+      sampleSharePercent: totalSampledMicros > 0 ? (sampledMicros / totalSampledMicros) * 100 : 0,
     }));
 }
 
@@ -351,8 +441,8 @@ async function cpuProfileSummary(profile, profileWebsiteDir) {
   const applicationFrames = mappedFrames.filter((frame) => {
     const source = frame.source.replaceAll("\\", "/");
     return (
-      source.startsWith("src/") ||
       source.startsWith("server/") ||
+      source.startsWith("src/") ||
       source.startsWith("../../packages/") ||
       source.startsWith("packages/")
     );
@@ -419,6 +509,10 @@ async function startServer(serverWebsiteDir, dataset, side) {
       SUPABASE_SECRET_KEY: "local-route-cpu-fixture",
       TMDB_API_KEY: "local-route-cpu-fixture",
       TVDB_API_KEY: "local-route-cpu-fixture",
+      IGDB_CLIENT_ID: "local-route-cpu-fixture",
+      IGDB_CLIENT_SECRET: "local-route-cpu-fixture",
+      NUXT_IGDB_CLIENT_ID: "local-route-cpu-fixture",
+      NUXT_IGDB_CLIENT_SECRET: "local-route-cpu-fixture",
       NITRO_HOST: "127.0.0.1",
       NITRO_PORT: String(port),
     },
@@ -540,7 +634,7 @@ async function requestBatch(server, route, count) {
     systemMicrosPerRequest: samples.reduce((total, row) => total + row.systemMicros, 0) / count,
     totalMicrosPerRequest:
       samples.reduce((total, row) => total + row.userMicros + row.systemMicros, 0) / count,
-    htmlBytesPerRequest: responseBytes / count,
+    responseBytesPerRequest: responseBytes / count,
   };
 }
 
@@ -559,6 +653,35 @@ function assertRouteDependencies(route, before, after) {
 }
 
 function fixtureFor(dataset, routeName) {
+  if (routeName === "trending-shows") return { results: 20 };
+  if (routeName === "trending-games") return { games: 20 };
+  if (routeName === "game") {
+    return {
+      artworks: dataset === "large" ? 100 : 24,
+      screenshots: dataset === "large" ? 100 : 24,
+      characters: dataset === "large" ? 50 : 24,
+    };
+  }
+  if (routeName === "media-cast-audiobook") {
+    return { works: dataset === "large" ? 40 : 15 };
+  }
+  if (routeName === "season" || routeName === "season-api") {
+    return {
+      projects: dataset === "large" ? 80 : 12,
+      worksPerProject: dataset === "large" ? 40 : 12,
+      episodes: 24,
+    };
+  }
+  if (routeName === "episode") {
+    const episodeProjects = dataset === "large" ? 80 : 12;
+    const worksPerEpisodeProject = dataset === "large" ? 40 : 12;
+    return {
+      episodeCast: dataset === "large" ? 500 : 120,
+      episodeDubbingProjects: episodeProjects,
+      episodeWorks: episodeProjects * worksPerEpisodeProject,
+      episodeUniqueVoiceActors: Math.min(episodeProjects * worksPerEpisodeProject, 500),
+    };
+  }
   if (routeName === "admin-dubbing-project") {
     return {
       works: dataset === "large" ? 2400 : 50,
@@ -572,6 +695,7 @@ function fixtureFor(dataset, routeName) {
     actorRoles: dataset === "large" ? 500 : 24,
     voiceActorWorks: dataset === "large" ? 500 : 24,
     uniqueVoiceActorMedia: dataset === "large" ? 100 : 12,
+    searchResultsPerSource: dataset === "large" ? 20 : 10,
   };
 }
 
@@ -581,21 +705,104 @@ async function validateRoute(server, route, dataset) {
   if (route.kind === "api") {
     const response = JSON.parse(validation.html);
     const fixture = fixtureFor(dataset, route.name);
-    const voiceActors = dubbingProjectVoiceActors(response);
+    if (route.name === "trending-shows") {
+      const results = response.results;
+      if (
+        !Array.isArray(results) ||
+        results.length !== fixture.results ||
+        results[0]?.name !== route.marker ||
+        !results[0]?.poster_path
+      ) {
+        throw new Error(`${route.path} returned unexpected trending show data.`);
+      }
+      if (
+        server.side === "head" &&
+        ["overview", "backdrop_path", "original_name", "adult"].some((field) =>
+          Object.hasOwn(results[0], field),
+        )
+      ) {
+        throw new Error(
+          `${route.path} included unused full TMDB show fields in its card projection.`,
+        );
+      }
+    } else if (route.name === "trending-games") {
+      if (
+        !Array.isArray(response) ||
+        response.length !== fixture.games ||
+        response[0]?.name !== route.marker ||
+        !response[0]?.cover?.url
+      ) {
+        throw new Error(
+          `${route.path} returned unexpected trending game data: ${JSON.stringify(response).slice(0, 300)}`,
+        );
+      }
+      if (
+        server.side === "head" &&
+        ["summary", "rating", "rating_count", "genres", "platforms"].some((field) =>
+          Object.hasOwn(response[0], field),
+        )
+      ) {
+        throw new Error(`${route.path} included unused IGDB fields in its card projection.`);
+      }
+    } else if (route.name === "season-api") {
+      const projects = response.dubbingProjects;
+      if (
+        response.season?.name !== route.marker ||
+        !Array.isArray(projects) ||
+        projects.length !== fixture.projects ||
+        seasonProjectSummaries(projects).reduce(
+          (total, project) => total + project.work_count,
+          0,
+        ) !==
+          fixture.projects * fixture.worksPerProject
+      ) {
+        throw new Error(`${route.path} returned unexpected season page data.`);
+      }
+      if (server.side === "head" && projects.some((project) => Object.hasOwn(project, "works"))) {
+        throw new Error(`${route.path} sent per-work rows in the season page projection.`);
+      }
+    } else if (route.name === "media-cast-audiobook") {
+      if (
+        !Array.isArray(response.data) ||
+        response.data.length !== Math.min(12, fixture.works) ||
+        response.data[0]?.firstname !== route.marker ||
+        response.pagination?.totalItems !== fixture.works
+      ) {
+        throw new Error(`${route.path} returned unexpected paginated audiobook cast data.`);
+      }
+    } else {
+      const voiceActors = dubbingProjectVoiceActors(response);
+      if (
+        response.projectId !== 1 ||
+        !Array.isArray(response.works) ||
+        response.works.length !== fixture.works ||
+        voiceActors.length !== fixture.uniqueActors ||
+        !voiceActors[0]?.firstname?.startsWith(route.marker) ||
+        response.works.some((work) => work.editable !== false)
+      ) {
+        throw new Error(`${route.path} returned unexpected dubbing project assignments.`);
+      }
+      if (server.side === "head" && response.works.some((work) => "voice_actor" in work)) {
+        throw new Error(`${route.path} repeated voice actor records in each work row.`);
+      }
+    }
+  } else if (route.name === "episode") {
+    const renderedHtml = validation.html.replace(/<script\b[\s\S]*?<\/script>/gi, "");
     if (
-      response.projectId !== 1 ||
-      !Array.isArray(response.works) ||
-      response.works.length !== fixture.works ||
-      voiceActors.length !== fixture.uniqueActors ||
-      !voiceActors[0]?.firstname?.startsWith(route.marker) ||
-      response.works.some((work) => work.editable !== false)
+      !renderedHtml.includes(route.marker) ||
+      !/href="[^"]*\/actor\/200000"/.test(renderedHtml) ||
+      !/href="[^"]*\/voice-actor\/70\d{3}"/.test(renderedHtml)
     ) {
-      throw new Error(`${route.path} returned unexpected dubbing project assignments.`);
+      throw new Error(`${route.path} did not render the expected episode cast and actor links.`);
     }
-    if (server.side === "head" && response.works.some((work) => "voice_actor" in work)) {
-      throw new Error(`${route.path} repeated voice actor records in each work row.`);
+  } else if (route.name === "game") {
+    if (!validation.html.includes(route.marker) || !validation.html.includes("__NUXT_DATA__")) {
+      throw new Error(`${route.path} did not SSR the expected IGDB fixture data.`);
     }
-  } else if (!validation.html.includes(route.marker) || !validation.html.includes("__NUXT_DATA__")) {
+  } else if (
+    !validation.html.includes(route.marker) ||
+    !validation.html.includes("__NUXT_DATA__")
+  ) {
     throw new Error(`${route.path} did not SSR the expected fixture data.`);
   }
   const after = await currentDependencies(server);
@@ -605,6 +812,42 @@ async function validateRoute(server, route, dataset) {
   }
   await postJson(server.baseUrl, "/__route_cpu__/dependencies/reset");
   return validation;
+}
+
+function episodeCastLinks(html) {
+  const renderedHtml = html.replace(/<script\b[\s\S]*?<\/script>/gi, "");
+  return {
+    actors: [...renderedHtml.matchAll(/href="[^"]*\/actor\/(\d+)"/g)].map((match) => match[1]),
+    voiceActors: [...renderedHtml.matchAll(/href="[^"]*\/voice-actor\/(\d+)"/g)].map(
+      (match) => match[1],
+    ),
+  };
+}
+
+function trendingShowCardData(body) {
+  return JSON.parse(body).results.map(({ id, name, title, poster_path }) => ({
+    id,
+    name,
+    title,
+    poster_path,
+  }));
+}
+
+function trendingGameCardData(body) {
+  return JSON.parse(body).map(({ id, name, cover }) => ({
+    id,
+    name,
+    cover: cover ? { image_id: cover.image_id, url: cover.url } : undefined,
+  }));
+}
+
+function gamePageMarkup(body) {
+  return body
+    .replace(/<head\b[\s\S]*?<\/head>/gi, "")
+    .replace(/<script\b[\s\S]*?<\/script>/gi, "")
+    .replace(/<style\b[\s\S]*?<\/style>/gi, "")
+    .replace(/<link\b[^>]*>/gi, "")
+    .replace(/<footer\b[\s\S]*?<\/footer>/gi, "");
 }
 
 function dubbingProjectPageData(body) {
@@ -634,6 +877,76 @@ function dubbingProjectVoiceActors(response) {
   return [...voiceActors.values()];
 }
 
+function seasonProjectSummaries(projects) {
+  return projects.map((project) => {
+    if (!Array.isArray(project.works))
+      return {
+        id: project.id,
+        language: project.language,
+        studio_data: project.studio_data,
+        has_voice_actor: project.has_voice_actor,
+        voice_actor_count: project.voice_actor_count,
+        work_count: project.work_count,
+      };
+
+    const voiceActorIds = new Set();
+    let hasVoiceActor = false;
+    for (const work of project.works) {
+      if (work.voice_actor) {
+        hasVoiceActor = true;
+        if (work.voice_actor.id) voiceActorIds.add(work.voice_actor.id);
+      }
+    }
+    return {
+      id: project.id,
+      language: project.language,
+      studio_data: project.studio_data,
+      has_voice_actor: hasVoiceActor,
+      voice_actor_count: voiceActorIds.size,
+      work_count: project.works.length,
+    };
+  });
+}
+
+function seasonPageData(body) {
+  const response = JSON.parse(body);
+  return {
+    season: response.season,
+    serie: response.serie,
+    dubbingProjects: seasonProjectSummaries(response.dubbingProjects),
+    characterProfilePictures: response.characterProfilePictures,
+    votes: response.votes,
+  };
+}
+
+function mediaCastPageData(body) {
+  const response = JSON.parse(body);
+  return {
+    data: response.data.map(
+      ({
+        work_id,
+        voice_actor_id,
+        firstname,
+        lastname,
+        character_name,
+        performance,
+        note,
+        profile_picture,
+      }) => ({
+        work_id,
+        voice_actor_id,
+        firstname,
+        lastname,
+        character_name,
+        performance,
+        note,
+        profile_picture,
+      }),
+    ),
+    pagination: response.pagination,
+  };
+}
+
 async function warmServers(baseServer, headServer, route) {
   for (let request = 0; request < warmupRequests; request += 1) {
     const order = request % 2 === 0 ? [baseServer, headServer] : [headServer, baseServer];
@@ -656,7 +969,16 @@ async function captureProfile(server, route) {
   return profile;
 }
 
-function workloadFor(server, route, dataset, rounds, pairedDeltas, dependencies, profile, responseHash) {
+function workloadFor(
+  server,
+  route,
+  dataset,
+  rounds,
+  pairedDeltas,
+  dependencies,
+  profile,
+  responseHash,
+) {
   const samples = rounds.map((round) => round[server.side]);
   return {
     name: route.name,
@@ -673,9 +995,17 @@ function workloadFor(server, route, dataset, rounds, pairedDeltas, dependencies,
       system: summarize(samples.map((sample) => sample.systemMicrosPerRequest)),
       total: summarize(samples.map((sample) => sample.totalMicrosPerRequest)),
     },
-    responseBytesPerRequest: summarize(samples.map((sample) => sample.htmlBytesPerRequest)),
-    responseBodySha256: route.kind === "api" ? responseHash : undefined,
-    responseSemanticParity: route.name === "admin-dubbing-project" ? "regional-assignment-data" : undefined,
+    responseBytesPerRequest: summarize(samples.map((sample) => sample.responseBytesPerRequest)),
+    responseBodySha256: route.kind === "api" && !route.semanticParity ? responseHash : undefined,
+    responseSemanticParity:
+      route.semanticParity ??
+      (route.name === "admin-dubbing-project"
+        ? "regional-assignment-data"
+        : route.name === "episode"
+          ? "episode-cast-links"
+          : route.name === "game"
+            ? "game-page-rendered-markup"
+            : undefined),
     upstreamRequests: dependencies,
     profile,
   };
@@ -684,16 +1014,24 @@ function workloadFor(server, route, dataset, rounds, pairedDeltas, dependencies,
 async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
   const servers = [];
   try {
-    const baseServer = await startServer(baseWebsiteDir, dataset, "base");
-    servers.push(baseServer);
-    baseServer.side = "base";
-    const headServer = await startServer(headWebsiteDir, dataset, "head");
-    servers.push(headServer);
-    headServer.side = "head";
+    const startOrder = dataset === "large" ? ["head", "base"] : ["base", "head"];
+    const startedServers = new Map();
+    for (const side of startOrder) {
+      const server = await startServer(
+        side === "base" ? baseWebsiteDir : headWebsiteDir,
+        dataset,
+        side,
+      );
+      servers.push(server);
+      server.side = side;
+      startedServers.set(side, server);
+    }
+    const baseServer = startedServers.get("base");
+    const headServer = startedServers.get("head");
 
     const baseWorkloads = [];
     const headWorkloads = [];
-    for (const route of routes) {
+    for (const route of measuredRoutes) {
       const baseValidation = await validateRoute(baseServer, route, dataset);
       const headValidation = await validateRoute(headServer, route, dataset);
       if (route.name === "admin-dubbing-project") {
@@ -703,16 +1041,67 @@ async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
         ) {
           throw new Error(`${route.path} changed the assignments consumed by its page.`);
         }
-      } else if (route.kind === "api" && baseValidation.hash !== headValidation.hash) {
+      } else if (
+        route.name === "episode" &&
+        JSON.stringify(episodeCastLinks(baseValidation.html)) !==
+          JSON.stringify(episodeCastLinks(headValidation.html))
+      ) {
+        throw new Error(`${route.path} changed the rendered episode cast links.`);
+      } else if (
+        route.name === "season-api" &&
+        JSON.stringify(seasonPageData(baseValidation.html)) !==
+          JSON.stringify(seasonPageData(headValidation.html))
+      ) {
+        throw new Error(
+          `${route.path} changed season page data while compacting its project summary.`,
+        );
+      } else if (
+        route.name === "media-cast-audiobook" &&
+        JSON.stringify(mediaCastPageData(baseValidation.html)) !==
+          JSON.stringify(mediaCastPageData(headValidation.html))
+      ) {
+        throw new Error(`${route.path} changed visible audiobook cast cards or pagination.`);
+      } else if (
+        route.name === "trending-shows" &&
+        JSON.stringify(trendingShowCardData(baseValidation.html)) !==
+          JSON.stringify(trendingShowCardData(headValidation.html))
+      ) {
+        throw new Error(`${route.path} changed fields consumed by homepage trending show cards.`);
+      } else if (
+        route.name === "trending-games" &&
+        JSON.stringify(trendingGameCardData(baseValidation.html)) !==
+          JSON.stringify(trendingGameCardData(headValidation.html))
+      ) {
+        throw new Error(`${route.path} changed fields consumed by homepage trending game cards.`);
+      } else if (
+        route.name === "game" &&
+        gamePageMarkup(baseValidation.html) !== gamePageMarkup(headValidation.html)
+      ) {
+        throw new Error(`${route.path} changed server-rendered game page markup.`);
+      } else if (
+        route.kind === "api" &&
+        route.name !== "season-api" &&
+        route.name !== "media-cast-audiobook" &&
+        route.name !== "trending-shows" &&
+        route.name !== "trending-games" &&
+        baseValidation.hash !== headValidation.hash
+      ) {
         throw new Error(`${route.path} changed its response body in the CPU comparison.`);
       }
       await warmServers(baseServer, headServer, route);
 
       const rounds = [];
       for (let round = 0; round < measuredRounds; round += 1) {
-        const order = round % 2 === 0
-          ? [["base", baseServer], ["head", headServer]]
-          : [["head", headServer], ["base", baseServer]];
+        const order =
+          round % 2 === 0
+            ? [
+                ["base", baseServer],
+                ["head", headServer],
+              ]
+            : [
+                ["head", headServer],
+                ["base", baseServer],
+              ];
         const result = {};
         for (const [side, server] of order) {
           result[side] = await requestBatch(server, route, requestsPerRound);
@@ -726,8 +1115,8 @@ async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
       let baseProfile;
       let headProfile;
       if (dataset === "large") {
-        baseProfile = await captureProfile(baseServer, route);
         headProfile = await captureProfile(headServer, route);
+        baseProfile = await captureProfile(baseServer, route);
       }
 
       baseWorkloads.push(
@@ -773,7 +1162,8 @@ async function measurePaired() {
   await assertIsolatedNetworkNamespace("route profiling");
   const baseWebsiteDir = process.env.ROUTE_CPU_BASE_WEBSITE_DIR;
   const headWebsiteDir = process.env.ROUTE_CPU_HEAD_WEBSITE_DIR ?? websiteDir;
-  if (!baseWebsiteDir) throw new Error("Set ROUTE_CPU_BASE_WEBSITE_DIR to the baseline website build.");
+  if (!baseWebsiteDir)
+    throw new Error("Set ROUTE_CPU_BASE_WEBSITE_DIR to the baseline website build.");
 
   await rm(join(profileRoot, "base"), { recursive: true, force: true });
   await rm(join(profileRoot, "head"), { recursive: true, force: true });

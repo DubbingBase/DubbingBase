@@ -11,6 +11,7 @@
     <SelectPortal>
       <SelectContent
         position="popper"
+        :body-lock="false"
         class="z-50 theme-surface-overlay backdrop-blur-md border theme-border rounded-xl shadow-xl overflow-hidden min-w-[140px] theme-text"
         :sideOffset="8"
       >
@@ -51,6 +52,7 @@
     <SelectPortal>
       <SelectContent
         position="popper"
+        :body-lock="false"
         class="z-50 theme-surface-overlay backdrop-blur-md border theme-border rounded-xl shadow-xl overflow-hidden min-w-[140px] theme-text"
         :sideOffset="8"
       >

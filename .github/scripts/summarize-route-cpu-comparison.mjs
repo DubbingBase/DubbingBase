@@ -20,7 +20,16 @@ if (
   throw new Error("Base and pull request reports use different or invalid paired workloads.");
 }
 
-const routeNames = ["movie", "show", "actor", "voice-actor", "admin-dubbing-project"];
+const routeNames = [
+  "movie",
+  "show",
+  "episode",
+  "season",
+  "season-api",
+  "actor",
+  "voice-actor",
+  "admin-dubbing-project",
+];
 const datasets = ["representative", "large"];
 const workflowRun =
   process.env.GITHUB_RUN_ID && process.env.GITHUB_REPOSITORY
@@ -46,9 +55,7 @@ function formatCpu(stats) {
 function median(values) {
   const sorted = [...values].sort((left, right) => left - right);
   const middle = Math.floor(sorted.length / 2);
-  return sorted.length % 2 === 0
-    ? (sorted[middle - 1] + sorted[middle]) / 2
-    : sorted[middle];
+  return sorted.length % 2 === 0 ? (sorted[middle - 1] + sorted[middle]) / 2 : sorted[middle];
 }
 
 function percentile(sortedValues, probability) {
@@ -109,6 +116,9 @@ function sameFixture(base, head, route, dataset) {
   if (base.path !== head.path || JSON.stringify(base.fixture) !== JSON.stringify(head.fixture)) {
     throw new Error(`Base and PR fixtures differ for ${route} ${dataset}.`);
   }
+  if (route === "global-search" && base.responseBodySha256 !== head.responseBodySha256) {
+    throw new Error(`Base and PR response bodies differ for ${route} ${dataset}.`);
+  }
 }
 
 const rows = [];
@@ -120,6 +130,18 @@ for (const route of routeNames) {
     sameFixture(base, head, route, dataset);
     const baseCpu = base.cpuMicrosPerRequest.total;
     const headCpu = head.cpuMicrosPerRequest.total;
+    const baseBytes = base.responseBytesPerRequest.median;
+    const headBytes = head.responseBytesPerRequest.median;
+    const responseHashMatch =
+      base.responseBodySha256 && head.responseBodySha256
+        ? base.responseBodySha256 === head.responseBodySha256
+        : undefined;
+    const projectedResponseParity =
+      base.responseSemanticParity === "duplicates-page-actor-fields" &&
+      head.responseSemanticParity === "duplicates-page-actor-fields";
+    if (responseHashMatch === false && !projectedResponseParity) {
+      throw new Error(`Base and PR API response hashes differ for ${route} ${dataset}.`);
+    }
     const baseDeltas = base.pairedCpuDeltaSamplesMicrosPerRequest;
     const headDeltas = head.pairedCpuDeltaSamplesMicrosPerRequest;
     if (
@@ -138,10 +160,15 @@ for (const route of routeNames) {
     ) {
       throw new Error(`Base and PR reports have invalid CPU medians for ${route} ${dataset}.`);
     }
+    const responseHash = responseHashMatch
+      ? `match: \`${base.responseBodySha256}\``
+      : projectedResponseParity
+        ? "projected actor fields match"
+        : "—";
     const interval = bootstrapMedianInterval(headDeltas, `${route}:${dataset}`);
     cpuComparisons.push({ interval });
     rows.push(
-      `| ${route} (${dataset}) | ${formatCpu(baseCpu)} | ${formatCpu(headCpu)} | ${formatDelta(baseCpu.median, headDeltas, interval)} |`,
+      `| ${route} (${dataset}) | ${formatCpu(baseCpu)} | ${formatCpu(headCpu)} | ${formatDelta(baseCpu.median, headDeltas, interval)} | ${Math.round(base.responseBytesPerRequest.median)} → ${Math.round(head.responseBytesPerRequest.median)} | ${base.responseBodySha256 ?? "—"} |`,
     );
   }
 }
@@ -155,6 +182,7 @@ const resultSummary =
 function isApplicationSource(source) {
   const normalized = source.replaceAll("\\", "/");
   return (
+    normalized.startsWith("server/") ||
     normalized.startsWith("src/") ||
     normalized.startsWith("../../packages/") ||
     normalized.startsWith("packages/")
@@ -166,9 +194,7 @@ function formatTopApplicationCpuConsumers(workload, route, revision) {
   const hasFullApplicationFrames = Array.isArray(profile?.topApplicationFrames);
   const sampledFrames =
     profile?.topApplicationFrames ??
-    profile?.topSampledFrames?.filter((frame) =>
-      isApplicationSource(frame.source),
-    );
+    profile?.topSampledFrames?.filter((frame) => isApplicationSource(frame.source));
   if (!profile || !Array.isArray(sampledFrames)) {
     throw new Error(`Large workload ${workload.name} is missing its V8 profile summary.`);
   }
@@ -180,8 +206,9 @@ function formatTopApplicationCpuConsumers(workload, route, revision) {
   }
   return sampledFrames
     .slice(0, 10)
-    .map((frame, index) =>
-      `| ${route} | ${revision} | ${index + 1} | \`${safeCell(frame.functionName)}\` | \`${safeCell(frame.source)}\` | ${frame.sampleSharePercent.toFixed(1)}% |`,
+    .map(
+      (frame, index) =>
+        `| ${route} | ${revision} | ${index + 1} | \`${safeCell(frame.functionName)}\` | \`${safeCell(frame.source)}\` | ${frame.sampleSharePercent.toFixed(1)}% |`,
     );
 }
 
@@ -196,14 +223,14 @@ for (const route of routeNames) {
 const markdown = [
   "## Local route CPU comparison",
   "",
-  `Built Nuxt SSR · Node ${baseReport.runtime} · same runner · ${workflowRun}`,
+  `Built Nuxt/Nitro routes · Node ${baseReport.runtime} · same runner · ${workflowRun}`,
   "",
   "20 warmups; 20 alternating paired batches of 20 requests per route. Change is the median paired PR − base delta; interval is a deterministic 95% bootstrap.",
   "",
   `**Result:** ${resultSummary} 🔴 more CPU · 🟢 less CPU · ⚪ unchanged median; markers show direction only. This PR changes route code, and this comparison measures its effect.`,
   "",
-  "| Route / workload | Base median CPU / request | PR median CPU / request | Paired change (95% bootstrap interval) |",
-  "| --- | ---: | ---: | ---: |",
+  "| Route / workload | Base median CPU / request | PR median CPU / request | Paired change (95% bootstrap interval) | Response bytes (base → PR) | API body SHA-256 |",
+  "| --- | ---: | ---: | ---: | ---: | --- |",
   ...rows,
   "",
   "### Top 10 app CPU consumers (large workload)",

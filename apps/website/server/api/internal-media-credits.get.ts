@@ -1,6 +1,7 @@
 import { useIgdbClient, useTmdbClient } from "../utils";
 import { buildIgdbImageUrl } from "../utils/api/igdb";
 import { loadGameCharacterCatalog } from "../utils/game-characters";
+import { DEFAULT_LANGUAGE, resolveLocaleLanguage } from "@app/shared-logic";
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   const mediaType = String(query.media_type ?? "");
@@ -14,7 +15,9 @@ export default defineEventHandler(async (event) => {
   }
 
   if (mediaType === "movie" || mediaType === "tv") {
-    const data = await useTmdbClient().fetchMediaCredits(mediaType, mediaId, "fr-FR");
+    const acceptLanguage = getRequestHeader(event, "accept-language")?.split(",")[0]?.split(";")[0];
+    const language = resolveLocaleLanguage(acceptLanguage) ?? DEFAULT_LANGUAGE;
+    const data = await useTmdbClient().fetchMediaCredits(mediaType, mediaId, language);
     return { cast: data.cast ?? [] };
   }
 

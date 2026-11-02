@@ -15,14 +15,14 @@ export default defineEventHandler(async (event) => {
   // header: titles must match the page language. Allowlisted to the 4
   // canonical tags so cache keys stay collapsed; header is the fallback.
   const query = getQuery(event);
+  const pageProjection = query.projection === "page";
   const rawLang = typeof query.lang === "string" ? query.lang.trim() : "";
   const canonicalLangs = APP_LOCALES.map((l) => l.language);
   const shortToCanonical: Record<string, string> = Object.fromEntries(
     APP_LOCALES.map((l) => [l.code, l.language]),
   );
   const headerLang =
-    (getHeader(event, "accept-language") || "fr-FR").split(",")[0]?.trim() ||
-    "fr-FR";
+    (getHeader(event, "accept-language") || "fr-FR").split(",")[0]?.trim() || "fr-FR";
   const acceptLanguage = canonicalLangs.includes(rawLang)
     ? rawLang
     : shortToCanonical[rawLang] || headerLang;
@@ -32,10 +32,32 @@ export default defineEventHandler(async (event) => {
     const baseData = await mediaService.getVoiceActorWithWorkAndMedia(
       voiceActorId,
       acceptLanguage,
+      {
+        includePotentialWikipediaUrl: !pageProjection,
+      },
     );
-    return baseData;
+    if (!pageProjection) return baseData;
+
+    return {
+      ...baseData,
+      workCount: baseData.voiceActor.work.length,
+      voiceActor: { ...baseData.voiceActor, work: [] },
+      enhancedWorks: baseData.enhancedWorks.map(({ media, ...work }) => ({
+        ...work,
+        media_id: media.id,
+        media_type: media.media_type,
+      })),
+    };
   } catch (error) {
     console.error("Error fetching voice actor:", error);
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "statusCode" in error &&
+      typeof error.statusCode === "number"
+    ) {
+      throw error;
+    }
     throw createError({
       statusCode: 500,
       message: "Failed to fetch voice actor data",

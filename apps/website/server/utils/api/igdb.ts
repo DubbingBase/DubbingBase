@@ -62,8 +62,8 @@ export class IgdbClient {
 
   constructor(cache: SimpleCache) {
     const config = useRuntimeConfig();
-    this.clientId = config.igdbClientId || "";
-    this.clientSecret = config.igdbClientSecret || "";
+    this.clientId = String(config.igdbClientId || "");
+    this.clientSecret = String(config.igdbClientSecret || "");
     this.baseUrl = "https://api.igdb.com/v4";
     this.tokenUrl = "https://id.twitch.tv/oauth2/token";
     this.cache = cache;
@@ -204,7 +204,9 @@ export class IgdbClient {
         throw createMediaResponseError("IGDB", response);
       }
 
-      return response.json();
+      const result: unknown = await response.json();
+      if (!Array.isArray(result)) throw new Error(`Invalid IGDB response: /${endpoint}`);
+      return result;
     } catch (error: unknown) {
       if (
         error instanceof Error &&
@@ -218,10 +220,21 @@ export class IgdbClient {
     }
   }
 
-  async getGame(id: number): Promise<IgdbGame | null> {
+  async getGame(id: number, pageProjection = false): Promise<IgdbGame | null> {
+    const pageFields = `id, name, slug, summary, rating, first_release_date,
+       cover.image_id, cover.url,
+       artworks.image_id, artworks.url,
+       screenshots.image_id, screenshots.url,
+       genres.id, genres.name,
+       platforms.id, platforms.name,
+       involved_companies.id, involved_companies.company.id, involved_companies.company.name,
+       involved_companies.developer, involved_companies.publisher;`;
     const results = await this.query<IgdbGame>(
       "games",
-      `fields id, name, slug, summary, rating, rating_count, first_release_date,
+      pageProjection
+        ? `fields ${pageFields}
+       where id = ${id};`
+        : `fields id, name, slug, summary, rating, rating_count, first_release_date,
        cover.image_id, cover.url,
        artworks.image_id, artworks.url,
        screenshots.image_id, screenshots.url,
@@ -249,7 +262,7 @@ export class IgdbClient {
     return results;
   }
 
-  async getGameCharacters(gameId: number): Promise<IgdbCharacter[]> {
+  async getGameCharacters(gameId: number, pageProjection = false): Promise<IgdbCharacter[]> {
     const pageSize = 500;
     const maxPages = 5;
     const characters: IgdbCharacter[] = [];
@@ -262,9 +275,7 @@ export class IgdbClient {
       }
       const page = await this.query<IgdbCharacter>(
         "characters",
-        `fields id, name, description, species, gender,
-                mug_shot.image_id, mug_shot.url,
-                games;
+        `fields ${pageProjection ? "id, name, mug_shot.image_id, mug_shot.url" : "id, name, description, species, gender, mug_shot.image_id, mug_shot.url, games"};
          where games = (${gameId});
          sort id asc;
          limit ${pageSize};

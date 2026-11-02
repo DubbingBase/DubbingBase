@@ -536,13 +536,14 @@ const { locale, t } = useI18n();
 const localePath = useLocalePath();
 
 const cacheKey = `game-${gameId}-${locale.value}`;
-const { data, pending, refresh } = useAsyncData(
+const { data, pending, refresh, error } = await useAsyncData(
   cacheKey,
   () => fetchGameData(gameId, locale.value, "media-page"),
   {
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
 );
+if (import.meta.server && error.value) throw error.value;
 
 const game = computed(() => data.value?.game);
 const dubbingProjects = computed(() => {
@@ -625,7 +626,18 @@ const debouncedSearch = refDebounced(searchInput, 150);
 watch(debouncedSearch, (val) => {
   searchQuery.value = val;
 });
-watch([searchQuery, activeDubId], () => void setCastPage(1));
+watch([searchQuery, activeDubId], ([search, dub], [previousSearch, previousDub]) => {
+  if (
+    search !== previousSearch ||
+    (typeof previousDub === "number" &&
+      previousDub > 0 &&
+      typeof dub === "number" &&
+      dub > 0 &&
+      dub !== previousDub)
+  ) {
+    void setCastPage(1);
+  }
+});
 
 const completeCastItems = computed<GameDetailCastCard[]>(() =>
   formatGameDetailCastCards(data.value?.characters || [], activeDubProject.value),

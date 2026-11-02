@@ -16,6 +16,8 @@
 </template>
 
 <script setup lang="ts">
+import { APP_LOCALES } from "@app/shared-logic";
+
 const { effectiveTheme } = useTheme();
 const route = useRoute();
 const isAdminRoute = computed(() => {
@@ -29,6 +31,25 @@ const i18nHead = useLocaleHead({
   dir: true,
   seo: true,
 });
+const regionalLanguages = new Set(
+  APP_LOCALES.map((supportedLocale) => supportedLocale.language),
+);
+const localeHeadLinks = computed(() =>
+  (i18nHead.value.link || []).filter(
+    (headLink) =>
+      !("hreflang" in headLink) || regionalLanguages.has(headLink.hreflang),
+  ),
+);
+const canonicalUrl = computed(
+  () =>
+    i18nHead.value.link?.find((headLink) => headLink.rel === "canonical")?.href,
+);
+const defaultLocaleUrl = computed(
+  () =>
+    i18nHead.value.link?.find(
+      (headLink) => "hreflang" in headLink && headLink.hreflang === "en-US",
+    )?.href,
+);
 
 useHead(() => ({
   htmlAttrs: {
@@ -54,7 +75,16 @@ useHead(() => ({
     },
     { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
     { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
-    ...(i18nHead.value.link || []),
+    ...localeHeadLinks.value,
+    ...(defaultLocaleUrl.value
+      ? [
+          {
+            rel: "alternate" as const,
+            hreflang: "x-default",
+            href: defaultLocaleUrl.value,
+          },
+        ]
+      : []),
   ],
   meta: [
     {
@@ -71,6 +101,12 @@ useHead(() => ({
       ? [{ name: "robots", content: "noindex, nofollow" }]
       : []),
     ...(i18nHead.value.meta || []),
+    ...(!isAdminRoute.value && canonicalUrl.value
+      ? [
+          { property: "og:url", content: canonicalUrl.value },
+          { name: "twitter:url", content: canonicalUrl.value },
+        ]
+      : []),
   ],
 }));
 

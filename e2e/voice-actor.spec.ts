@@ -48,50 +48,7 @@ test.describe("Voice Actor Profile & Filmography", () => {
     api.expectNoErrors();
   });
 
-  test("renders category tabs with accurate counts", async ({ page }) => {
-    await page.goto("/voice-actor/1", { waitUntil: "domcontentloaded" });
-    await waitForVueHydration(page);
-
-    // Wait for main content to load
-    await expect(page.getByRole("heading", { name: "Richard Darbois" })).toBeVisible({
-      timeout: 20000,
-    });
-
-    // Verify category tabs bar exists
-    const allTab = page
-      .locator("button")
-      .filter({ hasText: /All|Tous/i })
-      .first();
-    await expect(allTab).toBeVisible({ timeout: 5000 });
-
-    // Verify all major media category buttons are present
-    await expect(
-      page
-        .locator("button")
-        .filter({ hasText: /Film|Movie/i })
-        .first(),
-    ).toBeVisible();
-    await expect(
-      page
-        .locator("button")
-        .filter({ hasText: /Série|Series|TV/i })
-        .first(),
-    ).toBeVisible();
-    await expect(
-      page
-        .locator("button")
-        .filter({ hasText: /Jeu|Game/i })
-        .first(),
-    ).toBeVisible();
-    await expect(
-      page
-        .locator("button")
-        .filter({ hasText: /Livre|Audiobook/i })
-        .first(),
-    ).toBeVisible();
-  });
-
-  test("filters filmography when clicking category tabs", async ({ page }) => {
+  test("shows category tabs and filters filmography", async ({ page }) => {
     await page.goto("/voice-actor/1", { waitUntil: "domcontentloaded" });
     await waitForVueHydration(page);
 
@@ -100,10 +57,27 @@ test.describe("Voice Actor Profile & Filmography", () => {
     });
 
     const filmography = getFilmography(page);
-    // Click on Movies tab
+    const allTab = filmography.getByRole("button", { name: /All|Tous/i });
     const moviesTab = filmography.getByRole("button", {
       name: /Film|Movie/i,
     });
+    const seriesTab = filmography.getByRole("button", {
+      name: /Série|Series|TV/i,
+    });
+    const gamesTab = filmography.getByRole("button", {
+      name: /Jeu|Game/i,
+    });
+    const audiobooksTab = filmography.getByRole("button", {
+      name: /Livre|Audiobook/i,
+    });
+
+    await expect(allTab).toBeVisible();
+    await expect(moviesTab).toBeVisible();
+    await expect(seriesTab).toBeVisible();
+    await expect(gamesTab).toBeVisible();
+    await expect(audiobooksTab).toBeVisible();
+
+    // Click on Movies tab
     await moviesTab.click();
     await expect(moviesTab).toHaveClass(/theme-selected/);
 
@@ -112,9 +86,6 @@ test.describe("Voice Actor Profile & Filmography", () => {
     await expect(filmography.locator("a[href*='/audiobook/401']")).toHaveCount(0);
 
     // Click on Audiobooks tab
-    const audiobooksTab = filmography.getByRole("button", {
-      name: /Livre|Audiobook/i,
-    });
     await audiobooksTab.click();
     await expect(audiobooksTab).toHaveClass(/theme-selected/);
 
@@ -122,7 +93,6 @@ test.describe("Voice Actor Profile & Filmography", () => {
     await expect(filmography.locator("a[href*='/movie/85']")).toHaveCount(0);
 
     // Click on All tab to restore full list
-    const allTab = filmography.getByRole("button", { name: /All|Tous/i });
     await allTab.click();
     await expect(allTab).toHaveClass(/theme-selected/);
 

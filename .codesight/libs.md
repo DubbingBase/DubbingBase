@@ -90,7 +90,7 @@
   - function getDubbingProjects: (contentId, contentType) => void
   - function getDubbingProjectsForMediaEndpoint: (contentId, contentType, projection) => void
   - function getAdvertisementPageDubbingProjects: (contentId) => void
-  - _...7 more_
+  - _...11 more_
 - `apps/website/server/utils/dubbing-language.ts` — function requireDubbingLanguage: (value) => DubbingLanguage
 - `apps/website/server/utils/dubbing-region-detection.ts` — function detectDubbingRegionFromWikitext: ({...}, sections, }) => DubbingEvidence, type DubbingEvidence
 - `apps/website/server/utils/error-message.ts` — function getErrorMessage: (error) => string
@@ -118,6 +118,7 @@
 - `apps/website/server/utils/media-request.ts`
   - function parseSeasonQuery: (query, unknown>) => void
   - function parseEpisodeQuery: (query, unknown>) => void
+  - function toMediaServiceError: (error, dependency) => void
   - function withMediaServiceTimeout: (request) => void
 - `apps/website/server/utils/normalize.ts` — function normalizeString: (input) => string, function isExploitableVoiceActorName: (input) => boolean
 - `apps/website/server/utils/notifications/discord.ts`
@@ -163,6 +164,8 @@
   - _...4 more_
 - `apps/website/server/utils/services/media.ts`
   - class MediaService
+  - const VOICE_ACTOR_PAGE_TMDB_MEDIA_NAMESPACE
+  - const VOICE_ACTOR_PAGE_TMDB_BACKDROP_NAMESPACE
   - const WIKIPEDIA_ACTOR_URL_NAMESPACE
   - const MEDIA_TVDB_CHARACTERS_NAMESPACE
 - `apps/website/server/utils/services/voice-actor.ts`
@@ -213,6 +216,7 @@
 - `apps/website/src/composables/useShowPageData.ts` — function useShowPageData: (showId, locale) => void
 - `apps/website/src/composables/useTheme.ts` — function useTheme: () => void
 - `apps/website/src/composables/useUrlPagination.ts` — function readUrlPage: (value) => number, function useUrlPagination: (queryKey) => void
+- `apps/website/src/composables/useVoiceActorPageData.ts` — function fetchVoiceActorPageData: (id, lang?) => Promise<VoiceActorPageDataPayload | null>
 - `apps/website/src/composables/useVoiceActorProfileRecord.ts` — function useVoiceActorProfileRecord: () => void
 - `apps/website/src/lib/media-editor-routes.ts` — function getMediaEditorRoute: ({...}, mediaId, projectId }) => string | null
 - `apps/website/src/lib/mediaQueue.ts` — function enqueueMedia: (params) => Promise<void>
@@ -244,7 +248,14 @@
   - _...1 more_
 - `apps/website/src/utils/posthog-prefetch-manifest.ts` — function deferPosthogPrefetch: (manifest, ClientManifestEntry>) => void, interface ClientManifestEntry
 - `apps/website/src/utils/search-routes.ts` — function getSearchResultRoute: (result, "id" | "media_type">) => string, type SearchFilter
-- `apps/website/src/utils/season-data.ts` — function fetchSeasonPageData: (showId, seasonNumber, locale?) => Promise<SeasonDataResponse>, function fetchEpisodePageData: (showId, seasonNumber, episodeNumber, locale?) => Promise<EpisodeDataResponse>
+- `apps/website/src/utils/season-data.ts`
+  - function fetchSeasonPageData: (showId, seasonNumber, locale?) => Promise<SeasonPageDataResponse>
+  - function fetchEpisodePageData: (showId, seasonNumber, episodeNumber, locale?, projectId?) => Promise<EpisodePageDataResponse>
+  - function fetchEpisodeProjectWorks: (showId, projectId, locale?) => Promise<EpisodePageProjectWorksResponse>
+  - interface SeasonPageDubbingProject
+  - interface EpisodePageDubbingProject
+  - interface EpisodePageVoiceActor
+  - _...2 more_
 - `apps/website/src/utils/show-character-pictures.ts`
   - function indexCharacterPictures: (pictures) => CharacterPictureIndex
   - function findCharacterImage: (index, namesToTry) => void
@@ -264,6 +275,8 @@
   - _...10 more_
 - `e2e/helpers/mock-api.ts`
   - function waitForVueHydration: (page) => Promise<void>
+  - function mockSeasonPageResponse: (season) => void
+  - function mockEpisodePageResponse: (episode) => void
   - function setupMockApi: (page, options) => void
   - interface MockApiOptions
 - `packages/og-image/src/index.ts`

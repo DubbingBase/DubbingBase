@@ -1,4 +1,4 @@
-name: Local Nuxt SSR route CPU comparison
+name: Local Nuxt route CPU comparison
 
 on:
   pull_request:
@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   profile:
-    name: Compare local route SSR CPU
+    name: Compare local route CPU
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:

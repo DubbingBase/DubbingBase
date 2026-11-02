@@ -12,7 +12,7 @@ const apiMocks = vi.hoisted(() => ({
   getCharacterProfilePictures: vi.fn(),
   fetchMediaCredits: vi.fn(),
   getDubbingProjects: vi.fn(),
-  getMediaPageDubbingProjects: vi.fn(),
+  getMediaPageDubbingProjectData: vi.fn(),
   getDubbingProjectsForMediaEndpoint: vi.fn(),
 }));
 
@@ -34,6 +34,7 @@ vi.mock("./services/media", () => ({
 
 vi.mock("./db/queries", () => ({
   getDubbingProjectsForMediaEndpoint: apiMocks.getDubbingProjectsForMediaEndpoint,
+  getMediaPageDubbingProjectData: apiMocks.getMediaPageDubbingProjectData,
 }));
 
 vi.mock("./urls/tmdb", () => ({ processMedia: (media: unknown) => media }));
@@ -93,19 +94,20 @@ const compactMovieProject = {
       id: 12,
       actor_id: 55,
       character_name: "Character",
-      performance: "Lead",
       note: "Voice note",
-      voice_actor: {
-        id: 5,
-        firstname: "Voice",
-        lastname: "Actor",
-        profile_picture: "https://example.com/voice.png",
-        voice_actor_name: "Voice Actor",
-      },
+      voice_actor_id: 5,
     },
   ],
-  crew: [],
 };
+
+const compactVoiceActors = [
+  {
+    id: 5,
+    firstname: "Voice",
+    lastname: "Actor",
+    profile_picture: "https://example.com/voice.png",
+  },
+];
 
 const fullShowProject = { ...fullMovieProject, content_type: "tv" };
 
@@ -118,12 +120,12 @@ beforeEach(() => {
   vi.stubGlobal("getQuery", getQuery);
   vi.stubGlobal("defineEventHandler", defineEventHandler);
   apiMocks.getDubbingProjects.mockResolvedValue([fullMovieProject]);
-  apiMocks.getMediaPageDubbingProjects.mockResolvedValue([compactMovieProject]);
+  apiMocks.getMediaPageDubbingProjectData.mockResolvedValue({
+    dubbingProjects: [compactMovieProject],
+    voiceActors: compactVoiceActors,
+  });
   apiMocks.getDubbingProjectsForMediaEndpoint.mockImplementation(
-    (contentId: number, contentType: string, projection: unknown) =>
-      projection === "media-page"
-        ? apiMocks.getMediaPageDubbingProjects(contentId, contentType)
-        : apiMocks.getDubbingProjects(contentId, contentType),
+    (contentId: number, contentType: string) => apiMocks.getDubbingProjects(contentId, contentType),
   );
   apiMocks.getMediaWithVoiceActors.mockResolvedValue({
     media: {
@@ -169,13 +171,20 @@ async function requestRouteData(
   handler: (event: H3Event) => Promise<unknown>,
   search = "",
 ): Promise<unknown> {
+  const response = await requestRouteResponse(handler, search);
+  return await response.json();
+}
+
+async function requestRouteResponse(
+  handler: (event: H3Event) => Promise<unknown>,
+  search = "",
+): Promise<Response> {
   const app = createApp();
   app.use(
     "/",
     defineEventHandler((event) => handler(event)),
   );
-  const response = await toWebHandler(app)(new Request(`http://localhost/${search}`));
-  return await response.json();
+  return await toWebHandler(app)(new Request(`http://localhost/${search}`));
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -241,6 +250,26 @@ describe("movie and show detail API payload compatibility", () => {
     expect(apiMocks.getDubbingProjects).toHaveBeenCalledWith(123, "movie");
   });
 
+  it("returns 404 for a missing movie and a gateway error for TMDB failures", async () => {
+    apiMocks.getMediaWithVoiceActors.mockRejectedValueOnce(new Error("TMDB API error: 404"));
+    const missing = await requestRouteResponse((event) => fetchMovieData(event, 123));
+    expect(missing.status).toBe(404);
+
+    apiMocks.getMediaWithVoiceActors.mockRejectedValueOnce(new Error("TMDB API error: 503"));
+    const upstreamFailure = await requestRouteResponse((event) => fetchMovieData(event, 123));
+    expect(upstreamFailure.status).toBe(502);
+  });
+
+  it("returns 404 for a missing show and a gateway error for TMDB failures", async () => {
+    apiMocks.getMediaWithVoiceActors.mockRejectedValueOnce(new Error("TMDB API error: 404"));
+    const missing = await requestRouteResponse((event) => fetchShowData(event, 123));
+    expect(missing.status).toBe(404);
+
+    apiMocks.getMediaWithVoiceActors.mockRejectedValueOnce(new Error("TMDB API error: 503"));
+    const upstreamFailure = await requestRouteResponse((event) => fetchShowData(event, 123));
+    expect(upstreamFailure.status).toBe(502);
+  });
+
   it("keeps page cast, studio and voice-actor rendering fields in the compact movie response", async () => {
     const response: unknown = await requestRouteData(
       (event) => fetchMovieData(event, 123),
@@ -249,6 +278,7 @@ describe("movie and show detail API payload compatibility", () => {
 
     expect(response).toMatchObject({
       movie: { credits: { cast: [{ id: 55, character: "Character" }] } },
+      voiceActors: compactVoiceActors,
       dubbingProjects: [
         {
           id: 7,
@@ -259,17 +289,10 @@ describe("movie and show detail API payload compatibility", () => {
               id: 12,
               actor_id: 55,
               character_name: "Character",
-              performance: "Lead",
               note: "Voice note",
-              voice_actor: {
-                id: 5,
-                firstname: "Voice",
-                lastname: "Actor",
-                profile_picture: "https://example.com/voice.png",
-              },
+              voice_actor_id: 5,
             },
           ],
-          crew: [],
         },
       ],
     });
@@ -294,16 +317,14 @@ describe("movie and show detail API payload compatibility", () => {
     }
 
     const matches = matchCastWorks([castActor], [work]);
-    expect(matches.matches[0]?.works[0]?.voice_actor?.profile_picture).toBe(
-      "https://example.com/voice.png",
-    );
-    expect(work).toMatchObject({ actor_id: 55, voice_actor: { id: 5 } });
+    expect(matches.matches[0]?.works[0]?.voice_actor_id).toBe(5);
+    expect(work).toMatchObject({ actor_id: 55, voice_actor_id: 5 });
     expect(apiMocks.getMediaWithVoiceActors).toHaveBeenCalledWith("movie", 123, {
       includeCollection: false,
       includeCreditsCrew: false,
       projection: "media-page",
     });
-    expect(apiMocks.getMediaPageDubbingProjects).toHaveBeenCalledWith(123, "movie");
+    expect(apiMocks.getMediaPageDubbingProjectData).toHaveBeenCalledWith(123, "movie");
     expect(apiMocks.getDubbingProjects).not.toHaveBeenCalled();
   });
 
@@ -366,18 +387,13 @@ describe("movie and show detail API payload compatibility", () => {
           id: 7,
           language: "fr-FR",
           studio_data: { id: 3, name: "Studio" },
-          works: [{ id: 12, actor_id: 55, voice_actor: { id: 5 } }],
-          crew: [],
+          works: [{ id: 12, actor_id: 55, voice_actor_id: 5 }],
         },
       ],
+      voiceActors: compactVoiceActors,
     });
     expect(apiMocks.fetchMediaCredits).toHaveBeenCalledTimes(1);
-    expect(apiMocks.getDubbingProjectsForMediaEndpoint).toHaveBeenCalledWith(
-      123,
-      "tv",
-      "media-page",
-    );
-    expect(apiMocks.getMediaPageDubbingProjects).toHaveBeenCalledWith(123, "tv");
+    expect(apiMocks.getMediaPageDubbingProjectData).toHaveBeenCalledWith(123, "tv");
     expect(response).toMatchObject({
       aggregateCredits: {
         cast: [

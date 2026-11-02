@@ -1,24 +1,11 @@
 import { requireAdmin } from "../utils/auth";
 import { useSupabaseAdmin } from "../utils/db/client";
-
-function gameCharacterError(statusCode: number, message: string) {
-  return createError({ statusCode, statusMessage: message, message });
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function hasOnlyKeys(value: Record<string, unknown>, allowed: readonly string[]) {
-  return Object.keys(value).every((key) => allowed.includes(key));
-}
-
-function isUuid(value: unknown): value is string {
-  return (
-    typeof value === "string" &&
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
-  );
-}
+import {
+  gameCharacterError,
+  hasOnlyKeys,
+  isRecord,
+  isUuid,
+} from "../utils/game-character-validation";
 
 export default defineEventHandler(async (event) => {
   const admin = requireAdmin(event);

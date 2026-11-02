@@ -66,6 +66,7 @@
 - `ROUTE_CPU_METRICS_ROOT` (has default) — apps/website/scripts/route-cpu-ssr.mjs
 - `ROUTE_CPU_PROFILE_DIR` **required** — apps/website/scripts/route-cpu-ssr.mjs
 - `ROUTE_CPU_PROFILE_ROOT` (has default) — apps/website/scripts/route-cpu-ssr.mjs
+- `ROUTE_CPU_ROUTES` **required** — apps/website/scripts/route-cpu-ssr.mjs
 - `SUPABASE_PUBLISHABLE_KEY` **required** — .env.example
 - `SUPABASE_SECRET_KEY` **required** — .env.example
 - `SUPABASE_URL` (has default) — .env.example

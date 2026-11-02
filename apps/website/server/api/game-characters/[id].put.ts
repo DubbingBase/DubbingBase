@@ -1,25 +1,12 @@
 import { requireAdmin } from "../../utils/auth";
 import { useIgdbClient } from "../../utils";
 import { useSupabaseAdmin } from "../../utils/db/client";
-
-function referenceError(statusCode: number, message: string) {
-  return createError({ statusCode, statusMessage: message, message });
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function hasOnlyKeys(value: Record<string, unknown>, allowed: readonly string[]) {
-  return Object.keys(value).every((key) => allowed.includes(key));
-}
-
-function isUuid(value: unknown): value is string {
-  return (
-    typeof value === "string" &&
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
-  );
-}
+import {
+  gameCharacterError,
+  hasOnlyKeys,
+  isRecord,
+  isUuid,
+} from "../../utils/game-character-validation";
 
 function isExpectedTimestamp(value: unknown): value is string {
   return typeof value === "string" && Number.isFinite(Date.parse(value));
@@ -51,7 +38,7 @@ export default defineEventHandler(async (event) => {
       body.wikidata_qid !== null &&
       (typeof body.wikidata_qid !== "string" || !/^Q[1-9][0-9]*$/.test(body.wikidata_qid)))
   ) {
-    throw referenceError(400, "Game character references are invalid");
+    throw gameCharacterError(400, "Game character references are invalid");
   }
 
   const references: {
@@ -80,10 +67,10 @@ export default defineEventHandler(async (event) => {
       .eq("id", gameCharacterId)
       .maybeSingle();
     if (lookupError) {
-      throw referenceError(500, "Game character references could not be verified");
+      throw gameCharacterError(500, "Game character references could not be verified");
     }
     if (!localCharacter) {
-      throw referenceError(404, "Game character does not exist");
+      throw gameCharacterError(404, "Game character does not exist");
     }
 
     let igdbCharacterBelongsToGame: boolean;
@@ -92,10 +79,10 @@ export default defineEventHandler(async (event) => {
         await useIgdbClient().getGameCharacters(localCharacter.igdb_game_id)
       ).some((character) => character.id === igdbCharacterId);
     } catch {
-      throw referenceError(503, "IGDB characters are unavailable; the link was not saved");
+      throw gameCharacterError(503, "IGDB characters are unavailable; the link was not saved");
     }
     if (!igdbCharacterBelongsToGame) {
-      throw referenceError(422, "The IGDB character does not belong to this game");
+      throw gameCharacterError(422, "The IGDB character does not belong to this game");
     }
   }
 
@@ -109,26 +96,26 @@ export default defineEventHandler(async (event) => {
 
   if (error) {
     if (error.code === "42501") {
-      throw referenceError(403, "Game character reference update is not authorized");
+      throw gameCharacterError(403, "Game character reference update is not authorized");
     }
     if (["23505", "55000", "40001"].includes(error.code)) {
-      throw referenceError(
+      throw gameCharacterError(
         409,
         "Game character references changed or conflict with another mapping",
       );
     }
     if (["22023", "23503", "22P02", "22003"].includes(error.code)) {
-      throw referenceError(422, "Game character references are invalid");
+      throw gameCharacterError(422, "Game character references are invalid");
     }
     console.error("Controlled game character reference update failed", {
       code: error.code,
     });
-    throw referenceError(500, "Game character references could not be updated");
+    throw gameCharacterError(500, "Game character references could not be updated");
   }
 
   const result = data?.[0];
   if (!result) {
-    throw referenceError(500, "Game character references could not be updated");
+    throw gameCharacterError(500, "Game character references could not be updated");
   }
 
   return {

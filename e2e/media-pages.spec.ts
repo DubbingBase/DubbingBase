@@ -1,11 +1,11 @@
 import { test, expect, type Page } from "@playwright/test";
-import { setupMockApi, waitForVueHydration } from "./helpers/mock-api";
 import {
-  MOCK_EPISODE,
-  MOCK_MOVIE,
-  MOCK_SEASON,
-  MOCK_SHOW,
-} from "./fixtures/mock-data";
+  mockEpisodePageResponse,
+  mockSeasonPageResponse,
+  setupMockApi,
+  waitForVueHydration,
+} from "./helpers/mock-api";
+import { MOCK_EPISODE, MOCK_MOVIE, MOCK_SEASON, MOCK_SHOW } from "./fixtures/mock-data";
 
 declare global {
   interface HTMLElement {
@@ -21,17 +21,11 @@ declare global {
 
 async function navigateClientSide(page: Page, path: string) {
   await page.waitForFunction(() => {
-    return Boolean(
-      document.getElementById("__nuxt")?.__vue_app__?.config.globalProperties
-        .$router,
-    );
+    return Boolean(document.getElementById("__nuxt")?.__vue_app__?.config.globalProperties.$router);
   });
   await page.evaluate(async (nextPath) => {
-    const router =
-      document.getElementById("__nuxt")?.__vue_app__?.config.globalProperties
-        .$router;
-    if (!router)
-      throw new Error("Nuxt router is not available after hydration");
+    const router = document.getElementById("__nuxt")?.__vue_app__?.config.globalProperties.$router;
+    if (!router) throw new Error("Nuxt router is not available after hydration");
     await router.push(nextPath);
   }, path);
 }
@@ -60,9 +54,9 @@ test.describe("Media Detail Pages", () => {
     await page.goto("/movie/85", { waitUntil: "domcontentloaded" });
 
     // Verify title and synopsis
-    await expect(
-      page.getByRole("heading", { name: "Raiders of the Lost Ark" }),
-    ).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("heading", { name: "Raiders of the Lost Ark" })).toBeVisible({
+      timeout: 10000,
+    });
     await expect(page.locator("body")).toContainText("Indiana Jones");
     await expect(page.locator("body")).toContainText("Richard Darbois");
 
@@ -73,9 +67,7 @@ test.describe("Media Detail Pages", () => {
     api.expectNoErrors();
   });
 
-  test("refetches movie data when browser back returns to the detail page", async ({
-    page,
-  }) => {
+  test("refetches movie data when browser back returns to the detail page", async ({ page }) => {
     await setupMockApi(page);
     const freshMovie = structuredClone(MOCK_MOVIE);
     freshMovie.movie.title = "Raiders of the Lost Ark (Updated)";
@@ -92,9 +84,7 @@ test.describe("Media Detail Pages", () => {
 
     await page.goto("/movie/85", { waitUntil: "domcontentloaded" });
     await waitForVueHydration(page);
-    await expect(
-      page.getByRole("heading", { name: "Raiders of the Lost Ark" }),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Raiders of the Lost Ark" })).toBeVisible();
 
     await page.locator('a[href*="/voice-actor/1"]').first().click();
     await expect(page).toHaveURL(/\/voice-actor\/1/);
@@ -108,25 +98,21 @@ test.describe("Media Detail Pages", () => {
     ).toBeVisible();
   });
 
-  test("renders TV Show detail page with cast and seasons", async ({
-    page,
-  }) => {
+  test("renders TV Show detail page with cast and seasons", async ({ page }) => {
     const api = await setupMockApi(page);
     await page.goto("/show/1396", { waitUntil: "domcontentloaded" });
 
     // Verify title and series cast
-    await expect(
-      page.getByRole("heading", { name: "Breaking Bad" }),
-    ).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("heading", { name: "Breaking Bad" })).toBeVisible({
+      timeout: 10000,
+    });
     await expect(page.locator("body")).toContainText("Walter White");
     await expect(page.locator("body")).toContainText("Jean-Louis Faure");
 
     api.expectNoErrors();
   });
 
-  test("keeps the cast page valid while navigating between shows", async ({
-    page,
-  }) => {
+  test("keeps the cast page valid while navigating between shows", async ({ page }) => {
     const showB = structuredClone(MOCK_SHOW);
     showB.serie.id = 108978;
     showB.serie.name = "Fargo";
@@ -195,9 +181,7 @@ test.describe("Media Detail Pages", () => {
     await expect(page).toHaveURL(/\/show\/108978\?castPage=2$/);
   });
 
-  test("keeps locale navigation intact when its implicit default dub changes", async ({
-    page,
-  }) => {
+  test("keeps locale navigation intact when its implicit default dub changes", async ({ page }) => {
     const show = structuredClone(MOCK_SHOW);
     show.serie.id = 108978;
     show.serie.name = "Default Dub Show";
@@ -248,8 +232,7 @@ test.describe("Media Detail Pages", () => {
     await page.goto("/show/1396", { waitUntil: "domcontentloaded" });
     await waitForVueHydration(page);
     await page.route("**/api/show/**", async (route) => {
-      const isFrench =
-        route.request().headers()["accept-language"]?.startsWith("fr") ?? false;
+      const isFrench = route.request().headers()["accept-language"]?.startsWith("fr") ?? false;
       if (isFrench) {
         markFrenchShowStarted();
         await frenchShowGate;
@@ -263,13 +246,9 @@ test.describe("Media Detail Pages", () => {
     });
 
     await navigateClientSide(page, "/show/108978");
-    await expect(
-      page.getByRole("heading", { name: "Default Dub Show" }),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Default Dub Show" })).toBeVisible();
     await navigateClientSide(page, "/show/108978?castPage=2");
-    await expect(
-      page.getByText("English default role 13", { exact: true }).first(),
-    ).toBeVisible();
+    await expect(page.getByText("English default role 13", { exact: true }).first()).toBeVisible();
 
     await page.locator('button[aria-label="Toggle language"]').click();
     await page.getByText("Français", { exact: true }).click();
@@ -281,19 +260,13 @@ test.describe("Media Detail Pages", () => {
     releaseFrenchShow();
     await frenchShowFinished;
     await expect(page).toHaveURL(/\/fr\/show\/108978\?castPage=2$/);
-    await expect(
-      page.getByRole("heading", { name: "Default Dub Show en français" }),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Default Dub Show en français" })).toBeVisible();
     await expect(page.getByText("Jean-Louis Faure").first()).toBeVisible();
-    await expect(
-      page.getByText("English default role 13", { exact: true }),
-    ).toHaveCount(0);
+    await expect(page.getByText("English default role 13", { exact: true })).toHaveCount(0);
     await expect(page.locator('nav[aria-label="Pagination"]')).toHaveCount(0);
   });
 
-  test("shows the first cast page for an out-of-range castPage query", async ({
-    page,
-  }) => {
+  test("shows the first cast page for an out-of-range castPage query", async ({ page }) => {
     await page.goto("/show/1396", { waitUntil: "domcontentloaded" });
     await waitForVueHydration(page);
     await navigateClientSide(page, "/show/1396?castPage=99");
@@ -304,9 +277,7 @@ test.describe("Media Detail Pages", () => {
     await expect(page).toHaveURL(/\/show\/1396\?castPage=99$/);
   });
 
-  test("uses TMDB actor IDs and leaves unmatched cast works unlinked", async ({
-    page,
-  }) => {
+  test("uses TMDB actor IDs and leaves unmatched cast works unlinked", async ({ page }) => {
     await setupMockApi(page);
     await page.goto("/show/1396", { waitUntil: "domcontentloaded" });
 
@@ -316,14 +287,12 @@ test.describe("Media Detail Pages", () => {
       .locator("xpath=ancestor::div[contains(@class, 'theme-input')][1]");
     await expect(unmatchedCard).toBeVisible();
     await expect(unmatchedCard.locator('a[href*="/actor/"]')).toHaveCount(0);
-    await expect(
-      page.locator('a[href*="/actor/undefined"], a[href*="/actor/17419-"]'),
-    ).toHaveCount(0);
+    await expect(page.locator('a[href*="/actor/undefined"], a[href*="/actor/17419-"]')).toHaveCount(
+      0,
+    );
   });
 
-  test("links movie and episode cast cards with TMDB actor IDs", async ({
-    page,
-  }) => {
+  test("links movie and episode cast cards with TMDB actor IDs", async ({ page }) => {
     await setupMockApi(page);
     await page.goto("/movie/85", { waitUntil: "domcontentloaded" });
     await expect(page.locator('a[href="/actor/3"]').first()).toBeVisible();
@@ -332,14 +301,12 @@ test.describe("Media Detail Pages", () => {
       waitUntil: "domcontentloaded",
     });
     await expect(page.locator('a[href="/actor/17419"]').first()).toBeVisible();
-    await expect(
-      page.locator('a[href*="/actor/undefined"], a[href*="/actor/17419-"]'),
-    ).toHaveCount(0);
+    await expect(page.locator('a[href*="/actor/undefined"], a[href*="/actor/17419-"]')).toHaveCount(
+      0,
+    );
   });
 
-  test("filters cast by full voice actor name on movie, show, and episode", async ({
-    page,
-  }) => {
+  test("filters cast by full voice actor name on movie, show, and episode", async ({ page }) => {
     test.setTimeout(120000);
     const routes = [
       {
@@ -370,25 +337,17 @@ test.describe("Media Detail Pages", () => {
         .locator("xpath=ancestor::section[1]");
       const search = castSection.locator('input[type="search"]');
       await search.fill(route.voiceActor);
-      await expect(
-        castSection.getByText(route.actor, { exact: true }),
-      ).toBeVisible();
-      await expect(
-        castSection.getByText(route.absentActor, { exact: true }),
-      ).toHaveCount(0);
+      await expect(castSection.getByText(route.actor, { exact: true })).toBeVisible();
+      await expect(castSection.getByText(route.absentActor, { exact: true })).toHaveCount(0);
     }
   });
 
   test("only exposes show JSON-LD on the show route", async ({ page }) => {
     await page.goto("/show/1396", { waitUntil: "domcontentloaded" });
-    await expect(
-      page.locator('head script[type="application/ld+json"]'),
-    ).toHaveCount(1);
+    await expect(page.locator('head script[type="application/ld+json"]')).toHaveCount(1);
 
     await page.goto("/show/1396/season/1", { waitUntil: "domcontentloaded" });
-    await expect(
-      page.locator('head script[type="application/ld+json"]'),
-    ).toHaveCount(0);
+    await expect(page.locator('head script[type="application/ld+json"]')).toHaveCount(0);
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
       "href",
       /show\/1396\/season\/1/,
@@ -397,9 +356,7 @@ test.describe("Media Detail Pages", () => {
     await page.goto("/show/1396/season/1/episode/1", {
       waitUntil: "domcontentloaded",
     });
-    await expect(
-      page.locator('head script[type="application/ld+json"]'),
-    ).toHaveCount(0);
+    await expect(page.locator('head script[type="application/ld+json"]')).toHaveCount(0);
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
       "href",
       /show\/1396\/season\/1\/episode\/1/,
@@ -427,12 +384,10 @@ test.describe("Media Detail Pages", () => {
           sameSite: "Lax",
         },
       ]);
-      const localeCookie = await page
-        .context()
-        .cookies("http://localhost:3050");
-      expect(
-        localeCookie.find((cookie) => cookie.name === "user_lang")?.value,
-      ).toBe(locale.code.slice(0, 2).toLowerCase());
+      const localeCookie = await page.context().cookies("http://localhost:3050");
+      expect(localeCookie.find((cookie) => cookie.name === "user_lang")?.value).toBe(
+        locale.code.slice(0, 2).toLowerCase(),
+      );
 
       for (const route of [
         {
@@ -454,14 +409,10 @@ test.describe("Media Detail Pages", () => {
         expect(response && new URL(response.url()).pathname).toBe(route.path);
         const html = response ? await response.text() : "";
         expect(html).not.toBe("");
-        expect(html).toMatch(
-          new RegExp(`<html\\b[^>]*\\blang="${locale.code}"`),
-        );
+        expect(html).toMatch(new RegExp(`<html\\b[^>]*\\blang="${locale.code}"`));
 
-        const canonicalTags =
-          html.match(/<link\b(?=[^>]*\brel="canonical")[^>]*>/g) || [];
-        const ogUrlTags =
-          html.match(/<meta\b(?=[^>]*\bproperty="og:url")[^>]*>/g) || [];
+        const canonicalTags = html.match(/<link\b(?=[^>]*\brel="canonical")[^>]*>/g) || [];
+        const ogUrlTags = html.match(/<meta\b(?=[^>]*\bproperty="og:url")[^>]*>/g) || [];
         expect(canonicalTags).toHaveLength(1);
         expect(ogUrlTags).toHaveLength(1);
         expect(getAttribute(canonicalTags[0], "href")).toBe(
@@ -471,9 +422,7 @@ test.describe("Media Detail Pages", () => {
           `https://dubbingbase.com${locale.prefix}${route.canonicalPath}`,
         );
         const alternateTags =
-          html.match(
-            /<link\b(?=[^>]*\brel="alternate")(?=[^>]*\bhreflang="[^"]+")[^>]*>/g,
-          ) || [];
+          html.match(/<link\b(?=[^>]*\brel="alternate")(?=[^>]*\bhreflang="[^"]+")[^>]*>/g) || [];
         const supportedAlternates = [
           { code: "en-US", prefix: "" },
           { code: "fr-FR", prefix: "/fr" },
@@ -487,9 +436,7 @@ test.describe("Media Detail Pages", () => {
           expect(matchingTags).toHaveLength(1);
           const alternateUrl = new URL(getAttribute(matchingTags[0], "href"));
           expect(alternateUrl.origin).toBe("https://dubbingbase.com");
-          expect(alternateUrl.pathname).toBe(
-            `${alternate.prefix}${route.canonicalPath}`,
-          );
+          expect(alternateUrl.pathname).toBe(`${alternate.prefix}${route.canonicalPath}`);
         }
         const titleTag = html.match(/<title>(.*?)<\/title>/s)?.[1] || "";
         for (const titlePart of route.titleParts) {
@@ -538,9 +485,7 @@ test.describe("Media Detail Pages", () => {
     await expect(page).toHaveTitle(/Breaking Bad en français.*Saison 1/);
     await expect(page).toHaveURL(/\/fr\/show\/1396\/season\/1/);
     await expect
-      .poll(() =>
-        page.evaluate(() => performance.getEntriesByType("navigation").length),
-      )
+      .poll(() => page.evaluate(() => performance.getEntriesByType("navigation").length))
       .toBe(1);
     await expect(page.locator('link[rel="canonical"]')).toHaveCount(1);
     await expect(page.locator('meta[property="og:url"]')).toHaveCount(1);
@@ -552,18 +497,11 @@ test.describe("Media Detail Pages", () => {
       "content",
       "https://dubbingbase.com/fr/show/1396/season/1",
     );
-    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
-      "content",
-      /Saison 1/,
-    );
-    await expect(
-      page.locator('link[rel="alternate"][hreflang="fr-FR"]'),
-    ).toHaveCount(1);
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", /Saison 1/);
+    await expect(page.locator('link[rel="alternate"][hreflang="fr-FR"]')).toHaveCount(1);
   });
 
-  test("hides stale show data while the next locale response is pending", async ({
-    page,
-  }) => {
+  test("hides stale show data while the next locale response is pending", async ({ page }) => {
     const frenchSeason = structuredClone(MOCK_SEASON);
     frenchSeason.serie.name = "Breaking Bad en français";
     let markFrenchSeasonRequested = () => {};
@@ -616,20 +554,13 @@ test.describe("Media Detail Pages", () => {
     releaseFrenchSeason();
     await frenchSeasonFinished;
     await expect(page).toHaveTitle(/Breaking Bad en français.*Saison 1/);
-    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
-      "content",
-      /Saison 1/,
-    );
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", /Saison 1/);
     await expect
-      .poll(() =>
-        page.evaluate(() => performance.getEntriesByType("navigation").length),
-      )
+      .poll(() => page.evaluate(() => performance.getEntriesByType("navigation").length))
       .toBe(1);
   });
 
-  test("navigates show to season to episode and preserves the selected dub", async ({
-    page,
-  }) => {
+  test("navigates show to season to episode and preserves the selected dub", async ({ page }) => {
     await setupMockApi(page);
     await page.goto("/show/1396", { waitUntil: "domcontentloaded" });
 
@@ -637,14 +568,10 @@ test.describe("Media Detail Pages", () => {
     await expect(seasonLink).toHaveAttribute("href", /dub=139601/);
     await seasonLink.click();
     await expect(page).toHaveURL(/\/show\/1396\/season\/1\?dub=139601/);
-    await expect(
-      page.getByText("Walter White begins a new chapter."),
-    ).toBeVisible();
+    await expect(page.getByText("Walter White begins a new chapter.")).toBeVisible();
 
     await page.getByRole("link", { name: /Pilot/ }).first().click();
-    await expect(page).toHaveURL(
-      /\/show\/1396\/season\/1\/episode\/1\?dub=139601/,
-    );
+    await expect(page).toHaveURL(/\/show\/1396\/season\/1\/episode\/1\?dub=139601/);
     await expect(page.locator("body")).toContainText(
       "Walter White starts cooking methamphetamine.",
     );
@@ -657,9 +584,7 @@ test.describe("Media Detail Pages", () => {
     await expect(page.getByRole("heading", { name: "Episodes" })).toBeVisible();
   });
 
-  test("lazy-loads and asynchronously decodes season episode thumbnails", async ({
-    page,
-  }) => {
+  test("lazy-loads and asynchronously decodes season episode thumbnails", async ({ page }) => {
     await setupMockApi(page);
     await page.goto("/show/1396/season/1");
 
@@ -759,27 +684,20 @@ test.describe("Media Detail Pages", () => {
     await expect(page.locator("body")).toContainText("Fargo Season Two");
 
     await expect(page).toHaveTitle(/Fargo/);
-    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
-      "content",
-      /Fargo/,
-    );
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", /Fargo/);
 
     releaseSeasonA();
     await seasonAFinished;
     await waitForBrowserPaint(page);
     await expect(page.locator("body")).toContainText("Fargo Season Two");
-    await expect(page.locator("body")).not.toContainText(
-      "Breaking Bad Season One",
-    );
+    await expect(page.locator("body")).not.toContainText("Breaking Bad Season One");
 
     await navigateClientSide(page, "/show/1396/season/1");
     await expect(page.locator("body")).toContainText("Breaking Bad Season One");
     await expect(page).toHaveTitle(/Breaking Bad/);
   });
 
-  test("hides loaded season A content and metadata while season B is pending", async ({
-    page,
-  }) => {
+  test("hides loaded season A content and metadata while season B is pending", async ({ page }) => {
     const seasonA = structuredClone(MOCK_SEASON);
     seasonA.season.name = "Breaking Bad Season One";
     seasonA.season.overview = "Breaking Bad season synopsis must disappear.";
@@ -816,7 +734,7 @@ test.describe("Media Detail Pages", () => {
         await route.fulfill({
           status: 200,
           contentType: "application/json",
-          body: JSON.stringify(seasonB),
+          body: JSON.stringify(mockSeasonPageResponse(seasonB)),
         });
         markSeasonBFinished();
         return;
@@ -825,7 +743,7 @@ test.describe("Media Detail Pages", () => {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify(seasonA),
+        body: JSON.stringify(mockSeasonPageResponse(seasonA)),
       });
     });
 
@@ -833,9 +751,7 @@ test.describe("Media Detail Pages", () => {
     await navigateClientSide(page, "/show/1396/season/1");
     await expect(page.locator("body")).toContainText("Breaking Bad Season One");
     await expect(page).toHaveTitle(/Breaking Bad.*Swedish/);
-    await expect(
-      page.locator('meta[property="og:description"]'),
-    ).toHaveAttribute(
+    await expect(page.locator('meta[property="og:description"]')).toHaveAttribute(
       "content",
       /Breaking Bad season synopsis must disappear\./,
     );
@@ -844,9 +760,7 @@ test.describe("Media Detail Pages", () => {
     await seasonBStarted;
 
     await expect(page.locator(".animate-pulse").first()).toBeVisible();
-    await expect(page.locator("body")).not.toContainText(
-      "Breaking Bad Season One",
-    );
+    await expect(page.locator("body")).not.toContainText("Breaking Bad Season One");
     await expect(page.locator("body")).not.toContainText(
       "Breaking Bad season synopsis must disappear.",
     );
@@ -856,9 +770,10 @@ test.describe("Media Detail Pages", () => {
       "content",
       /Breaking Bad|Swedish/,
     );
-    await expect(
-      page.locator('meta[property="og:description"]'),
-    ).not.toHaveAttribute("content", /Breaking Bad season synopsis/);
+    await expect(page.locator('meta[property="og:description"]')).not.toHaveAttribute(
+      "content",
+      /Breaking Bad season synopsis/,
+    );
 
     releaseSeasonB();
     await seasonBFinished;
@@ -866,9 +781,7 @@ test.describe("Media Detail Pages", () => {
     await expect(page).toHaveTitle(/Fargo/);
   });
 
-  test("clears rendered episode metadata while the next route is loading", async ({
-    page,
-  }) => {
+  test("clears rendered episode metadata while the next route is loading", async ({ page }) => {
     const episodeB = structuredClone(MOCK_EPISODE);
     episodeB.episode.season_number = 2;
     episodeB.episode.episode_number = 2;
@@ -896,7 +809,7 @@ test.describe("Media Detail Pages", () => {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify(episodeB),
+        body: JSON.stringify(mockEpisodePageResponse(episodeB)),
       });
     });
 
@@ -907,19 +820,13 @@ test.describe("Media Detail Pages", () => {
       "Walter White starts cooking methamphetamine.",
     );
     await expect(page).toHaveTitle(/Pilot/);
-    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
-      "content",
-      /Pilot/,
-    );
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", /Pilot/);
 
     await navigateClientSide(page, "/show/108978/season/2/episode/2");
     await episodeBStarted;
 
     await expect(page).not.toHaveTitle(/Pilot/);
-    await expect(page.locator('meta[property="og:title"]')).not.toHaveAttribute(
-      "content",
-      /Pilot/,
-    );
+    await expect(page.locator('meta[property="og:title"]')).not.toHaveAttribute("content", /Pilot/);
     await expect(page.locator("body")).not.toContainText(
       "Walter White starts cooking methamphetamine.",
     );
@@ -933,23 +840,20 @@ test.describe("Media Detail Pages", () => {
     );
 
     releaseEpisodeB();
-    await expect(page.locator("body")).toContainText(
-      "Fargo Selected Episode Two",
-    );
+    await expect(page.locator("body")).toContainText("Fargo Selected Episode Two");
     await expect(page.locator("body")).toContainText("Fargo Cast Actor");
     await expect(page).toHaveTitle(/Fargo Selected Episode Two/);
     await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
       "content",
       /Fargo Selected Episode Two/,
     );
-    await expect(
-      page.locator('meta[property="og:description"]'),
-    ).toHaveAttribute("content", /A new Fargo story begins\./);
+    await expect(page.locator('meta[property="og:description"]')).toHaveAttribute(
+      "content",
+      /A new Fargo story begins\./,
+    );
   });
 
-  test("updates episode data across A to B to A with out-of-order responses", async ({
-    page,
-  }) => {
+  test("updates episode data across A to B to A with out-of-order responses", async ({ page }) => {
     const episodeA = structuredClone(MOCK_EPISODE);
     episodeA.episode.name = "Breaking Bad Delayed Episode One";
     const episodeB = structuredClone(MOCK_EPISODE);
@@ -1000,7 +904,7 @@ test.describe("Media Detail Pages", () => {
         await route.fulfill({
           status: 200,
           contentType: "application/json",
-          body: JSON.stringify(episodeB),
+          body: JSON.stringify(mockEpisodePageResponse(episodeB)),
         });
         return;
       }
@@ -1013,7 +917,7 @@ test.describe("Media Detail Pages", () => {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify(episodeA),
+        body: JSON.stringify(mockEpisodePageResponse(episodeA)),
       });
       if (episodeARequests === 1) markEpisodeAFinished();
     });
@@ -1039,49 +943,38 @@ test.describe("Media Detail Pages", () => {
       "content",
       /Breaking Bad/,
     );
-    await expect(page.locator("body")).not.toContainText(
-      "Breaking Bad Delayed Episode One",
-    );
+    await expect(page.locator("body")).not.toContainText("Breaking Bad Delayed Episode One");
     await expect(page.locator("body")).not.toContainText("Walter White");
 
     releaseEpisodeB();
-    await expect(page.locator("body")).toContainText(
-      "Fargo Selected Episode Two",
-    );
+    await expect(page.locator("body")).toContainText("Fargo Selected Episode Two");
     await expect(page.locator("body")).toContainText("Fargo Cast Actor");
     await expect(page).toHaveTitle(/Fargo Selected Episode Two/);
     await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
       "content",
       /Fargo Selected Episode Two/,
     );
-    await expect(
-      page.locator('meta[property="og:description"]'),
-    ).toHaveAttribute("content", /A new Fargo story begins\./);
+    await expect(page.locator('meta[property="og:description"]')).toHaveAttribute(
+      "content",
+      /A new Fargo story begins\./,
+    );
     await expect(page).not.toHaveTitle(/^Series$/);
 
     releaseEpisodeA();
     await episodeAFinished;
     await waitForBrowserPaint(page);
-    await expect(page.locator("body")).toContainText(
-      "Fargo Selected Episode Two",
-    );
-    await expect(page.locator("body")).not.toContainText(
-      "Breaking Bad Delayed Episode One",
-    );
+    await expect(page.locator("body")).toContainText("Fargo Selected Episode Two");
+    await expect(page.locator("body")).not.toContainText("Breaking Bad Delayed Episode One");
 
     await navigateClientSide(page, "/show/1396/season/1/episode/1");
-    await expect(page.locator("body")).toContainText(
-      "Breaking Bad Delayed Episode One",
-    );
+    await expect(page.locator("body")).toContainText("Breaking Bad Delayed Episode One");
     await expect(page.locator('meta[property="og:url"]')).toHaveAttribute(
       "content",
       /show\/1396\/season\/1\/episode\/1/,
     );
   });
 
-  test("mounts the season skeleton while the season request is delayed", async ({
-    page,
-  }) => {
+  test("mounts the season skeleton while the season request is delayed", async ({ page }) => {
     await setupMockApi(page);
     await page.goto("/show/1396");
     await page.route("**/api/season?**", async (route) => {
@@ -1096,14 +989,10 @@ test.describe("Media Detail Pages", () => {
     await page.locator('a[href*="/show/1396/season/1"]').first().click();
     await expect(page).toHaveURL(/\/show\/1396\/season\/1/);
     await expect(page.locator(".animate-pulse").first()).toBeVisible();
-    await expect(
-      page.getByText("Walter White begins a new chapter."),
-    ).toBeVisible();
+    await expect(page.getByText("Walter White begins a new chapter.")).toBeVisible();
   });
 
-  test("shows an error for a timed out French season request", async ({
-    page,
-  }) => {
+  test("shows an error for a timed out French season request", async ({ page }) => {
     await setupMockApi(page);
     await page.context().addCookies([
       {
@@ -1119,30 +1008,24 @@ test.describe("Media Detail Pages", () => {
 
     await expect(page).toHaveURL("/fr/show/108978/season/1?dub=524");
     await expect(page.locator(".animate-pulse").first()).toBeVisible();
-    await expect(
-      page.getByText("Impossible de charger ce contenu pour le moment."),
-    ).toBeVisible();
+    await expect(page.getByText("Impossible de charger ce contenu pour le moment.")).toBeVisible();
   });
 
-  test("renders Video Game detail page with localized voice cast", async ({
-    page,
-  }) => {
+  test("renders Video Game detail page with localized voice cast", async ({ page }) => {
     const api = await setupMockApi(page);
     await page.goto("/game/1942", { waitUntil: "domcontentloaded" });
 
     // Verify game title and voice actors
-    await expect(
-      page.getByRole("heading", { name: "The Witcher 3: Wild Hunt" }),
-    ).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("heading", { name: "The Witcher 3: Wild Hunt" })).toBeVisible({
+      timeout: 10000,
+    });
     await expect(page.locator("body")).toContainText("Geralt de Riv");
     await expect(page.locator("body")).toContainText("Daniel Lobé");
 
     api.expectNoErrors();
   });
 
-  test("renders Audiobook detail page with narrator information", async ({
-    page,
-  }) => {
+  test("renders Audiobook detail page with narrator information", async ({ page }) => {
     const api = await setupMockApi(page);
     await page.goto("/audiobook/401", { waitUntil: "domcontentloaded" });
 
@@ -1161,9 +1044,9 @@ test.describe("Media Detail Pages", () => {
     await page.goto("/podcast/101", { waitUntil: "domcontentloaded" });
 
     // Verify podcast title and cast
-    await expect(
-      page.getByRole("heading", { name: /L.*Ombre du Doute/i }),
-    ).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("heading", { name: /L.*Ombre du Doute/i })).toBeVisible({
+      timeout: 10000,
+    });
     await expect(page.locator("body")).toContainText("Richard Darbois");
 
     api.expectNoErrors();

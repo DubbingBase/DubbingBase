@@ -232,11 +232,10 @@ import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
 import ReportModal from "../../components/ReportModal.vue";
 import {
   fetchAdvertisementData,
-  formatMediaWorkCastCards,
-  paginateDetailCollection,
+  fetchDetailCollection,
   resolveDetailCollectionProject,
 } from "@app/shared-logic";
-import type { Advertisement, DetailCollectionProject } from "@app/shared-logic";
+import type { Advertisement, MediaWorkCastCard } from "@app/shared-logic";
 
 const route = useRoute();
 const router = useRouter();
@@ -258,13 +257,14 @@ const { page: castPage, setPage: setCastPage } = useUrlPagination("castPage");
 const currentUrl = computed(() => route.fullPath);
 
 // Instant Hydration Data Fetching
-const { data, pending } = await useAsyncData(
+const { data, pending, error } = await useAsyncData(
   `ad-${adId.value}-${locale.value}`,
-  () => fetchAdvertisementData(adId.value, locale.value, { projection: "advertisement-page" }),
+  () => fetchAdvertisementData(adId.value, locale.value, { projection: "media-summary" }),
   {
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
 );
+if (import.meta.server && error.value) throw error.value;
 
 const advertisement = computed<Advertisement | null>(() => data.value?.advertisement || null);
 const dubbingProjects = computed(() => data.value?.dubbingProjects || []);
@@ -274,17 +274,31 @@ const activeDubProject = computed(() =>
 );
 const activeDubId = computed(() => activeDubProject.value?.id || 0);
 
-watch(activeDubId, () => void setCastPage(1));
+watch(activeDubId, (dub, previousDub) => {
+  if (previousDub > 0 && dub > 0 && dub !== previousDub) void setCastPage(1);
+});
 
 const posterUrl = computed(() => {
   return advertisement.value?.poster_url || null;
 });
 
-const completeCastItems = computed(() => formatMediaWorkCastCards(activeDubProject.value));
-const castTotal = computed(() => completeCastItems.value.length);
-const castItems = computed(() =>
-  paginateDetailCollection(completeCastItems.value, castPage.value, 12),
+const { data: castData } = await useAsyncData(
+  () => `advertisement-cast-${adId.value}-${activeDubId.value}-${castPage.value}`,
+  () =>
+    activeDubId.value
+      ? fetchDetailCollection<MediaWorkCastCard>({
+          collection: "media-cast",
+          id: adId.value,
+          type: "advertisement",
+          projectId: activeDubId.value,
+          page: castPage.value,
+          pageSize: 12,
+        })
+      : Promise.resolve(null),
+  { watch: [activeDubId, castPage] },
 );
+const castTotal = computed(() => castData.value?.pagination.totalItems || 0);
+const castItems = computed(() => castData.value?.data || []);
 
 useHead({
   title: computed(() =>

@@ -177,7 +177,7 @@
             class="text-center py-16 theme-surface-raised theme-surface-overlay rounded-2xl border theme-border-subtle theme-border theme-text-muted text-sm"
           >
             {{
-              completeCastItems.length === 0 ? $t("podcast.noCastInfo") : $t("podcast.noCastMatch")
+              dubbingProjects.length === 0 ? $t("podcast.noCastInfo") : $t("podcast.noCastMatch")
             }}
           </div>
 
@@ -251,12 +251,10 @@ import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
 import ReportModal from "../../components/ReportModal.vue";
 import {
   fetchPodcastData,
-  filterDetailCollectionItems,
-  formatMediaWorkCastCards,
-  paginateDetailCollection,
+  fetchDetailCollection,
   resolveDetailCollectionProject,
 } from "@app/shared-logic";
-import type { DetailCollectionProject, Podcast } from "@app/shared-logic";
+import type { DetailCollectionProject, MediaWorkCastCard, Podcast } from "@app/shared-logic";
 import {
   ExternalLink as ExternalLinkIcon,
   Search as SearchIcon,
@@ -283,25 +281,29 @@ const currentUrl = computed(() => route.fullPath);
 const { page: castPage, setPage: setCastPage } = useUrlPagination("castPage");
 
 // Instant Hydration Data Fetching
-const { data, pending } = await useAsyncData(
+const { data, pending, error } = await useAsyncData(
   `podcast-${podcastId.value}-${locale.value}`,
-  () => fetchPodcastData(podcastId.value, locale.value, { projection: "podcast-page" }),
+  () => fetchPodcastData(podcastId.value, locale.value, { projection: "media-summary" }),
   {
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
 );
+if (import.meta.server && error.value) throw error.value;
 
 const podcast = computed<Podcast | null>(() => data.value?.podcast || null);
 const dubbingProjects = computed(() => {
-  return (data.value?.dubbingProjects || []).filter((p: DetailCollectionProject) =>
-    (p.works || []).some((w) => w.voice_actor),
+  return (data.value?.dubbingProjects || []).filter(
+    (p: DetailCollectionProject) =>
+      p.has_voice_actor || (p.works || []).some((w) => w.voice_actor || w.voice_actor_id),
   );
 });
 
 function projectVoiceActorCount(project: DetailCollectionProject): number {
+  if (project.voice_actor_count !== undefined) return project.voice_actor_count;
   const ids = new Set<number>();
   for (const w of project.works || []) {
-    if (w.voice_actor?.id) ids.add(w.voice_actor.id);
+    const id = w.voice_actor?.id || w.voice_actor_id;
+    if (id) ids.add(id);
   }
   return ids.size;
 }
@@ -339,18 +341,38 @@ const coverUrl = computed(() => {
 const castSearchQuery = ref("");
 const debouncedCastSearch = refDebounced(castSearchQuery, 150);
 
-watch([debouncedCastSearch, activeDubId], () => {
-  void setCastPage(1);
+watch([debouncedCastSearch, activeDubId], ([search, dub], [previousSearch, previousDub]) => {
+  if (
+    search !== previousSearch ||
+    (typeof previousDub === "number" &&
+      previousDub > 0 &&
+      typeof dub === "number" &&
+      dub > 0 &&
+      dub !== previousDub)
+  ) {
+    void setCastPage(1);
+  }
 });
 
-const completeCastItems = computed(() => formatMediaWorkCastCards(activeDubProject.value));
-const filteredCastItems = computed(() =>
-  filterDetailCollectionItems(completeCastItems.value, debouncedCastSearch.value),
+const { data: castData } = await useAsyncData(
+  () =>
+    `podcast-cast-${podcastId.value}-${activeDubId.value}-${castPage.value}-${debouncedCastSearch.value}`,
+  () =>
+    activeDubId.value
+      ? fetchDetailCollection<MediaWorkCastCard>({
+          collection: "media-cast",
+          id: podcastId.value,
+          type: "podcast",
+          projectId: activeDubId.value,
+          page: castPage.value,
+          pageSize: 12,
+          query: debouncedCastSearch.value,
+        })
+      : Promise.resolve(null),
+  { watch: [activeDubId, castPage, debouncedCastSearch] },
 );
-const castTotal = computed(() => filteredCastItems.value.length);
-const castItems = computed(() =>
-  paginateDetailCollection(filteredCastItems.value, castPage.value, 12),
-);
+const castTotal = computed(() => castData.value?.pagination.totalItems || 0);
+const castItems = computed(() => castData.value?.data || []);
 
 function openExternalUrl(url?: string) {
   if (typeof window !== "undefined" && url) {

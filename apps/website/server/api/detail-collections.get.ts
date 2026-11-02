@@ -8,6 +8,7 @@ import {
 import type { IgdbCharacter } from "@app/shared-logic";
 import type { H3Event$Fetch } from "nitropack/types";
 import { paginateArray } from "../utils/pagination";
+import { getMediaPageDubbingProjects } from "../utils/db/queries";
 
 type CollectionItem = {
   id?: number | string;
@@ -166,6 +167,12 @@ function formatTmdbCards(
   const media: CollectionItem = detail.movie || detail.serie || detail.episode || {};
   const cast = detail.aggregateCredits?.cast || media.credits?.cast || [];
   const works = project?.works || [];
+  const profilePicturesByName = new Map<string, CollectionItem>();
+  for (const picture of detail.characterProfilePictures || []) {
+    if (!picture.name) continue;
+    const name = normalized(picture.name);
+    if (!profilePicturesByName.has(name)) profilePicturesByName.set(name, picture);
+  }
   const worksByActorId = new Map<string, CollectionItem[]>();
   for (const work of works) {
     const actorId = String(work.actor_id);
@@ -184,9 +191,7 @@ function formatTmdbCards(
     for (const work of actorWorks) {
       matchedWorkIds.add(work.id);
       const characterName = actor.character || work?.character_name || null;
-      const characterPicture = (detail.characterProfilePictures || []).find(
-        (picture: CollectionItem) => normalized(picture.name) === normalized(characterName),
-      );
+      const characterPicture = profilePicturesByName.get(normalized(characterName));
       const voiceActor = work ? workVoiceActor(work) : null;
       cards.push({
         ...actor,
@@ -223,6 +228,12 @@ async function getMediaCast(
 ): Promise<CollectionItem[]> {
   const type = queryValue(query.type) || "";
   const id = requiredId(query.id, "id");
+  if (["audiobook", "podcast", "advertisement", "toy"].includes(type)) {
+    const projectId = requiredId(query.projectId, "projectId");
+    const projects = await getMediaPageDubbingProjects(id, type, projectId);
+    return formatMediaWorkCastCards(projects[0]);
+  }
+
   const detailQuery =
     type === "episode"
       ? {
@@ -312,8 +323,7 @@ async function getCollectionItems(
       const detail = await requestFetch<DetailPayload>(`/api/get-studio-details`, {
         query: { studioId: id },
       });
-      const text = normalized(queryValue(query.query));
-      return filterDetailCollectionItems(detail.dubbedProjects || [], text);
+      return detail.dubbedProjects || [];
     }
     case "studio-voice-actors": {
       const detail = await requestFetch<DetailPayload>(`/api/get-studio-details`, {

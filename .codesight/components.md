@@ -105,6 +105,7 @@
 - **HeaderPreferences** [client] — `apps/website/src/components/HeaderPreferences.vue`
 - **HomeBelowFoldSections** [client] — `apps/website/src/components/HomeBelowFoldSections.vue`
 - **LanguageBanner** [client] — `apps/website/src/components/LanguageBanner.vue`
+- **MediaCatalogPage** [client] — props: type — `apps/website/src/components/MediaCatalogPage.vue`
 - **MediaSkeleton** [client] — `apps/website/src/components/MediaSkeleton.vue`
 - **PaginatedResponsiveGrid** [client] — props: items, pageSize, totalItems, page, gridClass, itemKey — `apps/website/src/components/PaginatedResponsiveGrid.vue`
 - **PaginationControls** [client] — props: page, totalItems, pageSize — `apps/website/src/components/PaginationControls.vue`
@@ -152,15 +153,18 @@
 - **new** [client] — `apps/website/src/pages/advertisement/[adId]/projects/new.vue`
 - **[id]** [client] — `apps/website/src/pages/advertisement/[id].vue`
 - **new** [client] — `apps/website/src/pages/advertisement/new.vue`
+- **advertisements** [client] — `apps/website/src/pages/advertisements.vue`
 - **edit** [client] — `apps/website/src/pages/audiobook/[audiobookId]/projects/[projectId]/edit.vue`
 - **new** [client] — `apps/website/src/pages/audiobook/[audiobookId]/projects/new.vue`
 - **[id]** [client] — `apps/website/src/pages/audiobook/[id].vue`
+- **audiobooks** [client] — `apps/website/src/pages/audiobooks.vue`
 - **index** [client] — `apps/website/src/pages/contribute/index.vue`
 - **play** [client] — `apps/website/src/pages/contribute/task/play.vue`
 - **discussions** [client] — `apps/website/src/pages/discussions.vue`
 - **edit** [client] — `apps/website/src/pages/game/[gameId]/projects/[projectId]/edit.vue`
 - **new** [client] — `apps/website/src/pages/game/[gameId]/projects/new.vue`
 - **[id]** [client] — `apps/website/src/pages/game/[id].vue`
+- **games** [client] — `apps/website/src/pages/games.vue`
 - **guidelines** [client] — `apps/website/src/pages/guidelines.vue`
 - **index** [client] — `apps/website/src/pages/index.vue`
 - **leaderboard** [client] — `apps/website/src/pages/leaderboard.vue`
@@ -174,6 +178,7 @@
 - **edit** [client] — `apps/website/src/pages/podcast/[podcastId]/projects/[projectId]/edit.vue`
 - **new** [client] — `apps/website/src/pages/podcast/[podcastId]/projects/new.vue`
 - **new** [client] — `apps/website/src/pages/podcast/new.vue`
+- **podcasts** [client] — `apps/website/src/pages/podcasts.vue`
 - **privacy** [client] — `apps/website/src/pages/privacy.vue`
 - **api-key** [client] — `apps/website/src/pages/profile/api-key.vue`
 - **index** [client] — `apps/website/src/pages/profile/index.vue`
@@ -196,6 +201,7 @@
 - **edit** [client] — `apps/website/src/pages/toy/[toyId]/projects/[projectId]/edit.vue`
 - **new** [client] — `apps/website/src/pages/toy/[toyId]/projects/new.vue`
 - **new** [client] — `apps/website/src/pages/toy/new.vue`
+- **toys** [client] — `apps/website/src/pages/toys.vue`
 - **[id]** [client] — `apps/website/src/pages/voice-actor/[id].vue`
 - **edit** [client] — `apps/website/src/pages/voice-actor/[voiceActorId]/edit.vue`
 - **new** [client] — `apps/website/src/pages/voice-actor/new.vue`

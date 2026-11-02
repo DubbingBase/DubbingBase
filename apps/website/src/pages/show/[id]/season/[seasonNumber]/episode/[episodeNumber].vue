@@ -185,7 +185,21 @@
         </div>
 
         <!-- Voice Cast -->
-        <section v-if="castTotal > 0">
+        <section
+          v-if="activeProjectError"
+          role="alert"
+          class="theme-surface border theme-border-subtle theme-border rounded-xl p-6 text-center"
+        >
+          <p class="theme-text-secondary mb-4">{{ $t("details.requestError") }}</p>
+          <button
+            type="button"
+            class="px-4 py-2 theme-primary-bg font-semibold rounded-lg hover:opacity-90 transition-opacity"
+            @click="retryActiveProjectWorks"
+          >
+            {{ $t("common.retry") }}
+          </button>
+        </section>
+        <section v-else-if="castTotal > 0">
           <div class="flex flex-col mb-6 gap-2">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
               <div>
@@ -289,11 +303,7 @@
                       </div>
                       <div
                         class="font-bold text-sm theme-text truncate block w-full"
-                        :title="
-                          actor.roleNames.join(', ') ||
-                          actor.workCharacterName ||
-                          ''
-                        "
+                        :title="actor.roleNames.join(', ') || actor.workCharacterName || ''"
                       >
                         {{
                           actor.roleNames.join(", ") ||
@@ -392,6 +402,13 @@
       <p class="theme-text-secondary theme-text-muted mb-6">
         {{ $t("details.requestError") }}
       </p>
+      <button
+        type="button"
+        class="px-4 py-2 mb-4 theme-primary-bg font-semibold rounded-lg hover:opacity-90 transition-opacity"
+        @click="retryPageData"
+      >
+        {{ $t("common.retry") }}
+      </button>
       <NuxtLink
         :to="localePath(`/show/${showId}/season/${seasonNumber}`)"
         class="px-4 py-2 theme-primary-bg font-semibold rounded-lg hover:opacity-90 transition-opacity"
@@ -440,7 +457,12 @@ import {
   StarIcon,
 } from "lucide-vue-next";
 import ReportModal from "../../../../../../components/ReportModal.vue";
-import { fetchEpisodePageData } from "../../../../../../utils/season-data";
+import {
+  fetchEpisodePageData,
+  fetchEpisodeProjectWorks,
+  type EpisodePageDubbingProject,
+  type EpisodePageProjectWorksResponse,
+} from "../../../../../../utils/season-data";
 import {
   type CastActorReference,
   type CastWorkReference,
@@ -451,7 +473,6 @@ import {
   indexCharacterPictures,
   type CharacterProfilePicture,
 } from "../../../../../../utils/show-character-pictures";
-import type { MediaDetailDubbingProject } from "@app/shared-logic";
 
 const isReportModalOpen = ref(false);
 const { page: castPage, setPage: setCastPage } = useUrlPagination("castPage");
@@ -509,15 +530,23 @@ const {
   data: pageData,
   pending,
   error,
+  refresh: refreshPageData,
 } = useAsyncData(
   cacheKey,
   async () => {
     const requestKey = cacheKey.value;
+    const requestedProjectId =
+      typeof route.query.dub === "string" &&
+      Number.isSafeInteger(Number(route.query.dub)) &&
+      Number(route.query.dub) > 0
+        ? Number(route.query.dub)
+        : undefined;
     const response = await fetchEpisodePageData(
       showId.value,
       seasonNumber.value,
       episodeNumber.value,
       locale.value,
+      requestedProjectId,
     );
     return { requestKey, response };
   },
@@ -526,6 +555,10 @@ const {
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
 );
+
+function retryPageData(): void {
+  void refreshPageData();
+}
 
 const data = computed(() =>
   pageData.value?.requestKey === cacheKey.value ? pageData.value.response : undefined,
@@ -537,48 +570,26 @@ const characterPictureIndex = computed(() =>
   indexCharacterPictures(characterProfilePictures.value),
 );
 const episode = computed(() => data.value?.episode);
-const requestError = computed(() => Boolean(error.value && error.value.statusCode !== 404));
-const projectVoiceActorMetrics = computed(() => {
-  const visibleProjects: MediaDetailDubbingProject[] = [];
-  const actorCounts = new Map<number, number>();
-
-  for (const project of data.value?.dubbingProjects || []) {
-    let hasVoiceActor = false;
-    const actorIds = new Set<number>();
-
-    for (const work of project.works || []) {
-      if (work.voice_actor) {
-        hasVoiceActor = true;
-        if (work.voice_actor.id) actorIds.add(work.voice_actor.id);
-      }
-    }
-
-    actorCounts.set(project.id, actorIds.size);
-    if (hasVoiceActor) visibleProjects.push(project);
+const projectDataById = ref(new Map<number, EpisodePageProjectWorksResponse>());
+const projectDataErrors = ref(new Set<number>());
+watch(data, (response) => {
+  projectDataById.value.clear();
+  projectDataErrors.value.clear();
+  if (response?.activeProjectId !== null && response?.activeProjectId !== undefined) {
+    projectDataById.value.set(response.activeProjectId, {
+      projectId: response.activeProjectId,
+      works: response.activeProjectWorks,
+      voiceActors: response.voiceActors,
+    });
   }
-
-  const currentLocale = locale.value.toLowerCase();
-  visibleProjects.sort((a, b) => {
-    const aIsPref = a.language?.toLowerCase().startsWith(currentLocale) ? 1 : 0;
-    const bIsPref = b.language?.toLowerCase().startsWith(currentLocale) ? 1 : 0;
-
-    if (aIsPref !== bIsPref) {
-      return bIsPref - aIsPref;
-    }
-
-    const aWorks = a.works?.length || 0;
-    const bWorks = b.works?.length || 0;
-    return bWorks - aWorks;
-  });
-
-  return { projects: visibleProjects, actorCounts };
 });
-const dubbingProjects = computed<MediaDetailDubbingProject[]>(
-  () => projectVoiceActorMetrics.value.projects,
+const requestError = computed(() => Boolean(error.value && error.value.statusCode !== 404));
+const dubbingProjects = computed<EpisodePageDubbingProject[]>(
+  () => data.value?.dubbingProjects || [],
 );
 
-function projectVoiceActorCount(project: MediaDetailDubbingProject): number {
-  return projectVoiceActorMetrics.value.actorCounts.get(project.id) || 0;
+function projectVoiceActorCount(project: EpisodePageDubbingProject): number {
+  return project.voiceActorCount;
 }
 const title = computed(() => {
   if (!episode.value) return t("search.tv");
@@ -612,6 +623,42 @@ const activeDubProject = computed(() => {
     dubbingProjects.value[0]
   );
 });
+const activeProjectId = computed(() => activeDubProject.value?.id ?? null);
+const voiceActorsById = computed(() => {
+  const activeData = activeProjectId.value
+    ? projectDataById.value.get(activeProjectId.value)
+    : undefined;
+  const voiceActors =
+    activeData?.voiceActors ||
+    (activeProjectId.value === data.value?.activeProjectId ? data.value.voiceActors : []);
+  return new Map(voiceActors.map((voiceActor) => [voiceActor.id, voiceActor]));
+});
+
+async function loadProjectWorks(projectId: number): Promise<void> {
+  if (projectDataById.value.has(projectId)) return;
+  projectDataErrors.value.delete(projectId);
+  try {
+    const projectData = await fetchEpisodeProjectWorks(showId.value, projectId, locale.value);
+    projectDataById.value.set(projectId, projectData);
+  } catch (error) {
+    console.error("Failed to load episode project works:", error);
+    projectDataErrors.value.add(projectId);
+  }
+}
+
+watch([data, activeProjectId], ([response, projectId]) => {
+  if (!response || projectId === null || projectDataById.value.has(projectId)) return;
+  void loadProjectWorks(projectId);
+});
+const activeProjectError = computed(
+  () => activeProjectId.value !== null && projectDataErrors.value.has(activeProjectId.value),
+);
+
+function retryActiveProjectWorks(): void {
+  const projectId = activeProjectId.value;
+  if (projectId === null) return;
+  void loadProjectWorks(projectId);
+}
 
 const isOriginalLanguage = computed(() => {
   const orig = (
@@ -660,7 +707,13 @@ type EpisodeDisplayCastActor = DisplayCastActor & {
 const formattedCast = computed<DisplayCastActor[]>(() => {
   const cast: CastActorReference[] =
     data.value?.aggregateCredits?.cast || episode.value?.credits?.cast || [];
-  const works: CastWorkReference[] = activeDubProject.value?.works || [];
+  const activeData = activeProjectId.value
+    ? projectDataById.value.get(activeProjectId.value)
+    : undefined;
+  const works: CastWorkReference[] = activeProjectId.value
+    ? activeData?.works ||
+      (activeProjectId.value === data.value?.activeProjectId ? data.value.activeProjectWorks : [])
+    : [];
   const { matches, unmatchedWorks } = matchCastWorks(cast, works);
   const matchedCards = matches.flatMap(({ actor, works: actorWorks }) =>
     actorWorks.map((work) => {
@@ -668,26 +721,41 @@ const formattedCast = computed<DisplayCastActor[]>(() => {
       if (profilePath?.startsWith("/")) {
         profilePath = `https://image.tmdb.org/t/p/w185${profilePath}`;
       }
+      const voiceActor =
+        work.voice_actor_id === undefined
+          ? work.voice_actor
+          : work.voice_actor_id === null
+            ? null
+            : voiceActorsById.value.get(work.voice_actor_id);
 
       return {
         ...actor,
         actorId: actor.id,
         id: `${actor.id}-${work.id}`,
         profile_path: profilePath,
-        voiceActor: work.voice_actor ? { ...work.voice_actor, note: work.note } : null,
+        voiceActor: voiceActor ? { ...voiceActor, note: work.note } : null,
         workCharacterName: work.character_name || null,
       };
     }),
   );
-  const unmatchedCards = unmatchedWorks.map((work) => ({
-    id: `work-${work.id}`,
-    name: work.character_name || t("details.unknownCharacter"),
-    profile_path: null,
-    character: work.character_name || null,
-    voiceActor: work.voice_actor ? { ...work.voice_actor, note: work.note } : null,
-    characterImage: null,
-    workCharacterName: work.character_name || null,
-  }));
+  const unmatchedCards = unmatchedWorks.map((work) => {
+    const voiceActor =
+      work.voice_actor_id === undefined
+        ? work.voice_actor
+        : work.voice_actor_id === null
+          ? null
+          : voiceActorsById.value.get(work.voice_actor_id);
+
+    return {
+      id: `work-${work.id}`,
+      name: work.character_name || t("details.unknownCharacter"),
+      profile_path: null,
+      character: work.character_name || null,
+      voiceActor: voiceActor ? { ...voiceActor, note: work.note } : null,
+      characterImage: null,
+      workCharacterName: work.character_name || null,
+    };
+  });
   return [...matchedCards, ...unmatchedCards];
 });
 const filteredCast = computed(() => {
@@ -728,9 +796,7 @@ const castItems = computed<EpisodeDisplayCastActor[]>(() => {
       ...actor,
       actorPath: actor.actorId ? localePath(`/actor/${actor.actorId}`) : undefined,
       roleNames: (actor.roles || []).map((role) => role.character),
-      voiceActorPath: actor.voiceActor
-        ? localePath(`/voice-actor/${actor.voiceActor.id}`)
-        : "",
+      voiceActorPath: actor.voiceActor ? localePath(`/voice-actor/${actor.voiceActor.id}`) : "",
       characterImage: characterImage || null,
     };
   });

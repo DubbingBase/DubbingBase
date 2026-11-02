@@ -337,11 +337,7 @@
                       </div>
                       <div
                         class="font-bold text-sm theme-text truncate block w-full"
-                        :title="
-                          actor.roleLabels.join(', ') ||
-                          actor.workCharacterName ||
-                          ''
-                        "
+                        :title="actor.roleLabels.join(', ') || actor.workCharacterName || ''"
                       >
                         {{
                           actor.roleLabels.join(", ") ||
@@ -490,7 +486,10 @@ const languageDisplayNames = computed(() => {
 });
 const pageUrl = computed(() => new URL(localePath(`/show/${showId.value}`), siteUrl).href);
 
-const { currentData: data, pending } = useShowPageData(showId, locale);
+const showPageRequest = useShowPageData(showId, locale);
+await showPageRequest;
+const { currentData: data, pending, error } = showPageRequest;
+if (import.meta.server && error.value) throw error.value;
 
 const serie = computed(() => {
   const show = data.value?.serie;
@@ -518,9 +517,10 @@ const projectVoiceActorMetrics = computed(() => {
     const actorIds = new Set<number>();
 
     for (const work of project.works || []) {
-      if (work.voice_actor) {
+      const voiceActorId = work.voice_actor_id ?? work.voice_actor?.id;
+      if (voiceActorId !== undefined && voiceActorId !== null) {
         hasVoiceActor = true;
-        if (work.voice_actor.id) actorIds.add(work.voice_actor.id);
+        if (voiceActorId) actorIds.add(voiceActorId);
       }
     }
 
@@ -545,6 +545,9 @@ const projectVoiceActorMetrics = computed(() => {
   return { projects: visibleProjects, actorCounts };
 });
 const dubbingProjects = computed(() => projectVoiceActorMetrics.value.projects);
+const voiceActorsById = computed(
+  () => new Map((data.value?.voiceActors || []).map((voiceActor) => [voiceActor.id, voiceActor])),
+);
 
 function projectVoiceActorCount(project: MediaDetailDubbingProject): number {
   return projectVoiceActorMetrics.value.actorCounts.get(project.id) || 0;
@@ -574,7 +577,13 @@ const posterUrl = computed(() => {
 
 const activeDubId = computed(() => {
   if (route.query.dub) {
-    return Number(route.query.dub);
+    const requestedId = Number(route.query.dub);
+    if (
+      Number.isSafeInteger(requestedId) &&
+      dubbingProjects.value.some((project) => project.id === requestedId)
+    ) {
+      return requestedId;
+    }
   }
   return dubbingProjects.value[0]?.id || null;
 });
@@ -593,16 +602,26 @@ const isOriginalLanguage = computed(() => {
   return orig === dub || dub.startsWith(`${orig}-`) || orig.startsWith(`${dub}-`);
 });
 
+const displayLanguageCache = new Map<string, string>();
+
 const getDisplayLanguage = (langCode: string | undefined | null) => {
   if (!langCode) return t("details.notSpecified");
+  const cacheKey = `${locale.value || "en"}:${langCode}`;
+  const cachedName = displayLanguageCache.get(cacheKey);
+  if (cachedName !== undefined) return cachedName;
+
+  let displayName = langCode;
   try {
     const name = languageDisplayNames.value?.of(langCode);
-    return typeof name === "string" && name.length > 0
-      ? name.charAt(0).toUpperCase() + name.slice(1)
-      : langCode;
+    if (typeof name === "string" && name.length > 0) {
+      displayName = name.charAt(0).toUpperCase() + name.slice(1);
+    }
   } catch {
-    return langCode;
+    displayName = langCode;
   }
+
+  displayLanguageCache.set(cacheKey, displayName);
+  return displayName;
 };
 
 // Format cast and attach voice actors
@@ -629,7 +648,10 @@ const formattedCast = computed<DisplayCastActor[]>(() => {
     // Find the voice actor work for this physical actor
     const cards = actorWorks.length > 0 ? actorWorks : [null];
     return cards.map((work) => {
-      const voiceActor = work?.voice_actor;
+      const voiceActor = work
+        ? (work.voice_actor_id ? voiceActorsById.value.get(work.voice_actor_id) : undefined) ||
+          work.voice_actor
+        : undefined;
       // Fallback character name from DB when TMDB returns no roles
       const workCharacterName = work?.character_name || null;
 
@@ -646,15 +668,21 @@ const formattedCast = computed<DisplayCastActor[]>(() => {
 
   // Keep manually entered works visible even when TMDB no longer returns the
   // linked actor (or the work has no TMDB actor id).
-  const unmatchedCards = unmatchedWorks.map((work) => ({
-    id: `work-${work.id}`,
-    name: work.character_name || t("details.unknownCharacter"),
-    profile_path: null,
-    character: work.character_name || null,
-    voiceActor: work.voice_actor ? { ...work.voice_actor, note: work.note } : null,
-    characterImage: null,
-    workCharacterName: work.character_name || null,
-  }));
+  const unmatchedCards = unmatchedWorks.map((work) => {
+    const voiceActor = work.voice_actor_id
+      ? voiceActorsById.value.get(work.voice_actor_id)
+      : work.voice_actor;
+
+    return {
+      id: `work-${work.id}`,
+      name: work.character_name || t("details.unknownCharacter"),
+      profile_path: null,
+      character: work.character_name || null,
+      voiceActor: voiceActor ? { ...voiceActor, note: work.note } : null,
+      characterImage: null,
+      workCharacterName: work.character_name || null,
+    };
+  });
 
   return [...matchedCards, ...unmatchedCards];
 });
@@ -716,9 +744,7 @@ const castItems = computed<ShowDisplayCastActor[]>(() => {
     return {
       ...actor,
       actorLinkPath: actor.actorId ? localePath(`/actor/${actor.actorId}`) : undefined,
-      voiceActorLinkPath: actor.voiceActor
-        ? localePath(`/voice-actor/${actor.voiceActor.id}`)
-        : "",
+      voiceActorLinkPath: actor.voiceActor ? localePath(`/voice-actor/${actor.voiceActor.id}`) : "",
       roleLabels: roles.map((role) =>
         role.episode_count ? `${role.character} (${role.episode_count} eps)` : role.character,
       ),
@@ -804,10 +830,6 @@ useHead({
           {
             property: "og:type",
             content: "video.tv_show",
-          },
-          {
-            property: "og:url",
-            content: pageUrl,
           },
           {
             property: "og:image",

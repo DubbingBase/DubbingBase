@@ -6,7 +6,7 @@
 |---|---|---|---|---|
 | codesight | push, workflow_dispatch | 1 | — | — |
 | Release and Deployment Pipeline | push, workflow_dispatch | 16 | netlify, cloudflare | — |
-| Local Nuxt SSR route CPU comparison | pull_request | 2 | — | — |
+| Local Nuxt route CPU comparison | pull_request | 2 | — | — |
 
 ### Release and Deployment Pipeline
 
@@ -82,7 +82,7 @@
   - `actions/setup-node@v4`
   - `actions/download-artifact@v4`
 
-### Local Nuxt SSR route CPU comparison
+### Local Nuxt route CPU comparison
 
 > `.github/workflows/route-cpu-ci.yml`
 

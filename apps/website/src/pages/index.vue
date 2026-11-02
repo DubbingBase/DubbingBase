@@ -169,7 +169,7 @@
                     v-if="show.poster_path"
                     :src="show.poster_path"
                     :srcset="getTmdbPosterSrcset(show.poster_path)"
-                    :alt="(show as any).name || (show as any).title"
+                    :alt="show.name || show.title"
                     format="webp"
                     width="192"
                     height="288"
@@ -179,7 +179,7 @@
                   />
                 </div>
                 <h3 class="font-semibold text-sm theme-text line-clamp-2">
-                  {{ (show as any).name || (show as any).title }}
+                  {{ show.name || show.title }}
                 </h3>
               </NuxtLink>
             </div>
@@ -352,7 +352,6 @@ useHead({
       }),
     },
     { property: "og:type", content: "website" },
-    { property: "og:url", content: pageUrl },
     {
       property: "og:image",
       content: computed(() => siteAssetUrl("/android-chrome-512x512.png")),
@@ -459,6 +458,13 @@ type TrendingMovieCard = {
   poster_path: string | null;
 };
 
+type TrendingShowCard = {
+  id: number;
+  name?: string;
+  title?: string;
+  poster_path: string | null;
+};
+
 const moviesData = useHomeSection(
   "movies",
   async () => {
@@ -475,9 +481,9 @@ const moviesData = useHomeSection(
 const seriesData = useHomeSection(
   "series",
   async () => {
-    const response = await $fetch<{
-      results?: HomeDataPayload["trendingSeries"];
-    }>("/api/trending/shows", { params: { lang: trendingLanguage.value } });
+    const response = await $fetch<{ results?: TrendingShowCard[] }>("/api/trending/shows", {
+      params: { lang: trendingLanguage.value, projection: "card" },
+    });
     return response.results ?? [];
   },
   () => [],
@@ -487,7 +493,7 @@ const gamesData = useHomeSection(
   "games",
   () =>
     $fetch<HomeDataPayload["trendingGames"]>("/api/trending/games", {
-      params: { lang: trendingLanguage.value },
+      params: { lang: trendingLanguage.value, projection: "card" },
     }),
   () => [],
 );

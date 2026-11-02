@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Component inventory and prop signatures extracted via AST. Read the source files before adding props or modifying component logic.
 
-**200 components** (vue)
+**206 components** (vue)
 
 ## Client Components
 
@@ -111,6 +111,7 @@
 - **HeaderPreferences** — `apps/website/src/components/HeaderPreferences.vue`
 - **HomeBelowFoldSections** — `apps/website/src/components/HomeBelowFoldSections.vue`
 - **LanguageBanner** — `apps/website/src/components/LanguageBanner.vue`
+- **MediaCatalogPage** — props: type — `apps/website/src/components/MediaCatalogPage.vue`
 - **MediaSkeleton** — `apps/website/src/components/MediaSkeleton.vue`
 - **PaginatedResponsiveGrid** — props: items, pageSize, totalItems, page, gridClass, itemKey — `apps/website/src/components/PaginatedResponsiveGrid.vue`
 - **PaginationControls** — props: page, totalItems, pageSize — `apps/website/src/components/PaginationControls.vue`
@@ -158,15 +159,18 @@
 - **new** — `apps/website/src/pages/advertisement/[adId]/projects/new.vue`
 - **[id]** — `apps/website/src/pages/advertisement/[id].vue`
 - **new** — `apps/website/src/pages/advertisement/new.vue`
+- **advertisements** — `apps/website/src/pages/advertisements.vue`
 - **edit** — `apps/website/src/pages/audiobook/[audiobookId]/projects/[projectId]/edit.vue`
 - **new** — `apps/website/src/pages/audiobook/[audiobookId]/projects/new.vue`
 - **[id]** — `apps/website/src/pages/audiobook/[id].vue`
+- **audiobooks** — `apps/website/src/pages/audiobooks.vue`
 - **index** — `apps/website/src/pages/contribute/index.vue`
 - **play** — `apps/website/src/pages/contribute/task/play.vue`
 - **discussions** — `apps/website/src/pages/discussions.vue`
 - **edit** — `apps/website/src/pages/game/[gameId]/projects/[projectId]/edit.vue`
 - **new** — `apps/website/src/pages/game/[gameId]/projects/new.vue`
 - **[id]** — `apps/website/src/pages/game/[id].vue`
+- **games** — `apps/website/src/pages/games.vue`
 - **guidelines** — `apps/website/src/pages/guidelines.vue`
 - **index** — `apps/website/src/pages/index.vue`
 - **leaderboard** — `apps/website/src/pages/leaderboard.vue`
@@ -180,6 +184,7 @@
 - **edit** — `apps/website/src/pages/podcast/[podcastId]/projects/[projectId]/edit.vue`
 - **new** — `apps/website/src/pages/podcast/[podcastId]/projects/new.vue`
 - **new** — `apps/website/src/pages/podcast/new.vue`
+- **podcasts** — `apps/website/src/pages/podcasts.vue`
 - **privacy** — `apps/website/src/pages/privacy.vue`
 - **api-key** — `apps/website/src/pages/profile/api-key.vue`
 - **index** — `apps/website/src/pages/profile/index.vue`
@@ -202,6 +207,7 @@
 - **edit** — `apps/website/src/pages/toy/[toyId]/projects/[projectId]/edit.vue`
 - **new** — `apps/website/src/pages/toy/[toyId]/projects/new.vue`
 - **new** — `apps/website/src/pages/toy/new.vue`
+- **toys** — `apps/website/src/pages/toys.vue`
 - **[id]** — `apps/website/src/pages/voice-actor/[id].vue`
 - **edit** — `apps/website/src/pages/voice-actor/[voiceActorId]/edit.vue`
 - **new** — `apps/website/src/pages/voice-actor/new.vue`

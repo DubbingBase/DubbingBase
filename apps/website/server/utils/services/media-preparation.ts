@@ -194,6 +194,8 @@ export interface ExtractCreditsResult {
   ok: boolean;
   changes: number;
   creditsAdded: number;
+  creditsOverlapped?: number;
+  creditsMismatched?: number;
   title?: string;
   imageUrl?: string;
   llmModel?: string;
@@ -608,14 +610,18 @@ export async function extractMediaDubbingCredits(options: {
       ok: true,
       changes: totalNewVoiceActors,
       creditsAdded: totalNewCredits,
+      creditsOverlapped: persistedCredits.creditsOverlapped,
+      creditsMismatched: persistedCredits.creditsMismatched,
       title: mediaTitle,
       imageUrl,
       llmModel: llmResult.llmModel,
       llmQuota: llmResult.llmQuota,
       note:
-        totalNewCredits === 0
-          ? `No dubbing entries matched (LLM: ${llmResult.llmModel || "unknown"}). Check if Wikipedia has dubbing tables for ${wikipediaLanguage}.`
-          : undefined,
+        totalNewCredits === 0 && persistedCredits.creditsOverlapped > 0
+          ? `No new roles were added; ${persistedCredits.creditsOverlapped} overlaps and ${persistedCredits.creditsMismatched} mismatches were found. Existing entries were kept.`
+          : totalNewCredits === 0
+            ? `No dubbing entries matched (LLM: ${llmResult.llmModel || "unknown"}). Check if Wikipedia has dubbing tables for ${wikipediaLanguage}.`
+            : undefined,
     };
   } catch (error) {
     const errorMsg = getErrorMessage(error);
@@ -757,14 +763,18 @@ export async function extractGameDubbingCredits(options: {
       ok: true,
       changes: totalNewVoiceActors,
       creditsAdded: totalNewCredits,
+      creditsOverlapped: persistedCredits.creditsOverlapped,
+      creditsMismatched: persistedCredits.creditsMismatched,
       title: gameTitle,
       imageUrl,
       llmModel: llmResult.llmModel,
       llmQuota: llmResult.llmQuota,
       note:
-        totalNewCredits === 0
-          ? `No dubbing entries matched (LLM: ${llmResult.llmModel || "unknown"}). Check if Wikipedia has dubbing tables for ${wikipediaLanguage}.`
-          : undefined,
+        totalNewCredits === 0 && persistedCredits.creditsOverlapped > 0
+          ? `No new roles were added; ${persistedCredits.creditsOverlapped} overlaps and ${persistedCredits.creditsMismatched} mismatches were found. Existing entries were kept.`
+          : totalNewCredits === 0
+            ? `No dubbing entries matched (LLM: ${llmResult.llmModel || "unknown"}). Check if Wikipedia has dubbing tables for ${wikipediaLanguage}.`
+            : undefined,
     };
   } catch (error) {
     const errorMsg = getErrorMessage(error);

@@ -438,13 +438,14 @@ const languageDisplayNames = computed(() => {
 
 const cacheKey = `movie-${movieId}-${locale.value}`;
 
-const { data, pending } = useAsyncData(
+const { data, pending, error } = await useAsyncData(
   cacheKey,
   () => fetchMovieData(movieId, locale.value, { projection: "media-page" }),
   {
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
 );
+if (import.meta.server && error.value) throw error.value;
 
 const movie = computed(() => data.value?.movie);
 const dubbingProjectData = computed(() => {
@@ -455,9 +456,9 @@ const dubbingProjectData = computed(() => {
     let hasVoiceActor = false;
     const voiceActorIds = new Set<number>();
     for (const work of project.works || []) {
-      const voiceActor = work.voice_actor;
-      if (voiceActor) hasVoiceActor = true;
-      if (voiceActor?.id) voiceActorIds.add(voiceActor.id);
+      const voiceActorId = work.voice_actor_id ?? work.voice_actor?.id;
+      if (voiceActorId !== undefined && voiceActorId !== null) hasVoiceActor = true;
+      if (voiceActorId) voiceActorIds.add(voiceActorId);
     }
 
     if (!hasVoiceActor) continue;
@@ -482,6 +483,9 @@ const dubbingProjectData = computed(() => {
   return { projects, projectVoiceActorCounts };
 });
 const dubbingProjects = computed(() => dubbingProjectData.value.projects);
+const voiceActorsById = computed(
+  () => new Map((data.value?.voiceActors || []).map((voiceActor) => [voiceActor.id, voiceActor])),
+);
 
 function projectVoiceActorCount(project: MediaDetailDubbingProject): number {
   return dubbingProjectData.value.projectVoiceActorCounts.get(project) ?? 0;
@@ -503,7 +507,13 @@ const posterUrl = computed(() => {
 
 const activeDubId = computed(() => {
   if (route.query.dub) {
-    return Number(route.query.dub);
+    const requestedId = Number(route.query.dub);
+    if (
+      Number.isSafeInteger(requestedId) &&
+      dubbingProjects.value.some((project) => project.id === requestedId)
+    ) {
+      return requestedId;
+    }
   }
   return dubbingProjects.value[0]?.id || null;
 });
@@ -522,16 +532,26 @@ const isOriginalLanguage = computed(() => {
   return orig === dub || dub.startsWith(`${orig}-`) || orig.startsWith(`${dub}-`);
 });
 
+const displayLanguageCache = new Map<string, string>();
+
 const getDisplayLanguage = (langCode: string | undefined | null) => {
   if (!langCode) return t("details.notSpecified");
+  const cacheKey = `${locale.value || "en"}:${langCode}`;
+  const cachedName = displayLanguageCache.get(cacheKey);
+  if (cachedName !== undefined) return cachedName;
+
+  let displayName = langCode;
   try {
     const name = languageDisplayNames.value?.of(langCode);
-    return typeof name === "string" && name.length > 0
-      ? name.charAt(0).toUpperCase() + name.slice(1)
-      : langCode;
+    if (typeof name === "string" && name.length > 0) {
+      displayName = name.charAt(0).toUpperCase() + name.slice(1);
+    }
   } catch {
-    return langCode;
+    displayName = langCode;
   }
+
+  displayLanguageCache.set(cacheKey, displayName);
+  return displayName;
 };
 
 // Format cast and attach voice actors
@@ -556,7 +576,10 @@ const formattedCast = computed<DisplayCastActor[]>(() => {
     const cards = actorWorks.length > 0 ? actorWorks : [null];
 
     return cards.map((work) => {
-      const voiceActor = work?.voice_actor;
+      const voiceActor = work
+        ? (work.voice_actor_id ? voiceActorsById.value.get(work.voice_actor_id) : undefined) ||
+          work.voice_actor
+        : undefined;
       // Fallback character name from DB when TMDB returns no character
       const workCharacterName = work?.character_name || null;
 
@@ -573,15 +596,21 @@ const formattedCast = computed<DisplayCastActor[]>(() => {
 
   // Keep manually entered works visible even when TMDB no longer returns the
   // linked actor (or the work has no TMDB actor id).
-  const unmatchedCards = unmatchedWorks.map((work) => ({
-    id: `work-${work.id}`,
-    name: work.character_name || t("details.unknownCharacter"),
-    profile_path: null,
-    character: work.character_name || null,
-    voiceActor: work.voice_actor ? { ...work.voice_actor, note: work.note } : null,
-    characterImage: null,
-    workCharacterName: work.character_name || null,
-  }));
+  const unmatchedCards = unmatchedWorks.map((work) => {
+    const voiceActor = work.voice_actor_id
+      ? voiceActorsById.value.get(work.voice_actor_id)
+      : work.voice_actor;
+
+    return {
+      id: `work-${work.id}`,
+      name: work.character_name || t("details.unknownCharacter"),
+      profile_path: null,
+      character: work.character_name || null,
+      voiceActor: voiceActor ? { ...voiceActor, note: work.note } : null,
+      characterImage: null,
+      workCharacterName: work.character_name || null,
+    };
+  });
 
   return [...matchedCards, ...unmatchedCards];
 });
@@ -593,7 +622,18 @@ const debouncedSearch = refDebounced(searchInput, 150);
 watch(debouncedSearch, (val) => {
   searchQuery.value = val;
 });
-watch([searchQuery, activeDubId], () => void setCastPage(1));
+watch([searchQuery, activeDubId], ([search, dub], [previousSearch, previousDub]) => {
+  if (
+    search !== previousSearch ||
+    (typeof previousDub === "number" &&
+      previousDub > 0 &&
+      typeof dub === "number" &&
+      dub > 0 &&
+      dub !== previousDub)
+  ) {
+    void setCastPage(1);
+  }
+});
 
 const filteredCast = computed(() => {
   const cast = formattedCast.value;
@@ -718,10 +758,6 @@ useHead({
     {
       property: "og:type",
       content: "video.movie",
-    },
-    {
-      property: "og:url",
-      content: pageUrl,
     },
     {
       property: "og:image",

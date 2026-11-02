@@ -6,16 +6,32 @@ import { resolveLocaleLanguage } from "@app/shared-logic";
 import { setPublicCacheHeaders } from "../../utils/cache/http";
 import type { IgdbTrendingGamesResult } from "../../utils/api/igdb";
 
-function formatGame(game: IgdbGame) {
+function formatGame(game: IgdbGame, cardProjection: boolean) {
+  if (cardProjection) {
+    return {
+      id: game.id,
+      name: game.name,
+      media_type: "video_game" as const,
+      cover: game.cover
+        ? {
+            image_id: game.cover.image_id,
+            url: buildIgdbImageUrl(game.cover.image_id, "cover_big"),
+          }
+        : undefined,
+    };
+  }
+
+  const cover = game.cover
+    ? {
+        ...game.cover,
+        url: buildIgdbImageUrl(game.cover.image_id, "cover_big"),
+      }
+    : undefined;
+
   return {
     ...game,
     media_type: "video_game" as const,
-    cover: game.cover
-      ? {
-          ...game.cover,
-          url: buildIgdbImageUrl(game.cover.image_id, "cover_big"),
-        }
-      : undefined,
+    cover,
   };
 }
 
@@ -32,8 +48,7 @@ function isIgdbGame(value: unknown): value is IgdbGame {
     typeof name === "string" &&
     (cover === undefined ||
       cover === null ||
-      (typeof cover === "object" &&
-        typeof Reflect.get(cover, "image_id") === "string"))
+      (typeof cover === "object" && typeof Reflect.get(cover, "image_id") === "string"))
   );
 }
 
@@ -42,11 +57,9 @@ export async function getTrendingGamesResponse(
   language: string,
   config: { igdbClientId?: string; igdbClientSecret?: string },
   igdbClient: {
-    getTrendingGames(
-      limit?: number,
-      language?: string,
-    ): Promise<IgdbTrendingGamesResult>;
+    getTrendingGames(limit?: number, language?: string): Promise<IgdbTrendingGamesResult>;
   },
+  projection?: string,
 ) {
   if (!config.igdbClientId || !config.igdbClientSecret) return [];
 
@@ -61,7 +74,7 @@ export async function getTrendingGamesResponse(
     ) {
       return [];
     }
-    const formatted = result.games.map(formatGame);
+    const formatted = result.games.map((game) => formatGame(game, projection === "card"));
 
     if (result.degraded) return formatted;
     setPublicCacheHeaders(event, "discovery");
@@ -76,11 +89,7 @@ export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   const rawLanguage = query.lang;
   const language = resolveLocaleLanguage(
-    rawLanguage === undefined
-      ? undefined
-      : typeof rawLanguage === "string"
-        ? rawLanguage
-        : "",
+    rawLanguage === undefined ? undefined : typeof rawLanguage === "string" ? rawLanguage : "",
   );
   if (language === null) {
     throw createError({ statusCode: 400, message: "Unsupported language" });
@@ -88,5 +97,6 @@ export default defineEventHandler(async (event) => {
 
   const config = useRuntimeConfig();
   const igdbClient = useIgdbClient();
-  return getTrendingGamesResponse(event, language, config, igdbClient);
+  const projection = query.projection === "card" ? "card" : undefined;
+  return getTrendingGamesResponse(event, language, config, igdbClient, projection);
 });
