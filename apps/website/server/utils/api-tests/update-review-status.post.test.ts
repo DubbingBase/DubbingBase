@@ -44,10 +44,17 @@ function createSupabaseMock(result: {
     reviewed_status: "accepted",
     dubbing_projects: { id: 9 },
   };
+  const beforeRow = {
+    updated_at: updatedAt,
+    reviewed_status: "accepted",
+    status: "validated",
+    voice_actor_id: null,
+    dubbing_project_id: null,
+  };
   const query = {
     select: vi.fn(() => query),
     eq: vi.fn(() => query),
-    maybeSingle: vi.fn(async () => ({ data: { updated_at: updatedAt }, error: null })),
+    maybeSingle: vi.fn(async () => ({ data: beforeRow, error: null })),
     single: vi.fn(async () => ({ data: workRow, error: null })),
   };
   const from = vi.fn(() => query);
@@ -134,13 +141,15 @@ describe("POST /api/update-review-status", () => {
     const { rpc } = createSupabaseMock({ data: null, error: { code: "42501" } });
     const forbidden = await post(request);
     expect(forbidden.status).toBe(403);
+    expect(rpc).toHaveBeenCalledOnce();
 
-    routeMocks.useSupabaseAdmin.mockReturnValue({
-      rpc: vi.fn(async () => ({ data: null, error: { code: "40001" } })),
+    const { rpc: staleRpc } = createSupabaseMock({
+      data: null,
+      error: { code: "40001" },
     });
     const stale = await post(request);
     expect(stale.status).toBe(409);
-    expect(rpc).toHaveBeenCalledOnce();
+    expect(staleRpc).toHaveBeenCalledOnce();
   });
 
   it("does not report success when the audited database transaction fails", async () => {
@@ -150,7 +159,9 @@ describe("POST /api/update-review-status", () => {
 
     expect(response.status).toBe(500);
     expect(rpc).toHaveBeenCalledOnce();
-    expect(from).not.toHaveBeenCalled();
+    expect(from).toHaveBeenCalledWith("work");
+    expect(from).toHaveBeenCalledOnce();
+    expect(query.single).not.toHaveBeenCalled();
   });
 
   it("rejects anonymous callers before reaching the privileged database client", async () => {
@@ -179,6 +190,16 @@ describe("POST /api/update-review-status", () => {
     const query = {
       select: vi.fn(() => query),
       eq: vi.fn(() => query),
+      maybeSingle: vi.fn(async () => ({
+        data: {
+          updated_at: "2026-10-15T12:00:00.000Z",
+          reviewed_status: "accepted",
+          status: "validated",
+          voice_actor_id: null,
+          dubbing_project_id: null,
+        },
+        error: null,
+      })),
       single: vi.fn(async () => ({ data: { id: 73 }, error: null })),
     };
     routeMocks.useSupabaseAdmin.mockReturnValue({ rpc, from: vi.fn(() => query) });
