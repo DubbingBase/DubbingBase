@@ -118,6 +118,7 @@
 - `apps/website/server/utils/media-request.ts`
   - function parseSeasonQuery: (query, unknown>) => void
   - function parseEpisodeQuery: (query, unknown>) => void
+  - function toMediaServiceError: (error, dependency) => void
   - function withMediaServiceTimeout: (request) => void
 - `apps/website/server/utils/normalize.ts` — function normalizeString: (input) => string, function isExploitableVoiceActorName: (input) => boolean
 - `apps/website/server/utils/notifications/discord.ts`

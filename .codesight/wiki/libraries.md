@@ -28,9 +28,9 @@
 - `apps/website/server/utils/services/media.ts` — MediaService, VOICE_ACTOR_PAGE_TMDB_MEDIA_NAMESPACE, VOICE_ACTOR_PAGE_TMDB_BACKDROP_NAMESPACE, WIKIPEDIA_ACTOR_URL_NAMESPACE, MEDIA_TVDB_CHARACTERS_NAMESPACE
 - `apps/website/server/utils/services/wiki-extraction-batching.ts` — buildWikipediaExtractionBatches, deduplicateExtractedCredits, WikipediaExtractionSection, WikipediaExtractionBatch, MAX_WIKIPEDIA_EXTRACTION_PROMPT_CHARS
 - `apps/website/server/utils/api/igdb.ts` — buildIgdbImageUrl, IgdbClient, IgdbTrendingGamesResult, IgdbPopularityPrimitive
+- `apps/website/server/utils/media-request.ts` — parseSeasonQuery, parseEpisodeQuery, toMediaServiceError, withMediaServiceTimeout
 - `apps/website/server/utils/pagination.ts` — parsePagination, paginateArray, PaginationOptions, ParsedPagination
 - `apps/website/server/utils/services/voice-actor.ts` — applyExtractedCredits, upsertStudio, ExtractedCredit, AppliedExtractedCredits
-- `apps/website/server/utils/urls/tmdb.ts` — buildTmdbImageUrl, cleanCharacterName, processMedia, TMDB_CONFIG
 - _…and 49 more files_
 
 ## Shared-logic (20 files)

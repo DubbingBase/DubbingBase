@@ -5,7 +5,7 @@
 
 > 86 routes | 27 models | 206 components | 114 lib files | 75 env vars | 15 middleware | 46% test coverage
 > **Token savings:** this file is ~19,500 tokens. Without it, AI exploration would cost ~174,600 tokens. **Saves ~155,100 tokens per conversation.**
-> **Last scanned:** 2026-11-02 10:36 — re-run after significant changes
+> **Last scanned:** 2026-11-02 12:34 — re-run after significant changes
 
 ---
 
@@ -625,6 +625,7 @@
 - `apps/website/server/utils/media-request.ts`
   - function parseSeasonQuery: (query, unknown>) => void
   - function parseEpisodeQuery: (query, unknown>) => void
+  - function toMediaServiceError: (error, dependency) => void
   - function withMediaServiceTimeout: (request) => void
 - `apps/website/server/utils/normalize.ts` — function normalizeString: (input) => string, function isExploitableVoiceActorName: (input) => boolean
 - `apps/website/server/utils/notifications/discord.ts`
@@ -981,10 +982,11 @@
 - `apps/website/server/utils/notifications/discord.ts` — imported by **12** files
 - `apps/website/server/utils/api/igdb.ts` — imported by **12** files
 - `apps/website/server/utils/urls/supabase.ts` — imported by **11** files
-- `apps/website/server/utils/urls/tmdb.ts` — imported by **10** files
 - `apps/website/server/utils/dubbing-language.ts` — imported by **10** files
 - `apps/website/server/utils/db/queries.ts` — imported by **9** files
+- `apps/website/server/utils/urls/tmdb.ts` — imported by **9** files
 - `packages/shared-logic/src/types/index.ts` — imported by **9** files
+- `apps/website/server/utils/media-request.ts` — imported by **8** files
 - `apps/website/server/utils/cache/http.ts` — imported by **8** files
 - `apps/website/server/utils/cache/constants.ts` — imported by **8** files
 - `e2e/helpers/mock-api.ts` — imported by **8** files
@@ -993,7 +995,6 @@
 - `apps/website/server/utils/cache/wikipedia.ts` — imported by **5** files
 - `apps/website/server/utils/dubbing-region-detection.ts` — imported by **5** files
 - `apps/website/server/utils/error-message.ts` — imported by **5** files
-- `apps/website/server/utils/pagination.ts` — imported by **4** files
 
 ## Import Map (who imports what)
 
@@ -1004,16 +1005,16 @@
 - `apps/website/server/utils/notifications/discord.ts` ← `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/game/[id].get.ts`, `apps/website/server/api/media-queue.post.ts`, `apps/website/server/api/movie/[id].get.ts` +7 more
 - `apps/website/server/utils/api/igdb.ts` ← `apps/website/server/api/game/[id].get.ts`, `apps/website/server/api/internal-media-credits.get.ts`, `apps/website/server/api/internal-media-metadata.get.ts`, `apps/website/server/api/media-catalog.get.ts`, `apps/website/server/api/search/index.get.ts` +7 more
 - `apps/website/server/utils/urls/supabase.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/dashboard-stats.get.ts`, `apps/website/server/api/find_duplicate_voice_actors.get.ts`, `apps/website/server/api/list-voice-actors.get.ts`, `apps/website/server/api/recent-voice-actors.get.ts` +6 more
-- `apps/website/server/utils/urls/tmdb.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/movie/[id].get.ts`, `apps/website/server/api/notify-subscribers.post.ts`, `apps/website/server/api/prepare-trending-media.post.ts`, `apps/website/server/api/search/index.get.ts` +5 more
 - `apps/website/server/utils/dubbing-language.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/internal-media-create.post.ts`, `apps/website/server/api/link-voice-actor.post.ts`, `apps/website/server/api/media-queue.post.ts` +5 more
 - `apps/website/server/utils/db/queries.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/detail-collections.get.ts`, `apps/website/server/api/game/[id].get.ts` +4 more
+- `apps/website/server/utils/urls/tmdb.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/notify-subscribers.post.ts`, `apps/website/server/api/prepare-trending-media.post.ts`, `apps/website/server/api/search/index.get.ts`, `apps/website/server/api/show/[id].get.ts` +4 more
 
 ---
 
 # Test Coverage
 
 > **46%** of routes and models are covered by tests
-> 130 test files found
+> 132 test files found
 
 ## Covered Routes
 
