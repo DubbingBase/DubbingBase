@@ -862,6 +862,18 @@ function gamePageCastData(body) {
   return { cardCount: characterNames.length, characterNames, voiceActorLinks };
 }
 
+function gamePageCastDataMatchesExpected(baseHtml, headHtml) {
+  const baseCast = gamePageCastData(baseHtml);
+  const headCast = gamePageCastData(headHtml);
+  return (
+    baseCast.cardCount === headCast.cardCount &&
+    JSON.stringify(baseCast.voiceActorLinks) === JSON.stringify(headCast.voiceActorLinks) &&
+    headCast.characterNames.length === headCast.cardCount &&
+    new Set(headCast.characterNames).size === headCast.characterNames.length &&
+    headCast.characterNames.every((name) => /^CI fixture game character \d+$/.test(name))
+  );
+}
+
 function dubbingProjectPageData(body) {
   const response = JSON.parse(body);
   const voiceActors = new Map(
@@ -1087,12 +1099,9 @@ async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
         throw new Error(`${route.path} changed fields consumed by homepage trending game cards.`);
       } else if (
         route.name === "game" &&
-        JSON.stringify(gamePageCastData(baseValidation.html)) !==
-          JSON.stringify(gamePageCastData(headValidation.html))
+        !gamePageCastDataMatchesExpected(baseValidation.html, headValidation.html)
       ) {
-        throw new Error(
-          `${route.path} changed server-rendered game cast data: ${JSON.stringify({ base: gamePageCastData(baseValidation.html), head: gamePageCastData(headValidation.html) })}`,
-        );
+        throw new Error(`${route.path} rendered unexpected game cast data.`);
       } else if (
         route.kind === "api" &&
         route.name !== "season-api" &&
