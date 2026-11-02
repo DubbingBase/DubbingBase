@@ -67,6 +67,72 @@ test.describe("Media Detail Pages", () => {
     api.expectNoErrors();
   });
 
+  test("shows original cast separately from a real same-language dub", async ({
+    page,
+  }, testInfo) => {
+    const movie = structuredClone(MOCK_MOVIE);
+    movie.movie.credits.cast = movie.movie.credits.cast.map((actor) =>
+      actor.id === 102 ? { ...actor, profile_path: null } : actor,
+    );
+    const englishProject = structuredClone(movie.dubbingProjects[0]!);
+    englishProject.id = 8502;
+    englishProject.language = "en-US";
+    englishProject.works = [
+      {
+        ...englishProject.works[0]!,
+        id: 102,
+        actor_id: 102,
+        voice_actor: { id: 4, firstname: "Karen", lastname: "Allen" },
+      },
+      {
+        ...englishProject.works[0]!,
+        id: 103,
+        actor_id: 103,
+        voice_actor: { id: 5, firstname: "English", lastname: "Performer" },
+      },
+      {
+        ...englishProject.works[0]!,
+        id: 104,
+        actor_id: 3,
+        voice_actor_id: null,
+        voice_actor: null,
+      },
+    ];
+    movie.dubbingProjects.push(englishProject);
+
+    await setupMockApi(page, { movie });
+    await page.goto("/movie/85", { waitUntil: "domcontentloaded" });
+    await waitForVueHydration(page);
+
+    await page.getByRole("link", { name: /Original Version/ }).click();
+    await expect(page).toHaveURL(/\/movie\/85\?dub=original/);
+    await expect(page.getByText("Original audio", { exact: true })).toBeVisible();
+    await expect(page.getByText("Harrison Ford", { exact: true })).toBeVisible();
+    await expect(page.getByText("English Performer", { exact: true })).toHaveCount(0);
+    await expect(page.getByText("Karen Allen", { exact: true })).toHaveCount(1);
+    await expect(page.getByText("Richard Darbois", { exact: true })).toHaveCount(0);
+    await expect(page.getByText("Not specified", { exact: true })).toHaveCount(0);
+    await expect(page.locator('img[src*="karen_allen.jpg"]')).toHaveCount(0);
+    await testInfo.attach("original-version-movie", {
+      body: await page.screenshot({ fullPage: true }),
+      contentType: "image/png",
+    });
+
+    await page.goto("/movie/85?dub=8502", { waitUntil: "domcontentloaded" });
+    await expect(page.getByText("Voice Actor", { exact: true }).first()).toBeVisible();
+    await expect(page.getByText("English Performer", { exact: true })).toBeVisible();
+    await expect(page.getByText("Original audio", { exact: true })).toHaveCount(0);
+    await expect(page.getByText("Not specified", { exact: true })).toBeVisible();
+  });
+
+  test("hides original version when origin language is missing", async ({ page }) => {
+    const movie = structuredClone(MOCK_MOVIE);
+    movie.movie.original_language = "";
+    await setupMockApi(page, { movie });
+    await page.goto("/movie/85", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("link", { name: /Original Version/ })).toHaveCount(0);
+  });
+
   test("refetches movie data when browser back returns to the detail page", async ({ page }) => {
     await setupMockApi(page);
     const freshMovie = structuredClone(MOCK_MOVIE);
@@ -575,6 +641,28 @@ test.describe("Media Detail Pages", () => {
     await expect(page.locator("body")).toContainText(
       "Walter White starts cooking methamphetamine.",
     );
+  });
+
+  test("keeps the original version selected through TV season and episode casting", async ({
+    page,
+  }) => {
+    const show = structuredClone(MOCK_SHOW);
+    show.serie = { ...show.serie, original_language: "en" };
+    const episode = structuredClone(MOCK_EPISODE);
+    await setupMockApi(page, { show, episode });
+    await page.goto("/show/1396", { waitUntil: "domcontentloaded" });
+    await waitForVueHydration(page);
+
+    await page.getByRole("link", { name: /Original Version/ }).click();
+    await expect(page).toHaveURL(/\/show\/1396\?dub=original/);
+    await page.locator('a[href*="/show/1396/season/1"]').first().click();
+    await expect(page).toHaveURL(/\/show\/1396\/season\/1\?dub=original/);
+    await page.getByRole("link", { name: /Pilot/ }).first().click();
+    await expect(page).toHaveURL(/\/show\/1396\/season\/1\/episode\/1\?dub=original/);
+    await expect(page.getByText("Original audio", { exact: true })).toBeVisible();
+    await expect(page.getByText("Bryan Cranston", { exact: true })).toBeVisible();
+    await expect(page.getByText("Jean-Louis Faure", { exact: true })).toHaveCount(0);
+    await expect(page.getByText("Not specified", { exact: true })).toHaveCount(0);
   });
 
   test("loads Specials from season zero", async ({ page }) => {

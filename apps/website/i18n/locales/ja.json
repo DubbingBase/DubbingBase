@@ -361,6 +361,8 @@
   "details": {
     "modify": "修正",
     "dubbing": "吹き替え（{lang}）",
+    "originalVersion": "オリジナル版",
+    "originalAudio": "オリジナル音声",
     "synopsis": "あらすじ",
     "noSynopsis": "あらすじはありません。",
     "castAndCrew": "キャスト＆スタッフ",

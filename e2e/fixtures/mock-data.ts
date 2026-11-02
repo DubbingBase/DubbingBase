@@ -407,6 +407,7 @@ export const MOCK_MOVIE = {
     overview:
       "When Dr. Indiana Jones is hired by the government to locate the legendary Ark of the Covenant, he finds himself up against the entire Nazi machine.",
     release_date: "1981-06-12",
+    original_language: "en",
     vote_average: 8.4,
     vote_count: 12000,
     runtime: 115,
@@ -526,6 +527,7 @@ export const MOCK_SHOW = {
     overview:
       "A chemistry teacher diagnosed with inoperable lung cancer turns to manufacturing and selling methamphetamine with a former student in order to secure his family's future.",
     first_air_date: "2008-01-20",
+    original_language: "en",
     vote_average: 9.5,
     vote_count: 14000,
     number_of_seasons: 5,

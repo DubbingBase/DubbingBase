@@ -42,7 +42,35 @@
       </template>
 
       <template #actions-left>
-        <div v-if="dubbingProjects.length > 0" class="flex flex-wrap gap-2">
+        <div
+          v-if="dubbingProjects.length > 0 || canShowOriginalVersion"
+          class="flex flex-wrap gap-2"
+        >
+          <NuxtLink
+            v-if="canShowOriginalVersion"
+            :to="{
+              path: localePath(`/show/${showId}/season/${seasonNumber}/episode/${episodeNumber}`),
+              query: { dub: 'original' },
+            }"
+            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border theme-border-subtle theme-border flex items-center gap-1.5"
+            :class="
+              isOriginalVersion
+                ? 'theme-primary-bg theme-primary-border'
+                : 'theme-surface theme-text-secondary theme-hover-surface-muted'
+            "
+          >
+            {{ $t("details.originalVersion") }}
+            <span
+              class="text-xs px-1.5 py-0.5 rounded-full font-medium"
+              :class="
+                isOriginalVersion
+                  ? 'bg-black/15 text-black'
+                  : 'theme-surface-raised theme-surface-muted theme-text-muted'
+              "
+            >
+              {{ episodeCast.length || 0 }}
+            </span>
+          </NuxtLink>
           <NuxtLink
             v-for="project in dubbingProjects"
             :key="project.id"
@@ -105,7 +133,11 @@
         <NuxtLink
           :to="{
             path: localePath(`/show/${showId}/season/${seasonNumber}`),
-            query: activeDubId ? { dub: activeDubId } : {},
+            query: isOriginalVersion
+              ? { dub: 'original' }
+              : activeDubId
+                ? { dub: activeDubId }
+                : {},
           }"
           class="text-sm theme-primary-text theme-hover-primary-text transition-colors flex items-center gap-1.5 font-medium"
         >
@@ -121,7 +153,7 @@
         </NuxtLink>
 
         <NuxtLink
-          v-show="isAdmin"
+          v-show="isAdmin && !isOriginalVersion"
           :to="
             localePath(
               activeDubId
@@ -206,6 +238,9 @@
                 <h2 class="text-2xl font-bold">
                   {{ $t("details.castAndCrew") }}
                 </h2>
+                <span v-if="isOriginalVersion" class="theme-text-muted text-sm">
+                  {{ $t("details.originalAudio") }}
+                </span>
               </div>
 
               <div class="relative w-full sm:w-64">
@@ -238,7 +273,9 @@
               >
                 <div
                   class="flex flex-col sm:grid gap-4"
-                  :class="isOriginalLanguage ? 'sm:grid-cols-2' : 'sm:grid-cols-3'"
+                  :class="
+                    isOriginalVersion && !actor.voiceActor ? 'sm:grid-cols-2' : 'sm:grid-cols-3'
+                  "
                 >
                   <!-- Original Actor -->
                   <div
@@ -316,7 +353,7 @@
 
                   <!-- Voice Actor (hidden when viewing in original language) -->
                   <div
-                    v-if="!isOriginalLanguage"
+                    v-if="!isOriginalVersion || actor.voiceActor"
                     class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t theme-border-subtle theme-border sm:border-t-0 pt-4 sm:pt-0 mt-2 sm:mt-0"
                   >
                     <template v-if="actor.voiceActor">
@@ -467,7 +504,11 @@ import {
   type CastActorReference,
   type CastWorkReference,
   matchCastWorks,
+  hasOriginalVersion,
+  isOriginalVersionQuery,
+  originalVersionCast,
   type DisplayCastActor,
+  type MediaProjectView,
 } from "../../../../../../utils/media-cast";
 import {
   indexCharacterPictures,
@@ -587,6 +628,18 @@ const requestError = computed(() => Boolean(error.value && error.value.statusCod
 const dubbingProjects = computed<EpisodePageDubbingProject[]>(
   () => data.value?.dubbingProjects || [],
 );
+const episodeCast = computed<CastActorReference[]>(
+  () => data.value?.aggregateCredits?.cast || episode.value?.credits?.cast || [],
+);
+const canShowOriginalVersion = computed(() =>
+  hasOriginalVersion(
+    episode.value?.original_language || episode.value?.show_original_language,
+    episodeCast.value,
+  ),
+);
+const isOriginalVersion = computed(
+  () => canShowOriginalVersion.value && isOriginalVersionQuery(route.query.dub),
+);
 
 function projectVoiceActorCount(project: EpisodePageDubbingProject): number {
   return project.voiceActorCount;
@@ -611,18 +664,28 @@ const posterUrl = computed(() => {
 });
 
 const activeDubId = computed(() => {
+  if (isOriginalVersion.value) return null;
   if (route.query.dub) {
     return Number(route.query.dub);
   }
   return dubbingProjects.value[0]?.id || null;
 });
 
-const activeDubProject = computed(() => {
-  return (
-    dubbingProjects.value.find((project) => project.id === activeDubId.value) ||
-    dubbingProjects.value[0]
-  );
+const activeProjectView = computed<MediaProjectView<EpisodePageDubbingProject> | undefined>(() => {
+  const originalLanguage =
+    episode.value?.original_language || episode.value?.show_original_language;
+  if (isOriginalVersion.value && originalLanguage) {
+    return { kind: "original", key: "original", language: originalLanguage };
+  }
+  const project =
+    dubbingProjects.value.find((candidate) => candidate.id === activeDubId.value) ||
+    dubbingProjects.value[0];
+  return project ? { kind: "dubbing", key: project.id, project } : undefined;
 });
+const activeDubProject = computed(() =>
+  activeProjectView.value?.kind === "dubbing" ? activeProjectView.value.project : undefined,
+);
+const activeIsOriginal = computed(() => activeProjectView.value?.kind === "original");
 const activeProjectId = computed(() => activeDubProject.value?.id ?? null);
 const voiceActorsById = computed(() => {
   const activeData = activeProjectId.value
@@ -660,15 +723,6 @@ function retryActiveProjectWorks(): void {
   void loadProjectWorks(projectId);
 }
 
-const isOriginalLanguage = computed(() => {
-  const orig = (
-    episode.value?.original_language || episode.value?.show_original_language
-  )?.toLowerCase();
-  const dub = activeDubProject.value?.language?.toLowerCase();
-  if (!orig || !dub) return false;
-  return orig === dub || dub.startsWith(`${orig}-`) || orig.startsWith(`${dub}-`);
-});
-
 const getDisplayLanguage = (langCode: string | undefined | null) => {
   if (!langCode) return t("details.notSpecified");
   try {
@@ -705,8 +759,8 @@ type EpisodeDisplayCastActor = DisplayCastActor & {
 };
 
 const formattedCast = computed<DisplayCastActor[]>(() => {
-  const cast: CastActorReference[] =
-    data.value?.aggregateCredits?.cast || episode.value?.credits?.cast || [];
+  const cast = episodeCast.value;
+  if (activeIsOriginal.value) return originalVersionCast(cast);
   const activeData = activeProjectId.value
     ? projectDataById.value.get(activeProjectId.value)
     : undefined;

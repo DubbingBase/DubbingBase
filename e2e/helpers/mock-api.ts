@@ -237,7 +237,7 @@ export async function setupMockApi(page: Page, options: MockApiOptions = {}) {
       const movieData = options.movie || MOCK_MOVIE;
       const response =
         url.searchParams.get("projection") === "media-page"
-          ? { ...movieData, ...pageProjects(MOCK_MOVIE.dubbingProjects) }
+          ? { ...movieData, ...pageProjects(movieData.dubbingProjects) }
           : movieData;
       return route.fulfill({
         status: 200,
@@ -251,7 +251,7 @@ export async function setupMockApi(page: Page, options: MockApiOptions = {}) {
       const showData = options.show || MOCK_SHOW;
       const response =
         url.searchParams.get("projection") === "media-page"
-          ? { ...showData, ...pageProjects(MOCK_SHOW.dubbingProjects) }
+          ? { ...showData, ...pageProjects(showData.dubbingProjects) }
           : showData;
       return route.fulfill({
         status: 200,
