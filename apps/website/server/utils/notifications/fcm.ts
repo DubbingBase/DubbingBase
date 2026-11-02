@@ -4,6 +4,8 @@ import { localizePublishedContentLink } from "./published-content-link";
 const FCM_SCOPE = "https://www.googleapis.com/auth/firebase.messaging";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const MAX_INSTALLATIONS_PER_EVENT = 500;
+const FOLLOWER_PAGE_SIZE = 1_000;
+const ID_QUERY_BATCH_SIZE = 100;
 const SEND_CONCURRENCY = 10;
 const MAX_DISPATCH_TIME_MS = 20_000;
 const MAX_FETCH_TIME_MS = 5_000;
@@ -26,6 +28,14 @@ interface PushMessage {
   body: string;
   link: string;
   eventId: string;
+}
+
+function chunk<T>(items: T[], size: number): T[][] {
+  const batches: T[][] = [];
+  for (let index = 0; index < items.length; index += size) {
+    batches.push(items.slice(index, index + size));
+  }
+  return batches;
 }
 
 export interface PushSendResult {
@@ -335,35 +345,59 @@ export async function notifyVoiceActorFollowers(
 
   try {
     const supabase = useSupabaseAdmin();
-    const { data: subscriptions, error: subscriptionError } = await supabase
-      .from("voice_actor_subscriptions")
-      .select("user_id")
-      .in("voice_actor_id", actorIds);
-    if (subscriptionError) throw subscriptionError;
-    const userIds = [...new Set((subscriptions ?? []).map((row) => row.user_id))];
+    const subscriptions: Array<{ user_id: string; voice_actor_id: number }> = [];
+    for (const actorBatch of chunk(actorIds, ID_QUERY_BATCH_SIZE)) {
+      for (let offset = 0; ; offset += FOLLOWER_PAGE_SIZE) {
+        const { data: page, error } = await supabase
+          .from("voice_actor_subscriptions")
+          .select("user_id, voice_actor_id")
+          .in("voice_actor_id", actorBatch)
+          .order("user_id")
+          .order("voice_actor_id")
+          .range(offset, offset + FOLLOWER_PAGE_SIZE - 1);
+        if (error) throw error;
+        subscriptions.push(...(page ?? []));
+        if (!page || page.length < FOLLOWER_PAGE_SIZE) break;
+      }
+    }
+    const userIds = [...new Set(subscriptions.map((row) => row.user_id))];
     if (userIds.length === 0) return { attempted: 0, sent: 0, invalidTokens: 0, truncated: false };
 
-    const { data: preferences, error: preferenceError } = await supabase
-      .from("user_profiles")
-      .select("user_id")
-      .in("user_id", userIds)
-      .eq("push_enabled", true);
-    if (preferenceError) throw preferenceError;
-    const enabledUserIds = [...new Set((preferences ?? []).map((row) => row.user_id))];
+    const preferences: Array<{ user_id: string }> = [];
+    for (const batch of chunk(userIds, ID_QUERY_BATCH_SIZE)) {
+      const { data, error } = await supabase
+        .from("user_profiles")
+        .select("user_id")
+        .in("user_id", batch)
+        .eq("push_enabled", true);
+      if (error) throw error;
+      preferences.push(...(data ?? []));
+    }
+    const enabledUserIds = [...new Set(preferences.map((row) => row.user_id))];
     if (enabledUserIds.length === 0) {
       return { attempted: 0, sent: 0, invalidTokens: 0, truncated: false };
     }
-    const { data: installations, error: installationError } = await supabase
-      .from("push_installations")
-      .select("user_id, fcm_token, locale, platform, enabled")
-      .in("user_id", enabledUserIds)
-      .eq("enabled", true)
-      .limit(MAX_INSTALLATIONS_PER_EVENT + 1);
-    if (installationError) throw installationError;
+    const installations: Array<{
+      user_id: string;
+      fcm_token: string;
+      locale: string;
+      platform: string;
+      enabled: boolean;
+    }> = [];
+    for (const batch of chunk(enabledUserIds, ID_QUERY_BATCH_SIZE)) {
+      const { data, error } = await supabase
+        .from("push_installations")
+        .select("user_id, fcm_token, locale, platform, enabled")
+        .in("user_id", batch)
+        .eq("enabled", true)
+        .limit(MAX_INSTALLATIONS_PER_EVENT + 1);
+      if (error) throw error;
+      installations.push(...(data ?? []));
+    }
     const eligibleInstallations = eligiblePushInstallations(
-      subscriptions ?? [],
-      preferences ?? [],
-      installations ?? [],
+      subscriptions,
+      preferences,
+      installations,
     );
     const truncated = eligibleInstallations.length > MAX_INSTALLATIONS_PER_EVENT;
     const boundedInstallations = eligibleInstallations.slice(0, MAX_INSTALLATIONS_PER_EVENT);
@@ -382,14 +416,14 @@ export async function notifyVoiceActorFollowers(
     );
     const dispatchTruncated = truncated || result.attempted < boundedInstallations.length;
     if (result.invalidTokens.length > 0) {
-      const { error } = await supabase
-        .from("push_installations")
-        .delete()
-        .in("fcm_token", result.invalidTokens);
-      if (error) {
-        console.warn("[FCM] Invalid token cleanup failed", {
-          count: result.invalidTokens.length,
-        });
+      for (const batch of chunk(result.invalidTokens, ID_QUERY_BATCH_SIZE)) {
+        const { error } = await supabase
+          .from("push_installations")
+          .delete()
+          .in("fcm_token", batch);
+        if (error) {
+          console.warn("[FCM] Invalid token cleanup failed", { count: batch.length });
+        }
       }
     }
     console.info("[FCM] Event delivery completed", {

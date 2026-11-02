@@ -30,7 +30,9 @@ export function projectPublicationActorIds(
     Array.isArray(previousCast)
       ? previousCast.flatMap((row) => {
           const record = isRecord(row) ? row : null;
-          return typeof record?.id === "number" ? [record.id] : [];
+          return record?.status === "validated" && typeof record.id === "number"
+            ? [record.id]
+            : [];
         })
       : [],
   );

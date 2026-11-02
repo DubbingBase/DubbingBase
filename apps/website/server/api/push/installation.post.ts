@@ -21,7 +21,7 @@ export default defineEventHandler(async (event) => {
   const eligibleUserAgent =
     parsed.data.platform === "android"
       ? /Android/i.test(userAgent)
-      : /iPhone|iPad|iPod/i.test(userAgent) || /Macintosh.*Mobile/i.test(userAgent);
+      : /iPhone|iPad|iPod|Macintosh/i.test(userAgent);
   if (!eligibleUserAgent) {
     throw createError({ statusCode: 400, message: "Push is only available on mobile devices" });
   }

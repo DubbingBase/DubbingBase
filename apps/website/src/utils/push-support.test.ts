@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getPushSupport } from "./push-support";
+import { getPushSupport, needsPushTokenRevocation } from "./push-support";
 
 const supported = {
   secureContext: true,
@@ -9,6 +9,12 @@ const supported = {
 };
 
 describe("mobile PWA push support", () => {
+  it("revokes a cached browser token for a missing or changed account owner", () => {
+    expect(needsPushTokenRevocation(null, "user-1")).toBe(true);
+    expect(needsPushTokenRevocation("user-1", "user-2")).toBe(true);
+    expect(needsPushTokenRevocation("user-1", "user-1")).toBe(false);
+  });
+
   it("allows installed Android PWAs and asks browser users to install", () => {
     expect(
       getPushSupport({ ...supported, userAgent: "Android 14 Chrome", standalone: true }),

@@ -16,6 +16,10 @@ export interface PushSupport {
   platform: PushPlatform | null;
 }
 
+export function needsPushTokenRevocation(previousOwnerId: string | null, userId: string): boolean {
+  return previousOwnerId !== userId;
+}
+
 export function getPushSupport(environment: PushSupportEnvironment): PushSupport {
   if (
     !environment.secureContext ||

@@ -56,4 +56,19 @@ describe("publication notification eligibility", () => {
       ),
     ).toEqual([]);
   });
+
+  it("treats a newly validated cast row as new when its earlier row was unvalidated", () => {
+    expect(
+      projectPublicationActorIds(
+        {
+          project: { status: "validated" },
+          cast: [{ id: 7, voice_actor_id: 20, status: "user" }],
+        },
+        {
+          project: { status: "validated" },
+          cast: [{ id: 7, voice_actor_id: 20, status: "validated" }],
+        },
+      ),
+    ).toEqual([20]);
+  });
 });
