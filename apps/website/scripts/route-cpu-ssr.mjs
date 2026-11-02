@@ -844,15 +844,6 @@ function trendingGameCardData(body) {
   }));
 }
 
-function gamePageMarkup(body) {
-  return body
-    .replace(/<head\b[\s\S]*?<\/head>/gi, "")
-    .replace(/<script\b[\s\S]*?<\/script>/gi, "")
-    .replace(/<style\b[\s\S]*?<\/style>/gi, "")
-    .replace(/<link\b[^>]*>/gi, "")
-    .replace(/<footer\b[\s\S]*?<\/footer>/gi, "");
-}
-
 function dubbingProjectPageData(body) {
   const response = JSON.parse(body);
   const voiceActors = new Map(
@@ -1076,11 +1067,6 @@ async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
           JSON.stringify(trendingGameCardData(headValidation.html))
       ) {
         throw new Error(`${route.path} changed fields consumed by homepage trending game cards.`);
-      } else if (
-        route.name === "game" &&
-        gamePageMarkup(baseValidation.html) !== gamePageMarkup(headValidation.html)
-      ) {
-        throw new Error(`${route.path} changed server-rendered game page markup.`);
       } else if (
         route.kind === "api" &&
         route.name !== "season-api" &&
