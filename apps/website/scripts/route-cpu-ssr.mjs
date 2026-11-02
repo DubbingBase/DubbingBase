@@ -866,6 +866,7 @@ function gamePageCastDataMatchesExpected(baseHtml, headHtml) {
   const baseCast = gamePageCastData(baseHtml);
   const headCast = gamePageCastData(headHtml);
   return (
+    headCast.cardCount > 0 &&
     baseCast.cardCount === headCast.cardCount &&
     JSON.stringify(baseCast.voiceActorLinks) === JSON.stringify(headCast.voiceActorLinks) &&
     headCast.characterNames.length === headCast.cardCount &&
