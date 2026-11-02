@@ -115,6 +115,7 @@ export default defineEventHandler(async (event) => {
   }
   const igdbClient = useIgdbClient();
   const pageProjection = getQuery(event).projection === "media-page";
+  let gameLookupFailed = false;
 
   const [game, characterCatalog] = await Promise.all([
     withMediaServiceTimeout(
@@ -124,7 +125,8 @@ export default defineEventHandler(async (event) => {
       .then((igdbGame) => (igdbGame ? processIgdbGame(igdbGame, pageProjection) : null))
       .catch((error: unknown) => {
         console.error(`Failed to fetch IGDB game ${gameId}:`, error);
-        return unavailableGame(gameId);
+        gameLookupFailed = true;
+        return null;
       }),
     loadGameCharacterCatalog(event, gameId, () =>
       igdbClient.getGameCharacters(gameId, pageProjection),
@@ -135,7 +137,13 @@ export default defineEventHandler(async (event) => {
     (characterCatalog.characters.some((character) => character.identity_source === "local")
       ? unavailableGame(gameId)
       : null);
-  if (!resolvedGame) throw createError({ statusCode: 404, statusMessage: "Game not found" });
+  if (!resolvedGame) {
+    throw createError(
+      gameLookupFailed
+        ? { statusCode: 502, statusMessage: "IGDB is unavailable" }
+        : { statusCode: 404, statusMessage: "Game not found" },
+    );
+  }
 
   const metadata = {
     game: resolvedGame,

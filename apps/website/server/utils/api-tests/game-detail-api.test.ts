@@ -77,6 +77,12 @@ describe("GET /api/game/:id", () => {
     expect((await request()).status).toBe(404);
   });
 
+  it("returns 502 when IGDB fails and there is no local character fallback", async () => {
+    mocks.getGame.mockRejectedValueOnce(new Error("IGDB API error: 503 unavailable"));
+
+    expect((await request()).status).toBe(502);
+  });
+
   it("keeps local characters available when IGDB is unavailable", async () => {
     mocks.getGame.mockRejectedValueOnce(new Error("IGDB API error: 503 unavailable"));
     mocks.loadGameCharacterCatalog.mockResolvedValueOnce({

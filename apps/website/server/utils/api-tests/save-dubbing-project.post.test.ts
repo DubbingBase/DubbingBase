@@ -389,6 +389,66 @@ describe("POST /api/save-dubbing-project", () => {
     expect(routeMocks.getIgdbGameCharacters).not.toHaveBeenCalled();
   });
 
+  it("preserves an unchanged local character after its IGDB mapping changes", async () => {
+    const { rpc, localCharacterQuery } = createSupabaseMock({
+      data: [
+        {
+          project_id: 51,
+          updated_at: "2026-10-15T12:05:00",
+          audit_log_id: "f20d747e-c98e-43ea-9356-133fcbf0b496",
+          replayed: false,
+        },
+      ],
+      error: null,
+    });
+    localCharacterQuery.in.mockResolvedValue({
+      data: [
+        {
+          id: "11111111-1111-4111-8111-111111111111",
+          igdb_character_id: null,
+        },
+      ],
+      error: null,
+    });
+    const currentBody = validBody();
+    const body = {
+      ...currentBody,
+      project: {
+        ...currentBody.project,
+        content_type: "video_game",
+        content_id: 42,
+      },
+      cast: [
+        {
+          id: 27,
+          expected_updated_at: "2026-10-15T12:00:00.000Z",
+          expected: {
+            actor_id: null,
+            character_id: 7,
+            character_name: "Local character",
+            game_character_id: "11111111-1111-4111-8111-111111111111",
+            voice_actor_id: 8,
+            performance: "dialogues",
+            note: null,
+            highlight: false,
+            status: "validated",
+          },
+          character_id: 7,
+          character_name: "Local character",
+          game_character_id: "11111111-1111-4111-8111-111111111111",
+          voice_actor_id: 8,
+          performance: "dialogues",
+        },
+      ],
+    };
+
+    const response = await post(body);
+
+    expect(response.status).toBe(200);
+    expect(rpc).toHaveBeenCalledOnce();
+    expect(routeMocks.getIgdbGameCharacters).not.toHaveBeenCalled();
+  });
+
   it("accepts a selected local character with its confirmed IGDB mapping", async () => {
     const { rpc, localCharacterQuery } = createSupabaseMock({
       data: [

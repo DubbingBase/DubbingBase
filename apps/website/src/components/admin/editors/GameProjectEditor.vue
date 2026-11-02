@@ -1404,13 +1404,14 @@ watch(
 
       if (data.works) {
         castRows.value = data.works.map((w) => {
-          const linkedCharacter = w.game_character_id
-            ? null
-            : igdbCharacters.value.find(
-                (character) =>
-                  character.identity_source === "local" &&
-                  character.igdb_character_id === w.character_id,
-              );
+          const linkedCharacter =
+            w.game_character_id || w.character_id === null
+              ? null
+              : igdbCharacters.value.find(
+                  (character) =>
+                    character.identity_source === "local" &&
+                    character.igdb_character_id === w.character_id,
+                );
           const gameCharacterId = w.game_character_id ?? linkedCharacter?.game_character_id ?? null;
           if (w.voice_actors && w.voice_actor_id !== null) {
             const name =
