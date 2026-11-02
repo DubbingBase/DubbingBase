@@ -144,7 +144,12 @@ const routes = [
     name: "game",
     path: "/game/85",
     marker: "CI fixture game 85",
-    expected: ["igdb:games", "igdb:characters", "supabase:dubbing_projects"],
+    expected: [
+      "igdb:games",
+      "igdb:characters",
+      "supabase:game_characters",
+      "supabase:dubbing_projects",
+    ],
   },
   {
     name: "admin-dubbing-project",
