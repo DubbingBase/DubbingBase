@@ -20,6 +20,19 @@ export function needsPushTokenRevocation(previousOwnerId: string | null, userId:
   return previousOwnerId !== userId;
 }
 
+export async function revokePushTokenForAccountChange(
+  accountChanged: boolean,
+  prepareServiceWorker: () => Promise<void>,
+  deleteToken: () => Promise<boolean>,
+  saveAccountOwner: () => void,
+): Promise<boolean> {
+  if (!accountChanged) return true;
+  await prepareServiceWorker();
+  if (!(await deleteToken())) return false;
+  saveAccountOwner();
+  return true;
+}
+
 export function getPushSupport(environment: PushSupportEnvironment): PushSupport {
   if (
     !environment.secureContext ||

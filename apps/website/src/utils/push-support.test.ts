@@ -1,5 +1,9 @@
-import { describe, expect, it } from "vitest";
-import { getPushSupport, needsPushTokenRevocation } from "./push-support";
+import { describe, expect, it, vi } from "vitest";
+import {
+  getPushSupport,
+  needsPushTokenRevocation,
+  revokePushTokenForAccountChange,
+} from "./push-support";
 
 const supported = {
   secureContext: true,
@@ -13,6 +17,39 @@ describe("mobile PWA push support", () => {
     expect(needsPushTokenRevocation(null, "user-1")).toBe(true);
     expect(needsPushTokenRevocation("user-1", "user-2")).toBe(true);
     expect(needsPushTokenRevocation("user-1", "user-1")).toBe(false);
+  });
+
+  it("binds the PWA worker before revoking and saves the owner only after success", async () => {
+    const events: string[] = [];
+    const revoked = await revokePushTokenForAccountChange(
+      true,
+      async () => {
+        events.push("bind-worker");
+      },
+      async () => {
+        events.push("delete-token");
+        return true;
+      },
+      () => {
+        events.push("save-owner");
+      },
+    );
+
+    expect(revoked).toBe(true);
+    expect(events).toEqual(["bind-worker", "delete-token", "save-owner"]);
+  });
+
+  it("does not save the new owner when token revocation fails", async () => {
+    const saveOwner = vi.fn();
+    const revoked = await revokePushTokenForAccountChange(
+      true,
+      async () => {},
+      async () => false,
+      saveOwner,
+    );
+
+    expect(revoked).toBe(false);
+    expect(saveOwner).not.toHaveBeenCalled();
   });
 
   it("allows installed Android PWAs and asks browser users to install", () => {

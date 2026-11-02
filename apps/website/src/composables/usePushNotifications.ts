@@ -1,6 +1,7 @@
 import {
   detectPushSupport,
   needsPushTokenRevocation,
+  revokePushTokenForAccountChange,
   type PushPlatform,
 } from "../utils/push-support";
 
@@ -33,7 +34,10 @@ async function getMessagingForCurrentAccount(userId: string) {
     return null;
   }
 
-  const [{ getApp, getApps, initializeApp }, { deleteToken, getMessaging, isSupported }] =
+  const [
+    { getApp, getApps, initializeApp },
+    { deleteToken, getMessaging, getToken, isSupported },
+  ] =
     await Promise.all([import("firebase/app"), import("firebase/messaging")]);
   if (!(await isSupported())) return null;
   const app =
@@ -46,10 +50,24 @@ async function getMessagingForCurrentAccount(userId: string) {
           projectId: config.firebaseProjectId,
         });
   const messaging = getMessaging(app);
-  if (needsPushTokenRevocation(localStorage.getItem(accountOwnerKey), userId)) {
-    if (!(await deleteToken(messaging))) return null;
-    localStorage.setItem(accountOwnerKey, userId);
-  }
+  const accountChanged = needsPushTokenRevocation(
+    localStorage.getItem(accountOwnerKey),
+    userId,
+  );
+  if (accountChanged && !config.firebaseVapidKey) return null;
+  const revoked = await revokePushTokenForAccountChange(
+    accountChanged,
+    async () => {
+      const registration = await navigator.serviceWorker.ready;
+      await getToken(messaging, {
+        vapidKey: config.firebaseVapidKey,
+        serviceWorkerRegistration: registration,
+      });
+    },
+    () => deleteToken(messaging),
+    () => localStorage.setItem(accountOwnerKey, userId),
+  );
+  if (!revoked) return null;
   return { config, messaging };
 }
 
@@ -113,15 +131,15 @@ export async function reconcilePushInstallation(locale: string): Promise<void> {
   if (support.eligibility !== "ready" || !support.platform || !userId) {
     return;
   }
+  if (Notification.permission !== "granted") {
+    if (Notification.permission === "denied") await detachPushInstallation();
+    return;
+  }
   try {
     const account = await getMessagingForCurrentAccount(userId);
     if (!account) return;
   } catch (error) {
     console.warn("Push account token could not be rotated", error);
-    return;
-  }
-  if (Notification.permission !== "granted") {
-    if (Notification.permission === "denied") await detachPushInstallation();
     return;
   }
   try {
