@@ -1,5 +1,7 @@
 # TODO: Migrate to Standard Supabase RBAC
 
+> Historical inventory: this draft references the retired Ionic/Capacitor client and must not be treated as current application guidance. Reassess its client-side notes against `apps/website` before resuming this work.
+
 > **Reference**: [Supabase Custom Claims & RBAC Guide](https://supabase.com/docs/guides/api/custom-claims-and-role-based-access-control-rbac)
 
 ---

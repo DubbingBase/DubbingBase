@@ -27,9 +27,6 @@ dist-ssr
 !.env.example
 backup_*/**
 supabase/seed.sql
-apps/mobile/android/.bundle/
-apps/mobile/android/vendor/
-apps/mobile/android/Gemfile.lock
 target/**
 *.jks
 .turbo

@@ -26,8 +26,6 @@ reviews:
     - "!**/*.log"
     - "!supabase/.temp/**"
     - "!target/**"
-    - "!apps/mobile/android/.bundle/**"
-    - "!apps/mobile/android/vendor/**"
     - "!backup_*/**"
     - "!**/*.jks"
     - "!**/.env*"

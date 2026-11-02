@@ -22,33 +22,25 @@ const { effectiveTheme } = useTheme();
 const route = useRoute();
 const isAdminRoute = computed(() => {
   const middleware = route.meta.middleware;
-  return (
-    middleware === "admin" ||
-    (Array.isArray(middleware) && middleware.includes("admin"))
-  );
+  return middleware === "admin" || (Array.isArray(middleware) && middleware.includes("admin"));
 });
 const i18nHead = useLocaleHead({
   dir: true,
   seo: true,
 });
-const regionalLanguages = new Set(
-  APP_LOCALES.map((supportedLocale) => supportedLocale.language),
-);
+const regionalLanguages = new Set(APP_LOCALES.map((supportedLocale) => supportedLocale.language));
 const localeHeadLinks = computed(() =>
   (i18nHead.value.link || []).filter(
-    (headLink) =>
-      !("hreflang" in headLink) || regionalLanguages.has(headLink.hreflang),
+    (headLink) => !("hreflang" in headLink) || regionalLanguages.has(headLink.hreflang),
   ),
 );
 const canonicalUrl = computed(
-  () =>
-    i18nHead.value.link?.find((headLink) => headLink.rel === "canonical")?.href,
+  () => i18nHead.value.link?.find((headLink) => headLink.rel === "canonical")?.href,
 );
 const defaultLocaleUrl = computed(
   () =>
-    i18nHead.value.link?.find(
-      (headLink) => "hreflang" in headLink && headLink.hreflang === "en-US",
-    )?.href,
+    i18nHead.value.link?.find((headLink) => "hreflang" in headLink && headLink.hreflang === "en-US")
+      ?.href,
 );
 
 useHead(() => ({
@@ -61,6 +53,7 @@ useHead(() => ({
     return titleChunk ? `${titleChunk} | DubbingBase` : "DubbingBase";
   },
   link: [
+    { rel: "manifest", href: "/manifest.webmanifest" },
     {
       rel: "icon",
       type: "image/png",
@@ -97,9 +90,7 @@ useHead(() => ({
       content: "#f8fafc",
       media: "(prefers-color-scheme: light)",
     },
-    ...(isAdminRoute.value
-      ? [{ name: "robots", content: "noindex, nofollow" }]
-      : []),
+    ...(isAdminRoute.value ? [{ name: "robots", content: "noindex, nofollow" }] : []),
     ...(i18nHead.value.meta || []),
     ...(!isAdminRoute.value && canonicalUrl.value
       ? [

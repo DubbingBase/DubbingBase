@@ -197,7 +197,7 @@ export default defineNuxtConfig({
       ],
     },
     workbox: {
-      navigateFallback: "/offline.html",
+      navigateFallback: "/offline",
       navigateFallbackDenylist: [/^\/api\//, /^\/_nuxt\//],
       globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2,webmanifest}"],
       runtimeCaching: [],

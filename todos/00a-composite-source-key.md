@@ -85,12 +85,6 @@ For each file, replace `content_id` references with `(source, source_id)`:
 | `server/api/link-voice-actor.post.ts`                 | use composite in `findOrCreateDubbingProject`                  |
 | `server/utils/db/dubbing-project.ts`                  | signature change: `findOrCreate(source, source_id, ...)`       |
 
-### Mobile app
-
-| File                              | Change                                           |
-| --------------------------------- | ------------------------------------------------ |
-| `apps/mobile/src/types/models.ts` | type definition: `DubbingProject.source: string` |
-
 ### Database types regen
 
 ```bash
@@ -121,7 +115,7 @@ It also obsoletes:
 - **Type regen mandatory** — every TS file that touches `dubbing_projects` will fail to compile until types are regenerated.
 - **Existing rows have `content_id` as their unique key** — backfill must be lossless.
 - **External API clients (TMDB, IGDB) return numeric IDs as numbers** — must cast to string before insert.
-- **Apps store `content_id` in local storage / URLs** — search-and-replace pass on mobile + website routes.
+- **Website stores `content_id` in local storage / URLs** — search-and-replace pass on website routes.
 - **Rollback is hard** — once `content_id` is dropped, you can't easily revert without a backup.
 
 ---

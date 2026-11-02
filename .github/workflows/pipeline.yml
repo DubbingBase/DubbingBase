@@ -27,7 +27,7 @@ concurrency:
   # Let an in-flight production migration and deployment finish before a newer main run.
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
-# Grant permissions required for posting Netlify deployments, comments, and statuses
+# Grant permissions required for deployment, comments, and statuses
 permissions:
   contents: write
   deployments: write
@@ -45,7 +45,6 @@ jobs:
     outputs:
       database: ${{ steps.filter.outputs.database == 'true' && !(github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.force_website_deploy) }}
       database_validation: ${{ steps.filter.outputs.database_validation }}
-      mobile: ${{ steps.filter.outputs.mobile }}
       website: ${{ steps.filter.outputs.website == 'true' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.force_website_deploy) }}
       website_validation: ${{ steps.filter.outputs.website_validation == 'true' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.force_website_deploy) }}
     steps:
@@ -62,8 +61,6 @@ jobs:
             database_validation:
               - 'packages/database/**'
               - '.github/workflows/pipeline.yml'
-            mobile:
-              - 'apps/mobile/**'
             website:
               - 'apps/website/**'
               - 'packages/shared-logic/**'
@@ -154,7 +151,6 @@ jobs:
         inputs.allow_e2e_pending
       ) &&
       (
-        needs.detect.outputs.mobile == 'true' ||
         needs.detect.outputs.website_validation == 'true' ||
         needs.detect.outputs.database_validation == 'true'
       )
@@ -343,7 +339,6 @@ jobs:
             .github/workflows/pipeline.yml \
             apps/website \
             e2e \
-            ':(exclude)e2e/mobile.spec.ts' \
             package.json \
             packages/locales \
             packages/database \
@@ -354,7 +349,7 @@ jobs:
   # Job 3.7: i18n Translation Check
   i18n-check:
     needs: [detect]
-    if: needs.detect.outputs.website_validation == 'true' || needs.detect.outputs.mobile == 'true' || needs.detect.outputs.database_validation == 'true'
+    if: needs.detect.outputs.website_validation == 'true' || needs.detect.outputs.database_validation == 'true'
     continue-on-error: false
     runs-on: ubuntu-latest
     steps:
@@ -377,201 +372,6 @@ jobs:
 
       - name: Check i18n keys
         run: pnpm i18n:check
-
-  # Job 4: Deploy Mobile App as Website
-  deploy-mobile-web:
-    needs: [detect, deploy-supabase, release-validation, e2e-tests, frontend-tests, i18n-check]
-    # A skipped migration is expected only when no database files changed.
-    if: |
-      always() &&
-      !cancelled() &&
-      needs.detect.result == 'success' &&
-      needs.detect.outputs.mobile == 'true' &&
-      needs.e2e-tests.result == 'success' &&
-      needs.i18n-check.result == 'success' &&
-      (
-        needs.frontend-tests.result == 'success' ||
-        (
-          needs.detect.outputs.database != 'true' &&
-          needs.detect.outputs.website != 'true' &&
-          needs.frontend-tests.result == 'skipped'
-        )
-      ) &&
-      (
-        needs.release-validation.result == 'success' ||
-        (
-          needs.detect.outputs.database != 'true' &&
-          needs.detect.outputs.website != 'true' &&
-          needs.release-validation.result == 'skipped'
-        )
-      ) &&
-      (
-        needs.deploy-supabase.result == 'success' ||
-        (
-          needs.detect.outputs.database != 'true' &&
-          needs.deploy-supabase.result == 'skipped'
-        )
-      )
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup PNPM
-        uses: pnpm/action-setup@v4
-        with:
-          version: 12.4.1
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install --config.minimum-release-age=0 --config.minimum-release-age-strict=false
-
-      - name: Build mobile website
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
-          VITE_ONESIGNAL_APP_ID: ${{ secrets.ONESIGNAL_APP_ID }}
-          VITE_API_BASE_URL: https://dubbingbase.com
-        run: pnpm --filter=@app/mobile build
-
-      - name: Deploy to Netlify
-        if: github.ref == 'refs/heads/main'
-        uses: nwtgck/actions-netlify@v3.0
-        with:
-          publish-dir: "./apps/mobile/dist"
-          production-branch: main
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          deploy-message: "Deploy Mobile Web from GitHub Actions"
-          enable-pull-request-comment: false
-          enable-commit-comment: true
-          overwrites-pull-request-comment: true
-        env:
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_MOBILE_SITE_ID }}
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-
-  # Job 5: Build Android app (TEMPORARILY DISABLED - re-enable by restoring the mobile-change condition)
-  build-android:
-    needs: [detect, deploy-supabase, e2e-tests, frontend-tests, i18n-check]
-    # Temporarily disabled; re-enable by restoring the original condition:
-    # always() && needs.detect.outputs.mobile == 'true' && (...)
-    if: false
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup PNPM
-        uses: pnpm/action-setup@v4
-        with:
-          version: 12.4.1
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-          cache: "pnpm"
-
-      - name: Setup Java 21
-        uses: actions/setup-java@v4
-        with:
-          distribution: "temurin"
-          java-version: "21"
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install dependencies
-        run: pnpm install --config.minimum-release-age=0 --config.minimum-release-age-strict=false
-
-      - name: Setup Android signing - Capacitor
-        run: |
-          base64 -d <<< "${{ secrets.KEYSTORE_FILE }}" > ./apps/mobile/android/dubbing-base-keystore.jks
-
-      - name: Set Android dev version name
-        if: "github.ref != 'refs/heads/main'"
-        run: |
-          VERSION=$(node -p "require('./apps/mobile/package.json').version")
-          echo "ANDROID_VERSION_NAME=${VERSION}-build.${GITHUB_RUN_NUMBER}" >> $GITHUB_ENV
-
-      - name: Set Android production version code
-        if: github.ref == 'refs/heads/main'
-        run: |
-          VERSION=$(node -p "require('./apps/mobile/package.json').version")
-          MAJOR=$(echo "$VERSION" | cut -d. -f1)
-          MINOR=$(echo "$VERSION" | cut -d. -f2)
-          PATCH=$(echo "$VERSION" | cut -d. -f3)
-          VERSION_CODE=$(( MAJOR * 1000000 + MINOR * 1000 + PATCH ))
-          echo "ANDROID_VERSION_CODE=${VERSION_CODE}${GITHUB_RUN_NUMBER}" >> $GITHUB_ENV
-
-      - name: Build Android Release
-        if: github.event_name != 'pull_request'
-        timeout-minutes: 20
-        working-directory: apps/mobile
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
-          VITE_ONESIGNAL_APP_ID: ${{ secrets.ONESIGNAL_APP_ID }}
-          VITE_API_BASE_URL: https://dubbingbase.com
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
-          ANDROID_VERSION_CODE: ${{ env.ANDROID_VERSION_CODE }}
-          ANDROID_VERSION_NAME: ${{ env.ANDROID_VERSION_NAME }}
-        run: |
-          pnpm build
-          pnpm cap sync
-          pnpm cap build android --androidreleasetype AAB
-          pnpm cap build android --androidreleasetype APK
-
-      - name: Upload AAB artifact
-        if: github.event_name != 'pull_request'
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-app-bundle
-          path: apps/mobile/android/app/build/outputs/bundle/release/app-release-signed.aab
-          retention-days: 30
-
-      - name: Upload APK artifact
-        if: github.event_name != 'pull_request'
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-apk-release
-          path: apps/mobile/android/app/build/outputs/apk/release/app-release-signed.apk
-          retention-days: 30
-
-  # Job 6: Upload AAB to Play Store (runs only on main branch pushes)
-  upload-play-store:
-    needs: [detect, build-android]
-    if: |
-      always() &&
-      github.event_name != 'pull_request' && 
-      github.ref == 'refs/heads/main' &&
-      needs.detect.outputs.mobile == 'true' &&
-      needs.build-android.result == 'success'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Download AAB artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: android-app-bundle
-
-      - name: Upload .aab to Google Play
-        uses: KevinRohn/github-action-upload-play-store@v1.0.1
-        with:
-          service_account_json: ${{ secrets.SERVICE_ACCOUNT_JSON }}
-          package_name: "com.dubbingbase.app"
-          aab_file_path: "app-release-signed.aab"
-          track: internal
-          release_status: "completed"
 
   # Job 7: Build website before release validation; main deployment reuses this artifact
   build-website:
@@ -650,21 +450,6 @@ jobs:
           NUXT_ADMIN_EMAIL: admin@example.invalid
           NITRO_PRESET: cloudflare-module
         run: pnpm --filter=@app/website build
-
-      - name: Verify hidden production build output
-        if: github.ref == 'refs/heads/main' && needs.detect.outputs.website == 'true'
-        run: |
-          test -f apps/website/.output/public/.well-known/assetlinks.json
-          well_known_entry_count="$(find apps/website/.output/public/.well-known -mindepth 1 -print | wc -l | tr -d '[:space:]')"
-          if [ "$well_known_entry_count" -ne 1 ]; then
-            echo "Unexpected files in .well-known build output." >&2
-            exit 1
-          fi
-          unexpected_hidden_paths="$(find apps/website/.output -mindepth 1 \( -type d -o -type f -o -type l \) -name '.*' ! -path 'apps/website/.output/public/.well-known' -print)"
-          if [ -n "$unexpected_hidden_paths" ]; then
-            printf 'Unexpected hidden build output:\n%s\n' "$unexpected_hidden_paths" >&2
-            exit 1
-          fi
 
       - name: Upload production website build
         if: github.ref == 'refs/heads/main' && needs.detect.outputs.website == 'true'

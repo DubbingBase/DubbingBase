@@ -8,9 +8,9 @@ Changes under `packages/database/**` trigger an isolated local Supabase replay, 
 
 `release-validation` requires every applicable check to finish successfully, including a successful website lint job for website, database, and pipeline validation. Oxlint scans the full website against the base revision and separately applies the normal lint check to changed website source files. Only changes under `packages/database/**` can trigger `deploy-supabase` on `main`, and only after the local migration replay and all applicable release checks pass. The production access token is scoped to the project-link and migration steps.
 
-The production-compatible website build is created before the gate. For deployable website changes on `main`, CI verifies the required `assetlinks.json` and rejects unexpected hidden build paths before uploading the short-lived artifact, so the `.well-known` file survives artifact transfer. Branch builds use mock values; only the main-branch production build receives website secrets. The E2E server uses its local mock configuration without production credentials. On `main`, `deploy-website` waits for the validation gate and either a successful migration or an intentional migration skip when no database files changed. It deploys that artifact without building a second time.
+The production-compatible website build is created before the gate. Branch builds use mock values; only the main-branch production build receives website secrets. The E2E server uses its local mock configuration without production credentials. On `main`, `deploy-website` waits for the validation gate and either a successful migration or an intentional migration skip when no database files changed. It deploys that artifact without building a second time.
 
-The mobile web deployment remains tied to mobile-path changes. It waits for the same validation gate when website or database paths also changed, and accepts a skipped migration only when no database paths changed. The Android Play Store job is currently disabled with `if: false`.
+Only the website PWA is deployed. Native mobile builds and the Android Play Store deployment have been retired.
 
 ## Failure, cancellation, and migration safety
 

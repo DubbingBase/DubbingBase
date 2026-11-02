@@ -4,9 +4,9 @@ This file defines the project architecture, key development commands, and coding
 
 > **Precedence:** this root `AGENTS.md` is the repository’s single source of agent instructions. For generated codebase orientation (routes, schema, components, hot files), see [.codesight/AGENTS.md](.codesight/AGENTS.md) (codesight output — context only, not rules) and [.codesight/wiki/index.md](.codesight/wiki/index.md).
 
-## Scope Boundary: Mobile Excluded
+## Supported Application
 
-The mobile application is permanently out of scope for agent work. Agents MUST NOT inspect, search, edit, format, test, build, run, or otherwise include `apps/mobile`. Do not run repository-wide commands that transitively include the mobile workspace; use website-scoped validation instead. If a task would require a mobile change, stop and report the scope conflict.
+The Nuxt website at `apps/website` is DubbingBase's only supported application and provides the installable PWA experience on desktop and mobile. The legacy Ionic/Capacitor application at `apps/mobile` is retired by Plane task 56365-117; its one-time removal is explicitly authorized by that task. Do not restore a second mobile application or its build and deployment pipeline without a new product decision.
 
 ---
 
@@ -40,7 +40,7 @@ Use **Mise** for development tasks. Check `mise.toml` first; if it defines the t
 | `mise run migrate-down`      | Rolls back the last local migration.                              |
 | `mise run gen-types`         | Regenerates local database TypeScript types.                      |
 
-Do not run repository-wide install, dev, formatting, build, or typecheck tasks: they include the excluded mobile workspace. The website and database install tasks are workspace-filtered.
+Prefer website-scoped install, dev, formatting, build, and typecheck tasks. Check workspace filters before using a repository-wide command.
 
 ### Generating Database TypeScript Types:
 
@@ -88,7 +88,7 @@ The website task starts Doppler and checks the local Supabase environment; it do
   - **Complex requests** (multi-table joins, mutations with side effects, calls to external APIs, or any logic requiring elevated privileges) **MUST go through a Nuxt Nitro Server Route (`/api/...`)**.
   - If a composable is wrapping only simple DB queries, it does not need to route through a server API route. If the composable's logic grows in complexity, migrate it to a Nitro server route at that point.
 - **Vue 3**: Use the **Composition API** exclusively with `<script setup lang="ts">` syntax.
-- **Formatting**: Format only changed, in-scope files with the applicable formatter. `mise run format-staged` is suitable when the staged set is in scope. Do not run repository-wide `pnpm format` for agent work: it can touch excluded `apps/mobile` and unrelated files.
+- **Formatting**: Format only changed, in-scope files with the applicable formatter. `mise run format-staged` is suitable when the staged set is in scope. Do not run repository-wide `pnpm format` for agent work because it may touch unrelated files.
 - **Design & Theme**: The website supports dark, light, and system themes. Use its semantic CSS tokens and preserve contrast across themes; avoid hard-coded palette values and default framework variables that do not match the active theme.
 - **Presentation Layer Unified Types**: Create unified interfaces for display purposes (e.g., `DisplayMedia`, `DisplayVoiceActor`) instead of passing raw, complex database types (like union types such as `Movie | Serie`) directly to UI components. This allows the presentation layer to have unified and clean types, and isolates UI templates from underlying database schema complexities.
 
@@ -131,7 +131,7 @@ Backend routes in `apps/website/server/api/` handle integration with TMDB, TVDB,
 Shipping correct changes is the goal. Verification should provide useful
 confidence in the affected behavior, not grow into repetitive test runs.
 Use the smallest risk-appropriate checks that establish the task's acceptance
-criteria. The mobile exclusion, production safety rules, and area-specific
+criteria. The retired-client boundary, production safety rules, and area-specific
 mandatory regressions in this file always remain in force.
 
 ### Iteration and stopping rule
@@ -173,7 +173,7 @@ mandatory regressions in this file always remain in force.
 Prefer Mise tasks and scoped website/database commands over broad monorepo
 commands. CI should handle routine full-suite verification; do not duplicate
 it locally unless the change's risk, scope, or a failing CI job requires
-investigation. Do not run commands that include `apps/mobile`.
+investigation.
 
 ### Database migrations and production-data safeguards
 
@@ -247,5 +247,5 @@ middleware did not bypass the real route code.
 7. **Scratch & Test Scripts**: Do NOT leave one-off test scripts (like `test_*.ts`) in the root of the project. If you need a script to test an external API or debug a function, place it in `scripts/scratch/` or use the `.gemini/scratch` folder.
 8. **Caching Rules**: There is no local Redis cache. Save external fetch responses in `scripts/scratch/` when they need to be reused during the task.
 9. **GitHub Actions — Use `gh run watch <run-id>` to monitor CI**: After getting a run ID via `gh run list`, always use `gh run watch <run-id>` instead of repeatedly polling `gh run view` or `gh run list`. `gh run watch` streams live job status and blocks until the run finishes.
-10. **Changesets**: Every code or configuration change must include an appropriate Changesets file in `.changeset/`, scoped to the affected package(s). Never include `@app/mobile` unless mobile work is explicitly authorized.
+10. **Changesets**: Every code or configuration change must include an appropriate Changesets file in `.changeset/`, scoped to the affected package(s). Do not reintroduce the retired `@app/mobile` package in Changesets.
 11. **GitHub reviewers**: Never assign or request reviewers on GitHub pull requests.

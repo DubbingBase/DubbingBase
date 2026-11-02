@@ -7,7 +7,7 @@ node = "24"
 _.file = '.env.development'
 
 [tasks.install]
-description = "Installs every workspace, including mobile; maintainer-only"
+description = "Installs every workspace"
 run = "pnpm install"
 
 [tasks.backend]
@@ -24,7 +24,7 @@ run = "pnpm supabase stop"
 
 
 [tasks.format]
-description = "Formats the whole repository, including mobile; maintainer-only"
+description = "Formats the whole repository"
 run = "pnpm run format"
 
 [tasks.format-staged]
@@ -32,15 +32,9 @@ description = "Format only staged files using lint-staged"
 run = "npx lint-staged"
 
 [tasks.dev]
-description = "Runs every workspace development server, including mobile; maintainer-only"
+description = "Runs the workspace development servers"
 depends = ["install", "backend"]
 run = "pnpm run dev"
-
-[tasks.sync]
-description = "Syncs mobile Capacitor assets; maintainer-only"
-depends = ["build-web"]
-dir = "apps/mobile"
-run = "pnpm cap sync"
 
 [tasks.build-web]
 description = "Builds the web app"
@@ -81,29 +75,6 @@ run = "npx supabase db reset --local --no-seed --yes"
 description = "Backups the database"
 depends = ["database-install"]
 run = "./backup_db.sh"
-
-[tasks.start-emulator]
-description = "Starts an Android emulator for mobile; maintainer-only"
-depends = ["install"]
-run = "$ANDROID_HOME/emulator/emulator -avd Medium_Phone_API_36.0"
-
-[tasks.android-dev]
-description = "Runs the mobile Android app; maintainer-only"
-depends = ["install", "start-emulator"]
-dir = "apps/mobile"
-run = "pnpm cap run android"
-env = { "VITE_SUPABASE_URL" = "http://10.0.2.2:55321", "VITE_SUPABASE_PUBLISHABLE_KEY" = "sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH" }
-
-[tasks.android-app-install]
-description = "Installs the mobile Android app; maintainer-only"
-depends = ["android-build-prod"]
-run = "adb install -r apps/mobile/android/app/build/outputs/apk/universal/release/app-universal-release.apk"
-
-[tasks.app]
-description = "Starts the mobile app in web mode; maintainer-only"
-depends = ["install"]
-dir = "apps/mobile"
-run = "pnpm dev"
 
 [tasks.website]
 description = "Runs the website"
@@ -160,7 +131,7 @@ dir = "packages/database"
 run = "npx supabase db reset --local --yes"
 
 [tasks.typecheck]
-description = "Type checks all workspaces, including mobile; maintainer-only"
+description = "Type checks all workspaces"
 depends = ["install"]
 run = "pnpm typecheck"
 
