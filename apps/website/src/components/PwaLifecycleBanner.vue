@@ -17,13 +17,12 @@
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          stroke-width="2"
+          stroke-width="1.8"
           stroke-linecap="round"
           stroke-linejoin="round"
         >
-          <path d="M20 7v5h-5" />
-          <path d="M4 17v-5h5" />
-          <path d="M5.64 9A7 7 0 0 1 17.5 6.5L20 12M4 12l2.5 5.5A7 7 0 0 0 18.36 15" />
+          <path d="m12 3 1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2L12 3Z" />
+          <path d="m19 16 .7 2.3L22 19l-2.3.7L19 22l-.7-2.3L16 19l2.3-.7L19 16Z" />
         </svg>
         <svg
           v-else
@@ -54,9 +53,25 @@
     <div class="flex shrink-0 gap-2">
       <button
         type="button"
-        class="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl bg-violet-600 px-4 text-sm font-semibold text-white shadow-sm shadow-violet-950/10 transition hover:bg-violet-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-app-focus focus-visible:ring-offset-2 focus-visible:ring-offset-app-background motion-reduce:transition-none sm:flex-none"
+        class="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-violet-600 px-4 text-sm font-semibold text-white shadow-sm shadow-violet-950/10 transition hover:bg-violet-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-app-focus focus-visible:ring-offset-2 focus-visible:ring-offset-app-background motion-reduce:transition-none disabled:cursor-wait disabled:opacity-80 sm:flex-none"
+        :disabled="isProcessing"
+        :aria-busy="isProcessing"
         @click="needRefresh ? refresh() : install()"
       >
+        <svg
+          v-if="isProcessing"
+          class="size-4 animate-spin motion-reduce:animate-none"
+          viewBox="0 0 24 24"
+          fill="none"
+          aria-hidden="true"
+        >
+          <circle class="opacity-25" cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3" />
+          <path
+            class="opacity-90"
+            fill="currentColor"
+            d="M12 3a9 9 0 0 1 9 9h-3a6 6 0 0 0-6-6V3Z"
+          />
+        </svg>
         {{ needRefresh ? t("pwa.refresh") : t("pwa.install") }}
       </button>
       <button
@@ -77,13 +92,24 @@ const { $pwa } = useNuxtApp();
 
 const showInstallPrompt = computed(() => Boolean($pwa?.showInstallPrompt) && !$pwa?.isPWAInstalled);
 const needRefresh = computed(() => Boolean($pwa?.needRefresh));
+const isProcessing = ref(false);
 
 async function install(): Promise<void> {
-  await $pwa?.install();
+  isProcessing.value = true;
+  try {
+    await $pwa?.install();
+  } finally {
+    isProcessing.value = false;
+  }
 }
 
 async function refresh(): Promise<void> {
-  await $pwa?.updateServiceWorker(true);
+  isProcessing.value = true;
+  try {
+    await $pwa?.updateServiceWorker(true);
+  } finally {
+    isProcessing.value = false;
+  }
 }
 
 async function dismiss(): Promise<void> {
