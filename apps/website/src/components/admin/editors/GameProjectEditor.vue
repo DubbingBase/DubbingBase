@@ -1022,6 +1022,15 @@ const reloadGameCharacterOptions = async () => {
     ...character,
     id: character.stable_id ?? `igdb_character:${character.id}`,
   }));
+  for (const row of castRows.value) {
+    if (!row.game_character_id) continue;
+    const localCharacter = igdbCharacters.value.find(
+      (character) =>
+        character.identity_source === "local" &&
+        character.game_character_id === row.game_character_id,
+    );
+    if (localCharacter) row.character_id = localCharacter.igdb_character_id;
+  }
   filteredIgdbCharacters.value = igdbCharacters.value.slice(0, 50);
 };
 
