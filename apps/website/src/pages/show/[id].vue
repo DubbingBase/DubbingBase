@@ -73,7 +73,7 @@
                   : 'theme-surface-raised theme-surface-muted theme-text-muted'
               "
             >
-              {{ aggregateCredits.cast.length || 0 }}
+              {{ aggregateCredits.cast?.length || 0 }}
             </span>
           </NuxtLink>
           <NuxtLink
