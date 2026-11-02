@@ -3,6 +3,7 @@ import { getActorPageWorkByActor, getWorkByActor } from "../../utils/db/queries"
 import { buildSupabaseImageUrl } from "../../utils/urls/supabase";
 import { buildTmdbImageUrl } from "../../utils/urls/tmdb";
 import { actorPageResponse, type ActorPageVoiceRole } from "../../utils/actor-page-response";
+import { withMediaServiceTimeout } from "../../utils/media-request";
 type TmdbCastMember = Record<string, unknown> & {
   profile_path?: string | null;
   poster_path?: string | null;
@@ -94,12 +95,10 @@ async function getActor(
   tmdbClient: ReturnType<typeof useTmdbClient>,
   acceptLanguage?: string,
 ) {
-  try {
-    return await tmdbClient.getPersonWithCredits(actorId, acceptLanguage);
-  } catch (e) {
-    console.error("Error fetching actor details:", e);
-    return null;
-  }
+  return await withMediaServiceTimeout(
+    () => tmdbClient.getPersonWithCredits(actorId, acceptLanguage),
+    "TMDB actor",
+  );
 }
 
 async function getActorPageVoiceRoles(actorId: number): Promise<ActorPageVoiceRole[]> {
@@ -234,9 +233,9 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: "Missing id parameter" });
   }
 
-  const actorId = parseInt(id, 10);
-  if (isNaN(actorId)) {
-    throw createError({ statusCode: 400, message: "Invalid id parameter" });
+  const actorId = Number(id);
+  if (!Number.isSafeInteger(actorId) || actorId < 1) {
+    throw createError({ statusCode: 404, statusMessage: "Actor not found" });
   }
   const acceptLanguage = getHeader(event, "accept-language") || undefined;
   const tmdbClient = useTmdbClient();

@@ -843,6 +843,7 @@ function trendingGameCardData(body) {
 
 function gamePageMarkup(body) {
   return body
+    .replace(/<head\b[\s\S]*?<\/head>/gi, "")
     .replace(/<script\b[\s\S]*?<\/script>/gi, "")
     .replace(/<style\b[\s\S]*?<\/style>/gi, "")
     .replace(/<link\b[^>]*>/gi, "")

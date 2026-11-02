@@ -29,7 +29,13 @@ export default defineEventHandler(async (event) => {
   try {
     const tmdbClient = useTmdbClient();
     const mediaService = new MediaService(tmdbClient, acceptLanguage);
-    const baseData = await mediaService.getVoiceActorWithWorkAndMedia(voiceActorId, acceptLanguage);
+    const baseData = await mediaService.getVoiceActorWithWorkAndMedia(
+      voiceActorId,
+      acceptLanguage,
+      {
+        includePotentialWikipediaUrl: !pageProjection,
+      },
+    );
     if (!pageProjection) return baseData;
 
     return {
@@ -44,6 +50,14 @@ export default defineEventHandler(async (event) => {
     };
   } catch (error) {
     console.error("Error fetching voice actor:", error);
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "statusCode" in error &&
+      typeof error.statusCode === "number"
+    ) {
+      throw error;
+    }
     throw createError({
       statusCode: 500,
       message: "Failed to fetch voice actor data",

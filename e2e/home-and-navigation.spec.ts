@@ -7,7 +7,9 @@ test.describe("Home Page & Global Navigation", () => {
     await setupMockApi(page);
   });
 
-  test("loads home page with trending carousels and top voice actors", async ({ page }) => {
+  test("loads home page with trending carousels and top voice actors without hydration errors", async ({
+    page,
+  }) => {
     const api = await setupMockApi(page);
     await page.goto("/", { waitUntil: "domcontentloaded" });
     await waitForVueHydration(page);
@@ -18,6 +20,9 @@ test.describe("Home Page & Global Navigation", () => {
     // Verify trending sections / voice actors
     await expect(page.locator("body")).toContainText("Richard Darbois");
 
+    expect(api.getErrors().some((error) => error.includes("Cannot redefine property: imgEl"))).toBe(
+      false,
+    );
     api.expectNoErrors();
   });
 

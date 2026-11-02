@@ -64,31 +64,25 @@ export async function fetchActorData(
   id: string | number,
   options: { projection?: "actor-page"; filmographyPage?: number } = {},
 ): Promise<ActorDataPayload | null> {
-  try {
-    const query: Record<string, string | number> = {};
-    if (options.projection) query.projection = options.projection;
-    if (options.filmographyPage !== undefined) query.filmographyPage = options.filmographyPage;
+  const query: Record<string, string | number> = {};
+  if (options.projection) query.projection = options.projection;
+  if (options.filmographyPage !== undefined) query.filmographyPage = options.filmographyPage;
 
-    const response = await $fetch<ActorResponse>(`/api/actor/${id}`, {
-      ...(Object.keys(query).length > 0 ? { query } : {}),
-    });
+  const response = await $fetch<ActorResponse>(`/api/actor/${id}`, {
+    ...(Object.keys(query).length > 0 ? { query } : {}),
+  });
 
-    if (!response || !response.actor) {
-      console.error("Actor response is null");
-      return null;
-    }
-
-    return {
-      actor: response.actor,
-      voiceRoles: response.actor.voice_roles || [],
-      ...(response.filmographyCount !== undefined
-        ? { filmographyCount: response.filmographyCount }
-        : {}),
-    };
-  } catch (e) {
-    console.error("fetchActorData error:", e);
-    return null;
+  if (!response || !response.actor) {
+    throw new Error("Actor response is missing the actor record");
   }
+
+  return {
+    actor: response.actor,
+    voiceRoles: response.actor.voice_roles || [],
+    ...(response.filmographyCount !== undefined
+      ? { filmographyCount: response.filmographyCount }
+      : {}),
+  };
 }
 
 export function useActorData(

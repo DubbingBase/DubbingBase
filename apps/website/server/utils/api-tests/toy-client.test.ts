@@ -2,7 +2,9 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 
 const clientMocks = vi.hoisted(() => ({ useSupabaseAdmin: vi.fn() }));
 
-vi.mock("../db/client", () => ({ useSupabaseAdmin: clientMocks.useSupabaseAdmin }));
+vi.mock("../db/client", () => ({
+  useSupabaseAdmin: clientMocks.useSupabaseAdmin,
+}));
 
 let ToyClient: typeof import("../api/toy").ToyClient;
 
@@ -133,5 +135,13 @@ describe("ToyClient", () => {
     expect(query.or).toHaveBeenCalledWith(
       'name.ilike."%100\\\\%\\\\_%",manufacturer.ilike."%100\\\\%\\\\_%",product_line.ilike."%100\\\\%\\\\_%"',
     );
+  });
+
+  it("preserves database errors instead of reporting a missing toy", async () => {
+    createSupabaseMock({ data: null, error: { code: "08006" } });
+
+    await expect(new ToyClient().getToy(1)).rejects.toMatchObject({
+      code: "08006",
+    });
   });
 });
