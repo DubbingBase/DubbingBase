@@ -1,5 +1,4 @@
 ---
-"@app/mobile": patch
 "@app/website": patch
 "@app/locales": patch
 ---

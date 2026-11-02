@@ -1,7 +1,0 @@
-{
-  "name": "DubbingBase",
-  "integrations": {
-    "capacitor": {}
-  },
-  "type": "vue-vite"
-}

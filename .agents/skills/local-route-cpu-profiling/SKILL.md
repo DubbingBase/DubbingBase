@@ -20,7 +20,7 @@ Do not reuse another route's fixture sizes as defaults. For example, the actor w
 
 ## 2. Build and isolate the local server
 
-- Build only the website with `mise run check`. This task runs the website build and does not include `apps/mobile`. Keep build-time egress blocked too when prerendering, font discovery, or hooks could call remote services; use dummy values and do not load production credentials.
+- Build only the website with `mise run check`. Keep build-time egress blocked too when prerendering, font discovery, or hooks could call remote services; use dummy values and do not load production credentials.
 - Profile the built Nitro Node server (`node-server` preset), not the Cloudflare Worker runtime. Use a temporary local config override when needed to disable scheduled tasks, prerender output for a dynamic target route, or remote font discovery. Keep these overrides out of tracked application config.
 - Run the built server and request/profile driver inside a loopback-only network namespace or equivalent OS-level egress block. Bind the server and inspector to `127.0.0.1`; use dummy local environment values, never production credentials. If external egress cannot be blocked, stop and report the limitation instead of profiling.
 - Install a strict upstream `fetch` stub before the server starts. Allow only the exact provider hosts and paths required by the route, return the deterministic fixtures, count each allowed call, and throw on every other request. Also block external networking at the OS level; a fetch stub alone is not a network boundary.

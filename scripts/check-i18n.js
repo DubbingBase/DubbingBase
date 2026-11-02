@@ -5,9 +5,7 @@ function runCheck(label, vueFiles, languageFiles, output) {
   const cmd = `pnpm exec vue-i18n-extract --vueFiles "${vueFiles}" --languageFiles "${languageFiles}" --output ${output}`;
   execSync(cmd, { stdio: "ignore", cwd: process.cwd() });
 
-  const report = JSON.parse(
-    execSync(`cat ${output}`, { encoding: "utf8" }).toString()
-  );
+  const report = JSON.parse(execSync(`cat ${output}`, { encoding: "utf8" }).toString());
 
   const missing = report.missingKeys || [];
   if (missing.length > 0) {
@@ -28,19 +26,8 @@ if (existsSync("apps/website")) {
       "website",
       "apps/website/src/**/*.{vue,ts}",
       "apps/website/i18n/locales/*.json",
-      "/tmp/i18n-report-website.json"
-    )
-  );
-}
-
-if (existsSync("apps/mobile/src") && existsSync("packages/locales")) {
-  allMissing = allMissing.concat(
-    runCheck(
-      "mobile",
-      "apps/mobile/src/**/*.vue",
-      "packages/locales/{en,fr}.json",
-      "/tmp/i18n-report-mobile.json"
-    )
+      "/tmp/i18n-report-website.json",
+    ),
   );
 }
 

@@ -40,5 +40,5 @@ Currently, smart audio toys and storytellers (e.g., Lunii, Tonies, VTech, Bookin
   - [ ] Story tracks & episodes breakdown per cartridge/figurine/pack.
   - [ ] Age group recommendations and franchise links.
 - [ ] **UI & Discovery:**
-  - [ ] Dedicated toy discovery and filtering by device platform on the website and mobile app.
+  - [ ] Dedicated toy discovery and filtering by device platform on the website.
   - [ ] Visual badge indicators for toy platforms (e.g., Lunii logo, Tonies figurine icon).

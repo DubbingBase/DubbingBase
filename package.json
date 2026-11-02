@@ -8,7 +8,6 @@
   "type": "module",
   "scripts": {
     "build": "turbo run build",
-    "build:mobile": "turbo run build --filter=@app/mobile",
     "build:website": "turbo run build --filter=@app/website",
     "dev": "turbo run dev",
     "lint": "oxlint -c .oxlintrc.json",
@@ -61,9 +60,6 @@
           "nuxt": "-"
         }
       }
-    },
-    "patchedDependencies": {
-      "@onesignal/capacitor-plugin": "patches/@onesignal__capacitor-plugin.patch"
     }
   }
 }

@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - name: Checkout repository without mobile workspace
+      - name: Checkout website source
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
