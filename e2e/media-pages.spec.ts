@@ -90,7 +90,7 @@ test.describe("Media Detail Pages", () => {
     await expect(page.getByText("Voice Actor", { exact: true }).first()).toBeVisible();
     await expect(page.getByText("Richard Darbois", { exact: true })).toBeVisible();
     await expect(page.getByText("Original audio", { exact: true })).toHaveCount(0);
-    await expect(page.getByText("Not specified", { exact: true })).toBeVisible();
+    await expect(page.getByText("Not specified", { exact: true }).first()).toBeVisible();
   });
 
   test("refetches movie data when browser back returns to the detail page", async ({ page }) => {
