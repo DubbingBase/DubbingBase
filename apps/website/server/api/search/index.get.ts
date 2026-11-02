@@ -110,6 +110,7 @@ function calculateScore(item: SearchItem, queryLower: string, now: number): numb
     "",
     item.original_title,
     item.original_name,
+    typeof item.product_line === "string" ? item.product_line : "",
     typeof item.manufacturer === "string" ? item.manufacturer : "",
     typeof item.brand === "string" ? item.brand : "",
     typeof item.firstname === "string" && typeof item.lastname === "string" ? `${item.firstname} ${item.lastname}` : "",
@@ -235,9 +236,10 @@ export default defineEventHandler(async (event) => {
     // 2. Voice actor DB search
     const voiceActorSearchPromise = (async () => {
       const results: SearchItem[] = [];
-      try {
-        const searchQuery = buildTextSearchQuery(trimmedQuery);
-        if (searchQuery) {
+      let trackSucceeded = false;
+      const searchQuery = buildTextSearchQuery(trimmedQuery);
+      if (searchQuery) {
+        try {
           const { data: ftsData, error: ftsError } = await supabase
             .from("voice_actors")
             .select("*")
@@ -248,9 +250,14 @@ export default defineEventHandler(async (event) => {
           if (ftsData && Array.isArray(ftsData)) {
             results.push(...ftsData);
           }
+          trackSucceeded = true;
+        } catch (e) {
+          console.error("Voice actor full-text search error:", e);
         }
+      }
 
-        // Also try ILIKE for partial matches
+      // Also try ILIKE for partial matches, even when full-text search fails.
+      try {
         const { data: ilikeData, error: ilikeError } = await supabase
           .from("voice_actors")
           .select("*")
@@ -267,9 +274,13 @@ export default defineEventHandler(async (event) => {
             }
           }
         }
-        successfulTracks += 1;
+        trackSucceeded = true;
       } catch (e) {
-        console.error("Voice actor search error:", e);
+        console.error("Voice actor partial search error:", e);
+      }
+
+      if (trackSucceeded) {
+        successfulTracks += 1;
       }
       return results;
     })();
@@ -376,22 +387,28 @@ export default defineEventHandler(async (event) => {
       if (tmdbIds.length === 0) return tmdbResults;
 
       try {
-        const { data: projects, error } = await supabase
-          .from("dubbing_projects")
-          .select("content_id, content_type, studios(name)")
-          .in("content_id", tmdbIds)
-          .in("content_type", ["movie", "tv"])
-          .limit(200);
-        if (error) throw error;
-
         const studioNamesByMedia = new Map<string, Set<string>>();
-        for (const project of projects ?? []) {
-          const studioName = project.studios?.name;
-          if (!studioName) continue;
-          const key = `${project.content_type}:${project.content_id}`;
-          const names = studioNamesByMedia.get(key) ?? new Set<string>();
-          names.add(studioName);
-          studioNamesByMedia.set(key, names);
+        const pageSize = 500;
+        for (let from = 0; ; from += pageSize) {
+          const { data: projects, error } = await supabase
+            .from("dubbing_projects")
+            .select("id, content_id, content_type, studios(name)")
+            .in("content_id", tmdbIds)
+            .in("content_type", ["movie", "tv"])
+            .order("id", { ascending: true })
+            .range(from, from + pageSize - 1);
+          if (error) throw error;
+
+          for (const project of projects ?? []) {
+            const studioName = project.studios?.name;
+            if (!studioName) continue;
+            const key = `${project.content_type}:${project.content_id}`;
+            const names = studioNamesByMedia.get(key) ?? new Set<string>();
+            names.add(studioName);
+            studioNamesByMedia.set(key, names);
+          }
+
+          if (!projects || projects.length < pageSize) break;
         }
         return tmdbResults.map((item) => {
           if (item.media_type !== "movie" && item.media_type !== "tv") return item;

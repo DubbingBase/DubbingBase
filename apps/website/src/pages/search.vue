@@ -25,13 +25,14 @@
             ref="searchInput"
             v-model="query"
             type="search"
+            role="combobox"
             data-testid="search-input"
             autofocus
             :placeholder="t('search.placeholder')"
             :aria-label="t('search.placeholder')"
             class="w-full rounded-full border py-3 pl-12 pr-4 text-base outline-none theme-border theme-surface-raised theme-text theme-placeholder theme-focus"
             :aria-expanded="!loading && filteredResults.length > 0"
-            aria-controls="search-results"
+            :aria-controls="filteredResults.length > 0 ? 'search-results-listbox' : undefined"
             :aria-activedescendant="activeResultId"
             @keydown.down.prevent="navigateResults(1)"
             @keydown.up.prevent="navigateResults(-1)"
@@ -54,6 +55,7 @@
 
         <div
           v-else-if="filteredResults.length > 0"
+          id="search-results-listbox"
           role="listbox"
           :aria-label="t('search.results')"
           :class="['flex flex-col gap-1', loading ? 'pointer-events-none opacity-60' : '']"

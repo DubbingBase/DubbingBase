@@ -33,7 +33,13 @@ export class ToyClient {
     const trimmedQuery = query.trim();
     if (trimmedQuery.length < 2) return [];
 
-    const ilikePattern = `"%${trimmedQuery.replaceAll("\\", "\\\\").replaceAll('"', '\\"')}%"`;
+    const escapedLikeQuery = trimmedQuery
+      .replaceAll("\\", "\\\\")
+      .replaceAll("%", "\\%")
+      .replaceAll("_", "\\_");
+    const ilikePattern = `"%${escapedLikeQuery
+      .replaceAll("\\", "\\\\")
+      .replaceAll('"', '\\"')}%"`;
 
     try {
       const supabase = useSupabaseAdmin();

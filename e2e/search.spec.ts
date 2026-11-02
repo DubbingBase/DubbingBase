@@ -49,7 +49,7 @@ test.describe("Global Search Page", () => {
     await searchInput.fill("Richard");
     await searchUrl;
     await expect(
-      page.getByRole("button", { name: "Richard Darbois" }),
+      page.getByRole("option", { name: /Richard Darbois/ }),
     ).toBeVisible({ timeout: 5000 });
 
     api.expectNoErrors();
@@ -74,7 +74,7 @@ test.describe("Global Search Page", () => {
     const searchInput = page.getByTestId("search-input");
     await expect(searchInput).toHaveValue("Richard");
     await expect(
-      page.getByRole("button", { name: "Richard Darbois" }),
+      page.getByRole("option", { name: /Richard Darbois/ }),
     ).toBeVisible({ timeout: 10000 });
   });
 
@@ -219,7 +219,7 @@ test.describe("Global Search Page", () => {
     await page.goto("/search?q=Richard");
     await waitForVueHydration(page);
     await expect(
-      page.getByRole("button", { name: "Richard Darbois" }),
+      page.getByRole("option", { name: /Richard Darbois/ }),
     ).toBeVisible({ timeout: 10000 });
 
     const searchInput = page.getByTestId("search-input");
@@ -241,7 +241,7 @@ test.describe("Global Search Page", () => {
       releasePendingSearch();
     }
 
-    await expect(page.getByRole("button", { name: "Alpine" })).toBeVisible({
+    await expect(page.getByRole("option", { name: /Alpine/ })).toBeVisible({
       timeout: 10000,
     });
   });
@@ -253,8 +253,8 @@ test.describe("Global Search Page", () => {
     await page.goto("/search?q=Richard");
     await waitForVueHydration(page);
 
-    const resultItem = page.getByRole("button", {
-      name: "Richard Darbois",
+    const resultItem = page.getByRole("option", {
+      name: /Richard Darbois/,
     });
     await expect(resultItem).toBeVisible({ timeout: 10000 });
     await Promise.all([

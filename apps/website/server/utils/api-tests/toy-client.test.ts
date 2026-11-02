@@ -117,4 +117,21 @@ describe("ToyClient", () => {
       'name.ilike."%Fisher-Price, \\"Little People\\"%",manufacturer.ilike."%Fisher-Price, \\"Little People\\"%",product_line.ilike."%Fisher-Price, \\"Little People\\"%"',
     );
   });
+
+  it("treats percent and underscore as literal search characters", async () => {
+    const query = {
+      select: vi.fn(),
+      or: vi.fn(),
+      limit: vi.fn(async () => ({ data: [], error: null })),
+    };
+    query.select.mockReturnValue(query);
+    query.or.mockReturnValue(query);
+    clientMocks.useSupabaseAdmin.mockReturnValue({ from: vi.fn(() => query) });
+
+    await new ToyClient().searchToys("100%_");
+
+    expect(query.or).toHaveBeenCalledWith(
+      'name.ilike."%100\\\\%\\\\_%",manufacturer.ilike."%100\\\\%\\\\_%",product_line.ilike."%100\\\\%\\\\_%"',
+    );
+  });
 });
