@@ -1283,11 +1283,7 @@ export type Database = {
       };
       normalize_actor_name: { Args: { str: string }; Returns: string };
       page_media_catalog: {
-        Args: {
-          p_content_type: string;
-          p_page: number;
-          p_page_size: number;
-        };
+        Args: { p_content_type: string; p_page: number; p_page_size: number };
         Returns: {
           content_ids: number[];
           page: number;
