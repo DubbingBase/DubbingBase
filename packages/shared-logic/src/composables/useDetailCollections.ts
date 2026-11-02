@@ -185,6 +185,7 @@ export function formatGameDetailCastCards(
       const workIndexes = worksByGameCharacterId.get(gameCharacterId);
       if (workIndexes) workIndexes.push(index);
       else worksByGameCharacterId.set(gameCharacterId, [index]);
+      continue;
     }
     for (const rawId of [work.character_id, work.actor_id]) {
       if (rawId === null || rawId === undefined) continue;

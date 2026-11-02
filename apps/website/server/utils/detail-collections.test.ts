@@ -504,6 +504,35 @@ describe("GET /api/detail-collections", () => {
     expect(cards.slice(0, 2).map(({ name }) => name)).toEqual(["Alex", "Alex"]);
   });
 
+  it("treats a local game character UUID as authoritative over its stale IGDB ID", () => {
+    const localCharacterId = "11111111-1111-4111-8111-111111111111";
+    const cards = formatGameDetailCastCards(
+      [
+        {
+          id: null,
+          name: "Local character",
+          game_character_id: localCharacterId,
+          igdb_character_id: 8,
+        },
+        { id: 7, name: "Former IGDB character" },
+      ],
+      {
+        works: [
+          {
+            id: 501,
+            game_character_id: localCharacterId,
+            character_id: 7,
+            character_name: "Local character",
+          },
+        ],
+      },
+    );
+
+    expect(cards.filter(({ work_id }) => work_id === 501).map(({ name }) => name)).toEqual([
+      "Local character",
+    ]);
+  });
+
   it("keeps studio project and roster filtering and pagination aligned with page projections", async () => {
     const projects = Array.from({ length: 16 }, (_, index) => ({
       id: index + 1,
