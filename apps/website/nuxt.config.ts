@@ -73,7 +73,7 @@ export default defineNuxtConfig({
   nitro: {
     preset: process.env.NITRO_PRESET || "node-server",
     prerender: {
-      routes: [...ABOUT_PRERENDER_ROUTES],
+      routes: [...ABOUT_PRERENDER_ROUTES, "/robots.txt"],
     },
     hooks: {
       "prerender:generate": (route) => {
@@ -259,6 +259,10 @@ export default defineNuxtConfig({
   site: {
     url: siteUrl,
     name: "DubbingBase",
+  },
+
+  robots: {
+    sitemap: [`${siteUrl}/sitemap.xml`],
   },
 
   image: {

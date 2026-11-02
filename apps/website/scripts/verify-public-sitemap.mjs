@@ -32,6 +32,17 @@ function readLocations(xml) {
   return [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
 }
 
+function readUrlEntries(xml) {
+  return [...xml.matchAll(/<url>([\s\S]*?)<\/url>/g)].map(([, url]) => ({
+    location: /<loc>([^<]+)<\/loc>/.exec(url)?.[1],
+    alternates: Object.fromEntries(
+      [...url.matchAll(/<xhtml:link\b[^>]*hreflang="([^"]+)"[^>]*href="([^"]+)"[^>]*\/?\s*>/g)].map(
+        ([, language, href]) => [language, href],
+      ),
+    ),
+  }));
+}
+
 const index = await readFile(resolve(publicDirectory, "sitemap_index.xml"), "utf8");
 const sitemapUrls = readLocations(index);
 if (sitemapUrls.length !== locales.length) {
@@ -47,25 +58,31 @@ for (const { code, prefix } of locales) {
 
   const xml = await readFile(resolve(publicDirectory, `__sitemap__/${code}.xml`), "utf8");
   const locations = readLocations(xml);
+  const entries = readUrlEntries(xml);
   const expected = publicRoutes.map((route) => `${origin}${localizedPath(prefix, route)}`);
-  if (locations.length !== expected.length || expected.some((url) => !locations.includes(url))) {
+  const routeByLocation = new Map(expected.map((location, index) => [location, publicRoutes[index]]));
+  if (
+    locations.length !== expected.length ||
+    entries.length !== expected.length ||
+    expected.some((url) => !locations.includes(url))
+  ) {
     throw new Error(`The ${code} sitemap does not match the public-route allow-list.`);
   }
 
-  for (const { code: alternateCode, prefix: alternatePrefix } of locales) {
-    if (!xml.includes(`hreflang="${alternateCode}"`)) {
-      throw new Error(`The ${code} sitemap is missing the ${alternateCode} alternate links.`);
-    }
-    for (const route of publicRoutes) {
+  for (const entry of entries) {
+    const route = routeByLocation.get(entry.location);
+    if (!route) throw new Error(`The ${code} sitemap contains an unexpected URL entry.`);
+
+    for (const { code: alternateCode, prefix: alternatePrefix } of locales) {
       const alternateUrl = `${origin}${localizedPath(alternatePrefix, route)}`;
-      if (!xml.includes(`href="${alternateUrl}"`)) {
-        throw new Error(`The ${code} sitemap is missing alternate URL ${alternateUrl}.`);
+      if (entry.alternates[alternateCode] !== alternateUrl) {
+        throw new Error(`The ${entry.location} entry has an incorrect ${alternateCode} alternate.`);
       }
     }
-  }
-
-  if (!xml.includes('hreflang="x-default"')) {
-    throw new Error(`The ${code} sitemap is missing its x-default alternate links.`);
+    const defaultUrl = `${origin}${localizedPath("", route)}`;
+    if (entry.alternates["x-default"] !== defaultUrl) {
+      throw new Error(`The ${entry.location} entry has an incorrect x-default alternate.`);
+    }
   }
 }
 
@@ -75,6 +92,14 @@ if (sitemapAlias !== index) {
 }
 
 const robots = await readFile(resolve(import.meta.dirname, "../public/_robots.txt"), "utf8");
-if (!robots.includes(`Sitemap: ${origin}/sitemap.xml`)) {
-  throw new Error("The robots.txt source does not reference the root sitemap alias.");
+if (!robots.includes("User-agent: *") || !robots.includes("Allow: /")) {
+  throw new Error("The robots.txt source must allow public crawling.");
+}
+if (robots.includes("Sitemap:")) {
+  throw new Error("The sitemap directive must come from the configured robots sitemap URL.");
+}
+
+const generatedRobots = await readFile(resolve(publicDirectory, "robots.txt"), "utf8");
+if (!generatedRobots.includes(`Sitemap: ${origin}/sitemap.xml`)) {
+  throw new Error("The generated robots.txt does not reference the configured sitemap origin.");
 }
