@@ -144,12 +144,8 @@ const routes = [
     name: "game",
     path: "/game/85",
     marker: "CI fixture game 85",
-    expected: [
-      "igdb:games",
-      "igdb:characters",
-      "supabase:game_characters",
-      "supabase:dubbing_projects",
-    ],
+    expected: ["igdb:games", "igdb:characters", "supabase:dubbing_projects"],
+    expectedHead: ["supabase:game_characters"],
   },
   {
     name: "admin-dubbing-project",
@@ -649,8 +645,10 @@ async function currentDependencies(server) {
   return response.json();
 }
 
-function assertRouteDependencies(route, before, after) {
-  for (const key of route.expected) {
+function assertRouteDependencies(route, before, after, side) {
+  const expected =
+    side === "head" ? [...route.expected, ...(route.expectedHead ?? [])] : route.expected;
+  for (const key of expected) {
     if ((after[key] ?? 0) <= (before[key] ?? 0)) {
       throw new Error(`${route.path} did not reach its real upstream dependency ${key}.`);
     }
@@ -811,7 +809,7 @@ async function validateRoute(server, route, dataset) {
     throw new Error(`${route.path} did not SSR the expected fixture data.`);
   }
   const after = await currentDependencies(server);
-  assertRouteDependencies(route, before, after);
+  assertRouteDependencies(route, before, after, server.side);
   if (route.kind === "api" && route.expected.some((key) => after[key] - (before[key] ?? 0) !== 1)) {
     throw new Error(`${route.path} did not make exactly one call to each fixture dependency.`);
   }
