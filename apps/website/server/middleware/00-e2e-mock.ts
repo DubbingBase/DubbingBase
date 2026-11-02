@@ -485,6 +485,7 @@ export const MOCK_MOVIE = {
     overview:
       "When Dr. Indiana Jones is hired by the government to locate the legendary Ark of the Covenant, he finds himself up against the entire Nazi machine.",
     release_date: "1981-06-12",
+    original_language: "en",
     vote_average: 8.4,
     vote_count: 12000,
     runtime: 115,
@@ -500,7 +501,7 @@ export const MOCK_MOVIE = {
           id: 102,
           name: "Karen Allen",
           character: "Marion Ravenwood",
-          profile_path: "/karen_allen.jpg",
+          profile_path: null,
         },
         {
           id: 103,
@@ -530,7 +531,7 @@ export const MOCK_MOVIE = {
       id: 8501,
       content_id: 85,
       content_type: "movie",
-      language: "fr-FR",
+      language: "en-US",
       studios: {
         id: 10,
         name: "Dubbing Brothers",
@@ -561,6 +562,15 @@ export const MOCK_MOVIE = {
             profile_picture: "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
           },
         },
+        {
+          id: 102,
+          actor_id: 102,
+          voice_actor_id: null,
+          character_name: "Marion Ravenwood",
+          performance: "dialogues",
+          voice_actor: null,
+          voice_actors: null,
+        },
       ],
       works: [
         {
@@ -581,6 +591,15 @@ export const MOCK_MOVIE = {
             lastname: "Darbois",
             profile_picture: "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
           },
+        },
+        {
+          id: 102,
+          actor_id: 102,
+          voice_actor_id: null,
+          character_name: "Marion Ravenwood",
+          performance: "dialogues",
+          voice_actor: null,
+          voice_actors: null,
         },
       ],
       crew: [],
@@ -604,6 +623,7 @@ export const MOCK_SHOW = {
     vote_count: 14000,
     number_of_seasons: 5,
     number_of_episodes: 62,
+    original_language: "en",
     seasons: [
       {
         season_number: 0,
