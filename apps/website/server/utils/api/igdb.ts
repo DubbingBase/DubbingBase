@@ -25,7 +25,7 @@ export interface IgdbPopularityPrimitive {
   value: number;
 }
 
-function debugLog(message: string, data?: any) {
+function debugLog(message: string, data?: unknown) {
   console.log(`[IGDB] ${message}`, data ? JSON.stringify(data, null, 2) : "");
 }
 
@@ -62,8 +62,8 @@ export class IgdbClient {
 
   constructor(cache: SimpleCache) {
     const config = useRuntimeConfig();
-    this.clientId = (config.igdbClientId as string) || "";
-    this.clientSecret = (config.igdbClientSecret as string) || "";
+    this.clientId = String(config.igdbClientId || "");
+    this.clientSecret = String(config.igdbClientSecret || "");
     this.baseUrl = "https://api.igdb.com/v4";
     this.tokenUrl = "https://id.twitch.tv/oauth2/token";
     this.cache = cache;
@@ -204,7 +204,9 @@ export class IgdbClient {
         throw createMediaResponseError("IGDB", response);
       }
 
-      return (await response.json()) as T[];
+      const result: unknown = await response.json();
+      if (!Array.isArray(result)) throw new Error(`Invalid IGDB response: /${endpoint}`);
+      return result;
     } catch (error: unknown) {
       if (
         error instanceof Error &&

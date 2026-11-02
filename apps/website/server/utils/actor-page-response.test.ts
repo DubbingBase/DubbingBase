@@ -131,6 +131,14 @@ async function request(projection?: string, filmographyPage?: number) {
 }
 
 describe("actor page API projection", () => {
+  it("distinguishes a missing actor from a failed TMDB request", async () => {
+    mocks.getPersonWithCredits.mockRejectedValueOnce(new Error("TMDB API error: 404"));
+    expect((await request("actor-page")).status).toBe(404);
+
+    mocks.getPersonWithCredits.mockRejectedValueOnce(new Error("TMDB API error: 503"));
+    expect((await request("actor-page")).status).toBe(502);
+  });
+
   it("preserves the full default API including provider credits and editorial metadata", async () => {
     const response = await request();
     expect(response.status).toBe(200);

@@ -12,39 +12,22 @@ export default defineEventHandler(async (event): Promise<AdvertisementResponse> 
     throw createError({ statusCode: 400, message: "Missing id parameter" });
   }
 
-  const adId = parseInt(id, 10);
-  if (isNaN(adId)) {
-    throw createError({ statusCode: 400, message: "Invalid id parameter" });
+  const adId = Number(id);
+  if (!Number.isSafeInteger(adId) || adId === 0) {
+    throw createError({ statusCode: 404, statusMessage: "Advertisement not found" });
   }
   const adClient = useAdvertisementClient();
   const projection = getQuery(event).projection;
-  const [apiData, dbData] = await Promise.all([
-    (async () => {
-      try {
-        const ad = await adClient.getAdvertisement(adId);
-        return {
-          failed: false,
-          ad,
-        };
-      } catch (err) {
-        console.error(`Failed to fetch advertisement ${adId}:`, err);
-        return {
-          failed: true,
-          ad: {
-            id: adId,
-            title: `Spot Publicitaire #${adId}`,
-            brand: "Marque",
-            media_type: "advertisement" as const,
-          },
-        };
-      }
-    })(),
+  const [ad, dbData] = await Promise.all([
+    adClient.getAdvertisement(adId),
 
     // DB: dubbing projects
     getDubbingProjectsForMediaEndpoint(adId, "advertisement", projection),
   ]);
 
-  const { ad } = apiData;
+  if (!ad) {
+    throw createError({ statusCode: 404, statusMessage: "Advertisement not found" });
+  }
   const dubbingProjects = dbData;
 
   const isProcessed = dubbingProjects.length > 0;

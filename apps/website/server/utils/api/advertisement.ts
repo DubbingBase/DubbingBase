@@ -2,10 +2,7 @@ import type { Advertisement } from "@app/shared-logic";
 import { useSupabaseAdmin } from "../db/client";
 
 export class AdvertisementClient {
-  async searchAdvertisements(
-    query: string,
-    limit = 15,
-  ): Promise<Advertisement[]> {
+  async searchAdvertisements(query: string, limit = 15): Promise<Advertisement[]> {
     if (!query || query.trim().length < 2) return [];
 
     try {
@@ -19,11 +16,11 @@ export class AdvertisementClient {
 
       if (!data) return [];
 
-      return data.map((item: any) => ({
+      return data.map((item): Advertisement => ({
         id: item.content_id,
         title: `Spot Publicitaire #${item.content_id}`,
         brand: item.studios?.name || "Marque inconnue",
-        media_type: "advertisement" as const,
+        media_type: "advertisement",
       }));
     } catch (err) {
       console.error("Advertisement search failed:", err);
@@ -34,30 +31,28 @@ export class AdvertisementClient {
   async getAdvertisement(id: number): Promise<Advertisement | null> {
     try {
       const supabase = useSupabaseAdmin();
-      const { data: project } = await supabase
+      const { data: project, error } = await supabase
         .from("dubbing_projects")
         .select("*, studios(id, name)")
         .eq("content_id", id)
         .eq("content_type", "advertisement")
+        .order("created_at", { ascending: false, nullsFirst: false })
+        .limit(1)
         .maybeSingle();
+
+      if (error) throw error;
+      if (!project) return null;
 
       return {
         id,
         title: `Spot Publicitaire #${id}`,
-        brand: project?.studios?.name || "Campagne publicitaire",
+        brand: project.studios?.name || "Campagne publicitaire",
         media_type: "advertisement" as const,
-        year: project?.created_at
-          ? new Date(project.created_at).getFullYear()
-          : undefined,
+        year: project.created_at ? new Date(project.created_at).getFullYear() : undefined,
       };
     } catch (err) {
       console.error(`Failed to fetch advertisement #${id}:`, err);
-      return {
-        id,
-        title: `Spot Publicitaire #${id}`,
-        brand: "Marque",
-        media_type: "advertisement" as const,
-      };
+      throw err;
     }
   }
 }

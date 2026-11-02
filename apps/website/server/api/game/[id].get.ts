@@ -4,6 +4,7 @@ import { getDubbingProjects, getGamePageDubbingProjects } from "../../utils/db/q
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
 import { scheduleBackgroundTask } from "../../utils/background";
+import { withMediaServiceTimeout } from "../../utils/media-request";
 import type { IgdbGame, IgdbCharacter } from "@app/shared-logic";
 
 function processIgdbGame(
@@ -88,35 +89,28 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: "Missing id parameter" });
   }
 
-  const gameId = parseInt(id, 10);
-  if (isNaN(gameId)) {
-    throw createError({ statusCode: 400, message: "Invalid id parameter" });
+  const gameId = Number(id);
+  if (!Number.isSafeInteger(gameId) || gameId < 1) {
+    throw createError({ statusCode: 404, statusMessage: "Game not found" });
   }
   const igdbClient = useIgdbClient();
   const pageProjection = getQuery(event).projection === "media-page";
 
-  let game: (IgdbGame & { media_type: "video_game" }) | null = null;
-  let characters: ReturnType<typeof processIgdbCharacter>[] = [];
+  const [igdbGame, igdbCharacters] = await Promise.all([
+    withMediaServiceTimeout(
+      () => (pageProjection ? igdbClient.getGame(gameId, true) : igdbClient.getGame(gameId)),
+      "IGDB game",
+    ),
+    pageProjection
+      ? igdbClient.getGameCharacters(gameId, true)
+      : igdbClient.getGameCharacters(gameId),
+  ]);
+  if (!igdbGame) throw createError({ statusCode: 404, statusMessage: "Game not found" });
 
-  try {
-    const [igdbGame, igdbCharacters] = await Promise.all([
-      pageProjection ? igdbClient.getGame(gameId, true) : igdbClient.getGame(gameId),
-      pageProjection
-        ? igdbClient.getGameCharacters(gameId, true)
-        : igdbClient.getGameCharacters(gameId),
-    ]);
-    game = igdbGame ? processIgdbGame(igdbGame, pageProjection) : null;
-    characters = igdbCharacters.map((character) => processIgdbCharacter(character, pageProjection));
-  } catch (err) {
-    console.error(`Failed to fetch IGDB game ${gameId}:`, err);
-    game = {
-      id: gameId,
-      name: "Information indisponible (Timeout)",
-      summary: "Ce contenu n'a pas pu être chargé.",
-      media_type: "video_game",
-      cover: undefined,
-    };
-  }
+  const game = processIgdbGame(igdbGame, pageProjection);
+  const characters = igdbCharacters.map((character) =>
+    processIgdbCharacter(character, pageProjection),
+  );
 
   const metadata = { game, characters };
 

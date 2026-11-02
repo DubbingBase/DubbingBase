@@ -71,6 +71,25 @@ describe("MediaService voice actor media indexing", () => {
     vi.restoreAllMocks();
   });
 
+  it("returns not found only when the voice actor row is absent", async () => {
+    const queryResult = (error: { code: string } | null) => ({
+      from: () => ({
+        select: () => ({
+          eq: () => ({ single: async () => ({ data: null, error }) }),
+        }),
+      }),
+    });
+    serviceMocks.useSupabaseAdmin.mockReturnValue(queryResult({ code: "PGRST116" }));
+    await expect(
+      new MediaService(new TMDBClient()).getVoiceActorWithWorkAndMedia(71),
+    ).rejects.toMatchObject({ statusCode: 404 });
+
+    serviceMocks.useSupabaseAdmin.mockReturnValue(queryResult({ code: "08006" }));
+    await expect(
+      new MediaService(new TMDBClient()).getVoiceActorWithWorkAndMedia(71),
+    ).rejects.toMatchObject({ statusCode: 500 });
+  });
+
   it("reuses each media cast index and preserves the first matching TMDB credit", async () => {
     const fetchMock = vi.fn(
       async () =>

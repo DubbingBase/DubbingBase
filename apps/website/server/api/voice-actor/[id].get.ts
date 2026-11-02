@@ -50,6 +50,14 @@ export default defineEventHandler(async (event) => {
     };
   } catch (error) {
     console.error("Error fetching voice actor:", error);
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "statusCode" in error &&
+      typeof error.statusCode === "number"
+    ) {
+      throw error;
+    }
     throw createError({
       statusCode: 500,
       message: "Failed to fetch voice actor data",

@@ -52,21 +52,16 @@ export class ToyClient {
   }
 
   async getToy(id: number): Promise<Toy | null> {
-    try {
-      const supabase = useSupabaseAdmin();
-      const { data, error } = await supabase
-        .from("toy_metadata")
-        .select(
-          "content_id, name, manufacturer, product_line, release_year, cover_url, description, updated_at",
-        )
-        .eq("content_id", id)
-        .maybeSingle();
+    const supabase = useSupabaseAdmin();
+    const { data, error } = await supabase
+      .from("toy_metadata")
+      .select(
+        "content_id, name, manufacturer, product_line, release_year, cover_url, description, updated_at",
+      )
+      .eq("content_id", id)
+      .maybeSingle();
 
-      if (error) throw error;
-      return data ? mapToy(data) : null;
-    } catch (err) {
-      console.error(`Failed to fetch toy #${id}:`, err);
-      return null;
-    }
+    if (error) throw error;
+    return data ? mapToy(data) : null;
   }
 }

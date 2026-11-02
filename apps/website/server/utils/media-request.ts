@@ -39,12 +39,12 @@ function statusCodeOf(error: unknown): number | undefined {
   return typeof error.statusCode === "number" ? error.statusCode : undefined;
 }
 
-function toMediaServiceError(error: unknown, dependency: string) {
+export function toMediaServiceError(error: unknown, dependency: string) {
   const statusCode = statusCodeOf(error);
   if (statusCode === 404 || statusCode === 504) return error;
 
   const message = error instanceof Error ? error.message : String(error);
-  const upstreamStatus = /^TMDB API error:\s*(\d+)$/.exec(message)?.[1];
+  const upstreamStatus = /^(?:TMDB|IGDB) API error:\s*(\d+)/.exec(message)?.[1];
   if (upstreamStatus === "404") {
     return createError({
       statusCode: 404,
@@ -57,6 +57,14 @@ function toMediaServiceError(error: unknown, dependency: string) {
     return createError({
       statusCode: 504,
       statusMessage: `${dependency} timed out`,
+      cause: error,
+    });
+  }
+
+  if (statusCode !== undefined && statusCode >= 500) {
+    return createError({
+      statusCode: 502,
+      statusMessage: `${dependency} request failed`,
       cause: error,
     });
   }
@@ -74,11 +82,7 @@ export async function withMediaServiceTimeout<T>(
   timeoutMs = MEDIA_SERVICE_TIMEOUT_MS,
 ): Promise<T> {
   try {
-    return await withTimeout(
-      Promise.resolve().then(request),
-      timeoutMs,
-      dependency,
-    );
+    return await withTimeout(Promise.resolve().then(request), timeoutMs, dependency);
   } catch (error: unknown) {
     throw toMediaServiceError(error, dependency);
   }

@@ -13,6 +13,20 @@ const supabaseUrl = env("SUPABASE_URL") ?? env("PUBLIC_SUPABASE_URL");
 const supabasePublishableKey = env("SUPABASE_PUBLISHABLE_KEY");
 const siteUrl = env("SITE_URL") ?? "https://dubbingbase.com";
 const ABOUT_PRERENDER_ROUTES = new Set(["/about", "/fr/about", "/es/about", "/ja/about"]);
+const PUBLIC_SITEMAP_ROUTES = [
+  "/",
+  "/about",
+  "/contribute",
+  "/guidelines",
+  "/legal",
+  "/movies",
+  "/privacy",
+  "/series",
+  "/studios",
+  "/terms",
+  "/terms-api",
+  "/voice-actors",
+];
 
 function stripAboutClientRuntime(html: string): string {
   return (
@@ -59,7 +73,7 @@ export default defineNuxtConfig({
   nitro: {
     preset: process.env.NITRO_PRESET || "node-server",
     prerender: {
-      routes: [...ABOUT_PRERENDER_ROUTES],
+      routes: [...ABOUT_PRERENDER_ROUTES, "/robots.txt"],
     },
     hooks: {
       "prerender:generate": (route) => {
@@ -247,6 +261,10 @@ export default defineNuxtConfig({
     name: "DubbingBase",
   },
 
+  robots: {
+    sitemap: [`${siteUrl}/sitemap.xml`],
+  },
+
   image: {
     domains: ["image.tmdb.org", "images.igdb.com"],
     format: ["avif", "webp"],
@@ -271,6 +289,10 @@ export default defineNuxtConfig({
     client: true,
   },
   sitemap: {
+    // Use an explicit public-route allow-list so automatic page discovery
+    // cannot add individual database-record pages to the sitemap.
     zeroRuntime: true,
+    excludeAppSources: true,
+    urls: PUBLIC_SITEMAP_ROUTES.map((loc) => ({ loc, _i18nTransform: true })),
   },
 });

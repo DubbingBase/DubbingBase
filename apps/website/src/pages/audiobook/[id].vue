@@ -350,13 +350,14 @@ const currentUrl = computed(() => route.fullPath);
 const { page: castPage, setPage: setCastPage } = useUrlPagination("castPage");
 
 // Instant Hydration Data Fetching
-const { data, pending } = await useAsyncData(
+const { data, pending, error } = await useAsyncData(
   `audiobook-${audiobookId.value}-${locale.value}`,
   () => fetchAudiobookData(audiobookId.value, locale.value, { projection: "media-summary" }),
   {
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
 );
+if (import.meta.server && error.value) throw error.value;
 
 const audiobook = computed<Audiobook | null>(() => data.value?.audiobook || null);
 const dubbingProjects = computed(() => {
@@ -401,8 +402,17 @@ function getDisplayLanguage(langCode?: string | null): string {
 const searchInput = ref("");
 const debouncedSearch = refDebounced(searchInput, 150);
 
-watch([debouncedSearch, activeDubId], () => {
-  void setCastPage(1);
+watch([debouncedSearch, activeDubId], ([search, dub], [previousSearch, previousDub]) => {
+  if (
+    search !== previousSearch ||
+    (typeof previousDub === "number" &&
+      previousDub > 0 &&
+      typeof dub === "number" &&
+      dub > 0 &&
+      dub !== previousDub)
+  ) {
+    void setCastPage(1);
+  }
 });
 
 const { data: castData } = await useAsyncData(

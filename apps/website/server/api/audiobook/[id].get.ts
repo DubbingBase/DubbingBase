@@ -4,6 +4,7 @@ import { useSupabaseAdmin } from "../../utils/db/client";
 import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
 import { scheduleBackgroundTask } from "../../utils/background";
 import type { AudiobookResponse } from "@app/shared-logic";
+import { withMediaServiceTimeout } from "../../utils/media-request";
 
 export default defineEventHandler(async (event): Promise<AudiobookResponse> => {
   const id = getRouterParam(event, "id");
@@ -12,39 +13,21 @@ export default defineEventHandler(async (event): Promise<AudiobookResponse> => {
     throw createError({ statusCode: 400, message: "Missing id parameter" });
   }
 
-  const bookId = parseInt(id, 10);
-  if (isNaN(bookId)) {
-    throw createError({ statusCode: 400, message: "Invalid id parameter" });
+  const bookId = Number(id);
+  if (!Number.isSafeInteger(bookId) || bookId < 1) {
+    throw createError({ statusCode: 404, statusMessage: "Audiobook not found" });
   }
   const openLibraryClient = useOpenLibraryClient();
   // Fetch OpenLibrary book data + DB dubbing projects concurrently
   const [apiData, dbData] = await Promise.all([
-    (async () => {
-      try {
-        const book = await openLibraryClient.getBook(bookId);
-        return {
-          failed: false,
-          book,
-        };
-      } catch (err) {
-        console.error(`Failed to fetch OpenLibrary book ${bookId}:`, err);
-        return {
-          failed: true,
-          book: {
-            id: bookId,
-            title: "Livre audio",
-            description: "Information indisponible",
-            media_type: "audiobook" as const,
-          },
-        };
-      }
-    })(),
+    withMediaServiceTimeout(() => openLibraryClient.getBook(bookId), "OpenLibrary book"),
 
     // DB: dubbing projects
     getDubbingProjectsForMediaEndpoint(bookId, "audiobook", getQuery(event).projection),
   ]);
 
-  const { book } = apiData;
+  const book = apiData;
+  if (!book) throw createError({ statusCode: 404, statusMessage: "Audiobook not found" });
   const dubbingProjects = dbData;
 
   // Lazy enqueue if not yet processed - Gated by PostHog 'enqueue-on-navigate' (server-side)

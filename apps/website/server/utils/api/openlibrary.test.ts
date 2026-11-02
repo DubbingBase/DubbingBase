@@ -59,6 +59,17 @@ describe("OpenLibrary persistence policy", () => {
     expect(values.size).toBe(0);
   });
 
+  it("returns missing books as null and preserves provider failures", async () => {
+    vi.stubGlobal("fetch", async () => new Response("", { status: 404 }));
+    const client = new OpenLibraryClient(
+      new SimpleCache(() => ({ get: async () => null, put: async () => undefined })),
+    );
+    await expect(client.getBook(42)).resolves.toBeNull();
+
+    vi.stubGlobal("fetch", async () => new Response("", { status: 503 }));
+    await expect(client.getBook(42)).rejects.toThrow("OpenLibrary API error: 503");
+  });
+
   it("retains the small shared author-name mapping in KV", async () => {
     const values = new Map<string, unknown>();
     const reads: string[] = [];
