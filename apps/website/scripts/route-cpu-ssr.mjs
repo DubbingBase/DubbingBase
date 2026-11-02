@@ -1090,7 +1090,9 @@ async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
         JSON.stringify(gamePageCastData(baseValidation.html)) !==
           JSON.stringify(gamePageCastData(headValidation.html))
       ) {
-        throw new Error(`${route.path} changed server-rendered game cast data.`);
+        throw new Error(
+          `${route.path} changed server-rendered game cast data: ${JSON.stringify({ base: gamePageCastData(baseValidation.html), head: gamePageCastData(headValidation.html) })}`,
+        );
       } else if (
         route.kind === "api" &&
         route.name !== "season-api" &&
