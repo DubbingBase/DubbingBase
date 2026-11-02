@@ -15,6 +15,7 @@
           : 'theme-surface-raised theme-surface-muted theme-text-secondary theme-hover-surface-muted'
       "
       :aria-pressed="modelValue === filter.value"
+      @pointerdown="keepTouchFocus"
       @click="$emit('update:modelValue', filter.value)"
     >
       {{ filter.label }}
@@ -36,6 +37,10 @@ defineEmits<{
 }>();
 
 const { t } = useI18n();
+
+const keepTouchFocus = (event: PointerEvent): void => {
+  if (event.pointerType === "touch") event.preventDefault();
+};
 
 const filters = computed<Array<{ label: string; value: SearchFilter }>>(() => [
   { label: t("search.all"), value: "all" },
