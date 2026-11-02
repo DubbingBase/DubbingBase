@@ -5,7 +5,7 @@
 
 > 86 routes | 27 models | 206 components | 114 lib files | 75 env vars | 15 middleware | 46% test coverage
 > **Token savings:** this file is ~19,500 tokens. Without it, AI exploration would cost ~174,600 tokens. **Saves ~155,100 tokens per conversation.**
-> **Last scanned:** 2026-11-02 12:34 — re-run after significant changes
+> **Last scanned:** 2026-11-02 14:49 — re-run after significant changes
 
 ---
 
@@ -409,7 +409,7 @@
 - **PwaLifecycleBanner** [client] — `apps/website/src/components/PwaLifecycleBanner.vue`
 - **ReportModal** [client] — props: open, targetUrl — `apps/website/src/components/ReportModal.vue`
 - **SearchFilters** [client] — props: modelValue — `apps/website/src/components/SearchFilters.vue`
-- **SearchResultItem** [client] — props: result, mediaTypeLabel, selected — `apps/website/src/components/SearchResultItem.vue`
+- **SearchResultItem** [client] — props: result, mediaTypeLabel, selected, disabled — `apps/website/src/components/SearchResultItem.vue`
 - **UnderConstruction** [client] — `apps/website/src/components/UnderConstruction.vue`
 - **AsyncAutocomplete** [client] — props: modelValue, options, loading, placeholder, disabled, allowCreate, displayFn — `apps/website/src/components/admin/AsyncAutocomplete.vue`
 - **LanguageSelect** [client] — props: id — `apps/website/src/components/admin/LanguageSelect.vue`
@@ -814,7 +814,7 @@
   - type HomeDataPayload
 - `packages/shared-logic/src/composables/useMovieData.ts` — function fetchMovieData: (id, locale?, options) => Promise<MovieDetailResponse | null>
 - `packages/shared-logic/src/composables/usePodcastData.ts` — function fetchPodcastData: (id, locale?, options) => Promise<PodcastResponse | null>
-- `packages/shared-logic/src/composables/useSearchData.ts` — function fetchSearchData: (query) => Promise<SearchResult[]>, type SearchResult
+- `packages/shared-logic/src/composables/useSearchData.ts` — function fetchSearchData: (query, signal?, locale?) => Promise<SearchResult[]>, type SearchResult
 - `packages/shared-logic/src/composables/useSeasonData.ts` — function fetchSeasonData: (showId, seasonNumber, locale?) => Promise<any | null>
 - `packages/shared-logic/src/composables/useShowData.ts` — function fetchShowData: (id, locale?, options) => Promise<ShowDetailResponse | null>
 - `packages/shared-logic/src/composables/useStudioData.ts`

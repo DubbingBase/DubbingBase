@@ -404,7 +404,10 @@
     "title": "Search",
     "description": "Search for movies, series, voice actors, and more",
     "typeMore": "Type at least 2 characters...",
-    "media": "Media"
+    "media": "Media",
+    "results": "Search results",
+    "error": "Search failed. Check your connection and try again.",
+    "retry": "Retry"
   },
   "auth": {
     "loginRequiredForSubscription": "You must be logged in to subscribe",

@@ -3,7 +3,8 @@
     type="button"
     class="group flex w-full cursor-pointer items-center gap-3 rounded-xl p-3 text-left transition theme-hover-surface-muted"
     :class="selected ? 'theme-surface-raised theme-surface-muted' : ''"
-    :aria-label="displayName"
+    :aria-label="accessibleLabel"
+    :disabled="disabled"
     @click="$emit('select')"
   >
     <div
@@ -43,15 +44,12 @@
       <div
         class="mt-1 flex items-center gap-2 truncate text-xs theme-text-muted"
       >
-        <span v-if="result.release_date || result.first_air_date">
-          {{ (result.release_date || result.first_air_date)?.substring(0, 4) }}
+        <span v-if="releaseYear">
+          {{ releaseYear }}
         </span>
-        <span
-          v-if="
-            (result.release_date || result.first_air_date) && result.overview
-          "
-          >&bull;</span
-        >
+        <span v-if="releaseYear && (relatedCompany || result.overview)">&bull;</span>
+        <span v-if="relatedCompany" class="truncate">{{ relatedCompany }}</span>
+        <span v-if="relatedCompany && result.overview">&bull;</span>
         <span v-if="result.overview" class="truncate">
           {{ result.overview }}
         </span>
@@ -69,6 +67,7 @@ const props = defineProps<{
   result: SearchResult;
   mediaTypeLabel: string;
   selected: boolean;
+  disabled?: boolean;
 }>();
 
 defineEmits<{
@@ -92,5 +91,20 @@ const imagePath = computed(
     props.result.poster_path ||
     props.result.profile_path ||
     props.result.cover?.url,
+);
+const releaseYear = computed(() => {
+  const date = props.result.release_date || props.result.first_air_date;
+  if (date) return date.substring(0, 4);
+  return props.result.first_release_date
+    ? new Date(props.result.first_release_date * 1000).getFullYear().toString()
+    : undefined;
+});
+const relatedCompany = computed(
+  () => props.result.studio_names?.join(", ") || props.result.manufacturer || props.result.brand,
+);
+const accessibleLabel = computed(() =>
+  [displayName.value, props.mediaTypeLabel, releaseYear.value, relatedCompany.value]
+    .filter(Boolean)
+    .join(", "),
 );
 </script>

@@ -33,6 +33,14 @@ export class ToyClient {
     const trimmedQuery = query.trim();
     if (trimmedQuery.length < 2) return [];
 
+    const escapedLikeQuery = trimmedQuery
+      .replaceAll("\\", "\\\\")
+      .replaceAll("%", "\\%")
+      .replaceAll("_", "\\_");
+    const ilikePattern = `"%${escapedLikeQuery
+      .replaceAll("\\", "\\\\")
+      .replaceAll('"', '\\"')}%"`;
+
     try {
       const supabase = useSupabaseAdmin();
       const { data, error } = await supabase
@@ -40,14 +48,16 @@ export class ToyClient {
         .select(
           "content_id, name, manufacturer, product_line, release_year, cover_url, description, updated_at",
         )
-        .ilike("name", `%${trimmedQuery}%`)
+        .or(
+          `name.ilike.${ilikePattern},manufacturer.ilike.${ilikePattern},product_line.ilike.${ilikePattern}`,
+        )
         .limit(limit);
 
       if (error) throw error;
       return (data || []).map(mapToy);
     } catch (err) {
       console.error("Toy search failed:", err);
-      return [];
+      throw err;
     }
   }
 

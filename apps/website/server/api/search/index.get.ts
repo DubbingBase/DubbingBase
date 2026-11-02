@@ -26,6 +26,7 @@ type SearchItem = {
   release_date?: string | null;
   first_air_date?: string | null;
   first_release_date?: number | null;
+  studio_names?: string[];
   tmdb_id?: number | null;
   profile_picture?: string | null;
   profile_path?: string | null;
@@ -91,36 +92,46 @@ function buildTextSearchQuery(query: string): string {
   return words.join(" | ");
 }
 
+function getTmdbLocale(locale: unknown): string {
+  if (locale === "fr") return "fr-FR";
+  if (locale === "es") return "es-ES";
+  if (locale === "ja") return "ja-JP";
+  return "en-US";
+}
+
 function calculateScore(item: SearchItem, queryLower: string, now: number): number {
   let score = 0;
+  let relevanceTier = 0;
 
-  let itemDisplayName =
+  const displayNames = [
     (typeof item.title === "string" && item.title) ||
     (typeof item.name === "string" && item.name) ||
     (typeof item.voice_actor_name === "string" && item.voice_actor_name) ||
-    "";
-  if (!itemDisplayName && typeof item.firstname === "string" && typeof item.lastname === "string") {
-    itemDisplayName = `${item.firstname} ${item.lastname}`;
-  }
-  const itemName = normalizeString(itemDisplayName);
+    "",
+    item.original_title,
+    item.original_name,
+    typeof item.product_line === "string" ? item.product_line : "",
+    typeof item.manufacturer === "string" ? item.manufacturer : "",
+    typeof item.brand === "string" ? item.brand : "",
+    typeof item.firstname === "string" && typeof item.lastname === "string" ? `${item.firstname} ${item.lastname}` : "",
+  ].filter((name): name is string => typeof name === "string" && name.length > 0);
+  const itemNames = displayNames.map(normalizeString);
 
-  if (itemName === queryLower) {
-    score += 30;
-  } else if (itemName.includes(queryLower)) {
-    if (itemName.startsWith(queryLower)) {
-      score += 10;
-    } else {
-      score += 5;
-    }
+  if (itemNames.some((name) => name === queryLower)) {
+    relevanceTier = 3;
+  } else if (itemNames.some((name) => name.startsWith(queryLower))) {
+    relevanceTier = 2;
+  } else if (itemNames.some((name) => name.includes(queryLower))) {
+    relevanceTier = 1;
   }
 
   const pop = item.popularity || 0;
-  score += Math.sqrt(pop) * 3;
+  score += Math.min(Math.sqrt(pop) * 3, 50);
 
-  score += (item.vote_average || 0) * 0.1;
+  score += Math.min((item.vote_average || 0) * 0.1, 1);
 
   const vc = item.vote_count || 0;
-  score += Math.log10(vc + 1) * 3;
+  score += Math.min(Math.log10(vc + 1) * 3, 15);
 
   let releaseMs: number | null = null;
   const isoDate = item.release_date || item.first_air_date;
@@ -135,7 +146,7 @@ function calculateScore(item: SearchItem, queryLower: string, now: number): numb
     score += Math.max(0, 15 - ageYears * 1.5);
   }
 
-  return score;
+  return relevanceTier * 1000 + score;
 }
 
 function projectSearchResult(item: SearchItem): SearchItem {
@@ -162,6 +173,7 @@ function projectSearchResult(item: SearchItem): SearchItem {
     first_release_date: item.first_release_date,
     original_title: item.original_title,
     original_name: item.original_name,
+    studio_names: item.studio_names,
     ...(typeof coverUrl === "string" ? { cover: { url: coverUrl } } : {}),
     author_name: item.author_name,
     brand: item.brand,
@@ -174,15 +186,16 @@ function projectSearchResult(item: SearchItem): SearchItem {
 export default defineEventHandler(async (event) => {
   try {
     const rawQuery = getQuery(event).query;
-    const query = typeof rawQuery === "string" ? rawQuery : undefined;
+    const query = typeof rawQuery === "string" ? rawQuery.trim().slice(0, 100) : undefined;
 
     if (!query) {
       return [];
     }
 
+    const providerQuery = query;
     const trimmedQuery = normalizeString(query);
 
-    if (!trimmedQuery || trimmedQuery.length < 2) {
+    if (!trimmedQuery || providerQuery.length < 2) {
       return [];
     }
 
@@ -193,13 +206,15 @@ export default defineEventHandler(async (event) => {
     const adClient = useAdvertisementClient();
     const toyClient = useToyClient();
     const supabase = useSupabaseAdmin();
+    let successfulTracks = 0;
+    const tmdbLocale = getTmdbLocale(getQuery(event).locale);
 
     // 1. TMDB multi-search
     const tmdbSearchPromise = (async () => {
       const results: SearchItem[] = [];
       try {
         const pageResponses = await Promise.all(
-          [1, 2].map((page) => tmdbClient.searchMulti(trimmedQuery, page, "fr-FR")),
+          [1, 2].map((page) => tmdbClient.searchMulti(providerQuery, page, tmdbLocale)),
         );
 
         for (const response of pageResponses) {
@@ -211,6 +226,7 @@ export default defineEventHandler(async (event) => {
             results.push(...withImages);
           }
         }
+        successfulTracks += 1;
       } catch (e) {
         console.error("TMDB fetch error:", e);
       }
@@ -220,26 +236,34 @@ export default defineEventHandler(async (event) => {
     // 2. Voice actor DB search
     const voiceActorSearchPromise = (async () => {
       const results: SearchItem[] = [];
-      try {
-        const searchQuery = buildTextSearchQuery(trimmedQuery);
-        if (searchQuery) {
-          const { data: ftsData } = await supabase
+      let trackSucceeded = false;
+      const searchQuery = buildTextSearchQuery(trimmedQuery);
+      if (searchQuery) {
+        try {
+          const { data: ftsData, error: ftsError } = await supabase
             .from("voice_actors")
             .select("*")
             .textSearch("voice_actor_name", searchQuery)
             .limit(20);
+          if (ftsError) throw ftsError;
 
           if (ftsData && Array.isArray(ftsData)) {
             results.push(...ftsData);
           }
+          trackSucceeded = true;
+        } catch (e) {
+          console.error("Voice actor full-text search error:", e);
         }
+      }
 
-        // Also try ILIKE for partial matches
-        const { data: ilikeData } = await supabase
+      // Also try ILIKE for partial matches, even when full-text search fails.
+      try {
+        const { data: ilikeData, error: ilikeError } = await supabase
           .from("voice_actors")
           .select("*")
           .or(`firstname.ilike.%${trimmedQuery}%,lastname.ilike.%${trimmedQuery}%`)
           .limit(20);
+        if (ilikeError) throw ilikeError;
 
         if (ilikeData && Array.isArray(ilikeData)) {
           const seenIds = new Set(results.map((va) => va.id));
@@ -250,8 +274,13 @@ export default defineEventHandler(async (event) => {
             }
           }
         }
+        trackSucceeded = true;
       } catch (e) {
-        console.error("Voice actor search error:", e);
+        console.error("Voice actor partial search error:", e);
+      }
+
+      if (trackSucceeded) {
+        successfulTracks += 1;
       }
       return results;
     })();
@@ -260,7 +289,7 @@ export default defineEventHandler(async (event) => {
     const igdbSearchPromise = (async () => {
       const results: SearchItem[] = [];
       try {
-        const igdbGames = await igdbClient.searchGames(trimmedQuery);
+        const igdbGames = await igdbClient.searchGames(providerQuery);
         for (const game of igdbGames) {
           results.push({
             ...game,
@@ -276,6 +305,7 @@ export default defineEventHandler(async (event) => {
             vote_count: game.rating_count ?? 0,
           });
         }
+        successfulTracks += 1;
       } catch (e) {
         console.error("IGDB search error:", e);
       }
@@ -285,7 +315,8 @@ export default defineEventHandler(async (event) => {
     // 4. OpenLibrary audiobook search
     const openLibrarySearchPromise = (async () => {
       try {
-        const books = await openLibraryClient.searchBooks(trimmedQuery);
+        const books = await openLibraryClient.searchBooks(providerQuery);
+        successfulTracks += 1;
         return books.map((book) => ({
           ...book,
           poster_path: book.cover_url,
@@ -300,7 +331,8 @@ export default defineEventHandler(async (event) => {
     // 5. iTunes Podcast search
     const podcastSearchPromise = (async () => {
       try {
-        const podcasts = await podcastClient.searchPodcasts(trimmedQuery);
+        const podcasts = await podcastClient.searchPodcasts(providerQuery);
+        successfulTracks += 1;
         return podcasts.map((p) => ({
           ...p,
           poster_path: p.cover_url,
@@ -315,7 +347,8 @@ export default defineEventHandler(async (event) => {
     // 6. Advertisement search
     const adSearchPromise = (async () => {
       try {
-        const ads = await adClient.searchAdvertisements(trimmedQuery);
+        const ads = await adClient.searchAdvertisements(providerQuery);
+        successfulTracks += 1;
         return ads.map((ad) => ({
           ...ad,
           media_type: "advertisement" as const,
@@ -329,7 +362,8 @@ export default defineEventHandler(async (event) => {
     // 7. Toy search
     const toySearchPromise = (async () => {
       try {
-        const toys = await toyClient.searchToys(trimmedQuery);
+        const toys = await toyClient.searchToys(providerQuery);
+        successfulTracks += 1;
         return toys.map((toy) => ({
           ...toy,
           media_type: "toy" as const,
@@ -339,6 +373,55 @@ export default defineEventHandler(async (event) => {
         return [];
       }
     })();
+
+    const enrichedTmdbSearchPromise = tmdbSearchPromise.then(async (tmdbResults) => {
+      const tmdbIds = [...new Set(
+        tmdbResults
+          .filter(
+            (item) =>
+              (item.media_type === "movie" || item.media_type === "tv") &&
+              typeof item.id === "number",
+          )
+          .map((item) => Number(item.id)),
+      )];
+      if (tmdbIds.length === 0) return tmdbResults;
+
+      try {
+        const studioNamesByMedia = new Map<string, Set<string>>();
+        const pageSize = 500;
+        for (let from = 0; ; from += pageSize) {
+          const { data: projects, error } = await supabase
+            .from("dubbing_projects")
+            .select("id, content_id, content_type, studios(name)")
+            .in("content_id", tmdbIds)
+            .in("content_type", ["movie", "tv"])
+            .order("id", { ascending: true })
+            .range(from, from + pageSize - 1);
+          if (error) throw error;
+
+          for (const project of projects ?? []) {
+            const studioName = project.studios?.name;
+            if (!studioName) continue;
+            const key = `${project.content_type}:${project.content_id}`;
+            const names = studioNamesByMedia.get(key) ?? new Set<string>();
+            names.add(studioName);
+            studioNamesByMedia.set(key, names);
+          }
+
+          if (!projects || projects.length < pageSize) break;
+        }
+        return tmdbResults.map((item) => {
+          if (item.media_type !== "movie" && item.media_type !== "tv") return item;
+          const names = studioNamesByMedia.get(`${item.media_type}:${item.id}`);
+          return names
+            ? { ...item, studio_names: [...names].sort((a, b) => a.localeCompare(b)) }
+            : item;
+        });
+      } catch (error) {
+        console.error("DubbingBase studio enrichment failed:", error);
+        return tmdbResults;
+      }
+    });
 
     // Execute all tracks concurrently
     const [
@@ -350,7 +433,7 @@ export default defineEventHandler(async (event) => {
       adResults,
       toyResults,
     ] = await Promise.all([
-      tmdbSearchPromise,
+      enrichedTmdbSearchPromise,
       voiceActorSearchPromise,
       igdbSearchPromise,
       openLibrarySearchPromise,
@@ -358,6 +441,10 @@ export default defineEventHandler(async (event) => {
       adSearchPromise,
       toySearchPromise,
     ]);
+
+    if (successfulTracks === 0) {
+      throw createError({ statusCode: 503, statusMessage: "Search providers unavailable" });
+    }
 
     let resp: SearchItem[] = [...tmdbResults];
 
@@ -451,6 +538,23 @@ export default defineEventHandler(async (event) => {
       resp = Array.from(respMap.values());
     }
 
+    const uniqueResults = new Map<string, SearchItem>();
+    for (const item of resp) {
+      if (item.id == null) continue;
+      const key = `${item.media_type ?? "unknown"}:${item.id}`;
+      const previous = uniqueResults.get(key);
+      const studioNames = new Set([
+        ...(previous?.studio_names ?? []),
+        ...(item.studio_names ?? []),
+      ]);
+      uniqueResults.set(key, {
+        ...previous,
+        ...item,
+        ...(studioNames.size > 0 ? { studio_names: [...studioNames].sort((a, b) => a.localeCompare(b)) } : {}),
+      });
+    }
+    resp = [...uniqueResults.values()];
+
     // Score each result once; sort and return using the same score value.
     const now = Date.now();
     const results = resp
@@ -459,12 +563,19 @@ export default defineEventHandler(async (event) => {
         ...item,
         score: calculateScore(item, trimmedQuery, now),
       }))
-      .sort((a, b) => b.score - a.score);
+      .sort((a, b) =>
+        (b.score ?? 0) - (a.score ?? 0) ||
+        String(a.media_type ?? "").localeCompare(String(b.media_type ?? "")) ||
+        String(a.id ?? "").localeCompare(String(b.id ?? ""), undefined, { numeric: true }),
+      );
     return getQuery(event).projection === "search-page"
       ? results.map(projectSearchResult)
       : results;
   } catch (error) {
     console.error("Error in search function:", error);
+    if (typeof error === "object" && error !== null && "statusCode" in error) {
+      throw error;
+    }
     throw createError({ statusCode: 500, message: "Internal server error" });
   }
 });

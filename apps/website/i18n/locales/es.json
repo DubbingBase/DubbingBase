@@ -404,7 +404,10 @@
     "title": "Búsqueda",
     "description": "Buscar películas, series, actores de doblaje y más",
     "typeMore": "Escriba al menos 2 caracteres...",
-    "media": "Medio"
+    "media": "Medio",
+    "results": "Resultados de búsqueda",
+    "error": "La búsqueda falló. Comprueba tu conexión e inténtalo de nuevo.",
+    "retry": "Reintentar"
   },
   "auth": {
     "loginRequiredForSubscription": "Debe iniciar sesión para suscribirse",

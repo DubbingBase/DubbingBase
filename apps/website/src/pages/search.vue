@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen theme-bg theme-text">
     <div class="mx-auto max-w-5xl px-4 py-8 md:px-6 md:py-12">
-      <header class="mb-8">
+      <header class="mb-4 md:mb-8">
         <h1 class="text-3xl font-bold tracking-tight md:text-4xl">
           {{ t("search.title") }}
         </h1>
@@ -11,7 +11,7 @@
       </header>
 
       <div
-        class="sticky top-[68px] z-10 -mx-4 mb-6 space-y-4 border-b px-4 pb-4 backdrop-blur-xl theme-bg theme-border-subtle md:-mx-6 md:px-6"
+        class="sticky top-[68px] z-10 -mx-4 mb-4 space-y-3 border-b px-4 pb-3 backdrop-blur-xl theme-bg theme-border-subtle md:-mx-6 md:mb-6 md:space-y-4 md:px-6 md:pb-4"
       >
         <label class="sr-only" for="search-page-input">
           {{ t("search.placeholder") }}
@@ -25,11 +25,15 @@
             ref="searchInput"
             v-model="query"
             type="search"
+            role="combobox"
             data-testid="search-input"
             autofocus
             :placeholder="t('search.placeholder')"
             :aria-label="t('search.placeholder')"
             class="w-full rounded-full border py-3 pl-12 pr-4 text-base outline-none theme-border theme-surface-raised theme-text theme-placeholder theme-focus"
+            :aria-expanded="!loading && filteredResults.length > 0"
+            :aria-controls="filteredResults.length > 0 ? 'search-results-listbox' : undefined"
+            :aria-activedescendant="activeResultId"
             @keydown.down.prevent="navigateResults(1)"
             @keydown.up.prevent="navigateResults(-1)"
             @keydown.enter.prevent="selectCurrent"
@@ -38,32 +42,59 @@
         <SearchFilters v-model="selectedFilter" />
       </div>
 
-      <section aria-live="polite" aria-atomic="true">
+      <section id="search-results" aria-live="polite" aria-atomic="false" :aria-busy="loading">
+        <div v-if="loading && filteredResults.length > 0" role="status" class="sr-only">
+          {{ t("common.searching") }}
+        </div>
         <div
-          v-if="loading"
+          v-if="loading && filteredResults.length === 0"
           role="status"
           aria-busy="true"
-          class="flex flex-col items-center justify-center gap-3 py-16 theme-text-muted"
+          class="flex flex-col items-center justify-center gap-3 py-8 theme-text-muted md:py-16"
         >
           <Loader2Icon class="h-7 w-7 animate-spin" />
           <span>{{ t("common.searching") }}</span>
         </div>
 
-        <div v-else-if="filteredResults.length > 0" class="flex flex-col gap-1">
+        <div
+          v-else-if="filteredResults.length > 0"
+          id="search-results-listbox"
+          role="listbox"
+          :aria-label="t('search.results')"
+          :class="['flex flex-col gap-1', loading ? 'pointer-events-none opacity-60' : '']"
+        >
           <SearchResultItem
             v-for="(item, index) in filteredResults"
             :key="`${item.media_type}-${item.id}`"
             :result="item"
             :media-type-label="getMediaTypeLabel(item.media_type)"
             :selected="index === selectedIndex"
+            :disabled="loading"
+            :id="resultId(item)"
+            role="option"
+            :aria-selected="index === selectedIndex"
             @select="handleSelect(item)"
           />
         </div>
 
-        <div v-else-if="queryReady" class="py-16 text-center text-sm theme-text-muted">
+        <div
+          v-else-if="!loading && error"
+          role="alert"
+          class="py-8 text-center text-sm theme-text-muted md:py-12"
+        >
+          <p>{{ t('search.error') }}</p>
+          <button
+            type="button"
+            class="mt-3 rounded-lg px-4 py-2 theme-focus theme-selected"
+            @click="retrySearch"
+          >
+            {{ t('search.retry') }}
+          </button>
+        </div>
+        <div v-else-if="!loading && queryReady" class="py-8 text-center text-sm theme-text-muted md:py-16">
           {{ t("search.noResults") }}
         </div>
-        <div v-else class="py-16 text-center text-sm theme-text-muted">
+        <div v-else-if="!loading" class="py-8 text-center text-sm theme-text-muted md:py-16">
           {{ query.trim() ? t("search.typeMore") : t("search.emptyState") }}
         </div>
       </section>
@@ -82,7 +113,7 @@ import SearchResultItem from "../components/SearchResultItem.vue";
 import type { SearchFilter } from "../utils/search-routes";
 import { getSearchResultRoute } from "../utils/search-routes";
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const localePath = useLocalePath();
@@ -92,9 +123,11 @@ const queryFromRoute = (value: unknown): string => (typeof value === "string" ? 
 const query = ref(queryFromRoute(route.query.q));
 const results = ref<SearchResult[]>([]);
 const loading = ref(false);
+const error = ref(false);
 const selectedFilter = ref<SearchFilter>("all");
 const selectedIndex = ref(0);
 const searchInput = ref<HTMLInputElement | null>(null);
+let activeController: AbortController | null = null;
 
 const hasQuery = computed(() => query.value.trim().length > 0);
 const queryReady = computed(() => query.value.trim().length >= 2);
@@ -116,9 +149,28 @@ const mediaTypeLabelKeys: Record<SearchResult["media_type"], string> = {
 };
 
 const getMediaTypeLabel = (type: SearchResult["media_type"]): string => t(mediaTypeLabelKeys[type]);
+const resultId = (item: SearchResult): string => `search-result-${item.media_type}-${item.id}`;
+const activeResultId = computed(() => {
+  const item = filteredResults.value[selectedIndex.value];
+  return item ? resultId(item) : undefined;
+});
 
 let debounceTimeout: ReturnType<typeof setTimeout> | null = null;
 let searchVersion = 0;
+const markKeyboardModality = (event: KeyboardEvent): void => {
+  if (
+    event.isComposing ||
+    event.keyCode === 229 ||
+    !["Tab", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)
+  ) {
+    return;
+  }
+
+  document.documentElement.dataset.inputModality = "keyboard";
+};
+const markPointerModality = (event: PointerEvent): void => {
+  document.documentElement.dataset.inputModality = event.pointerType;
+};
 
 const syncQueryToUrl = (value: string): void => {
   const currentQuery = queryFromRoute(route.query.q);
@@ -133,17 +185,29 @@ const syncQueryToUrl = (value: string): void => {
 };
 
 const performSearch = async (searchTerm: string, version: number): Promise<void> => {
+  const controller = new AbortController();
+  activeController = controller;
   try {
-    const data = await fetchSearchData(searchTerm);
-    if (version === searchVersion) results.value = data;
+    const data = await fetchSearchData(searchTerm, controller.signal, String(locale.value));
+    if (version === searchVersion) {
+      results.value = data;
+      error.value = false;
+    }
+  } catch {
+    if (version === searchVersion && !controller.signal.aborted) {
+      results.value = [];
+      error.value = true;
+    }
   } finally {
     if (version === searchVersion) loading.value = false;
+    if (activeController === controller) activeController = null;
   }
 };
 
 const scheduleSearch = (value: string): void => {
   const trimmed = value.trim();
   searchVersion += 1;
+  activeController?.abort();
   const version = searchVersion;
   selectedIndex.value = 0;
   syncQueryToUrl(trimmed);
@@ -152,6 +216,7 @@ const scheduleSearch = (value: string): void => {
   if (trimmed.length < 2) {
     results.value = [];
     loading.value = false;
+    error.value = false;
     return;
   }
 
@@ -160,6 +225,8 @@ const scheduleSearch = (value: string): void => {
     void performSearch(trimmed, version);
   }, 300);
 };
+
+const retrySearch = (): void => scheduleSearch(query.value);
 
 const handleSelect = (item: SearchResult): void => {
   void router.push(localePath(getSearchResultRoute(item)));
@@ -208,12 +275,18 @@ useSeoMeta({
 });
 
 onMounted(() => {
+  document.addEventListener("keydown", markKeyboardModality, true);
+  document.addEventListener("pointerdown", markPointerModality, true);
   void nextTick(() => searchInput.value?.focus());
   scheduleSearch(query.value);
 });
 
 onUnmounted(() => {
   if (debounceTimeout) clearTimeout(debounceTimeout);
+  activeController?.abort();
+  document.removeEventListener("keydown", markKeyboardModality, true);
+  document.removeEventListener("pointerdown", markPointerModality, true);
+  delete document.documentElement.dataset.inputModality;
   searchVersion += 1;
 });
 </script>

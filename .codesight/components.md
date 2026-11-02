@@ -113,7 +113,7 @@
 - **PwaLifecycleBanner** [client] — `apps/website/src/components/PwaLifecycleBanner.vue`
 - **ReportModal** [client] — props: open, targetUrl — `apps/website/src/components/ReportModal.vue`
 - **SearchFilters** [client] — props: modelValue — `apps/website/src/components/SearchFilters.vue`
-- **SearchResultItem** [client] — props: result, mediaTypeLabel, selected — `apps/website/src/components/SearchResultItem.vue`
+- **SearchResultItem** [client] — props: result, mediaTypeLabel, selected, disabled — `apps/website/src/components/SearchResultItem.vue`
 - **UnderConstruction** [client] — `apps/website/src/components/UnderConstruction.vue`
 - **AsyncAutocomplete** [client] — props: modelValue, options, loading, placeholder, disabled, allowCreate, displayFn — `apps/website/src/components/admin/AsyncAutocomplete.vue`
 - **LanguageSelect** [client] — props: id — `apps/website/src/components/admin/LanguageSelect.vue`

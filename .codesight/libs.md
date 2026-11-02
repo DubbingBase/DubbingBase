@@ -307,7 +307,7 @@
   - type HomeDataPayload
 - `packages/shared-logic/src/composables/useMovieData.ts` — function fetchMovieData: (id, locale?, options) => Promise<MovieDetailResponse | null>
 - `packages/shared-logic/src/composables/usePodcastData.ts` — function fetchPodcastData: (id, locale?, options) => Promise<PodcastResponse | null>
-- `packages/shared-logic/src/composables/useSearchData.ts` — function fetchSearchData: (query) => Promise<SearchResult[]>, type SearchResult
+- `packages/shared-logic/src/composables/useSearchData.ts` — function fetchSearchData: (query, signal?, locale?) => Promise<SearchResult[]>, type SearchResult
 - `packages/shared-logic/src/composables/useSeasonData.ts` — function fetchSeasonData: (showId, seasonNumber, locale?) => Promise<any | null>
 - `packages/shared-logic/src/composables/useShowData.ts` — function fetchShowData: (id, locale?, options) => Promise<ShowDetailResponse | null>
 - `packages/shared-logic/src/composables/useStudioData.ts`
