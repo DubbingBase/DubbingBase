@@ -19,10 +19,12 @@
 - **SearchResultItem** [client] — props: result, mediaTypeLabel, selected, disabled — `apps/website/src/components/SearchResultItem.vue`
 - **UnderConstruction** [client] — `apps/website/src/components/UnderConstruction.vue`
 - **AsyncAutocomplete** [client] — props: modelValue, options, loading, placeholder, ariaLabel, disabled, allowCreate, displayFn, searchFn — `apps/website/src/components/admin/AsyncAutocomplete.vue`
+- **CastAvatar** [client] — props: name — `apps/website/src/components/admin/CastAvatar.vue`
 - **CreateStudioDialog** [client] — props: open, initialName, create — `apps/website/src/components/admin/CreateStudioDialog.vue`
 - **CreateVoiceActorDialog** [client] — props: open, initialQuery, status — `apps/website/src/components/admin/CreateVoiceActorDialog.vue`
 - **EditorSaveBar** [client] — props: status, isDirty, errorMessage, saveLabel, formId, disabled — `apps/website/src/components/admin/EditorSaveBar.vue`
 - **LanguageSelect** [client] — props: id — `apps/website/src/components/admin/LanguageSelect.vue`
+- **ProjectCastWorkspace** [client] — props: rows, selectedKey — `apps/website/src/components/admin/ProjectCastWorkspace.vue`
 - **UnsavedChangesDialog** [client] — props: open — `apps/website/src/components/admin/UnsavedChangesDialog.vue`
 - **BarChart** [client] — `apps/website/src/components/admin/charts/BarChart.vue`
 - **LineChart** [client] — `apps/website/src/components/admin/charts/LineChart.vue`

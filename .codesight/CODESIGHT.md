@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 88 routes | 28 models | 113 components | 102 lib files | 64 env vars | 14 middleware | 47% test coverage
-> **Token savings:** this file is ~16,300 tokens. Without it, AI exploration would cost ~141,000 tokens. **Saves ~124,700 tokens per conversation.**
-> **Last scanned:** 2026-11-03 14:50 — re-run after significant changes
+> 88 routes | 28 models | 115 components | 103 lib files | 64 env vars | 14 middleware | 47% test coverage
+> **Token savings:** this file is ~16,400 tokens. Without it, AI exploration would cost ~141,900 tokens. **Saves ~125,500 tokens per conversation.**
+> **Last scanned:** 2026-11-03 16:14 — re-run after significant changes
 
 ---
 
@@ -327,10 +327,12 @@
 - **SearchResultItem** [client] — props: result, mediaTypeLabel, selected, disabled — `apps/website/src/components/SearchResultItem.vue`
 - **UnderConstruction** [client] — `apps/website/src/components/UnderConstruction.vue`
 - **AsyncAutocomplete** [client] — props: modelValue, options, loading, placeholder, ariaLabel, disabled, allowCreate, displayFn, searchFn — `apps/website/src/components/admin/AsyncAutocomplete.vue`
+- **CastAvatar** [client] — props: name — `apps/website/src/components/admin/CastAvatar.vue`
 - **CreateStudioDialog** [client] — props: open, initialName, create — `apps/website/src/components/admin/CreateStudioDialog.vue`
 - **CreateVoiceActorDialog** [client] — props: open, initialQuery, status — `apps/website/src/components/admin/CreateVoiceActorDialog.vue`
 - **EditorSaveBar** [client] — props: status, isDirty, errorMessage, saveLabel, formId, disabled — `apps/website/src/components/admin/EditorSaveBar.vue`
 - **LanguageSelect** [client] — props: id — `apps/website/src/components/admin/LanguageSelect.vue`
+- **ProjectCastWorkspace** [client] — props: rows, selectedKey — `apps/website/src/components/admin/ProjectCastWorkspace.vue`
 - **UnsavedChangesDialog** [client] — props: open — `apps/website/src/components/admin/UnsavedChangesDialog.vue`
 - **BarChart** [client] — `apps/website/src/components/admin/charts/BarChart.vue`
 - **LineChart** [client] — `apps/website/src/components/admin/charts/LineChart.vue`
@@ -644,6 +646,10 @@
 - `apps/website/src/lib/mediaQueue.ts` — function enqueueMedia: (params) => Promise<void>
 - `apps/website/src/utils/access-token-cache.ts` — function createAccessTokenCache: (auth) => void, interface AccessTokenAuthClient
 - `apps/website/src/utils/actor-ssr-data.ts` — function prepareActorSsrData: (payload) => void
+- `apps/website/src/utils/cast-workspace.ts`
+  - function filterCastRows
+  - function getInitials
+  - interface CastWorkspaceRow
 - `apps/website/src/utils/dubbing-project-save.ts`
   - function getEditableDubbingProjectStatus: (value) => DubbingProjectStatus
   - function serializeGameProjectCastRows: (rows) => DubbingProjectCastSaveRow[]
@@ -918,7 +924,7 @@
 # Test Coverage
 
 > **47%** of routes and models are covered by tests
-> 138 test files found
+> 139 test files found
 
 ## Covered Routes
 

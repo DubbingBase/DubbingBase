@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Component inventory and prop signatures extracted via AST. Read the source files before adding props or modifying component logic.
 
-**113 components** (vue)
+**115 components** (vue)
 
 ## Client Components
 
@@ -25,10 +25,12 @@
 - **SearchResultItem** — props: result, mediaTypeLabel, selected, disabled — `apps/website/src/components/SearchResultItem.vue`
 - **UnderConstruction** — `apps/website/src/components/UnderConstruction.vue`
 - **AsyncAutocomplete** — props: modelValue, options, loading, placeholder, ariaLabel, disabled, allowCreate, displayFn, searchFn — `apps/website/src/components/admin/AsyncAutocomplete.vue`
+- **CastAvatar** — props: name — `apps/website/src/components/admin/CastAvatar.vue`
 - **CreateStudioDialog** — props: open, initialName, create — `apps/website/src/components/admin/CreateStudioDialog.vue`
 - **CreateVoiceActorDialog** — props: open, initialQuery, status — `apps/website/src/components/admin/CreateVoiceActorDialog.vue`
 - **EditorSaveBar** — props: status, isDirty, errorMessage, saveLabel, formId, disabled — `apps/website/src/components/admin/EditorSaveBar.vue`
 - **LanguageSelect** — props: id — `apps/website/src/components/admin/LanguageSelect.vue`
+- **ProjectCastWorkspace** — props: rows, selectedKey — `apps/website/src/components/admin/ProjectCastWorkspace.vue`
 - **UnsavedChangesDialog** — props: open — `apps/website/src/components/admin/UnsavedChangesDialog.vue`
 - **BarChart** — `apps/website/src/components/admin/charts/BarChart.vue`
 - **LineChart** — `apps/website/src/components/admin/charts/LineChart.vue`

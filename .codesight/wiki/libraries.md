@@ -2,9 +2,9 @@
 
 > **Navigation aid.** Library inventory extracted via AST. Read the source files listed here before modifying exported functions.
 
-**102 library files** across 4 modules
+**103 library files** across 4 modules
 
-## Website (79 files)
+## Website (80 files)
 
 - `apps/website/server/utils/db/queries.ts` — getVoiceActorWithWork, getWorkByActor, getActorPageWorkByActor, getDubbingProjects, getDubbingProjectsForMediaEndpoint, getAdvertisementPageDubbingProjects, …
 - `apps/website/src/utils/voice-actor-profile-save.ts` — voiceActorProfilePayload, changedVoiceActorProfileFields, displayedSocialLinks, mergeDisplayedSocialLinks, profileUnchangedExceptPicture, refreshVoiceActorProfilePicture, …
@@ -31,7 +31,7 @@
 - `apps/website/server/utils/api/igdb.ts` — buildIgdbImageUrl, IgdbClient, IgdbTrendingGamesResult, IgdbPopularityPrimitive
 - `apps/website/server/utils/game-character-validation.ts` — gameCharacterError, isRecord, hasOnlyKeys, isUuid
 - `apps/website/server/utils/media-request.ts` — parseSeasonQuery, parseEpisodeQuery, toMediaServiceError, withMediaServiceTimeout
-- _…and 54 more files_
+- _…and 55 more files_
 
 ## Shared-logic (20 files)
 

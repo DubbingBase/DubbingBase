@@ -218,6 +218,10 @@
 - `apps/website/src/lib/mediaQueue.ts` — function enqueueMedia: (params) => Promise<void>
 - `apps/website/src/utils/access-token-cache.ts` — function createAccessTokenCache: (auth) => void, interface AccessTokenAuthClient
 - `apps/website/src/utils/actor-ssr-data.ts` — function prepareActorSsrData: (payload) => void
+- `apps/website/src/utils/cast-workspace.ts`
+  - function filterCastRows
+  - function getInitials
+  - interface CastWorkspaceRow
 - `apps/website/src/utils/dubbing-project-save.ts`
   - function getEditableDubbingProjectStatus: (value) => DubbingProjectStatus
   - function serializeGameProjectCastRows: (rows) => DubbingProjectCastSaveRow[]
