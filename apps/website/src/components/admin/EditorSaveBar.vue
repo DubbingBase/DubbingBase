@@ -1,10 +1,10 @@
 <template>
   <div
-    class="sticky bottom-0 z-40 -mx-2 px-2 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+    class="sticky bottom-[var(--keyboard-inset,0px)] z-40 -mx-2 px-2 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
     data-testid="editor-save-bar"
   >
     <div
-      class="theme-surface-overlay border theme-border rounded-2xl shadow-2xl px-4 py-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+      class="theme-surface-overlay border theme-border rounded-2xl shadow-2xl px-3 sm:px-4 py-3 flex flex-col gap-2 sm:gap-3 sm:flex-row sm:items-center sm:justify-between"
     >
       <div class="min-w-0 text-sm flex items-start gap-2">
         <span

@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { filterCastRows, getInitials, type CastWorkspaceRow } from "./cast-workspace";
+import {
+  filterCastRows,
+  getInitials,
+  pickOriginalCastSeed,
+  type CastWorkspaceRow,
+} from "./cast-workspace";
 
 const row = (key: string, overrides: Partial<CastWorkspaceRow> = {}): CastWorkspaceRow => ({
   key,
@@ -41,5 +46,19 @@ describe("getInitials", () => {
   it("uses up to two leading letters and tolerates empty names", () => {
     expect(getInitials("tom  hanks jr")).toBe("TH");
     expect(getInitials("")).toBe("");
+  });
+});
+
+describe("pickOriginalCastSeed", () => {
+  it("keeps billing order, skips members without a character and bounds the result", () => {
+    const cast = [
+      { id: 1, character: "Neo" },
+      { id: 2, character: "  " },
+      { id: 3, character: null },
+      { id: 4, character: "Trinity" },
+      { id: 5, character: "Morpheus" },
+    ];
+    expect(pickOriginalCastSeed(cast).map((m) => m.id)).toEqual([1, 4, 5]);
+    expect(pickOriginalCastSeed(cast, 2).map((m) => m.id)).toEqual([1, 4]);
   });
 });

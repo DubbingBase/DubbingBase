@@ -1,12 +1,12 @@
 <template>
   <div
-    class="admin-project-editor max-w-6xl mx-auto space-y-6"
+    class="admin-project-editor max-w-6xl mx-auto space-y-4 sm:space-y-6"
     :inert="isSaving"
     :aria-busy="isSaving"
   >
     <!-- Header -->
     <div
-      class="theme-surface-overlay p-6 rounded-2xl border theme-border flex justify-between items-center shadow-xl"
+      class="theme-surface-overlay p-4 sm:p-6 rounded-2xl border theme-border flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center shadow-xl"
     >
       <div>
         <h3 class="text-xl font-bold theme-text flex items-center gap-2">
@@ -36,7 +36,10 @@
     </div>
 
     <!-- Navigation Tabs -->
-    <div v-if="tmdbMovieId" class="flex flex-wrap gap-2 pb-2 border-b theme-border">
+    <div
+      v-if="tmdbMovieId"
+      class="flex gap-2 pb-2 border-b theme-border overflow-x-auto sm:flex-wrap sm:overflow-visible [&>a]:whitespace-nowrap [&>a]:shrink-0"
+    >
       <NuxtLink
         v-for="project in movieDubbingProjects"
         :key="project.id"
@@ -86,14 +89,14 @@
     <div v-else class="grid grid-cols-1 lg:grid-cols-[12rem_minmax(0,1fr)] gap-6">
       <nav
         :aria-label="$t('projectEditor.sectionNav')"
-        class="flex lg:flex-col gap-1 overflow-x-auto lg:overflow-visible lg:sticky lg:top-4 h-fit"
+        class="flex lg:flex-col gap-1 overflow-x-auto lg:overflow-visible sticky top-0 z-30 -mx-1 px-1 py-2 backdrop-blur theme-surface lg:static lg:p-0 lg:mx-0 lg:top-4 lg:sticky h-fit"
         data-testid="editor-sections"
       >
         <button
           v-for="item in sections"
           :key="item.id"
           type="button"
-          class="px-4 py-2.5 min-h-10 rounded-xl text-sm font-medium text-left whitespace-nowrap transition-colors border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-focus)]"
+          class="flex-1 lg:flex-none px-4 py-2.5 min-h-11 rounded-xl text-sm font-medium text-center lg:text-left whitespace-nowrap transition-colors border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-focus)]"
           :class="
             section === item.id
               ? 'theme-status-info theme-status-info-text border-[var(--app-color-focus)]'
@@ -119,7 +122,7 @@
           <!-- Media Metadata Card -->
           <div
             v-show="section === 'overview'"
-            class="theme-surface-overlay border theme-border rounded-2xl p-6 space-y-5 h-fit shadow-xl"
+            class="theme-surface-overlay border theme-border rounded-2xl p-4 sm:p-6 space-y-5 h-fit shadow-xl"
           >
             <h4
               class="text-sm font-bold theme-text uppercase tracking-wider border-b theme-border pb-3 flex items-center justify-between"
@@ -184,7 +187,7 @@
           <!-- Settings Card -->
           <div
             v-show="section === 'settings'"
-            class="theme-surface-overlay border theme-border rounded-2xl p-6 space-y-5 h-fit shadow-xl"
+            class="theme-surface-overlay border theme-border rounded-2xl p-4 sm:p-6 space-y-5 h-fit shadow-xl"
           >
             <!-- Language -->
             <div class="space-y-1">
@@ -207,7 +210,7 @@
               }}</label>
               <select
                 v-model="status"
-                class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm"
+                class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-base sm:text-sm"
               >
                 <option value="validated">
                   {{ $t("admin.movieEditor.validated") }}
@@ -452,7 +455,7 @@
                   <select
                     id="cast-detail-performance"
                     v-model="selectedRow.performance"
-                    class="w-full px-4 py-2 theme-surface-overlay border theme-border rounded-lg theme-text focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm"
+                    class="w-full px-4 py-2 theme-surface-overlay border theme-border rounded-lg theme-text focus:ring-2 focus:ring-[var(--app-color-focus)] text-base sm:text-sm"
                   >
                     <option value="dialogues">
                       {{ $t("admin.movieEditor.dialogues") }}
@@ -481,7 +484,7 @@
                     id="cast-detail-note"
                     v-model="selectedRow.note"
                     type="text"
-                    class="w-full px-4 py-2 theme-surface-overlay border theme-border rounded-lg theme-text focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm"
+                    class="w-full px-4 py-2 theme-surface-overlay border theme-border rounded-lg theme-text focus:ring-2 focus:ring-[var(--app-color-focus)] text-base sm:text-sm"
                   />
                 </div>
                 <label class="flex items-center gap-2 text-xs theme-text-secondary">
@@ -517,7 +520,7 @@
     <!-- Toast -->
     <div
       v-if="toast.show"
-      class="fixed bottom-6 right-6 z-50 p-4 rounded-xl border shadow-2xl text-sm max-w-sm flex flex-col gap-2 theme-surface-overlay theme-border theme-text"
+      class="fixed bottom-24 inset-x-4 sm:inset-x-auto sm:right-6 z-50 p-4 rounded-xl border shadow-2xl text-sm max-w-sm flex flex-col gap-2 theme-surface-overlay theme-border theme-text"
     >
       <span>{{ toast.message }}</span>
       <a
@@ -573,8 +576,9 @@ import type {
   EditorTmdbCastMember,
 } from "~/utils/admin-project-editor-types";
 import { firstRouteParam } from "~/utils/route-param";
-import type { CastWorkspaceRow } from "~/utils/cast-workspace";
+import { pickOriginalCastSeed, type CastWorkspaceRow } from "~/utils/cast-workspace";
 
+useKeyboardInset();
 const supabase = useSupabaseClient();
 const saveDubbingProject = createDubbingProjectSaveClient((body) =>
   $fetch<DubbingProjectSaveResponse>("/api/save-dubbing-project", {
@@ -757,11 +761,13 @@ const characterImageFor = (characterName: string): string | null => {
 const castView = computed<CastWorkspaceRow[]>(() =>
   castRows.value.map((row) => {
     const actor = tmdbCast.value.find((c) => c.id === row.actor_id);
+    // Saved rows may carry only the original actor; the public pages fall back to the TMDB character.
+    const characterName = row.character_name || actor?.character?.trim() || "";
     return {
       key: row.key,
-      characterName: row.character_name,
+      characterName,
       originalActorName: actor?.name ?? "",
-      characterImage: characterImageFor(row.character_name),
+      characterImage: characterImageFor(characterName),
       originalActorImage: tmdbProfileUrl(actor?.profile_path),
       voiceActorName: row.voice_actor_id ? lookups.voiceActorLabel(row.voice_actor_id) : "",
       voiceActorImage: lookups.voiceActorImage(row.voice_actor_id),
@@ -1095,6 +1101,18 @@ watch(
         selectedCastKey.value =
           castRows.value.find((row) => row.id !== undefined && row.id === selectedSavedId)?.key ??
           null;
+        // No local cast yet: start from the original (TMDB) cast so only voice actors remain to assign.
+        if (castRows.value.length === 0) {
+          castRows.value = pickOriginalCastSeed(tmdbCast.value).map((member) => ({
+            key: createEditorRowKey(),
+            actor_id: member.id,
+            character_name: member.character?.trim() ?? "",
+            voice_actor_id: null,
+            performance: "dialogues",
+            note: "",
+            highlight: false,
+          }));
+        }
       }
 
       if (data.initialStudios) {

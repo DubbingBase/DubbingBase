@@ -12,13 +12,13 @@
             type="search"
             :aria-label="$t('projectEditor.castSearch')"
             :placeholder="$t('projectEditor.castSearch')"
-            class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text theme-placeholder focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm"
+            class="w-full px-4 py-2.5 min-h-11 theme-input border theme-border rounded-xl theme-text theme-placeholder focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-base sm:text-sm"
             data-testid="cast-search"
           />
         </div>
         <button
           type="button"
-          class="px-4 py-2.5 min-h-10 theme-primary-bg hover:bg-[var(--app-color-primary-hover)] text-xs font-semibold rounded-xl transition-colors"
+          class="px-4 py-2.5 min-h-11 theme-primary-bg hover:bg-[var(--app-color-primary-hover)] text-xs font-semibold rounded-xl transition-colors"
           data-testid="add-cast-row"
           @click="emit('add')"
         >
@@ -31,7 +31,7 @@
 
       <ul
         v-if="visibleRows.length > 0"
-        class="max-h-[32rem] overflow-y-auto space-y-2 pr-1"
+        class="max-h-[60dvh] lg:max-h-[32rem] overflow-y-auto overscroll-contain space-y-2 pr-1 scroll-pb-24"
         data-testid="cast-list"
       >
         <li
@@ -83,7 +83,7 @@
           </button>
           <button
             type="button"
-            class="shrink-0 min-h-10 min-w-10 inline-flex items-center justify-center rounded-xl border theme-status-danger transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-focus)]"
+            class="shrink-0 min-h-11 min-w-11 inline-flex items-center justify-center rounded-xl border theme-status-danger transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-focus)]"
             :aria-label="$t('projectEditor.removeCastRow', { index: index + 1 })"
             :title="$t('projectEditor.removeCastRow', { index: index + 1 })"
             data-testid="remove-cast-row"
@@ -116,7 +116,7 @@
     </div>
 
     <aside
-      class="lg:col-span-2 theme-surface-overlay border theme-border rounded-2xl p-4 space-y-4 h-fit lg:sticky lg:top-4"
+      class="lg:col-span-2 theme-surface-overlay border theme-border rounded-2xl p-4 space-y-4 h-fit scroll-mt-16 scroll-mb-28 lg:sticky lg:top-4"
       :aria-label="$t('projectEditor.castDetails')"
       ref="detailPanel"
       data-testid="cast-detail"
