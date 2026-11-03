@@ -81,8 +81,10 @@ test.describe("Media Detail Pages", () => {
     await expect(page.getByText("Karen Allen", { exact: true })).toHaveCount(1);
     await expect(page.getByText("Not specified", { exact: true })).toHaveCount(0);
     await expect(page.locator('img[src*="karen_allen.jpg"]')).toHaveCount(0);
+    const screenshotPath = testInfo.outputPath("original-version-movie.png");
+    await page.screenshot({ path: screenshotPath, fullPage: true });
     await testInfo.attach("original-version-movie", {
-      body: await page.screenshot({ fullPage: true }),
+      path: screenshotPath,
       contentType: "image/png",
     });
 
@@ -605,7 +607,7 @@ test.describe("Media Detail Pages", () => {
 
   test("keeps the original version selected through TV season and episode casting", async ({
     page,
-  }) => {
+  }, testInfo) => {
     const show = structuredClone(MOCK_SHOW);
     show.serie = { ...show.serie, original_language: "en" };
     const episode = structuredClone(MOCK_EPISODE);
@@ -615,6 +617,12 @@ test.describe("Media Detail Pages", () => {
 
     await page.getByRole("link", { name: /Original Version/ }).click();
     await expect(page).toHaveURL(/\/show\/1396\?dub=original/);
+    const showScreenshotPath = testInfo.outputPath("original-version-show.png");
+    await page.screenshot({ path: showScreenshotPath, fullPage: true });
+    await testInfo.attach("original-version-show", {
+      path: showScreenshotPath,
+      contentType: "image/png",
+    });
     await page.locator('a[href*="/show/1396/season/1"]').first().click();
     await expect(page).toHaveURL(/\/show\/1396\/season\/1\?dub=original/);
     await page.getByRole("link", { name: /Pilot/ }).first().click();
@@ -623,6 +631,12 @@ test.describe("Media Detail Pages", () => {
     await expect(page.getByText("Bryan Cranston", { exact: true })).toBeVisible();
     await expect(page.getByText("Jean-Louis Faure", { exact: true })).toHaveCount(0);
     await expect(page.getByText("Not specified", { exact: true })).toHaveCount(0);
+    const episodeScreenshotPath = testInfo.outputPath("original-version-episode.png");
+    await page.screenshot({ path: episodeScreenshotPath, fullPage: true });
+    await testInfo.attach("original-version-episode", {
+      path: episodeScreenshotPath,
+      contentType: "image/png",
+    });
   });
 
   test("loads Specials from season zero", async ({ page }) => {

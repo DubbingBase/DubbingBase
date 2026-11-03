@@ -184,6 +184,15 @@ jobs:
       - name: Run Playwright tests
         run: pnpm exec playwright test --project=website
 
+      - name: Upload original-version screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: original-version-screenshots
+          path: test-results/**/original-version-*.png
+          if-no-files-found: ignore
+          retention-days: 7
+
   # Job 3.5: Frontend Unit Tests
   frontend-tests:
     needs: [detect]
