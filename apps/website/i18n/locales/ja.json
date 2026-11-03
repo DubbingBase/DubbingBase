@@ -1257,7 +1257,32 @@
     "viewDetails": "詳細を表示 ↗",
     "voiceActor": "声優 *",
     "castNote": "注記",
-    "voiceCast": "声優キャスト"
+    "voiceCast": "声優キャスト",
+    "clearSelection": "選択をクリア",
+    "lookupFailed": "検索に失敗しました。もう一度お試しください。",
+    "removeCastRow": "キャスト行 {index} を削除",
+    "studioName": "スタジオ名",
+    "firstName": "名",
+    "lastName": "姓",
+    "studioNameRequired": "スタジオ名を入力してください。",
+    "createStudioFailed": "スタジオを作成できませんでした。もう一度お試しください。",
+    "voiceActorNameRequired": "名と姓は必須です。",
+    "voiceActorInvalid": "声優の情報を確認して、もう一度お試しください。",
+    "createVoiceActorFailed": "声優を作成できませんでした。もう一度お試しください。",
+    "saveBar": {
+      "pristine": "未保存の変更はありません",
+      "dirty": "未保存の変更があります",
+      "saving": "保存中…",
+      "saved": "すべての変更を保存しました",
+      "error": "保存に失敗しました。",
+      "discard": "変更を破棄"
+    },
+    "unsavedDialog": {
+      "title": "未保存の変更を破棄しますか？",
+      "description": "保存されていない変更があります。このまま移動すると変更は失われます。",
+      "stay": "編集を続ける",
+      "discard": "破棄して移動"
+    }
   },
   "audiobookEditor": {
     "addNarrator": "+ ナレーターを追加",

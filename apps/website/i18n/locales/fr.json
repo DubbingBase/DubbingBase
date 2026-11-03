@@ -1257,7 +1257,32 @@
     "viewDetails": "Voir les détails ↗",
     "voiceActor": "Comédien *",
     "castNote": "Note",
-    "voiceCast": "Distribution vocale"
+    "voiceCast": "Distribution vocale",
+    "clearSelection": "Effacer la sélection",
+    "lookupFailed": "La recherche a échoué. Réessayez.",
+    "removeCastRow": "Supprimer la ligne de casting {index}",
+    "studioName": "Nom du studio",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "studioNameRequired": "Saisissez un nom de studio.",
+    "createStudioFailed": "Impossible de créer le studio. Réessayez.",
+    "voiceActorNameRequired": "Le prénom et le nom sont obligatoires.",
+    "voiceActorInvalid": "Vérifiez les informations du comédien et réessayez.",
+    "createVoiceActorFailed": "Impossible de créer le comédien. Réessayez.",
+    "saveBar": {
+      "pristine": "Aucune modification non enregistrée",
+      "dirty": "Modifications non enregistrées",
+      "saving": "Enregistrement…",
+      "saved": "Toutes les modifications sont enregistrées",
+      "error": "Échec de l'enregistrement.",
+      "discard": "Annuler les modifications"
+    },
+    "unsavedDialog": {
+      "title": "Abandonner les modifications ?",
+      "description": "Certaines modifications n'ont pas été enregistrées. Si vous quittez maintenant, elles seront perdues.",
+      "stay": "Continuer l'édition",
+      "discard": "Abandonner et quitter"
+    }
   },
   "audiobookEditor": {
     "addNarrator": "+ Ajouter un narrateur",

@@ -1257,7 +1257,32 @@
     "viewDetails": "Ver detalles ↗",
     "voiceActor": "Actor de doblaje *",
     "castNote": "Nota",
-    "voiceCast": "Reparto de doblaje"
+    "voiceCast": "Reparto de doblaje",
+    "clearSelection": "Borrar selección",
+    "lookupFailed": "La búsqueda falló. Inténtalo de nuevo.",
+    "removeCastRow": "Eliminar fila de reparto {index}",
+    "studioName": "Nombre del estudio",
+    "firstName": "Nombre",
+    "lastName": "Apellido",
+    "studioNameRequired": "Introduce un nombre de estudio.",
+    "createStudioFailed": "No se pudo crear el estudio. Inténtalo de nuevo.",
+    "voiceActorNameRequired": "El nombre y el apellido son obligatorios.",
+    "voiceActorInvalid": "Revisa los datos del actor de doblaje e inténtalo de nuevo.",
+    "createVoiceActorFailed": "No se pudo crear el actor de doblaje. Inténtalo de nuevo.",
+    "saveBar": {
+      "pristine": "No hay cambios sin guardar",
+      "dirty": "Cambios sin guardar",
+      "saving": "Guardando…",
+      "saved": "Todos los cambios guardados",
+      "error": "Error al guardar.",
+      "discard": "Descartar"
+    },
+    "unsavedDialog": {
+      "title": "¿Descartar los cambios sin guardar?",
+      "description": "Hay cambios que no se han guardado. Si sales ahora, se perderán.",
+      "stay": "Seguir editando",
+      "discard": "Descartar y salir"
+    }
   },
   "audiobookEditor": {
     "addNarrator": "+ Añadir un narrador",

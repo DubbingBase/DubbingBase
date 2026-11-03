@@ -1257,7 +1257,32 @@
     "viewDetails": "View Details ↗",
     "voiceActor": "Voice Actor *",
     "castNote": "Note",
-    "voiceCast": "Voice Cast"
+    "voiceCast": "Voice Cast",
+    "clearSelection": "Clear selection",
+    "lookupFailed": "Search failed. Try again.",
+    "removeCastRow": "Remove cast row {index}",
+    "studioName": "Studio name",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "studioNameRequired": "Enter a studio name.",
+    "createStudioFailed": "Could not create the studio. Try again.",
+    "voiceActorNameRequired": "First name and last name are required.",
+    "voiceActorInvalid": "Check the voice actor details and try again.",
+    "createVoiceActorFailed": "Could not create the voice actor. Try again.",
+    "saveBar": {
+      "pristine": "No unsaved changes",
+      "dirty": "Unsaved changes",
+      "saving": "Saving…",
+      "saved": "All changes saved",
+      "error": "Save failed.",
+      "discard": "Discard"
+    },
+    "unsavedDialog": {
+      "title": "Discard unsaved changes?",
+      "description": "You have changes that have not been saved. Leaving now will discard them.",
+      "stay": "Keep editing",
+      "discard": "Discard and leave"
+    }
   },
   "audiobookEditor": {
     "addNarrator": "+ Add a Narrator",

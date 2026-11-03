@@ -41,6 +41,8 @@ export interface DubbingProjectCastSaveRow {
 }
 
 export interface GameProjectCastEditorRow {
+  /** Client-only stable identity for keyed rendering; never sent to the save API. */
+  key: string;
   id?: number;
   character_ref: number | string | null;
   character_id: number | string | null;
