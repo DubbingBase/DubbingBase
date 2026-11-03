@@ -55,7 +55,7 @@
               })
             "
             data-testid="cast-row"
-            @click="emit('update:selectedKey', row.key)"
+            @click="selectRow(row.key)"
           >
             <span
               class="relative flex shrink-0 items-center"
@@ -116,6 +116,7 @@
     <aside
       class="lg:col-span-2 theme-surface-overlay border theme-border rounded-2xl p-4 space-y-4 h-fit lg:sticky lg:top-4"
       :aria-label="$t('projectEditor.castDetails')"
+      ref="detailPanel"
       data-testid="cast-detail"
     >
       <h4 class="text-sm font-bold theme-text uppercase tracking-wider">
@@ -132,7 +133,7 @@
 <script setup lang="ts">
 import { XIcon } from "lucide-vue-next";
 import { refDebounced } from "@vueuse/core";
-import { computed, ref } from "vue";
+import { computed, nextTick, ref } from "vue";
 import { filterCastRows, type CastWorkspaceRow } from "~/utils/cast-workspace";
 
 const props = defineProps<{
@@ -145,6 +146,15 @@ const emit = defineEmits<{
   remove: [key: string];
   "update:selectedKey": [key: string | null];
 }>();
+
+const detailPanel = ref<HTMLElement | null>(null);
+// On narrow screens the detail panel is stacked below the list; bring it into view.
+const selectRow = async (key: string) => {
+  emit("update:selectedKey", key);
+  if (window.matchMedia("(min-width: 1024px)").matches) return;
+  await nextTick();
+  detailPanel.value?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+};
 
 const query = ref("");
 const debouncedQuery = refDebounced(query, 150);

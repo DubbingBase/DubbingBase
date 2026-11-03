@@ -1023,6 +1023,7 @@ watch(
       }
 
       if (data.works) {
+        const selectedSavedId = selectedRow.value?.id;
         castRows.value = data.works.map((w) => {
           if (w.voice_actors) {
             const name =
@@ -1051,6 +1052,10 @@ watch(
             },
           };
         });
+        // Row keys are regenerated on reload; keep the same saved row selected.
+        selectedCastKey.value =
+          castRows.value.find((row) => row.id !== undefined && row.id === selectedSavedId)?.key ??
+          null;
       }
 
       if (data.initialStudios) {
