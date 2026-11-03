@@ -34,6 +34,7 @@ interface LinkBody {
   character_name: string;
   performance: (typeof PERFORMANCES)[number];
   actor_id: number | null;
+  game_character_id: string | null;
   dubbing_language: string;
 }
 
@@ -86,6 +87,7 @@ function parseBody(value: unknown): LinkBody {
       "character_name",
       "performance",
       "actor_id",
+      "game_character_id",
       "dubbing_language",
     ])
   ) {
@@ -93,6 +95,7 @@ function parseBody(value: unknown): LinkBody {
   }
 
   const actorId = value.actor_id;
+  const gameCharacterId = value.game_character_id;
   const mediaType = value.media_type;
   const mediaId = value.media_id;
   const characterName = value.character_name;
@@ -106,6 +109,7 @@ function parseBody(value: unknown): LinkBody {
     mediaId === 0 ||
     (mediaId < 0 && mediaType !== "advertisement" && mediaType !== "toy") ||
     (actorId !== undefined && actorId !== null && actorId !== 0 && !isPositiveId(actorId)) ||
+    (gameCharacterId !== undefined && gameCharacterId !== null && !isUuid(gameCharacterId)) ||
     typeof characterName !== "string" ||
     characterName.trim().length === 0 ||
     characterName.length > 300 ||
@@ -124,6 +128,14 @@ function parseBody(value: unknown): LinkBody {
   ) {
     throw linkError(400, "The selected media type does not support actor ids");
   }
+  const parsedGameCharacterId =
+    gameCharacterId === undefined || gameCharacterId === null ? null : gameCharacterId;
+  if (parsedGameCharacterId !== null && mediaType !== "video_game") {
+    throw linkError(400, "Local game characters require a video game");
+  }
+  if (parsedGameCharacterId !== null && parsedActorId !== null) {
+    throw linkError(400, "Local game characters cannot use provider actor ids");
+  }
 
   return {
     request_id: value.request_id,
@@ -133,6 +145,7 @@ function parseBody(value: unknown): LinkBody {
     character_name: characterName,
     performance,
     actor_id: parsedActorId,
+    game_character_id: parsedGameCharacterId,
     dubbing_language: value.dubbing_language,
   };
 }
@@ -172,6 +185,18 @@ async function validateMediaReference(event: H3Event, body: LinkBody) {
   }
 
   if (body.media_type === "video_game") {
+    if (body.game_character_id) {
+      const supabase = event.context.supabaseAdmin || useSupabaseAdmin(event);
+      const { data, error } = await supabase
+        .from("game_characters")
+        .select("id")
+        .eq("id", body.game_character_id)
+        .eq("igdb_game_id", body.media_id)
+        .maybeSingle();
+      if (error) throw linkError(500, "Local game character could not be verified");
+      if (!data) throw linkError(422, "The selected character does not belong to this game");
+      return;
+    }
     const igdb = useIgdbClient();
     let game: Awaited<ReturnType<typeof igdb.getGame>> | undefined;
     try {
@@ -302,6 +327,7 @@ export default defineEventHandler(async (event) => {
     p_content_type: body.media_type,
     p_language: dubbingLanguage,
     p_actor_person_id: body.actor_id,
+    p_game_character_id: body.game_character_id,
     p_character_name: body.character_name,
     p_performance: body.performance,
   });

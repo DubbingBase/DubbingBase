@@ -401,6 +401,7 @@ for (let index = 0; index < sizes.uniqueMedia; index += 1) {
 
 const supabaseResponse = (url) => {
   const table = url.pathname.replace(/^\/rest\/v1\//, "").split("?")[0];
+  if (table === "game_characters") return { value: [], single: false };
   if (table === "dubbing_projects" && url.searchParams.get("select") === "id") {
     return { value: { id: 1 }, single: true };
   }

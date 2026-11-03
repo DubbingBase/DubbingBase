@@ -4,8 +4,9 @@ import { getDubbingProjects, getGamePageDubbingProjects } from "../../utils/db/q
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
 import { scheduleBackgroundTask } from "../../utils/background";
+import type { IgdbGame } from "@app/shared-logic";
+import { loadGameCharacterCatalog, type ResolvedGameCharacter } from "../../utils/game-characters";
 import { withMediaServiceTimeout } from "../../utils/media-request";
-import type { IgdbGame, IgdbCharacter } from "@app/shared-logic";
 
 function processIgdbGame(
   game: IgdbGame,
@@ -68,7 +69,7 @@ function processIgdbGame(
   };
 }
 
-function processIgdbCharacter(char: IgdbCharacter, pageProjection: boolean) {
+function processIgdbCharacter(char: ResolvedGameCharacter, pageProjection: boolean) {
   const mugShot = char.mug_shot
     ? {
         ...(pageProjection ? {} : char.mug_shot),
@@ -77,9 +78,28 @@ function processIgdbCharacter(char: IgdbCharacter, pageProjection: boolean) {
       }
     : undefined;
 
-  return pageProjection
-    ? { id: char.id, name: char.name, mug_shot: mugShot }
-    : { ...char, mug_shot: mugShot };
+  if (!pageProjection) return { ...char, mug_shot: mugShot };
+
+  return {
+    id: char.id,
+    name: char.name,
+    stable_id: char.stable_id,
+    game_character_id: char.game_character_id,
+    igdb_character_id: char.igdb_character_id,
+    identity_source: char.identity_source,
+    local_name: char.local_name,
+    mug_shot: mugShot,
+  };
+}
+
+function unavailableGame(gameId: number): IgdbGame & { media_type: "video_game" } {
+  return {
+    id: gameId,
+    name: "Information indisponible (Timeout)",
+    summary: "Ce contenu n'a pas pu être chargé.",
+    media_type: "video_game",
+    cover: undefined,
+  };
 }
 
 export default defineEventHandler(async (event) => {
@@ -95,24 +115,43 @@ export default defineEventHandler(async (event) => {
   }
   const igdbClient = useIgdbClient();
   const pageProjection = getQuery(event).projection === "media-page";
+  let gameLookupFailed = false;
 
-  const [igdbGame, igdbCharacters] = await Promise.all([
+  const [game, characterCatalog] = await Promise.all([
     withMediaServiceTimeout(
       () => (pageProjection ? igdbClient.getGame(gameId, true) : igdbClient.getGame(gameId)),
       "IGDB game",
+    )
+      .then((igdbGame) => (igdbGame ? processIgdbGame(igdbGame, pageProjection) : null))
+      .catch((error: unknown) => {
+        console.error(`Failed to fetch IGDB game ${gameId}:`, error);
+        gameLookupFailed = true;
+        return null;
+      }),
+    loadGameCharacterCatalog(event, gameId, () =>
+      igdbClient.getGameCharacters(gameId, pageProjection),
     ),
-    pageProjection
-      ? igdbClient.getGameCharacters(gameId, true)
-      : igdbClient.getGameCharacters(gameId),
   ]);
-  if (!igdbGame) throw createError({ statusCode: 404, statusMessage: "Game not found" });
+  const resolvedGame =
+    game ??
+    (characterCatalog.characters.some((character) => character.identity_source === "local")
+      ? unavailableGame(gameId)
+      : null);
+  if (!resolvedGame) {
+    throw createError(
+      gameLookupFailed
+        ? { statusCode: 502, statusMessage: "IGDB is unavailable" }
+        : { statusCode: 404, statusMessage: "Game not found" },
+    );
+  }
 
-  const game = processIgdbGame(igdbGame, pageProjection);
-  const characters = igdbCharacters.map((character) =>
-    processIgdbCharacter(character, pageProjection),
-  );
-
-  const metadata = { game, characters };
+  const metadata = {
+    game: resolvedGame,
+    characters: characterCatalog.characters.map((character) =>
+      processIgdbCharacter(character, pageProjection),
+    ),
+    character_catalog_status: characterCatalog.providerStatus,
+  };
 
   // Lazy enqueue if not yet processed - Gated by PostHog 'enqueue-on-navigate' (server-side)
   const dubbingProjects =

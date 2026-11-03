@@ -43,7 +43,7 @@ describe("AsyncAutocomplete.vue", () => {
   const defaultProps = {
     modelValue: null,
     options: [],
-    displayFn: (val: any) => `Display for ${val}`,
+    displayFn: (val: unknown) => `Display for ${String(val)}`,
   };
 
   it("renders correctly with placeholder", async () => {
@@ -119,7 +119,7 @@ describe("AsyncAutocomplete.vue", () => {
       props: {
         ...defaultProps,
         options,
-        displayFn: (val: any) => `Item ${val}`,
+        displayFn: (val: unknown) => `Item ${String(val)}`,
       },
     });
 
@@ -130,6 +130,23 @@ describe("AsyncAutocomplete.vue", () => {
     const bodyText = document.body.textContent || "";
     expect(bodyText).toContain("Item 1");
     expect(bodyText).toContain("Item 2");
+  });
+
+  it("selects an option with the keyboard", async () => {
+    const wrapper = await mountSuspended(AsyncAutocomplete, {
+      ...globalOptions,
+      props: {
+        ...defaultProps,
+        options: [{ id: "igdb_character:1" }],
+      },
+    });
+
+    const input = wrapper.find("input");
+    await input.trigger("focus");
+    await input.trigger("keydown", { key: "ArrowDown" });
+    await input.trigger("keydown", { key: "Enter" });
+
+    expect(wrapper.emitted("update:modelValue")?.[0]).toEqual(["igdb_character:1"]);
   });
 
   it("emits update:modelValue when clearing selection", async () => {
@@ -175,7 +192,7 @@ describe("AsyncAutocomplete.vue", () => {
         ...defaultProps,
         allowCreate: true,
         modelValue: 1, // User has selected item with ID 1
-        displayFn: (val: any) => `Item ${val}`, // Which displays as "Item 1"
+        displayFn: (val: unknown) => `Item ${String(val)}`, // Which displays as "Item 1"
       },
     });
 
@@ -196,7 +213,7 @@ describe("AsyncAutocomplete.vue", () => {
       props: {
         ...defaultProps,
         options,
-        displayFn: (val: any) => `Item ${val}`,
+        displayFn: (val: unknown) => `Item ${String(val)}`,
       },
     });
 
@@ -217,9 +234,7 @@ describe("AsyncAutocomplete.vue", () => {
     await nextTick();
 
     const newSearchCalls = wrapper.emitted("search")?.length || 0;
-    expect(newSearchCalls, "Should not emit search after selection").toBe(
-      previousSearchCalls,
-    );
+    expect(newSearchCalls, "Should not emit search after selection").toBe(previousSearchCalls);
   });
 
   it("syncs search term when modelValue is changed externally", async () => {
@@ -228,7 +243,7 @@ describe("AsyncAutocomplete.vue", () => {
       props: {
         ...defaultProps,
         modelValue: 1,
-        displayFn: (val: any) => `Item ${val}`,
+        displayFn: (val: unknown) => `Item ${String(val)}`,
       },
     });
 

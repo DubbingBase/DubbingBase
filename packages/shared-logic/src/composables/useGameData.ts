@@ -1,4 +1,15 @@
-import type { IgdbCharacter, IgdbGame } from "../types";
+import type { IgdbGame, IgdbMugShot } from "../types";
+
+interface GamePageCharacter {
+  id: number | null;
+  name: string;
+  stable_id: string;
+  game_character_id: string | null;
+  igdb_character_id: number | null;
+  identity_source: "igdb" | "local";
+  local_name: string | null;
+  mug_shot?: IgdbMugShot;
+}
 
 interface GamePageDubbingProject {
   id: number;
@@ -25,7 +36,7 @@ interface GamePageDubbingProject {
 
 interface GamePageData {
   game: IgdbGame | null;
-  characters: IgdbCharacter[];
+  characters: GamePageCharacter[];
   dubbingProjects: GamePageDubbingProject[];
 }
 

@@ -88,8 +88,7 @@ describe("controlled dubbing project save client", () => {
   });
 
   it("preserves role-distinct custom game names across save, refresh, and save", async () => {
-    const requests: Array<DubbingProjectSaveRequest & { request_id: string }> =
-      [];
+    const requests: Array<DubbingProjectSaveRequest & { request_id: string }> = [];
     const transport: DubbingProjectSaveTransport = async (request) => {
       requests.push(request);
       return saveResponse;
@@ -101,6 +100,7 @@ describe("controlled dubbing project save client", () => {
     });
     const initialRows: GameProjectCastEditorRow[] = [
       {
+        character_ref: "custom_captain",
         character_id: "custom_captain",
         character_name: "Captain",
         voice_actor_id: 41,
@@ -109,6 +109,7 @@ describe("controlled dubbing project save client", () => {
         highlight: false,
       },
       {
+        character_ref: "custom_pilot",
         character_id: "custom_pilot",
         character_name: "Pilot",
         voice_actor_id: 41,
@@ -127,28 +128,27 @@ describe("controlled dubbing project save client", () => {
     const savedRows = requests[0]?.cast;
     expect(savedRows).toHaveLength(2);
     if (!savedRows) throw new Error("Expected the first save payload");
-    const refreshedRows: GameProjectCastEditorRow[] = savedRows.map(
-      (row, index) => ({
-        id: index + 1,
+    const refreshedRows: GameProjectCastEditorRow[] = savedRows.map((row, index) => ({
+      id: index + 1,
+      character_ref: null,
+      character_id: row.character_id ?? null,
+      character_name: row.character_name ?? "",
+      voice_actor_id: row.voice_actor_id ?? null,
+      performance: row.performance ?? "dialogues",
+      note: row.note ?? "",
+      highlight: row.highlight ?? false,
+      expectedUpdatedAt: "2026-10-15T12:05:00",
+      expected: {
+        actor_id: row.actor_id ?? null,
         character_id: row.character_id ?? null,
-        character_name: row.character_name ?? "",
+        character_name: row.character_name ?? null,
         voice_actor_id: row.voice_actor_id ?? null,
-        performance: row.performance ?? "dialogues",
-        note: row.note ?? "",
+        performance: row.performance ?? null,
+        note: row.note ?? null,
         highlight: row.highlight ?? false,
-        expectedUpdatedAt: "2026-10-15T12:05:00",
-        expected: {
-          actor_id: row.actor_id ?? null,
-          character_id: row.character_id ?? null,
-          character_name: row.character_name ?? null,
-          voice_actor_id: row.voice_actor_id ?? null,
-          performance: row.performance ?? null,
-          note: row.note ?? null,
-          highlight: row.highlight ?? false,
-          status: "validated",
-        },
-      }),
-    );
+        status: "validated",
+      },
+    }));
 
     await save({
       ...saveRequest,
@@ -157,10 +157,7 @@ describe("controlled dubbing project save client", () => {
       cast: serializeGameProjectCastRows(refreshedRows),
     });
 
-    expect(requests[0]?.cast.map((row) => row.character_name)).toEqual([
-      "Captain",
-      "Pilot",
-    ]);
+    expect(requests[0]?.cast.map((row) => row.character_name)).toEqual(["Captain", "Pilot"]);
     expect(requests[1]?.cast).toMatchObject([
       {
         id: 1,
@@ -173,6 +170,44 @@ describe("controlled dubbing project save client", () => {
         character_id: null,
         character_name: "Pilot",
         voice_actor_id: 41,
+      },
+    ]);
+  });
+
+  it("serializes local character identity separately from provider ids", () => {
+    const rows: GameProjectCastEditorRow[] = [
+      {
+        character_ref: "game_character:11111111-1111-4111-8111-111111111111",
+        character_id: null,
+        game_character_id: "11111111-1111-4111-8111-111111111111",
+        character_name: "Local-only role",
+        voice_actor_id: 41,
+        performance: "dialogues",
+        note: "",
+        highlight: false,
+      },
+      {
+        character_ref: "game_character:22222222-2222-4222-8222-222222222222",
+        character_id: 7,
+        game_character_id: "22222222-2222-4222-8222-222222222222",
+        character_name: "Linked local spelling",
+        voice_actor_id: 42,
+        performance: "dialogues",
+        note: "",
+        highlight: false,
+      },
+    ];
+
+    expect(serializeGameProjectCastRows(rows)).toMatchObject([
+      {
+        character_id: null,
+        game_character_id: rows[0]?.game_character_id,
+        character_name: "Local-only role",
+      },
+      {
+        character_id: 7,
+        game_character_id: rows[1]?.game_character_id,
+        character_name: "Linked local spelling",
       },
     ]);
   });

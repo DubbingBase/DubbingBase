@@ -145,6 +145,7 @@ const routes = [
     path: "/game/85",
     marker: "CI fixture game 85",
     expected: ["igdb:games", "igdb:characters", "supabase:dubbing_projects"],
+    expectedHead: ["supabase:game_characters"],
   },
   {
     name: "admin-dubbing-project",
@@ -644,8 +645,10 @@ async function currentDependencies(server) {
   return response.json();
 }
 
-function assertRouteDependencies(route, before, after) {
-  for (const key of route.expected) {
+function assertRouteDependencies(route, before, after, side) {
+  const expected =
+    side === "head" ? [...route.expected, ...(route.expectedHead ?? [])] : route.expected;
+  for (const key of expected) {
     if ((after[key] ?? 0) <= (before[key] ?? 0)) {
       throw new Error(`${route.path} did not reach its real upstream dependency ${key}.`);
     }
@@ -806,7 +809,7 @@ async function validateRoute(server, route, dataset) {
     throw new Error(`${route.path} did not SSR the expected fixture data.`);
   }
   const after = await currentDependencies(server);
-  assertRouteDependencies(route, before, after);
+  assertRouteDependencies(route, before, after, server.side);
   if (route.kind === "api" && route.expected.some((key) => after[key] - (before[key] ?? 0) !== 1)) {
     throw new Error(`${route.path} did not make exactly one call to each fixture dependency.`);
   }
@@ -841,13 +844,35 @@ function trendingGameCardData(body) {
   }));
 }
 
-function gamePageMarkup(body) {
-  return body
-    .replace(/<head\b[\s\S]*?<\/head>/gi, "")
-    .replace(/<script\b[\s\S]*?<\/script>/gi, "")
-    .replace(/<style\b[\s\S]*?<\/style>/gi, "")
-    .replace(/<link\b[^>]*>/gi, "")
-    .replace(/<footer\b[\s\S]*?<\/footer>/gi, "");
+function gamePageCastData(body) {
+  const characterNames = [
+    ...body.matchAll(
+      /<div class="font-bold text-sm theme-text truncate block w-full"[^>]*>([\s\S]*?)<\/div>/gi,
+    ),
+  ].map(([, content]) =>
+    content
+      .replace(/<!--[^]*?-->/g, "")
+      .replace(/<[^>]*>/g, "")
+      .replace(/\s+/g, " ")
+      .trim(),
+  );
+  const voiceActorLinks = [...body.matchAll(/href="[^"]*\/voice-actor\/(\d+)"/gi)].map(
+    ([, id]) => id,
+  );
+  return { cardCount: characterNames.length, characterNames, voiceActorLinks };
+}
+
+function gamePageCastDataMatchesExpected(baseHtml, headHtml) {
+  const baseCast = gamePageCastData(baseHtml);
+  const headCast = gamePageCastData(headHtml);
+  return (
+    headCast.cardCount > 0 &&
+    baseCast.cardCount === headCast.cardCount &&
+    JSON.stringify(baseCast.voiceActorLinks) === JSON.stringify(headCast.voiceActorLinks) &&
+    headCast.characterNames.length === headCast.cardCount &&
+    new Set(headCast.characterNames).size === headCast.characterNames.length &&
+    headCast.characterNames.every((name) => /^CI fixture game character \d+$/.test(name))
+  );
 }
 
 function dubbingProjectPageData(body) {
@@ -1075,9 +1100,9 @@ async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
         throw new Error(`${route.path} changed fields consumed by homepage trending game cards.`);
       } else if (
         route.name === "game" &&
-        gamePageMarkup(baseValidation.html) !== gamePageMarkup(headValidation.html)
+        !gamePageCastDataMatchesExpected(baseValidation.html, headValidation.html)
       ) {
-        throw new Error(`${route.path} changed server-rendered game page markup.`);
+        throw new Error(`${route.path} rendered unexpected game cast data.`);
       } else if (
         route.kind === "api" &&
         route.name !== "season-api" &&
