@@ -3,6 +3,8 @@ import { reactive } from "vue";
 export interface AdminLookupOption {
   id: number;
   name: string;
+  /** Profile picture URL when the lookup source provides one. */
+  image?: string | null;
 }
 
 const STUDIO_LIMIT = 10;
@@ -21,16 +23,25 @@ export function useAdminLookups() {
   const supabase = useSupabaseClient();
   const studioLabels = reactive(new Map<number, string>());
   const voiceActorLabels = reactive(new Map<number, string>());
+  const voiceActorImages = reactive(new Map<number, string>());
 
   const rememberStudio = (id: number | null | undefined, name: string | null | undefined) => {
     if (id == null || !name) return;
     studioLabels.set(id, name);
   };
 
-  const rememberVoiceActor = (id: number | null | undefined, name: string | null | undefined) => {
+  const rememberVoiceActor = (
+    id: number | null | undefined,
+    name: string | null | undefined,
+    image?: string | null,
+  ) => {
     if (id == null || !name) return;
     voiceActorLabels.set(id, name);
+    if (image) voiceActorImages.set(id, image);
   };
+
+  const voiceActorImage = (id: number | null | undefined): string | null =>
+    id == null ? null : (voiceActorImages.get(id) ?? null);
 
   const studioLabel = (id: number | null | undefined): string => {
     if (id == null) return "";
@@ -58,7 +69,7 @@ export function useAdminLookups() {
   const searchVoiceActors = async (query: string): Promise<AdminLookupOption[]> => {
     let request = supabase
       .from("voice_actors")
-      .select("id, firstname, lastname")
+      .select("id, firstname, lastname, profile_picture")
       .limit(VOICE_ACTOR_LIMIT);
     if (query) request = request.or(`firstname.ilike.%${query}%,lastname.ilike.%${query}%`);
     const { data, error } = await request;
@@ -66,8 +77,9 @@ export function useAdminLookups() {
     const options = (data || []).map((voiceActor) => ({
       id: voiceActor.id,
       name: formatVoiceActorName(voiceActor),
+      image: voiceActor.profile_picture,
     }));
-    options.forEach((option) => rememberVoiceActor(option.id, option.name));
+    options.forEach((option) => rememberVoiceActor(option.id, option.name, option.image));
     return options;
   };
 
@@ -87,6 +99,7 @@ export function useAdminLookups() {
     rememberVoiceActor,
     studioLabel,
     voiceActorLabel,
+    voiceActorImage,
     searchStudios,
     searchVoiceActors,
     createStudio,
