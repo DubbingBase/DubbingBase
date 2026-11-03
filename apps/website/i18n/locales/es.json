@@ -361,6 +361,8 @@
   "details": {
     "modify": "Modificar",
     "dubbing": "Doblaje ({lang})",
+    "originalVersion": "Versión original",
+    "originalAudio": "Audio original",
     "synopsis": "Sinopsis",
     "noSynopsis": "Sin sinopsis disponible.",
     "castAndCrew": "Reparto y equipo",

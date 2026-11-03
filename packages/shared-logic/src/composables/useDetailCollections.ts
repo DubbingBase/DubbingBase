@@ -144,6 +144,9 @@ export function resolveDetailCollectionProject<T>(
   projects: readonly T[],
   projectId: unknown,
 ): T | undefined {
+  if (projectId === "original" || (Array.isArray(projectId) && projectId[0] === "original")) {
+    return undefined;
+  }
   return selectDetailCollectionProject(projects, projectId) ?? projects[0];
 }
 

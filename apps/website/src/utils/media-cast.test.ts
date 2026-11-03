@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { matchCastWorks, sameMediaId } from "./media-cast";
+import {
+  hasOriginalVersion,
+  isOriginalVersionQuery,
+  matchCastWorks,
+  originalVersionCast,
+  sameMediaId,
+} from "./media-cast";
 
 describe("matchCastWorks", () => {
   it("keeps every work when multiple voice actors share an actor", () => {
@@ -64,5 +70,26 @@ describe("sameMediaId", () => {
     expect(sameMediaId("123", 123)).toBe(true);
     expect(sameMediaId("123", 124)).toBe(false);
     expect(sameMediaId(null, 123)).toBe(false);
+  });
+});
+
+describe("original version casting", () => {
+  it("requires a known language and cast before exposing the original version", () => {
+    expect(hasOriginalVersion("fr", [{ id: 1 }])).toBe(true);
+    expect(hasOriginalVersion(null, [{ id: 1 }])).toBe(false);
+    expect(hasOriginalVersion("fr", [])).toBe(false);
+    expect(isOriginalVersionQuery("original")).toBe(true);
+    expect(isOriginalVersionQuery(["original"])).toBe(true);
+    expect(isOriginalVersionQuery("42")).toBe(false);
+  });
+
+  it("uses cast performers without borrowing credits from a real same-language dub", () => {
+    const cast = [{ id: 10, name: "Original Actor" }];
+
+    const result = originalVersionCast(cast);
+
+    expect(result).toHaveLength(1);
+    expect(result[0]?.name).toBe("Original Actor");
+    expect(result[0]?.voiceActor).toBeNull();
   });
 });

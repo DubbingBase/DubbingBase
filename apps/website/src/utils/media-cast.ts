@@ -38,6 +38,34 @@ export interface DisplayCastActor {
   workCharacterName?: string | null;
 }
 
+export type MediaProjectView<Project> =
+  | { kind: "original"; key: "original"; language: string }
+  | { kind: "dubbing"; key: number; project: Project };
+
+export function hasOriginalVersion(
+  language: string | null | undefined,
+  cast: readonly CastActorReference[] | null | undefined,
+): language is string {
+  return Boolean(language?.trim() && cast?.length);
+}
+
+export function isOriginalVersionQuery(value: unknown): boolean {
+  return value === "original" || (Array.isArray(value) && value[0] === "original");
+}
+
+export function originalVersionCast<Actor extends CastActorReference>(
+  actors: Actor[],
+): DisplayCastActor[] {
+  return actors.map((actor) => ({
+    ...actor,
+    actorId: actor.id,
+    profile_path: actor.profile_path?.startsWith("/")
+      ? `https://image.tmdb.org/t/p/w185${actor.profile_path}`
+      : actor.profile_path,
+    voiceActor: null,
+  }));
+}
+
 export interface CastWorkMatchResult<
   Actor extends CastActorReference,
   Work extends CastWorkReference,
@@ -83,7 +111,10 @@ export function matchCastWorks<Actor extends CastActorReference, Work extends Ca
   }
 
   const matches = actors.map((actor) => {
-    return { actor, works: worksByActorId.get(String(actor.id))?.slice() ?? [] };
+    return {
+      actor,
+      works: worksByActorId.get(String(actor.id))?.slice() ?? [],
+    };
   });
 
   return {

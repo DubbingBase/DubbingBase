@@ -94,7 +94,10 @@
         </template>
 
         <NuxtLink
-          :to="localePath(`/show/${showId}`)"
+          :to="{
+            path: localePath(`/show/${showId}`),
+            query: isOriginalVersion ? { dub: 'original' } : {},
+          }"
           class="text-sm theme-primary-text theme-hover-primary-text transition-colors flex items-center gap-1.5 font-medium"
         >
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -109,7 +112,7 @@
         </NuxtLink>
 
         <NuxtLink
-          v-show="isAdmin"
+          v-show="isAdmin && !isOriginalVersion"
           :to="
             localePath(
               activeDubId
@@ -199,7 +202,11 @@
                   path: localePath(
                     `/show/${showId}/season/${seasonNumber}/episode/${episode.episode_number}`,
                   ),
-                  query: activeDubId ? { dub: activeDubId } : {},
+                  query: isOriginalVersion
+                    ? { dub: 'original' }
+                    : activeDubId
+                      ? { dub: activeDubId }
+                      : {},
                 }"
                 class="group cursor-pointer block theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-primary-border hover:shadow-md"
               >
@@ -303,6 +310,7 @@ import { fetchSeasonPageData, type SeasonPageDubbingProject } from "../../../../
 import { computed, ref } from "vue";
 import { ClapperboardIcon, ExternalLinkIcon, StarIcon } from "lucide-vue-next";
 import ReportModal from "../../../../components/ReportModal.vue";
+import { isOriginalVersionQuery } from "../../../../utils/media-cast";
 
 const isReportModalOpen = ref(false);
 
@@ -327,6 +335,7 @@ const user = useSupabaseUser();
 const isAdmin = computed(() => {
   return user.value?.app_metadata?.role === "admin";
 });
+const isOriginalVersion = computed(() => isOriginalVersionQuery(route.query.dub));
 
 const { locale, t } = useI18n();
 const localePath = useLocalePath();
@@ -498,6 +507,7 @@ const requestError = computed(() =>
 );
 
 const activeDubId = computed(() => {
+  if (isOriginalVersion.value) return null;
   if (route.query.dub) {
     const requestedId = Number(route.query.dub);
     if (
@@ -511,6 +521,7 @@ const activeDubId = computed(() => {
 });
 
 const activeDubProject = computed(() => {
+  if (isOriginalVersion.value) return undefined;
   return (
     dubbingProjects.value.find((p: SeasonPageDubbingProject) => p.id === activeDubId.value) ||
     dubbingProjects.value[0]

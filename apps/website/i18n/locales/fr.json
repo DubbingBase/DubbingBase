@@ -360,6 +360,8 @@
   "details": {
     "modify": "Modifier",
     "dubbing": "Doublage ({lang})",
+    "originalVersion": "Version originale",
+    "originalAudio": "Audio original",
     "synopsis": "Synopsis",
     "noSynopsis": "Aucun synopsis disponible.",
     "castAndCrew": "Distribution & Équipe",

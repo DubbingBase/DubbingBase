@@ -42,7 +42,35 @@
       </template>
 
       <template #actions-left>
-        <div v-if="dubbingProjects.length > 0" class="flex flex-wrap gap-2">
+        <div
+          v-if="dubbingProjects.length > 0 || canShowOriginalVersion"
+          class="flex flex-wrap gap-2"
+        >
+          <NuxtLink
+            v-if="canShowOriginalVersion"
+            :to="{
+              path: localePath(`/show/${showId}/season/${seasonNumber}/episode/${episodeNumber}`),
+              query: { dub: 'original' },
+            }"
+            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border theme-border-subtle theme-border flex items-center gap-1.5"
+            :class="
+              isOriginalVersion
+                ? 'theme-primary-bg theme-primary-border'
+                : 'theme-surface theme-text-secondary theme-hover-surface-muted'
+            "
+          >
+            {{ $t("details.originalVersion") }}
+            <span
+              class="text-xs px-1.5 py-0.5 rounded-full font-medium"
+              :class="
+                isOriginalVersion
+                  ? 'bg-black/15 text-black'
+                  : 'theme-surface-raised theme-surface-muted theme-text-muted'
+              "
+            >
+              {{ episodeCast.length || 0 }}
+            </span>
+          </NuxtLink>
           <NuxtLink
             v-for="project in dubbingProjects"
             :key="project.id"
@@ -105,7 +133,11 @@
         <NuxtLink
           :to="{
             path: localePath(`/show/${showId}/season/${seasonNumber}`),
-            query: activeDubId ? { dub: activeDubId } : {},
+            query: isOriginalVersion
+              ? { dub: 'original' }
+              : activeDubId
+                ? { dub: activeDubId }
+                : {},
           }"
           class="text-sm theme-primary-text theme-hover-primary-text transition-colors flex items-center gap-1.5 font-medium"
         >
@@ -121,7 +153,7 @@
         </NuxtLink>
 
         <NuxtLink
-          v-show="isAdmin"
+          v-show="isAdmin && !isOriginalVersion"
           :to="
             localePath(
               activeDubId
@@ -206,6 +238,9 @@
                 <h2 class="text-2xl font-bold">
                   {{ $t("details.castAndCrew") }}
                 </h2>
+                <span v-if="isOriginalVersion" class="theme-text-muted text-sm">
+                  {{ $t("details.originalAudio") }}
+                </span>
               </div>
 
               <div class="relative w-full sm:w-64">
@@ -236,10 +271,7 @@
                 :key="actor.id"
                 class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-border"
               >
-                <div
-                  class="flex flex-col sm:grid gap-4"
-                  :class="isOriginalLanguage ? 'sm:grid-cols-2' : 'sm:grid-cols-3'"
-                >
+                <div class="flex flex-col sm:grid sm:grid-cols-3 gap-4">
                   <!-- Original Actor -->
                   <div
                     class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start"
@@ -314,12 +346,11 @@
                     </div>
                   </div>
 
-                  <!-- Voice Actor (hidden when viewing in original language) -->
+                  <!-- Voice Actor, or the original actor for the original version -->
                   <div
-                    v-if="!isOriginalLanguage"
                     class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t theme-border-subtle theme-border sm:border-t-0 pt-4 sm:pt-0 mt-2 sm:mt-0"
                   >
-                    <template v-if="actor.voiceActor">
+                    <template v-if="actor.voiceActor && !isOriginalVersion">
                       <NuxtLink
                         :to="actor.voiceActorPath"
                         class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
@@ -358,6 +389,40 @@
                         <div v-if="actor.voiceActor.note" class="text-xs theme-text-muted mt-1">
                           {{ actor.voiceActor.note }}
                         </div>
+                      </div>
+                    </template>
+                    <template v-else-if="isOriginalVersion">
+                      <component
+                        :is="actor.actorId ? NuxtLink : 'div'"
+                        :to="actor.actorPath"
+                        class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
+                        :aria-label="actor.name"
+                      >
+                        <NuxtImg
+                          format="webp"
+                          decoding="async"
+                          loading="lazy"
+                          v-if="actor.profile_path"
+                          :src="actor.profile_path"
+                          class="w-full h-full object-cover transition-transform duration-300"
+                          alt="Actor"
+                        />
+                      </component>
+                      <div class="flex flex-col min-w-0 flex-1 w-full overflow-hidden">
+                        <div
+                          class="flex items-center gap-1.5 text-[10px] theme-text-muted uppercase tracking-widest font-semibold mb-1"
+                        >
+                          <ClapperboardIcon class="w-3 h-3 flex-shrink-0" />
+                          <span class="truncate block w-full">{{ $t("details.actor") }}</span>
+                        </div>
+                        <component
+                          :is="actor.actorId ? NuxtLink : 'div'"
+                          :to="actor.actorPath"
+                          class="font-bold text-sm theme-text truncate hover:underline block w-full"
+                          :title="actor.name"
+                        >
+                          {{ actor.name }}
+                        </component>
                       </div>
                     </template>
                     <template v-else>
@@ -467,7 +532,11 @@ import {
   type CastActorReference,
   type CastWorkReference,
   matchCastWorks,
+  hasOriginalVersion,
+  isOriginalVersionQuery,
+  originalVersionCast,
   type DisplayCastActor,
+  type MediaProjectView,
 } from "../../../../../../utils/media-cast";
 import {
   indexCharacterPictures,
@@ -587,6 +656,19 @@ const requestError = computed(() => Boolean(error.value && error.value.statusCod
 const dubbingProjects = computed<EpisodePageDubbingProject[]>(
   () => data.value?.dubbingProjects || [],
 );
+const episodeCast = computed<CastActorReference[]>(
+  () => data.value?.aggregateCredits?.cast || episode.value?.credits?.cast || [],
+);
+const canShowOriginalVersion = computed(() =>
+  hasOriginalVersion(
+    episode.value?.original_language || episode.value?.show_original_language,
+    episodeCast.value,
+  ),
+);
+const originalVersionRequested = computed(() => isOriginalVersionQuery(route.query.dub));
+const isOriginalVersion = computed(
+  () => canShowOriginalVersion.value && originalVersionRequested.value,
+);
 
 function projectVoiceActorCount(project: EpisodePageDubbingProject): number {
   return project.voiceActorCount;
@@ -611,18 +693,29 @@ const posterUrl = computed(() => {
 });
 
 const activeDubId = computed(() => {
+  if (originalVersionRequested.value) return null;
   if (route.query.dub) {
     return Number(route.query.dub);
   }
   return dubbingProjects.value[0]?.id || null;
 });
 
-const activeDubProject = computed(() => {
-  return (
-    dubbingProjects.value.find((project) => project.id === activeDubId.value) ||
-    dubbingProjects.value[0]
-  );
+const activeProjectView = computed<MediaProjectView<EpisodePageDubbingProject> | undefined>(() => {
+  const originalLanguage =
+    episode.value?.original_language || episode.value?.show_original_language;
+  if (originalVersionRequested.value) {
+    if (!isOriginalVersion.value || !originalLanguage) return undefined;
+    return { kind: "original", key: "original", language: originalLanguage };
+  }
+  const project =
+    dubbingProjects.value.find((candidate) => candidate.id === activeDubId.value) ||
+    dubbingProjects.value[0];
+  return project ? { kind: "dubbing", key: project.id, project } : undefined;
 });
+const activeDubProject = computed(() =>
+  activeProjectView.value?.kind === "dubbing" ? activeProjectView.value.project : undefined,
+);
+const activeIsOriginal = computed(() => activeProjectView.value?.kind === "original");
 const activeProjectId = computed(() => activeDubProject.value?.id ?? null);
 const voiceActorsById = computed(() => {
   const activeData = activeProjectId.value
@@ -660,15 +753,6 @@ function retryActiveProjectWorks(): void {
   void loadProjectWorks(projectId);
 }
 
-const isOriginalLanguage = computed(() => {
-  const orig = (
-    episode.value?.original_language || episode.value?.show_original_language
-  )?.toLowerCase();
-  const dub = activeDubProject.value?.language?.toLowerCase();
-  if (!orig || !dub) return false;
-  return orig === dub || dub.startsWith(`${orig}-`) || orig.startsWith(`${dub}-`);
-});
-
 const getDisplayLanguage = (langCode: string | undefined | null) => {
   if (!langCode) return t("details.notSpecified");
   try {
@@ -705,8 +789,8 @@ type EpisodeDisplayCastActor = DisplayCastActor & {
 };
 
 const formattedCast = computed<DisplayCastActor[]>(() => {
-  const cast: CastActorReference[] =
-    data.value?.aggregateCredits?.cast || episode.value?.credits?.cast || [];
+  const cast = episodeCast.value;
+  if (activeIsOriginal.value) return originalVersionCast(cast);
   const activeData = activeProjectId.value
     ? projectDataById.value.get(activeProjectId.value)
     : undefined;
