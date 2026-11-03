@@ -203,6 +203,7 @@
   - interface EditorFormStateOptions
   - interface EditorFormState
   - _...2 more_
+- `apps/website/src/composables/useKeyboardInset.ts` — function computeKeyboardInset, function useKeyboardInset
 - `apps/website/src/composables/useLocalePathPrefix.ts` — function useLocalePathPrefix: () => (path: string) => string
 - `apps/website/src/composables/useMetadataCreation.ts`
   - function isMetadataValidationError: (error) => boolean
@@ -222,6 +223,8 @@
   - function filterCastRows
   - function getInitials
   - interface CastWorkspaceRow
+  - const ORIGINAL_CAST_SEED_LIMIT
+  - const pickOriginalCastSeed
 - `apps/website/src/utils/dubbing-project-save.ts`
   - function getEditableDubbingProjectStatus: (value) => DubbingProjectStatus
   - function serializeGameProjectCastRows: (rows) => DubbingProjectCastSaveRow[]

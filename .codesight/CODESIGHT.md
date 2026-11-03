@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 88 routes | 28 models | 115 components | 103 lib files | 64 env vars | 14 middleware | 47% test coverage
-> **Token savings:** this file is ~16,400 tokens. Without it, AI exploration would cost ~141,900 tokens. **Saves ~125,500 tokens per conversation.**
-> **Last scanned:** 2026-11-03 16:22 — re-run after significant changes
+> 88 routes | 28 models | 115 components | 104 lib files | 64 env vars | 14 middleware | 47% test coverage
+> **Token savings:** this file is ~16,400 tokens. Without it, AI exploration would cost ~142,200 tokens. **Saves ~125,700 tokens per conversation.**
+> **Last scanned:** 2026-11-03 17:56 — re-run after significant changes
 
 ---
 
@@ -631,6 +631,7 @@
   - interface EditorFormStateOptions
   - interface EditorFormState
   - _...2 more_
+- `apps/website/src/composables/useKeyboardInset.ts` — function computeKeyboardInset, function useKeyboardInset
 - `apps/website/src/composables/useLocalePathPrefix.ts` — function useLocalePathPrefix: () => (path: string) => string
 - `apps/website/src/composables/useMetadataCreation.ts`
   - function isMetadataValidationError: (error) => boolean
@@ -650,6 +651,8 @@
   - function filterCastRows
   - function getInitials
   - interface CastWorkspaceRow
+  - const ORIGINAL_CAST_SEED_LIMIT
+  - const pickOriginalCastSeed
 - `apps/website/src/utils/dubbing-project-save.ts`
   - function getEditableDubbingProjectStatus: (value) => DubbingProjectStatus
   - function serializeGameProjectCastRows: (rows) => DubbingProjectCastSaveRow[]
@@ -924,7 +927,7 @@
 # Test Coverage
 
 > **47%** of routes and models are covered by tests
-> 140 test files found
+> 141 test files found
 
 ## Covered Routes
 
