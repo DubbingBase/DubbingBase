@@ -197,10 +197,22 @@ export default defineNuxtConfig({
       ],
     },
     workbox: {
-      navigateFallback: "/offline",
-      navigateFallbackDenylist: [/^\/api\//, /^\/_nuxt\//],
+      navigateFallback: null,
       globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2,webmanifest}"],
-      runtimeCaching: [],
+      runtimeCaching: [
+        {
+          urlPattern: ({ request, url }) =>
+            request.mode === "navigate" &&
+            !url.pathname.startsWith("/api/") &&
+            !url.pathname.startsWith("/_nuxt/"),
+          handler: "NetworkOnly",
+          options: {
+            precacheFallback: {
+              fallbackURL: "/offline.html",
+            },
+          },
+        },
+      ],
     },
   },
 
