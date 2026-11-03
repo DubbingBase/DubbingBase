@@ -236,12 +236,7 @@
                 :key="actor.id"
                 class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-border"
               >
-                <div
-                  class="flex flex-col sm:grid gap-4"
-                  :class="
-                    isOriginalVersion && !actor.voiceActor ? 'sm:grid-cols-2' : 'sm:grid-cols-3'
-                  "
-                >
+                <div class="flex flex-col sm:grid sm:grid-cols-3 gap-4">
                   <!-- Original Actor -->
                   <div
                     class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start"
