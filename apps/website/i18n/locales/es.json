@@ -1273,6 +1273,7 @@
     "castDetails": "Detalles del reparto",
     "castCount": "{count} entradas de reparto",
     "castUnassigned": "Sin asignar",
+    "castCharacter": "Personaje",
     "castUnknownCharacter": "Personaje sin nombre",
     "castOriginalActor": "Actor original",
     "castSelectRow": "Editar fila {index}: {label}",

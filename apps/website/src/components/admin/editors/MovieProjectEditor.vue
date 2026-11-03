@@ -407,7 +407,16 @@
                       (id: string | number) => getActorName(id) || selectedRow!.character_name
                     "
                     @create="(query: string) => handleActorCreate(selectedRow!, query)"
-                  />
+                  >
+                    <template #option="{ option }"
+                      ><span class="flex items-center gap-2"
+                        ><AdminCastAvatar
+                          :name="option.name"
+                          :src="tmdbProfileUrl(option.profile_path)"
+                        />{{ getActorName(option.id) }}</span
+                      ></template
+                    >
+                  </AdminAsyncAutocomplete>
                 </div>
                 <div class="space-y-1">
                   <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
@@ -424,7 +433,15 @@
                       (q: string) =>
                         openCreateVaDialog(q, (id: number) => (selectedRow!.voice_actor_id = id))
                     "
-                  />
+                  >
+                    <template #option="{ option }"
+                      ><span class="flex items-center gap-2"
+                        ><AdminCastAvatar :name="option.name" :src="option.image ?? null" />{{
+                          option.name
+                        }}</span
+                      ></template
+                    >
+                  </AdminAsyncAutocomplete>
                 </div>
                 <div class="space-y-1">
                   <label
@@ -530,7 +547,11 @@
 </template>
 
 <script setup lang="ts">
-import { validateDubbingLanguage } from "@app/shared-logic";
+import {
+  createCharacterMatcher,
+  validateDubbingLanguage,
+  type MediaDetailCharacterProfilePicture,
+} from "@app/shared-logic";
 import { ref, onMounted, computed, nextTick, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { FilmIcon, Loader2Icon, ImageIcon, XIcon } from "lucide-vue-next";
@@ -630,6 +651,8 @@ interface TmdbMovieData {
   credits?: { cast?: EditorTmdbCastMember[] };
 }
 
+const TMDB_PROFILE_BASE = "https://image.tmdb.org/t/p/w185";
+
 // Toast
 const toast = ref({ show: false, message: "", type: "info", link: "" });
 const showToast = (message: string, type = "info", link = "") => {
@@ -723,6 +746,14 @@ const selectedCastKey = ref<string | null>(null);
 const selectedRow = computed(
   () => castRows.value.find((row) => row.key === selectedCastKey.value) ?? null,
 );
+const characterImageFor = (characterName: string): string | null => {
+  if (!characterName) return null;
+  const matches = createCharacterMatcher(characterName);
+  const match = characterPictures.value.find(
+    (picture) => picture.name && picture.image && matches(picture.name),
+  );
+  return match?.image ?? null;
+};
 const castView = computed<CastWorkspaceRow[]>(() =>
   castRows.value.map((row) => {
     const actor = tmdbCast.value.find((c) => c.id === row.actor_id);
@@ -730,11 +761,10 @@ const castView = computed<CastWorkspaceRow[]>(() =>
       key: row.key,
       characterName: row.character_name,
       originalActorName: actor?.name ?? "",
-      originalActorImage: actor?.profile_path
-        ? `https://image.tmdb.org/t/p/w185${actor.profile_path}`
-        : null,
+      characterImage: characterImageFor(row.character_name),
+      originalActorImage: tmdbProfileUrl(actor?.profile_path),
       voiceActorName: row.voice_actor_id ? lookups.voiceActorLabel(row.voice_actor_id) : "",
-      voiceActorImage: null,
+      voiceActorImage: lookups.voiceActorImage(row.voice_actor_id),
       performance: row.performance,
       highlight: row.highlight,
     };
@@ -742,6 +772,9 @@ const castView = computed<CastWorkspaceRow[]>(() =>
 );
 
 const tmdbCast = ref<EditorTmdbCastMember[]>([]);
+const characterPictures = ref<MediaDetailCharacterProfilePicture[]>([]);
+const tmdbProfileUrl = (path: string | null | undefined): string | null =>
+  path ? (path.startsWith("/") ? `${TMDB_PROFILE_BASE}${path}` : path) : null;
 const initialTmdbCastOptions = computed(() => tmdbCast.value.slice(0, 50));
 
 const searchActors = (query: string) => {
@@ -888,6 +921,7 @@ const {
   `movie-edit-${tmdbMovieId.value}-${projectIdParam}`,
   async () => {
     let tmdbData: TmdbMovieData | null = null;
+    let characterPictures: MediaDetailCharacterProfilePicture[] = [];
     let projects: EditorProjectTab[] = [];
     let project: EditorProjectRecord | null = null;
     let studioName: string | null = null;
@@ -897,12 +931,14 @@ const {
     if (tmdbMovieId.value) {
       // TMDB metadata
       try {
-        const data = await $fetch<{ movie?: TmdbMovieData | null }>(
-          `/api/movie/${tmdbMovieId.value}`,
-        );
+        const data = await $fetch<{
+          movie?: TmdbMovieData | null;
+          characterProfilePictures?: MediaDetailCharacterProfilePicture[];
+        }>(`/api/movie/${tmdbMovieId.value}`);
         if (data && data.movie) {
           tmdbData = data.movie;
         }
+        characterPictures = data?.characterProfilePictures ?? [];
       } catch (e) {
         console.error("Failed to fetch TMDB data.", e);
       }
@@ -920,7 +956,7 @@ const {
       const projectId = Number(projectIdParam);
       const { data: proj, error: projectError } = await supabase
         .from("dubbing_projects")
-        .select("*, studios(name), work(*, voice_actors(firstname, lastname))")
+        .select("*, studios(name), work(*, voice_actors(firstname, lastname, profile_picture))")
         .eq("id", projectId)
         .single();
       if (projectError || !proj) throw projectError || new Error("Project not found");
@@ -942,15 +978,17 @@ const {
 
     const { data: vaData } = await supabase
       .from("voice_actors")
-      .select("id, firstname, lastname")
+      .select("id, firstname, lastname, profile_picture")
       .limit(10);
     const initialVoiceActors = (vaData || []).map((va) => ({
       id: va.id,
       name: `${va.firstname || ""} ${va.lastname || ""}`.trim(),
+      image: va.profile_picture,
     }));
 
     return {
       tmdbData,
+      characterPictures,
       projects,
       project,
       studioName,
@@ -986,6 +1024,7 @@ watch(
         }
       }
 
+      characterPictures.value = data.characterPictures;
       movieDubbingProjects.value = data.projects;
 
       if (data.project) {
@@ -1028,7 +1067,7 @@ watch(
           if (w.voice_actors) {
             const name =
               `${w.voice_actors.firstname || ""} ${w.voice_actors.lastname || ""}`.trim();
-            lookups.rememberVoiceActor(w.voice_actor_id, name);
+            lookups.rememberVoiceActor(w.voice_actor_id, name, w.voice_actors.profile_picture);
           }
           return {
             key: createEditorRowKey(),
@@ -1065,7 +1104,7 @@ watch(
 
       if (data.initialVoiceActors) {
         initialVoiceActorOptions.value = data.initialVoiceActors;
-        data.initialVoiceActors.forEach((f) => lookups.rememberVoiceActor(f.id, f.name));
+        data.initialVoiceActors.forEach((f) => lookups.rememberVoiceActor(f.id, f.name, f.image));
       }
 
       isLoading.value = false;

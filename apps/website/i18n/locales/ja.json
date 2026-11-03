@@ -1273,6 +1273,7 @@
     "castDetails": "キャストの詳細",
     "castCount": "キャスト {count} 件",
     "castUnassigned": "未割り当て",
+    "castCharacter": "キャラクター",
     "castUnknownCharacter": "名前のないキャラクター",
     "castOriginalActor": "オリジナルの俳優",
     "castSelectRow": "{index} 行目を編集: {label}",

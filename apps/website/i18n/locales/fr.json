@@ -1273,6 +1273,7 @@
     "castDetails": "Détails du casting",
     "castCount": "{count} entrées de casting",
     "castUnassigned": "Non attribué",
+    "castCharacter": "Personnage",
     "castUnknownCharacter": "Personnage sans nom",
     "castOriginalActor": "Acteur original",
     "castSelectRow": "Modifier la ligne {index} : {label}",

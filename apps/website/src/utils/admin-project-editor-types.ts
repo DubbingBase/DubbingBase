@@ -27,7 +27,12 @@ export interface EditorProjectWork {
   highlight: boolean | null;
   status: string | null;
   updated_at: string | null;
-  voice_actors: { firstname: string | null; lastname: string | null } | null;
+  voice_actors: {
+    firstname: string | null;
+    lastname: string | null;
+    /** Optional: only selected by editors that show voice actor pictures. */
+    profile_picture?: string | null;
+  } | null;
 }
 
 export interface EditorProjectRecord {

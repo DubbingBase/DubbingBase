@@ -2,6 +2,7 @@
 export interface CastWorkspaceRow {
   key: string;
   characterName: string;
+  characterImage: string | null;
   originalActorName: string;
   originalActorImage: string | null;
   voiceActorName: string;

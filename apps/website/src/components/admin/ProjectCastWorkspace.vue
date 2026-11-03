@@ -37,11 +37,11 @@
         <li
           v-for="(row, index) in visibleRows"
           :key="row.key"
-          class="flex items-stretch gap-1 [content-visibility:auto] [contain-intrinsic-size:auto_4.5rem]"
+          class="flex items-stretch gap-1 [content-visibility:auto] [contain-intrinsic-size:auto_5.5rem]"
         >
           <button
             type="button"
-            class="flex-1 min-w-0 flex items-center gap-3 p-2 text-left rounded-xl border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-focus)]"
+            class="flex-1 min-w-0 grid grid-cols-2 sm:grid-cols-3 items-center gap-x-3 gap-y-2 p-2 text-left rounded-xl border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-focus)]"
             :class="
               row.key === selectedKey
                 ? 'theme-status-info border-[var(--app-color-focus)]'
@@ -57,24 +57,26 @@
             data-testid="cast-row"
             @click="selectRow(row.key)"
           >
-            <span
-              class="relative flex shrink-0 items-center"
-              :title="row.originalActorName || $t('projectEditor.castOriginalActor')"
-            >
-              <AdminCastAvatar :name="row.originalActorName" :src="row.originalActorImage" />
-            </span>
-            <span class="min-w-0 flex-1">
-              <span class="block truncate text-sm font-semibold theme-text">
+            <span class="col-span-2 sm:col-span-1 flex min-w-0 items-center gap-2">
+              <AdminCastAvatar
+                :name="row.characterName"
+                :src="row.characterImage"
+                :title="$t('projectEditor.castCharacter')"
+              />
+              <span class="min-w-0 block truncate text-sm font-semibold theme-text">
                 {{ row.characterName || $t("projectEditor.castUnknownCharacter") }}
                 <span v-if="row.highlight" aria-hidden="true">★</span>
               </span>
-              <span class="block truncate text-xs theme-text-muted">
+            </span>
+            <span class="flex min-w-0 items-center gap-2">
+              <AdminCastAvatar :name="row.originalActorName" :src="row.originalActorImage" />
+              <span class="min-w-0 truncate text-xs theme-text-muted">
                 {{ row.originalActorName || $t("projectEditor.castOriginalActor") }}
               </span>
             </span>
-            <span class="flex min-w-0 max-w-[40%] items-center gap-2">
+            <span class="flex min-w-0 items-center gap-2">
               <AdminCastAvatar :name="row.voiceActorName" :src="row.voiceActorImage" />
-              <span class="truncate text-xs theme-text-secondary">
+              <span class="min-w-0 truncate text-xs theme-text-secondary">
                 {{ row.voiceActorName || $t("projectEditor.castUnassigned") }}
               </span>
             </span>
@@ -122,6 +124,19 @@
       <h4 class="text-sm font-bold theme-text uppercase tracking-wider">
         {{ $t("projectEditor.castDetails") }}
       </h4>
+      <div
+        v-if="selectedRow"
+        class="flex items-start justify-between gap-2 text-center"
+        data-testid="cast-detail-portraits"
+      >
+        <figure v-for="item in portraits" :key="item.label" class="min-w-0 flex-1 space-y-1">
+          <AdminCastAvatar :name="item.name" :src="item.image" large class="mx-auto" />
+          <figcaption class="truncate text-xs font-semibold theme-text">
+            {{ item.name || $t("projectEditor.castUnassigned") }}
+          </figcaption>
+          <span class="block truncate text-[11px] theme-text-muted">{{ item.label }}</span>
+        </figure>
+      </div>
       <slot v-if="selectedKey" name="detail" :row-key="selectedKey" />
       <p v-else class="text-sm theme-text-muted">
         {{ $t("projectEditor.castSelectPrompt") }}
@@ -136,6 +151,7 @@ import { refDebounced } from "@vueuse/core";
 import { computed, nextTick, ref } from "vue";
 import { filterCastRows, type CastWorkspaceRow } from "~/utils/cast-workspace";
 
+const { t } = useI18n();
 const props = defineProps<{
   rows: CastWorkspaceRow[];
   selectedKey: string | null;
@@ -155,6 +171,29 @@ const selectRow = async (key: string) => {
   await nextTick();
   detailPanel.value?.scrollIntoView({ block: "nearest", behavior: "smooth" });
 };
+
+const selectedRow = computed(() => props.rows.find((row) => row.key === props.selectedKey) ?? null);
+const portraits = computed(() =>
+  selectedRow.value
+    ? [
+        {
+          label: t("projectEditor.castCharacter"),
+          name: selectedRow.value.characterName,
+          image: selectedRow.value.characterImage,
+        },
+        {
+          label: t("projectEditor.castOriginalActor"),
+          name: selectedRow.value.originalActorName,
+          image: selectedRow.value.originalActorImage,
+        },
+        {
+          label: t("projectEditor.voiceActor"),
+          name: selectedRow.value.voiceActorName,
+          image: selectedRow.value.voiceActorImage,
+        },
+      ]
+    : [],
+);
 
 const query = ref("");
 const debouncedQuery = refDebounced(query, 150);

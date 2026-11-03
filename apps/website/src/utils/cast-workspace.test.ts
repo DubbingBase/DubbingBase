@@ -4,6 +4,7 @@ import { filterCastRows, getInitials, type CastWorkspaceRow } from "./cast-works
 const row = (key: string, overrides: Partial<CastWorkspaceRow> = {}): CastWorkspaceRow => ({
   key,
   characterName: "",
+  characterImage: null,
   originalActorName: "",
   originalActorImage: null,
   voiceActorName: "",

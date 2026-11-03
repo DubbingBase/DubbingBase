@@ -38,7 +38,7 @@ describe("admin project editors", () => {
     (name) => {
       const source = editorSource(name);
 
-      expect(source).toContain("work(*, voice_actors(firstname, lastname))");
+      expect(source).toMatch(/work\(\*, voice_actors\(firstname, lastname(, profile_picture)?\)\)/);
       expect(source).toContain("works = proj.work || []");
       expect(source).toContain("loadError");
     },
