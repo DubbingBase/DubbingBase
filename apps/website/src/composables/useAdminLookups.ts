@@ -71,7 +71,12 @@ export function useAdminLookups() {
       .from("voice_actors")
       .select("id, firstname, lastname, profile_picture")
       .limit(VOICE_ACTOR_LIMIT);
-    if (query) request = request.or(`firstname.ilike.%${query}%,lastname.ilike.%${query}%`);
+    // Each word must match the first or last name, so "firstname lastname" works in any order.
+    // Chained .or() filters are ANDed by PostgREST.
+    for (const token of query.split(/\s+/).filter(Boolean)) {
+      const pattern = `"%${token.replace(/[\\"]/g, "\\$&")}%"`;
+      request = request.or(`firstname.ilike.${pattern},lastname.ilike.${pattern}`);
+    }
     const { data, error } = await request;
     if (error) throw error;
     const options = (data || []).map((voiceActor) => ({
