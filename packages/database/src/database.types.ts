@@ -324,6 +324,39 @@ export type Database = {
           },
         ];
       };
+      push_installations: {
+        Row: {
+          created_at: string;
+          enabled: boolean;
+          fcm_token: string;
+          installation_id: string;
+          last_seen_at: string;
+          locale: string;
+          platform: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          enabled?: boolean;
+          fcm_token: string;
+          installation_id: string;
+          last_seen_at?: string;
+          locale?: string;
+          platform: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          enabled?: boolean;
+          fcm_token?: string;
+          installation_id?: string;
+          last_seen_at?: string;
+          locale?: string;
+          platform?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       source: {
         Row: {
           id: number;
@@ -434,6 +467,7 @@ export type Database = {
           date_of_birth: string | null;
           id: string;
           nationality: string | null;
+          push_enabled: boolean;
           social_media_links: Json | null;
           updated_at: string | null;
           updated_by: string | null;
@@ -446,6 +480,7 @@ export type Database = {
           date_of_birth?: string | null;
           id?: string;
           nationality?: string | null;
+          push_enabled?: boolean;
           social_media_links?: Json | null;
           updated_at?: string | null;
           updated_by?: string | null;
@@ -458,6 +493,7 @@ export type Database = {
           date_of_birth?: string | null;
           id?: string;
           nationality?: string | null;
+          push_enabled?: boolean;
           social_media_links?: Json | null;
           updated_at?: string | null;
           updated_by?: string | null;

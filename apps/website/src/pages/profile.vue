@@ -57,6 +57,13 @@
           >
             {{ $t("profile.logout") }}
           </button>
+          <p
+            v-if="logoutError"
+            class="mt-2 text-sm theme-status-danger-text"
+            aria-live="polite"
+          >
+            {{ logoutError }}
+          </p>
         </div>
       </aside>
 
@@ -74,6 +81,7 @@
 
 <script setup lang="ts">
 import { useRoute, useRouter } from "vue-router";
+import { detachPushInstallation } from "../composables/usePushNotifications";
 
 definePageMeta({
   middleware: "auth",
@@ -88,9 +96,16 @@ useSeoMeta({
 const route = useRoute();
 const router = useRouter();
 const supabase = useSupabaseClient();
+const { t } = useI18n();
+const logoutError = ref("");
 
 const localePath = useLocalePath();
-const handleLogout = async () => {
+const handleLogout = async (): Promise<void> => {
+  logoutError.value = "";
+  if (!(await detachPushInstallation())) {
+    logoutError.value = t("push.logoutFailed");
+    return;
+  }
   await supabase.auth.signOut();
   router.push(localePath("/login"));
 };

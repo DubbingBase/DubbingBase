@@ -3,10 +3,12 @@ packages:
   - "packages/*"
 
 allowBuilds:
+  '@firebase/util': true
   "@parcel/watcher": true
   "@swc/core": true
   "core-js": true
   esbuild: true
+  protobufjs: true
   sharp: true
   "vue-demi": true
   workerd: true
