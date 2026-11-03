@@ -83,388 +83,404 @@
       {{ loadError }}
     </div>
 
-    <form v-else id="movie-project-form" @submit.prevent="saveMovieProject" class="space-y-6">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Media Metadata Card (Left Column) -->
-        <div
-          class="theme-surface-overlay border theme-border rounded-2xl p-6 space-y-5 h-fit shadow-xl"
+    <div v-else class="grid grid-cols-1 lg:grid-cols-[12rem_minmax(0,1fr)] gap-6">
+      <nav
+        :aria-label="$t('projectEditor.sectionNav')"
+        class="flex lg:flex-col gap-1 overflow-x-auto lg:overflow-visible lg:sticky lg:top-4 h-fit"
+        data-testid="editor-sections"
+      >
+        <button
+          v-for="item in sections"
+          :key="item.id"
+          type="button"
+          class="px-4 py-2.5 min-h-10 rounded-xl text-sm font-medium text-left whitespace-nowrap transition-colors border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-focus)]"
+          :class="
+            section === item.id
+              ? 'theme-status-info theme-status-info-text border-[var(--app-color-focus)]'
+              : 'theme-surface-overlay theme-text-secondary theme-border theme-hover-surface-muted'
+          "
+          :aria-current="section === item.id ? 'page' : undefined"
+          :data-testid="`section-${item.id}`"
+          @click="section = item.id"
         >
-          <h4
-            class="text-sm font-bold theme-text uppercase tracking-wider border-b theme-border pb-3 flex items-center justify-between"
-          >
-            <span>{{ $t("admin.movieEditor.mediaInfo") }}</span>
-            <span class="text-xs theme-status-info-text font-normal">{{
-              $t("admin.movieEditor.tmdbLinked")
-            }}</span>
-          </h4>
+          {{ item.label }}
+          <span v-if="item.count !== null" class="ml-1 text-xs opacity-75">({{ item.count }})</span>
+        </button>
+      </nav>
 
-          <!-- Poster Preview -->
-          <div class="flex justify-center">
-            <div
-              class="relative h-48 w-32 rounded-xl overflow-hidden border theme-border theme-input flex items-center justify-center theme-text-muted shadow-md"
+      <!-- Sections stay mounted (v-show) so unsaved edits are never lost when switching. -->
+      <form
+        id="movie-project-form"
+        novalidate
+        @submit.prevent="saveMovieProject"
+        class="space-y-6 min-w-0"
+      >
+        <div class="space-y-6">
+          <!-- Media Metadata Card -->
+          <div
+            v-show="section === 'overview'"
+            class="theme-surface-overlay border theme-border rounded-2xl p-6 space-y-5 h-fit shadow-xl"
+          >
+            <h4
+              class="text-sm font-bold theme-text uppercase tracking-wider border-b theme-border pb-3 flex items-center justify-between"
             >
-              <NuxtImg
-                format="webp"
-                v-if="posterUrl"
-                :src="posterUrl"
-                class="h-full w-full object-cover"
-                alt="Poster"
-              />
-              <div v-else class="text-center p-3 theme-text-secondary">
-                <ImageIcon class="h-10 w-10 mx-auto mb-1 opacity-50" />
-                <span class="text-[10px]">{{ $t("projectEditor.noPoster") }}</span>
+              <span>{{ $t("admin.movieEditor.mediaInfo") }}</span>
+              <span class="text-xs theme-status-info-text font-normal">{{
+                $t("admin.movieEditor.tmdbLinked")
+              }}</span>
+            </h4>
+
+            <!-- Poster Preview -->
+            <div class="flex justify-center">
+              <div
+                class="relative h-48 w-32 rounded-xl overflow-hidden border theme-border theme-input flex items-center justify-center theme-text-muted shadow-md"
+              >
+                <NuxtImg
+                  format="webp"
+                  v-if="posterUrl"
+                  :src="posterUrl"
+                  class="h-full w-full object-cover"
+                  alt="Poster"
+                />
+                <div v-else class="text-center p-3 theme-text-secondary">
+                  <ImageIcon class="h-10 w-10 mx-auto mb-1 opacity-50" />
+                  <span class="text-[10px]">{{ $t("projectEditor.noPoster") }}</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Content ID / TMDB ID -->
-          <div class="space-y-1">
-            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-              $t("projectEditor.tmdbMovieId")
-            }}</label>
-            <div class="flex space-x-2">
+            <!-- Content ID / TMDB ID -->
+            <div class="space-y-1">
+              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+                $t("projectEditor.tmdbMovieId")
+              }}</label>
+              <div class="flex space-x-2">
+                <input
+                  v-model.number="contentId"
+                  type="number"
+                  required
+                  :disabled="!!tmdbMovieId"
+                  placeholder="e.g. 1020"
+                  class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text theme-placeholder focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+              </div>
+            </div>
+
+            <!-- Media Name / Title -->
+            <div class="space-y-1">
+              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+                $t("admin.movieEditor.mediaTitle")
+              }}</label>
               <input
-                v-model.number="contentId"
-                type="number"
+                v-model="mediaTitle"
+                type="text"
                 required
-                :disabled="!!tmdbMovieId"
-                placeholder="e.g. 1020"
-                class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text theme-placeholder focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                readonly
+                class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text theme-placeholder focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm opacity-50 cursor-not-allowed"
               />
             </div>
           </div>
 
-          <!-- Media Name / Title -->
-          <div class="space-y-1">
-            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-              $t("admin.movieEditor.mediaTitle")
-            }}</label>
-            <input
-              v-model="mediaTitle"
-              type="text"
-              required
-              readonly
-              class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text theme-placeholder focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm opacity-50 cursor-not-allowed"
-            />
-          </div>
-
-          <!-- Language -->
-          <div class="space-y-1">
-            <label
-              for="movie-project-dubbing-language"
-              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-              >{{ $t("projectEditor.dubbingLanguage") }}</label
-            >
-            <AdminLanguageSelect
-              id="movie-project-dubbing-language"
-              v-model="dubbingLanguage"
-              required
-            />
-          </div>
-
-          <!-- Status -->
-          <div class="space-y-1">
-            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-              $t("common.status")
-            }}</label>
-            <select
-              v-model="status"
-              class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm"
-            >
-              <option value="validated">
-                {{ $t("admin.movieEditor.validated") }}
-              </option>
-              <option value="pending">
-                {{ $t("admin.movieEditor.pending") }}
-              </option>
-              <option value="draft">
-                {{ $t("admin.movieEditor.draft") }}
-              </option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Technical Crew Form (Right 2 Columns) -->
-        <div
-          class="lg:col-span-2 theme-surface-overlay border theme-border rounded-2xl p-6 space-y-6 shadow-xl"
-        >
-          <h4
-            class="text-sm font-bold theme-text uppercase tracking-wider border-b theme-border pb-3 flex items-center justify-between"
-          >
-            <span>{{ $t("admin.movieEditor.technicalDubbingTeam") }}</span>
-            <span class="text-xs theme-text-muted">{{
-              $t("admin.movieEditor.crewAttributes")
-            }}</span>
-          </h4>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <!-- Studio -->
-            <div class="space-y-1">
-              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-                $t("details.dubbingStudio")
-              }}</label>
-              <AdminAsyncAutocomplete
-                v-model="selectedStudioId"
-                :options="initialStudioOptions"
-                :search-fn="lookups.searchStudios"
-                placeholder="Search studio..."
-                :allow-create="true"
-                :display-fn="lookups.studioLabel"
-                @create="
-                  (q: string) => openCreateStudioDialog(q, (id: number) => (selectedStudioId = id))
-                "
-              />
-            </div>
-
-            <!-- Artistic Director -->
-            <div class="space-y-1">
-              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-                $t("admin.movieEditor.artisticDirector")
-              }}</label>
-              <AdminAsyncAutocomplete
-                v-model="artisticDirectorId"
-                :options="initialVoiceActorOptions"
-                :search-fn="lookups.searchVoiceActors"
-                placeholder="Search Voice Actor..."
-                :allow-create="true"
-                :display-fn="lookups.voiceActorLabel"
-                @create="
-                  (q: string) => openCreateVaDialog(q, (id: number) => (artisticDirectorId = id))
-                "
-              />
-            </div>
-
-            <!-- Adaptation -->
-            <div class="space-y-1">
-              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-                $t("admin.movieEditor.adaptation")
-              }}</label>
-              <AdminAsyncAutocomplete
-                v-model="adaptationId"
-                :options="initialVoiceActorOptions"
-                :search-fn="lookups.searchVoiceActors"
-                placeholder="Search Voice Actor..."
-                :allow-create="true"
-                :display-fn="lookups.voiceActorLabel"
-                @create="(q: string) => openCreateVaDialog(q, (id: number) => (adaptationId = id))"
-              />
-            </div>
-
-            <!-- Recording -->
-            <div class="space-y-1">
-              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-                $t("admin.movieEditor.soundRecording")
-              }}</label>
-              <AdminAsyncAutocomplete
-                v-model="recordingId"
-                :options="initialVoiceActorOptions"
-                :search-fn="lookups.searchVoiceActors"
-                placeholder="Search Voice Actor..."
-                :allow-create="true"
-                :display-fn="lookups.voiceActorLabel"
-                @create="(q: string) => openCreateVaDialog(q, (id: number) => (recordingId = id))"
-              />
-            </div>
-
-            <!-- Editing -->
-            <div class="space-y-1">
-              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-                $t("admin.movieEditor.soundEditing")
-              }}</label>
-              <AdminAsyncAutocomplete
-                v-model="editingId"
-                :options="initialVoiceActorOptions"
-                :search-fn="lookups.searchVoiceActors"
-                placeholder="Search Voice Actor..."
-                :allow-create="true"
-                :display-fn="lookups.voiceActorLabel"
-                @create="(q: string) => openCreateVaDialog(q, (id: number) => (editingId = id))"
-              />
-            </div>
-
-            <!-- Mixing -->
-            <div class="space-y-1">
-              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-                $t("dubbing.mixing")
-              }}</label>
-              <AdminAsyncAutocomplete
-                v-model="mixingId"
-                :options="initialVoiceActorOptions"
-                :search-fn="lookups.searchVoiceActors"
-                placeholder="Search Voice Actor..."
-                :allow-create="true"
-                :display-fn="lookups.voiceActorLabel"
-                @create="(q: string) => openCreateVaDialog(q, (id: number) => (mixingId = id))"
-              />
-            </div>
-
-            <!-- Project Manager -->
-            <div class="space-y-1">
-              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-                $t("admin.movieEditor.projectManager")
-              }}</label>
-              <AdminAsyncAutocomplete
-                v-model="projectManagerId"
-                :options="initialVoiceActorOptions"
-                :search-fn="lookups.searchVoiceActors"
-                placeholder="Search Voice Actor..."
-                :allow-create="true"
-                :display-fn="lookups.voiceActorLabel"
-                @create="
-                  (q: string) => openCreateVaDialog(q, (id: number) => (projectManagerId = id))
-                "
-              />
-            </div>
-
-            <!-- Creative Supervision -->
-            <div class="space-y-1">
-              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-                $t("admin.movieEditor.creativeSupervision")
-              }}</label>
-              <AdminAsyncAutocomplete
-                v-model="creativeSupervisionId"
-                :options="initialVoiceActorOptions"
-                :search-fn="lookups.searchVoiceActors"
-                placeholder="Search Voice Actor..."
-                :allow-create="true"
-                :display-fn="lookups.voiceActorLabel"
-                @create="
-                  (q: string) => openCreateVaDialog(q, (id: number) => (creativeSupervisionId = id))
-                "
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Cast / Voice Actors List -->
-      <div class="theme-surface-overlay border theme-border rounded-2xl p-6 space-y-6 shadow-xl">
-        <div class="flex justify-between items-center border-b theme-border pb-3">
-          <h4 class="text-sm font-bold theme-text uppercase tracking-wider">
-            {{ $t("projectEditor.voiceCast") }}
-          </h4>
-          <button
-            type="button"
-            @click="addCastRow"
-            class="px-4 py-2 theme-primary-bg hover:bg-[var(--app-color-primary-hover)] text-xs font-semibold rounded-xl flex items-center transition-colors"
-          >
-            {{ $t("projectEditor.addVoiceActor") }}
-          </button>
-        </div>
-
-        <div class="space-y-4">
+          <!-- Settings Card -->
           <div
-            v-for="(row, index) in castRows"
-            :key="row.key"
-            class="p-4 theme-input border theme-border rounded-xl relative group"
+            v-show="section === 'settings'"
+            class="theme-surface-overlay border theme-border rounded-2xl p-6 space-y-5 h-fit shadow-xl"
           >
-            <button
-              type="button"
-              @click="removeCastRow(row.key)"
-              class="absolute -top-3 -right-3 theme-status-danger hover:bg-[var(--app-color-danger-bg)] border p-2 min-h-10 min-w-10 inline-flex items-center justify-center rounded-full transition-colors shadow-lg z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-focus)]"
-              :aria-label="$t('projectEditor.removeCastRow', { index: index + 1 })"
-              :title="$t('projectEditor.removeCastRow', { index: index + 1 })"
-              data-testid="remove-cast-row"
-            >
-              <XIcon class="w-4 h-4" aria-hidden="true" />
-            </button>
+            <!-- Language -->
+            <div class="space-y-1">
+              <label
+                for="movie-project-dubbing-language"
+                class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
+                >{{ $t("projectEditor.dubbingLanguage") }}</label
+              >
+              <AdminLanguageSelect
+                id="movie-project-dubbing-language"
+                v-model="dubbingLanguage"
+                required
+              />
+            </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
-              <!-- Character fields -->
-              <div class="md:col-span-12 space-y-1">
+            <!-- Status -->
+            <div class="space-y-1">
+              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+                $t("common.status")
+              }}</label>
+              <select
+                v-model="status"
+                class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm"
+              >
+                <option value="validated">
+                  {{ $t("admin.movieEditor.validated") }}
+                </option>
+                <option value="pending">
+                  {{ $t("admin.movieEditor.pending") }}
+                </option>
+                <option value="draft">
+                  {{ $t("admin.movieEditor.draft") }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Technical Crew Form (Right 2 Columns) -->
+          <div
+            v-show="section === 'crew'"
+            class="theme-surface-overlay border theme-border rounded-2xl p-6 space-y-6 shadow-xl"
+          >
+            <h4
+              class="text-sm font-bold theme-text uppercase tracking-wider border-b theme-border pb-3 flex items-center justify-between"
+            >
+              <span>{{ $t("admin.movieEditor.technicalDubbingTeam") }}</span>
+              <span class="text-xs theme-text-muted">{{
+                $t("admin.movieEditor.crewAttributes")
+              }}</span>
+            </h4>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <!-- Studio -->
+              <div class="space-y-1">
                 <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-                  $t("projectEditor.originalActorCharacter")
+                  $t("details.dubbingStudio")
                 }}</label>
                 <AdminAsyncAutocomplete
-                  v-model="row.actor_id"
-                  @update:model-value="(val: string | number | null) => handleActorSelect(row, val)"
-                  :options="initialTmdbCastOptions"
-                  :search-fn="searchActors"
-                  placeholder="Search TMDB Cast..."
+                  v-model="selectedStudioId"
+                  :options="initialStudioOptions"
+                  :search-fn="lookups.searchStudios"
+                  placeholder="Search studio..."
                   :allow-create="true"
-                  :display-fn="(id: string | number) => getActorName(id) || row.character_name"
-                  @create="(query: string) => handleActorCreate(row, query)"
+                  :display-fn="lookups.studioLabel"
+                  @create="
+                    (q: string) =>
+                      openCreateStudioDialog(q, (id: number) => (selectedStudioId = id))
+                  "
                 />
               </div>
 
-              <!-- Voice Actor -->
-              <div class="md:col-span-8 space-y-1">
+              <!-- Artistic Director -->
+              <div class="space-y-1">
                 <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-                  $t("projectEditor.voiceActor")
+                  $t("admin.movieEditor.artisticDirector")
                 }}</label>
                 <AdminAsyncAutocomplete
-                  v-model="row.voice_actor_id"
+                  v-model="artisticDirectorId"
                   :options="initialVoiceActorOptions"
                   :search-fn="lookups.searchVoiceActors"
                   placeholder="Search Voice Actor..."
                   :allow-create="true"
                   :display-fn="lookups.voiceActorLabel"
                   @create="
-                    (q: string) => openCreateVaDialog(q, (id: number) => (row.voice_actor_id = id))
+                    (q: string) => openCreateVaDialog(q, (id: number) => (artisticDirectorId = id))
                   "
                 />
               </div>
 
-              <!-- Performance -->
-              <div class="md:col-span-4 space-y-1">
+              <!-- Adaptation -->
+              <div class="space-y-1">
                 <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-                  $t("projectEditor.performanceType")
+                  $t("admin.movieEditor.adaptation")
                 }}</label>
-                <select
-                  v-model="row.performance"
-                  class="w-full px-4 py-2 theme-surface-overlay border theme-border rounded-lg theme-text focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm"
-                >
-                  <option value="dialogues">
-                    {{ $t("admin.movieEditor.dialogues") }}
-                  </option>
-                  <option value="dialogues & chant">
-                    {{ $t("admin.movieEditor.dialoguesAndChant") }}
-                  </option>
-                  <option value="chant">
-                    {{ $t("admin.movieEditor.chant") }}
-                  </option>
-                  <option value="bruitages">
-                    {{ $t("projectEditor.performanceBruitages") }}
-                  </option>
-                  <option value="narration">
-                    {{ $t("projectEditor.performanceNarration") }}
-                  </option>
-                </select>
-              </div>
-
-              <div class="md:col-span-4 space-y-1">
-                <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-                  $t("projectEditor.castNote")
-                }}</label>
-                <input
-                  v-model="row.note"
-                  type="text"
-                  class="w-full px-4 py-2 theme-surface-overlay border theme-border rounded-lg theme-text focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm"
+                <AdminAsyncAutocomplete
+                  v-model="adaptationId"
+                  :options="initialVoiceActorOptions"
+                  :search-fn="lookups.searchVoiceActors"
+                  placeholder="Search Voice Actor..."
+                  :allow-create="true"
+                  :display-fn="lookups.voiceActorLabel"
+                  @create="
+                    (q: string) => openCreateVaDialog(q, (id: number) => (adaptationId = id))
+                  "
                 />
               </div>
 
-              <div class="md:col-span-12 flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  v-model="row.highlight"
-                  class="w-4 h-4 theme-surface-overlay theme-border rounded text-blue-500 focus:ring-[var(--app-color-focus)]"
-                />
-                <label class="text-xs theme-text-secondary">{{
-                  $t("projectEditor.highlightCharacter")
+              <!-- Recording -->
+              <div class="space-y-1">
+                <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+                  $t("admin.movieEditor.soundRecording")
                 }}</label>
+                <AdminAsyncAutocomplete
+                  v-model="recordingId"
+                  :options="initialVoiceActorOptions"
+                  :search-fn="lookups.searchVoiceActors"
+                  placeholder="Search Voice Actor..."
+                  :allow-create="true"
+                  :display-fn="lookups.voiceActorLabel"
+                  @create="(q: string) => openCreateVaDialog(q, (id: number) => (recordingId = id))"
+                />
+              </div>
+
+              <!-- Editing -->
+              <div class="space-y-1">
+                <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+                  $t("admin.movieEditor.soundEditing")
+                }}</label>
+                <AdminAsyncAutocomplete
+                  v-model="editingId"
+                  :options="initialVoiceActorOptions"
+                  :search-fn="lookups.searchVoiceActors"
+                  placeholder="Search Voice Actor..."
+                  :allow-create="true"
+                  :display-fn="lookups.voiceActorLabel"
+                  @create="(q: string) => openCreateVaDialog(q, (id: number) => (editingId = id))"
+                />
+              </div>
+
+              <!-- Mixing -->
+              <div class="space-y-1">
+                <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+                  $t("dubbing.mixing")
+                }}</label>
+                <AdminAsyncAutocomplete
+                  v-model="mixingId"
+                  :options="initialVoiceActorOptions"
+                  :search-fn="lookups.searchVoiceActors"
+                  placeholder="Search Voice Actor..."
+                  :allow-create="true"
+                  :display-fn="lookups.voiceActorLabel"
+                  @create="(q: string) => openCreateVaDialog(q, (id: number) => (mixingId = id))"
+                />
+              </div>
+
+              <!-- Project Manager -->
+              <div class="space-y-1">
+                <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+                  $t("admin.movieEditor.projectManager")
+                }}</label>
+                <AdminAsyncAutocomplete
+                  v-model="projectManagerId"
+                  :options="initialVoiceActorOptions"
+                  :search-fn="lookups.searchVoiceActors"
+                  placeholder="Search Voice Actor..."
+                  :allow-create="true"
+                  :display-fn="lookups.voiceActorLabel"
+                  @create="
+                    (q: string) => openCreateVaDialog(q, (id: number) => (projectManagerId = id))
+                  "
+                />
+              </div>
+
+              <!-- Creative Supervision -->
+              <div class="space-y-1">
+                <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+                  $t("admin.movieEditor.creativeSupervision")
+                }}</label>
+                <AdminAsyncAutocomplete
+                  v-model="creativeSupervisionId"
+                  :options="initialVoiceActorOptions"
+                  :search-fn="lookups.searchVoiceActors"
+                  placeholder="Search Voice Actor..."
+                  :allow-create="true"
+                  :display-fn="lookups.voiceActorLabel"
+                  @create="
+                    (q: string) =>
+                      openCreateVaDialog(q, (id: number) => (creativeSupervisionId = id))
+                  "
+                />
               </div>
             </div>
           </div>
-
-          <div
-            v-if="castRows.length === 0"
-            class="text-center py-10 theme-input border border-dashed theme-border rounded-xl theme-text-muted"
-          >
-            {{ $t("projectEditor.noCastMembers") }}
-          </div>
         </div>
-      </div>
-    </form>
+
+        <!-- Cast / Voice Actors workspace -->
+        <div v-show="section === 'cast'">
+          <AdminProjectCastWorkspace
+            v-model:selected-key="selectedCastKey"
+            :rows="castView"
+            @add="addCastRow"
+            @remove="removeCastRow"
+          >
+            <template #detail>
+              <div v-if="selectedRow" :key="selectedRow.key" class="space-y-4">
+                <div class="space-y-1">
+                  <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+                    $t("projectEditor.originalActorCharacter")
+                  }}</label>
+                  <AdminAsyncAutocomplete
+                    v-model="selectedRow.actor_id"
+                    @update:model-value="
+                      (val: string | number | null) => handleActorSelect(selectedRow!, val)
+                    "
+                    :options="initialTmdbCastOptions"
+                    :search-fn="searchActors"
+                    placeholder="Search TMDB Cast..."
+                    :allow-create="true"
+                    :display-fn="
+                      (id: string | number) => getActorName(id) || selectedRow!.character_name
+                    "
+                    @create="(query: string) => handleActorCreate(selectedRow!, query)"
+                  />
+                </div>
+                <div class="space-y-1">
+                  <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+                    $t("projectEditor.voiceActor")
+                  }}</label>
+                  <AdminAsyncAutocomplete
+                    v-model="selectedRow.voice_actor_id"
+                    :options="initialVoiceActorOptions"
+                    :search-fn="lookups.searchVoiceActors"
+                    placeholder="Search Voice Actor..."
+                    :allow-create="true"
+                    :display-fn="lookups.voiceActorLabel"
+                    @create="
+                      (q: string) =>
+                        openCreateVaDialog(q, (id: number) => (selectedRow!.voice_actor_id = id))
+                    "
+                  />
+                </div>
+                <div class="space-y-1">
+                  <label
+                    for="cast-detail-performance"
+                    class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
+                    >{{ $t("projectEditor.performanceType") }}</label
+                  >
+                  <select
+                    id="cast-detail-performance"
+                    v-model="selectedRow.performance"
+                    class="w-full px-4 py-2 theme-surface-overlay border theme-border rounded-lg theme-text focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm"
+                  >
+                    <option value="dialogues">
+                      {{ $t("admin.movieEditor.dialogues") }}
+                    </option>
+                    <option value="dialogues & chant">
+                      {{ $t("admin.movieEditor.dialoguesAndChant") }}
+                    </option>
+                    <option value="chant">
+                      {{ $t("admin.movieEditor.chant") }}
+                    </option>
+                    <option value="bruitages">
+                      {{ $t("projectEditor.performanceBruitages") }}
+                    </option>
+                    <option value="narration">
+                      {{ $t("projectEditor.performanceNarration") }}
+                    </option>
+                  </select>
+                </div>
+                <div class="space-y-1">
+                  <label
+                    for="cast-detail-note"
+                    class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
+                    >{{ $t("projectEditor.castNote") }}</label
+                  >
+                  <input
+                    id="cast-detail-note"
+                    v-model="selectedRow.note"
+                    type="text"
+                    class="w-full px-4 py-2 theme-surface-overlay border theme-border rounded-lg theme-text focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm"
+                  />
+                </div>
+                <label class="flex items-center gap-2 text-xs theme-text-secondary">
+                  <input
+                    type="checkbox"
+                    v-model="selectedRow.highlight"
+                    class="w-4 h-4 theme-surface-overlay theme-border rounded text-blue-500 focus:ring-[var(--app-color-focus)]"
+                  />
+                  {{ $t("projectEditor.highlightCharacter") }}
+                </label>
+              </div>
+            </template>
+          </AdminProjectCastWorkspace>
+        </div>
+      </form>
+    </div>
 
     <!-- Inline Create Studio Dialog -->
     <AdminCreateStudioDialog
@@ -536,6 +552,7 @@ import type {
   EditorTmdbCastMember,
 } from "~/utils/admin-project-editor-types";
 import { firstRouteParam } from "~/utils/route-param";
+import type { CastWorkspaceRow } from "~/utils/cast-workspace";
 
 const supabase = useSupabaseClient();
 const saveDubbingProject = createDubbingProjectSaveClient((body) =>
@@ -671,8 +688,11 @@ const form = useEditorFormState({
 const isSaving = form.isSaving;
 
 const addCastRow = () => {
+  const key = createEditorRowKey();
+  selectedCastKey.value = key;
+  section.value = "cast";
   castRows.value.push({
-    key: createEditorRowKey(),
+    key,
     actor_id: null,
     character_name: "",
     voice_actor_id: null,
@@ -683,7 +703,43 @@ const addCastRow = () => {
 };
 const removeCastRow = (key: string) => {
   castRows.value = castRows.value.filter((row) => row.key !== key);
+  if (selectedCastKey.value === key) selectedCastKey.value = null;
 };
+
+// Workspace presentation state
+type EditorSection = "overview" | "cast" | "crew" | "settings";
+const section = ref<EditorSection>("cast");
+const sections = computed<{ id: EditorSection; label: string; count: number | null }[]>(() => [
+  { id: "overview", label: t("projectEditor.sectionOverview"), count: null },
+  {
+    id: "cast",
+    label: t("projectEditor.sectionCast"),
+    count: castRows.value.length,
+  },
+  { id: "crew", label: t("projectEditor.sectionCrew"), count: null },
+  { id: "settings", label: t("projectEditor.sectionSettings"), count: null },
+]);
+const selectedCastKey = ref<string | null>(null);
+const selectedRow = computed(
+  () => castRows.value.find((row) => row.key === selectedCastKey.value) ?? null,
+);
+const castView = computed<CastWorkspaceRow[]>(() =>
+  castRows.value.map((row) => {
+    const actor = tmdbCast.value.find((c) => c.id === row.actor_id);
+    return {
+      key: row.key,
+      characterName: row.character_name,
+      originalActorName: actor?.name ?? "",
+      originalActorImage: actor?.profile_path
+        ? `https://image.tmdb.org/t/p/w185${actor.profile_path}`
+        : null,
+      voiceActorName: row.voice_actor_id ? lookups.voiceActorLabel(row.voice_actor_id) : "",
+      voiceActorImage: null,
+      performance: row.performance,
+      highlight: row.highlight,
+    };
+  }),
+);
 
 const tmdbCast = ref<EditorTmdbCastMember[]>([]);
 const initialTmdbCastOptions = computed(() => tmdbCast.value.slice(0, 50));

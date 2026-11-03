@@ -47,5 +47,6 @@ export interface EditorTmdbCastMember {
   id: number | string;
   name: string;
   character?: string | null;
+  profile_path?: string | null;
   roles?: { character?: string | null }[];
 }

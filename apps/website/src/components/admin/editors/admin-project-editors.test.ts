@@ -15,6 +15,14 @@ const editorNames = [
 const editorSource = (name: string): string =>
   readFileSync(resolve(import.meta.dirname, name), "utf8");
 
+// Editors that render their cast through the shared workspace delegate row keys and removal to it.
+const workspaceSource = readFileSync(
+  resolve(import.meta.dirname, "../ProjectCastWorkspace.vue"),
+  "utf8",
+);
+const castSource = (name: string): string =>
+  name === "MovieProjectEditor.vue" ? editorSource(name) + workspaceSource : editorSource(name);
+
 describe("admin project editors", () => {
   it.each(editorNames)("uses Nuxt's registered controls in %s", (name) => {
     const source = editorSource(name);
@@ -73,17 +81,17 @@ describe("admin project editors", () => {
   });
 
   it.each(editorNames)("uses stable row keys, never array indexes, in %s", (name) => {
-    const source = editorSource(name);
+    const source = castSource(name);
 
     expect(source).not.toMatch(/:key="index"/);
     expect(source).toContain(':key="row.key"');
     expect(source).toContain("createEditorRowKey()");
-    expect(source).toMatch(/removeCastRow\(row\.key\)/);
+    expect(source).toMatch(/removeCastRow\(row\.key\)|emit\('remove', row\.key\)/);
     expect(source).not.toMatch(/removeCastRow\(index\)/);
   });
 
   it.each(editorNames)("keeps row removal visible and labelled in %s", (name) => {
-    const source = editorSource(name);
+    const source = castSource(name);
 
     expect(source).not.toContain("opacity-0 group-hover:opacity-100");
     expect(source).toContain("projectEditor.removeCastRow");
