@@ -318,12 +318,11 @@
                     </div>
                   </div>
 
-                  <!-- Voice Actor (hidden when viewing in original language) -->
+                  <!-- Voice Actor, or the original actor for the original version -->
                   <div
-                    v-if="!isOriginalVersion || actor.voiceActor"
                     class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t theme-border-subtle theme-border sm:border-t-0 pt-4 sm:pt-0 mt-2 sm:mt-0"
                   >
-                    <template v-if="actor.voiceActor">
+                    <template v-if="actor.voiceActor && !isOriginalVersion">
                       <NuxtLink
                         :to="actor.voiceActorProfilePath"
                         class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
@@ -363,6 +362,40 @@
                         <div v-if="actor.voiceActor.note" class="text-xs theme-text-muted mt-1">
                           {{ actor.voiceActor.note }}
                         </div>
+                      </div>
+                    </template>
+                    <template v-else-if="isOriginalVersion">
+                      <component
+                        :is="actor.actorProfilePath ? NuxtLink : 'div'"
+                        :to="actor.actorProfilePath"
+                        class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
+                        :aria-label="actor.name"
+                      >
+                        <NuxtImg
+                          format="webp"
+                          decoding="async"
+                          loading="lazy"
+                          v-if="actor.profile_path"
+                          :src="actor.profile_path"
+                          class="w-full h-full object-cover transition-transform duration-300"
+                          alt="Actor"
+                        />
+                      </component>
+                      <div class="flex flex-col min-w-0 flex-1 w-full overflow-hidden">
+                        <div
+                          class="flex items-center gap-1.5 text-[10px] theme-text-muted uppercase tracking-widest font-semibold mb-1"
+                        >
+                          <ClapperboardIcon class="w-3 h-3 flex-shrink-0" />
+                          <span class="truncate block w-full">{{ $t("details.actor") }}</span>
+                        </div>
+                        <component
+                          :is="actor.actorProfilePath ? NuxtLink : 'div'"
+                          :to="actor.actorProfilePath"
+                          class="font-bold text-sm theme-text truncate hover:underline block w-full"
+                          :title="actor.name"
+                        >
+                          {{ actor.name }}
+                        </component>
                       </div>
                     </template>
                     <template v-else>

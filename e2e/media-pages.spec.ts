@@ -76,9 +76,9 @@ test.describe("Media Detail Pages", () => {
     await page.getByRole("link", { name: /Original Version/ }).click();
     await expect(page).toHaveURL(/\/movie\/85\?dub=original/);
     await expect(page.getByText("Original audio", { exact: true })).toBeVisible();
-    await expect(page.getByText("Harrison Ford", { exact: true })).toBeVisible();
+    await expect(page.getByText("Harrison Ford", { exact: true })).toHaveCount(2);
     await expect(page.getByText("Richard Darbois", { exact: true })).toHaveCount(0);
-    await expect(page.getByText("Karen Allen", { exact: true })).toHaveCount(1);
+    await expect(page.getByText("Karen Allen", { exact: true })).toHaveCount(2);
     await expect(page.getByText("Not specified", { exact: true })).toHaveCount(0);
     await expect(page.locator('img[src*="karen_allen.jpg"]')).toHaveCount(0);
     await testInfo.attach("original-version-movie", {
@@ -633,7 +633,7 @@ test.describe("Media Detail Pages", () => {
     await page.getByRole("link", { name: /Pilot/ }).first().click();
     await expect(page).toHaveURL(/\/show\/1396\/season\/1\/episode\/1\?dub=original/);
     await expect(page.getByText("Original audio", { exact: true })).toBeVisible();
-    await expect(page.getByText("Bryan Cranston", { exact: true })).toBeVisible();
+    await expect(page.getByText("Bryan Cranston", { exact: true })).toHaveCount(2);
     await expect(page.getByText("Jean-Louis Faure", { exact: true })).toHaveCount(0);
     await expect(page.getByText("Not specified", { exact: true })).toHaveCount(0);
   });
