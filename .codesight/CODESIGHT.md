@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 88 routes | 28 models | 109 components | 99 lib files | 64 env vars | 14 middleware | 47% test coverage
-> **Token savings:** this file is ~15,900 tokens. Without it, AI exploration would cost ~138,900 tokens. **Saves ~123,000 tokens per conversation.**
-> **Last scanned:** 2026-11-03 12:43 — re-run after significant changes
+> 88 routes | 28 models | 113 components | 102 lib files | 64 env vars | 14 middleware | 47% test coverage
+> **Token savings:** this file is ~16,300 tokens. Without it, AI exploration would cost ~141,000 tokens. **Saves ~124,700 tokens per conversation.**
+> **Last scanned:** 2026-11-03 14:50 — re-run after significant changes
 
 ---
 
@@ -326,8 +326,12 @@
 - **SearchFilters** [client] — props: modelValue — `apps/website/src/components/SearchFilters.vue`
 - **SearchResultItem** [client] — props: result, mediaTypeLabel, selected, disabled — `apps/website/src/components/SearchResultItem.vue`
 - **UnderConstruction** [client] — `apps/website/src/components/UnderConstruction.vue`
-- **AsyncAutocomplete** [client] — props: modelValue, options, loading, placeholder, disabled, allowCreate, displayFn — `apps/website/src/components/admin/AsyncAutocomplete.vue`
+- **AsyncAutocomplete** [client] — props: modelValue, options, loading, placeholder, ariaLabel, disabled, allowCreate, displayFn, searchFn — `apps/website/src/components/admin/AsyncAutocomplete.vue`
+- **CreateStudioDialog** [client] — props: open, initialName, create — `apps/website/src/components/admin/CreateStudioDialog.vue`
+- **CreateVoiceActorDialog** [client] — props: open, initialQuery, status — `apps/website/src/components/admin/CreateVoiceActorDialog.vue`
+- **EditorSaveBar** [client] — props: status, isDirty, errorMessage, saveLabel, formId, disabled — `apps/website/src/components/admin/EditorSaveBar.vue`
 - **LanguageSelect** [client] — props: id — `apps/website/src/components/admin/LanguageSelect.vue`
+- **UnsavedChangesDialog** [client] — props: open — `apps/website/src/components/admin/UnsavedChangesDialog.vue`
 - **BarChart** [client] — `apps/website/src/components/admin/charts/BarChart.vue`
 - **LineChart** [client] — `apps/website/src/components/admin/charts/LineChart.vue`
 - **PieChart** [client] — `apps/website/src/components/admin/charts/PieChart.vue`
@@ -603,6 +607,11 @@
 - `apps/website/server/utils/work-role-identity.ts` — function findUniqueWorkRoleMatch: (works, matchingWorkIds) => T | undefined
 - `apps/website/src/composables/getHydrationCachedData.ts` — function getHydrationCachedData: (key, nuxtApp) => T | undefined
 - `apps/website/src/composables/useAdminAuditLogs.ts` — function useAdminAuditLogs, type AdminAuditLog
+- `apps/website/src/composables/useAdminLookups.ts`
+  - function useAdminLookups: () => void
+  - function formatVoiceActorName
+  - interface AdminLookupOption
+  - type AdminLookups
 - `apps/website/src/composables/useAdminReports.ts` — function useAdminReports, const ADMIN_REPORTS_PAGE_SIZE
 - `apps/website/src/composables/useContribute.ts`
   - function fetchRandomTask
@@ -612,6 +621,14 @@
   - type ClaimedCategory
   - type ContributionClaim
 - `apps/website/src/composables/useDragScroll.ts` — function useDragScroll: (scrollRef) => void
+- `apps/website/src/composables/useEditorFormState.ts`
+  - function createEditorFormState: (options) => EditorFormState
+  - function createUnsavedChangesLeaveGuard: (isDirty) => void
+  - function useEditorFormState: (options) => void
+  - function createEditorRowKey: () => string
+  - interface EditorFormStateOptions
+  - interface EditorFormState
+  - _...2 more_
 - `apps/website/src/composables/useLocalePathPrefix.ts` — function useLocalePathPrefix: () => (path: string) => string
 - `apps/website/src/composables/useMetadataCreation.ts`
   - function isMetadataValidationError: (error) => boolean
@@ -652,6 +669,7 @@
   - interface CastActorReference
   - _...5 more_
 - `apps/website/src/utils/posthog-prefetch-manifest.ts` — function deferPosthogPrefetch: (manifest, ClientManifestEntry>) => void, interface ClientManifestEntry
+- `apps/website/src/utils/route-param.ts` — function firstRouteParam: (value) => string | undefined
 - `apps/website/src/utils/search-routes.ts` — function getSearchResultRoute: (result, "id" | "media_type">) => string, type SearchFilter
 - `apps/website/src/utils/season-data.ts`
   - function fetchSeasonPageData: (showId, seasonNumber, locale?) => Promise<SeasonPageDataResponse>
@@ -900,7 +918,7 @@
 # Test Coverage
 
 > **47%** of routes and models are covered by tests
-> 136 test files found
+> 138 test files found
 
 ## Covered Routes
 

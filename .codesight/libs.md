@@ -181,6 +181,11 @@
 - `apps/website/server/utils/work-role-identity.ts` — function findUniqueWorkRoleMatch: (works, matchingWorkIds) => T | undefined
 - `apps/website/src/composables/getHydrationCachedData.ts` — function getHydrationCachedData: (key, nuxtApp) => T | undefined
 - `apps/website/src/composables/useAdminAuditLogs.ts` — function useAdminAuditLogs, type AdminAuditLog
+- `apps/website/src/composables/useAdminLookups.ts`
+  - function useAdminLookups: () => void
+  - function formatVoiceActorName
+  - interface AdminLookupOption
+  - type AdminLookups
 - `apps/website/src/composables/useAdminReports.ts` — function useAdminReports, const ADMIN_REPORTS_PAGE_SIZE
 - `apps/website/src/composables/useContribute.ts`
   - function fetchRandomTask
@@ -190,6 +195,14 @@
   - type ClaimedCategory
   - type ContributionClaim
 - `apps/website/src/composables/useDragScroll.ts` — function useDragScroll: (scrollRef) => void
+- `apps/website/src/composables/useEditorFormState.ts`
+  - function createEditorFormState: (options) => EditorFormState
+  - function createUnsavedChangesLeaveGuard: (isDirty) => void
+  - function useEditorFormState: (options) => void
+  - function createEditorRowKey: () => string
+  - interface EditorFormStateOptions
+  - interface EditorFormState
+  - _...2 more_
 - `apps/website/src/composables/useLocalePathPrefix.ts` — function useLocalePathPrefix: () => (path: string) => string
 - `apps/website/src/composables/useMetadataCreation.ts`
   - function isMetadataValidationError: (error) => boolean
@@ -230,6 +243,7 @@
   - interface CastActorReference
   - _...5 more_
 - `apps/website/src/utils/posthog-prefetch-manifest.ts` — function deferPosthogPrefetch: (manifest, ClientManifestEntry>) => void, interface ClientManifestEntry
+- `apps/website/src/utils/route-param.ts` — function firstRouteParam: (value) => string | undefined
 - `apps/website/src/utils/search-routes.ts` — function getSearchResultRoute: (result, "id" | "media_type">) => string, type SearchFilter
 - `apps/website/src/utils/season-data.ts`
   - function fetchSeasonPageData: (showId, seasonNumber, locale?) => Promise<SeasonPageDataResponse>

@@ -2,9 +2,9 @@
 
 > **Navigation aid.** Library inventory extracted via AST. Read the source files listed here before modifying exported functions.
 
-**99 library files** across 4 modules
+**102 library files** across 4 modules
 
-## Website (76 files)
+## Website (79 files)
 
 - `apps/website/server/utils/db/queries.ts` — getVoiceActorWithWork, getWorkByActor, getActorPageWorkByActor, getDubbingProjects, getDubbingProjectsForMediaEndpoint, getAdvertisementPageDubbingProjects, …
 - `apps/website/src/utils/voice-actor-profile-save.ts` — voiceActorProfilePayload, changedVoiceActorProfileFields, displayedSocialLinks, mergeDisplayedSocialLinks, profileUnchangedExceptPicture, refreshVoiceActorProfilePicture, …
@@ -16,6 +16,7 @@
 - `apps/website/src/utils/duplicate-work.ts` — duplicateWorkDraftHasChanges, canPrefetchDuplicateWorkPage, rankDuplicateWorks, prefillDuplicateWork, DuplicateWorkEntry, DuplicateWorkGroup, …
 - `apps/website/server/utils/queue-payload.ts` — queueRequester, queueRequesterRpcArgs, validateDiscoveryPayload, validateCheckPayload, validateExtractPayload, ValidQueueBase, …
 - `apps/website/server/utils/cache/index.ts` — createCacheNamespace, CacheNamespace, SimpleCache, CacheKv, CachePolicy, CacheTTLPreset, …
+- `apps/website/src/composables/useEditorFormState.ts` — createEditorFormState, createUnsavedChangesLeaveGuard, useEditorFormState, createEditorRowKey, EditorFormStateOptions, EditorFormState, …
 - `apps/website/src/utils/season-data.ts` — fetchSeasonPageData, fetchEpisodePageData, fetchEpisodeProjectWorks, SeasonPageDubbingProject, EpisodePageDubbingProject, EpisodePageVoiceActor, …
 - `apps/website/server/utils/contribution/task-submission-validation.ts` — isTaskClaimId, authorizeTaskContribution, validateTaskContribution, TaskCategory, TaskUpload, TaskContributionInput, …
 - `apps/website/server/utils/cache/http.ts` — getPublicCacheControl, getCloudflareCacheControl, setNoCacheHeaders, setPublicCacheHeaders, CacheProfile, NO_STORE_CACHE_CONTROL
@@ -30,8 +31,7 @@
 - `apps/website/server/utils/api/igdb.ts` — buildIgdbImageUrl, IgdbClient, IgdbTrendingGamesResult, IgdbPopularityPrimitive
 - `apps/website/server/utils/game-character-validation.ts` — gameCharacterError, isRecord, hasOnlyKeys, isUuid
 - `apps/website/server/utils/media-request.ts` — parseSeasonQuery, parseEpisodeQuery, toMediaServiceError, withMediaServiceTimeout
-- `apps/website/server/utils/pagination.ts` — parsePagination, paginateArray, PaginationOptions, ParsedPagination
-- _…and 51 more files_
+- _…and 54 more files_
 
 ## Shared-logic (20 files)
 
