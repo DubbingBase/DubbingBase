@@ -97,7 +97,9 @@ test.describe("Media Detail Pages", () => {
     const movie = structuredClone(MOCK_MOVIE);
     movie.movie.original_language = "";
     await setupMockApi(page, { movie });
-    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page.goto("/movie/85", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("heading", { name: "Raiders of the Lost Ark" })).toBeVisible();
+    await expect(page.locator('a[href*="/voice-actor/1"]').first()).toBeVisible();
     await waitForVueHydration(page);
 
     await navigateClientSide(page, "/movie/85?dub=original");
