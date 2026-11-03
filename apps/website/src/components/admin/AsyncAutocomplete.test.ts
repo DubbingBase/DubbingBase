@@ -259,3 +259,110 @@ describe("AsyncAutocomplete.vue", () => {
     expect(input.element.value).toBe("");
   });
 });
+
+describe("AsyncAutocomplete.vue search ownership", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  const deferred = <T>() => {
+    let resolve!: (value: T) => void;
+    const promise = new Promise<T>((res) => {
+      resolve = res;
+    });
+    return { promise, resolve };
+  };
+
+  const mountWith = (searchFn: (query: string) => Promise<{ id: number }[]>) =>
+    mountSuspended(AsyncAutocomplete, {
+      global: { mocks: { $t: tMock } },
+      props: {
+        modelValue: null,
+        displayFn: (val: unknown) => `Item ${String(val)}`,
+        searchFn,
+      },
+    });
+
+  it("ignores a stale response that resolves after a newer query", async () => {
+    const first = deferred<{ id: number }[]>();
+    const second = deferred<{ id: number }[]>();
+    const searchFn = vi
+      .fn<(query: string) => Promise<{ id: number }[]>>()
+      .mockReturnValueOnce(first.promise)
+      .mockReturnValueOnce(second.promise);
+    const wrapper = await mountWith(searchFn);
+    const input = wrapper.find("input");
+    await input.trigger("focus");
+
+    await input.setValue("al");
+    vi.advanceTimersByTime(300);
+    await input.setValue("alice");
+    vi.advanceTimersByTime(300);
+    expect(searchFn).toHaveBeenCalledTimes(2);
+
+    second.resolve([{ id: 7002 }]);
+    await nextTick();
+    await nextTick();
+    first.resolve([{ id: 7001 }]);
+    await nextTick();
+    await nextTick();
+
+    const text = document.body.textContent || "";
+    expect(text).toContain("Item 7002");
+    expect(text).not.toContain("Item 7001");
+  });
+
+  it("keeps results and loading state isolated between instances", async () => {
+    const a = deferred<{ id: number }[]>();
+    const b = deferred<{ id: number }[]>();
+    const wrapperA = await mountWith(() => a.promise);
+    const wrapperB = await mountWith(() => b.promise);
+
+    await wrapperA.find("input").setValue("aa");
+    await wrapperB.find("input").setValue("bb");
+    vi.advanceTimersByTime(300);
+    await nextTick();
+
+    expect(wrapperA.find("svg.animate-spin").exists()).toBe(true);
+    expect(wrapperB.find("svg.animate-spin").exists()).toBe(true);
+
+    b.resolve([{ id: 20 }]);
+    await nextTick();
+    await nextTick();
+
+    expect(wrapperA.find("svg.animate-spin").exists()).toBe(true);
+    expect(wrapperB.find("svg.animate-spin").exists()).toBe(false);
+
+    a.resolve([{ id: 10 }]);
+    await nextTick();
+    await nextTick();
+    expect(wrapperA.find("svg.animate-spin").exists()).toBe(false);
+  });
+
+  it("shows an error state without throwing when a search fails", async () => {
+    const wrapper = await mountWith(() => Promise.reject(new Error("offline")));
+    const input = wrapper.find("input");
+    await input.trigger("focus");
+    await input.setValue("zz");
+    vi.advanceTimersByTime(300);
+    await nextTick();
+    await nextTick();
+
+    expect(wrapper.find("svg.animate-spin").exists()).toBe(false);
+  });
+
+  it("shows the saved label for a selected id that is not in the current results", async () => {
+    const wrapper = await mountSuspended(AsyncAutocomplete, {
+      global: { mocks: { $t: tMock } },
+      props: {
+        modelValue: 99,
+        options: [{ id: 1 }],
+        displayFn: (val: unknown) => (val === 99 ? "Saved Studio" : `Item ${String(val)}`),
+      },
+    });
+    expect(wrapper.find("input").element.value).toBe("Saved Studio");
+  });
+});
