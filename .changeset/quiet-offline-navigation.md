@@ -2,4 +2,4 @@
 "@app/website": patch
 ---
 
-Show the cached offline page only when a navigation request fails offline.
+Use normal server and browser behavior for navigation instead of a custom offline route.
