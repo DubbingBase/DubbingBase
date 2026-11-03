@@ -2,9 +2,9 @@
 
 > **Navigation aid.** Library inventory extracted via AST. Read the source files listed here before modifying exported functions.
 
-**97 library files** across 4 modules
+**99 library files** across 4 modules
 
-## Website (74 files)
+## Website (76 files)
 
 - `apps/website/server/utils/db/queries.ts` — getVoiceActorWithWork, getWorkByActor, getActorPageWorkByActor, getDubbingProjects, getDubbingProjectsForMediaEndpoint, getAdvertisementPageDubbingProjects, …
 - `apps/website/src/utils/voice-actor-profile-save.ts` — voiceActorProfilePayload, changedVoiceActorProfileFields, displayedSocialLinks, mergeDisplayedSocialLinks, profileUnchangedExceptPicture, refreshVoiceActorProfilePicture, …
@@ -28,10 +28,10 @@
 - `apps/website/server/utils/services/media.ts` — MediaService, VOICE_ACTOR_PAGE_TMDB_MEDIA_NAMESPACE, VOICE_ACTOR_PAGE_TMDB_BACKDROP_NAMESPACE, WIKIPEDIA_ACTOR_URL_NAMESPACE, MEDIA_TVDB_CHARACTERS_NAMESPACE
 - `apps/website/server/utils/services/wiki-extraction-batching.ts` — buildWikipediaExtractionBatches, deduplicateExtractedCredits, WikipediaExtractionSection, WikipediaExtractionBatch, MAX_WIKIPEDIA_EXTRACTION_PROMPT_CHARS
 - `apps/website/server/utils/api/igdb.ts` — buildIgdbImageUrl, IgdbClient, IgdbTrendingGamesResult, IgdbPopularityPrimitive
+- `apps/website/server/utils/game-character-validation.ts` — gameCharacterError, isRecord, hasOnlyKeys, isUuid
 - `apps/website/server/utils/media-request.ts` — parseSeasonQuery, parseEpisodeQuery, toMediaServiceError, withMediaServiceTimeout
 - `apps/website/server/utils/pagination.ts` — parsePagination, paginateArray, PaginationOptions, ParsedPagination
-- `apps/website/server/utils/services/voice-actor.ts` — applyExtractedCredits, upsertStudio, ExtractedCredit, AppliedExtractedCredits
-- _…and 49 more files_
+- _…and 51 more files_
 
 ## Shared-logic (20 files)
 

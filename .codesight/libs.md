@@ -69,6 +69,15 @@
 - `apps/website/server/utils/dubbing-region-detection.ts` — function detectDubbingRegionFromWikitext: ({...}, sections, }) => DubbingEvidence, type DubbingEvidence
 - `apps/website/server/utils/error-message.ts` — function getErrorMessage: (error) => string
 - `apps/website/server/utils/featureFlags.ts` — function isEnqueueOnNavigateEnabled: () => Promise<boolean>
+- `apps/website/server/utils/game-character-validation.ts`
+  - function gameCharacterError: (statusCode, message) => void
+  - function isRecord: (value) => value is Record<string, unknown>
+  - function hasOnlyKeys: (value, unknown>, allowed) => void
+  - function isUuid: (value) => value is string
+- `apps/website/server/utils/game-characters.ts`
+  - function mergeGameCharacters: (igdbCharacters, localCharacters) => ResolvedGameCharacter[]
+  - function loadGameCharacterCatalog: (event, gameId, loadIgdbCharacters) => void
+  - interface ResolvedGameCharacter
 - `apps/website/server/utils/index.ts`
   - function getCloudflareKv: (event?) => CacheKv | null
   - function useCache: (event?) => SimpleCache
@@ -269,7 +278,8 @@
   - function selectDetailCollectionProject: (projects, projectId) => T | undefined
   - function resolveDetailCollectionProject: (projects, projectId) => T | undefined
   - function formatMediaWorkCastCards: (project) => MediaWorkCastCard[]
-  - function formatGameDetailCastCards: (characters, project) => GameDetailCastCard[]
+  - function formatGameDetailCastCards: (characters, "id"> & {
+    id) => void
   - function matchesDetailCollectionSearch: (item, query) => boolean
   - function filterDetailCollectionItems: (items, query) => T[]
   - _...7 more_

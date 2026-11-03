@@ -26,6 +26,8 @@
 - `POST` `/api/extract-voice-actor-info` [auth] ✓
 - `GET` `/api/find_duplicate_voice_actors` [auth] ✓
 - `GET` `/api/game/:id` params(id) [queue]
+- `PUT` `/api/game-characters/:id` params(id) [auth]
+- `POST` `/api/game-characters` [auth] ✓
 - `POST` `/api/generate-social-content` [auth, email]
 - `GET` `/api/get-dubbing-project`
 - `GET` `/api/get-media-credits` [cache]
@@ -39,7 +41,7 @@
 - `GET` `/api/get-work-votes`
 - `GET` `/api/home-stats`
 - `POST` `/api/internal-media-create` [auth] ✓
-- `GET` `/api/internal-media-credits`
+- `GET` `/api/internal-media-credits` ✓
 - `GET` `/api/internal-media-metadata`
 - `POST` `/api/link-user-voice-actor` [auth] ✓
 - `POST` `/api/link-voice-actor` [auth] ✓

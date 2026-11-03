@@ -11,6 +11,7 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 - [Overview](./overview.md)
 - [Database](./database.md)
 - [[id].get](./[id].get.md)
+- [[id].put](./[id].put.md)
 - [About-preference.get](./about-preference.get.md)
 - [Admin](./admin.md)
 - [Career-grid.get](./career-grid.get.md)
@@ -25,6 +26,7 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 - [Extract-credits-from-image.post](./extract-credits-from-image.post.md)
 - [Extract-voice-actor-info.post](./extract-voice-actor-info.post.md)
 - [Find_duplicate_voice_actors.get](./find_duplicate_voice_actors.get.md)
+- [Game-characters.post](./game-characters.post.md)
 - [Games.get](./games.get.md)
 - [Generate-social-content.post](./generate-social-content.post.md)
 - [Get-dubbing-project.get](./get-dubbing-project.get.md)
@@ -82,8 +84,8 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 
 ## Quick Stats
 
-- Routes: **86**
-- Models: **27**
+- Routes: **88**
+- Models: **28**
 - Components: **109**
 - Env vars: **41** required, **23** with defaults
 
@@ -112,4 +114,4 @@ These exist in your codebase but are **not** reflected in wiki articles:
 When in doubt, search the source. The wiki is a starting point, not a complete inventory.
 
 ---
-_Last compiled: 2026-11-03 · 72 articles · [codesight](https://github.com/Houseofmvps/codesight)_
+_Last compiled: 2026-11-03 · 74 articles · [codesight](https://github.com/Houseofmvps/codesight)_

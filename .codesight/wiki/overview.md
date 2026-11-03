@@ -8,11 +8,12 @@
 
 ## Scale
 
-86 API routes · 27 database models · 109 UI components · 97 library files · 14 middleware layers · 64 environment variables
+88 API routes · 28 database models · 109 UI components · 99 library files · 14 middleware layers · 64 environment variables
 
 ## Subsystems
 
 - **[[id].get](./[id].get.md)** — 10 routes — touches: queue
+- **[[id].put](./[id].put.md)** — 1 routes — touches: auth
 - **[About-preference.get](./about-preference.get.md)** — 1 routes
 - **[Admin](./admin.md)** — 8 routes — touches: auth, queue, cache
 - **[Career-grid.get](./career-grid.get.md)** — 1 routes — touches: cache
@@ -27,6 +28,7 @@
 - **[Extract-credits-from-image.post](./extract-credits-from-image.post.md)** — 1 routes — touches: upload
 - **[Extract-voice-actor-info.post](./extract-voice-actor-info.post.md)** — 1 routes — touches: auth
 - **[Find_duplicate_voice_actors.get](./find_duplicate_voice_actors.get.md)** — 1 routes — touches: auth
+- **[Game-characters.post](./game-characters.post.md)** — 1 routes — touches: auth
 - **[Games.get](./games.get.md)** — 1 routes — touches: cache
 - **[Generate-social-content.post](./generate-social-content.post.md)** — 1 routes — touches: auth, email
 - **[Get-dubbing-project.get](./get-dubbing-project.get.md)** — 1 routes
@@ -80,19 +82,19 @@
 - **[Upload-profile-picture.post](./upload-profile-picture.post.md)** — 1 routes — touches: db, upload
 - **[Voice-actors.get](./voice-actors.get.md)** — 1 routes
 
-**Database:** unknown, 27 models — see [database.md](./database.md)
+**Database:** unknown, 28 models — see [database.md](./database.md)
 
 **UI:** 109 components (vue) — see [ui.md](./ui.md)
 
-**Libraries:** 97 files — see [libraries.md](./libraries.md)
+**Libraries:** 99 files — see [libraries.md](./libraries.md)
 
 ## High-Impact Files
 
 Changes to these files have the widest blast radius across the codebase:
 
-- `apps/website/server/utils/db/client.ts` — imported by **69** files
-- `apps/website/server/utils/auth.ts` — imported by **40** files
-- `apps/website/server/utils/index.ts` — imported by **25** files
+- `apps/website/server/utils/db/client.ts` — imported by **72** files
+- `apps/website/server/utils/auth.ts` — imported by **42** files
+- `apps/website/server/utils/index.ts` — imported by **27** files
 - `apps/website/server/utils/cache/index.ts` — imported by **19** files
 - `apps/website/server/utils/notifications/discord.ts` — imported by **12** files
 - `apps/website/server/utils/api/igdb.ts` — imported by **12** files

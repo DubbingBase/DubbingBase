@@ -189,3 +189,13 @@
 - result_changed: boolean
 - audit_log_id: uuid (fk)
 - completed_at: timestamp(tz)
+
+### game_characters
+- id: uuid (pk)
+- igdb_game_id: bigint (required, fk)
+- name: text (required)
+- igdb_character_id: bigint check (igdb_character_id is (fk)
+- wikidata_qid: text check (
+    wikidata_qid is
+- created_by: uuid (required)
+- updated_by: uuid (required)
