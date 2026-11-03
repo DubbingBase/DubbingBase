@@ -222,13 +222,13 @@
   - interface DuplicateWorkGroup
   - _...4 more_
 - `apps/website/src/utils/media-cast.ts`
+  - function hasOriginalVersion: (language, cast) => language is string
+  - function isOriginalVersionQuery: (value) => boolean
+  - function originalVersionCast: (actors) => DisplayCastActor[]
   - function sameMediaId: (left, right) => boolean
   - function matchCastWorks: (actors, works) => CastWorkMatchResult<Actor, Work>
   - interface CastActorReference
-  - interface CharacterProfilePicture
-  - interface CastWorkReference
-  - interface DisplayCastActor
-  - _...1 more_
+  - _...5 more_
 - `apps/website/src/utils/posthog-prefetch-manifest.ts` — function deferPosthogPrefetch: (manifest, ClientManifestEntry>) => void, interface ClientManifestEntry
 - `apps/website/src/utils/search-routes.ts` — function getSearchResultRoute: (result, "id" | "media_type">) => string, type SearchFilter
 - `apps/website/src/utils/season-data.ts`

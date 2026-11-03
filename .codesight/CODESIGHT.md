@@ -5,7 +5,7 @@
 
 > 88 routes | 28 models | 109 components | 99 lib files | 64 env vars | 14 middleware | 47% test coverage
 > **Token savings:** this file is ~15,900 tokens. Without it, AI exploration would cost ~138,900 tokens. **Saves ~123,000 tokens per conversation.**
-> **Last scanned:** 2026-11-03 12:24 — re-run after significant changes
+> **Last scanned:** 2026-11-03 12:43 — re-run after significant changes
 
 ---
 
@@ -644,13 +644,13 @@
   - interface DuplicateWorkGroup
   - _...4 more_
 - `apps/website/src/utils/media-cast.ts`
+  - function hasOriginalVersion: (language, cast) => language is string
+  - function isOriginalVersionQuery: (value) => boolean
+  - function originalVersionCast: (actors) => DisplayCastActor[]
   - function sameMediaId: (left, right) => boolean
   - function matchCastWorks: (actors, works) => CastWorkMatchResult<Actor, Work>
   - interface CastActorReference
-  - interface CharacterProfilePicture
-  - interface CastWorkReference
-  - interface DisplayCastActor
-  - _...1 more_
+  - _...5 more_
 - `apps/website/src/utils/posthog-prefetch-manifest.ts` — function deferPosthogPrefetch: (manifest, ClientManifestEntry>) => void, interface ClientManifestEntry
 - `apps/website/src/utils/search-routes.ts` — function getSearchResultRoute: (result, "id" | "media_type">) => string, type SearchFilter
 - `apps/website/src/utils/season-data.ts`
@@ -900,7 +900,7 @@
 # Test Coverage
 
 > **47%** of routes and models are covered by tests
-> 135 test files found
+> 136 test files found
 
 ## Covered Routes
 
