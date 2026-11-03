@@ -1271,6 +1271,7 @@
     "castClearSearch": "Clear filter",
     "castSelectPrompt": "Select a cast row to edit its details.",
     "castDetails": "Cast details",
+    "castDone": "Done",
     "castCount": "{count} cast entries",
     "castUnassigned": "Unassigned",
     "castCharacter": "Character",

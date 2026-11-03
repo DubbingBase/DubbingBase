@@ -6,10 +6,10 @@
   >
     <!-- Header -->
     <div
-      class="theme-surface-overlay p-4 sm:p-6 rounded-2xl border theme-border flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center shadow-xl"
+      class="theme-surface-overlay p-3 sm:p-6 rounded-2xl border theme-border flex justify-between items-center gap-3 shadow-xl"
     >
-      <div>
-        <h3 class="text-xl font-bold theme-text flex items-center gap-2">
+      <div class="min-w-0">
+        <h3 class="text-base sm:text-xl font-bold theme-text flex items-center gap-2">
           <FilmIcon class="w-6 h-6 theme-status-info-text" />
           {{
             isEditMode
@@ -17,7 +17,7 @@
               : $t("projectEditor.createMovieProject")
           }}
         </h3>
-        <p class="text-sm theme-text-muted mt-1">
+        <p class="hidden sm:block text-sm theme-text-muted mt-1">
           {{
             isEditMode
               ? `Updating dubbing project ID #${projectIdParam}`
@@ -27,7 +27,7 @@
       </div>
       <NuxtLink
         :to="tmdbMovieId ? localePath(`/movie/${tmdbMovieId}`) : localePath('/')"
-        class="text-xs font-semibold px-4 py-2.5 theme-surface-muted theme-hover-surface-muted theme-text-secondary theme-hover-text rounded-xl border theme-border transition-colors flex items-center space-x-2"
+        class="shrink-0 text-xs font-semibold px-3 sm:px-4 py-2.5 min-h-11 theme-surface-muted theme-hover-surface-muted theme-text-secondary theme-hover-text rounded-xl border theme-border transition-colors flex items-center space-x-2"
       >
         <span>{{
           tmdbMovieId ? $t("projectEditor.backToMovie") : $t("projectEditor.backHome")

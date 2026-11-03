@@ -1271,6 +1271,7 @@
     "castClearSearch": "Borrar filtro",
     "castSelectPrompt": "Selecciona una fila para editar sus detalles.",
     "castDetails": "Detalles del reparto",
+    "castDone": "Listo",
     "castCount": "{count} entradas de reparto",
     "castUnassigned": "Sin asignar",
     "castCharacter": "Personaje",

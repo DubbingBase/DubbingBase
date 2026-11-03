@@ -1271,6 +1271,7 @@
     "castClearSearch": "絞り込みを解除",
     "castSelectPrompt": "行を選択して詳細を編集します。",
     "castDetails": "キャストの詳細",
+    "castDone": "完了",
     "castCount": "キャスト {count} 件",
     "castUnassigned": "未割り当て",
     "castCharacter": "キャラクター",

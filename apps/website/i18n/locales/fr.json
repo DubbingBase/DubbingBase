@@ -1271,6 +1271,7 @@
     "castClearSearch": "Effacer le filtre",
     "castSelectPrompt": "Sélectionnez une ligne pour modifier ses détails.",
     "castDetails": "Détails du casting",
+    "castDone": "Terminé",
     "castCount": "{count} entrées de casting",
     "castUnassigned": "Non attribué",
     "castCharacter": "Personnage",
