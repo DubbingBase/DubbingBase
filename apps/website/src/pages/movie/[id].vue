@@ -523,8 +523,9 @@ const dubbingProjects = computed(() => dubbingProjectData.value.projects);
 const canShowOriginalVersion = computed(() =>
   hasOriginalVersion(movie.value?.original_language, movie.value?.credits?.cast),
 );
+const originalVersionRequested = computed(() => isOriginalVersionQuery(route.query.dub));
 const isOriginalVersion = computed(
-  () => canShowOriginalVersion.value && isOriginalVersionQuery(route.query.dub),
+  () => canShowOriginalVersion.value && originalVersionRequested.value,
 );
 const voiceActorsById = computed(
   () => new Map((data.value?.voiceActors || []).map((voiceActor) => [voiceActor.id, voiceActor])),
@@ -549,7 +550,7 @@ const posterUrl = computed(() => {
 });
 
 const activeDubId = computed(() => {
-  if (isOriginalVersion.value) return null;
+  if (originalVersionRequested.value) return null;
   if (route.query.dub) {
     const requestedId = Number(route.query.dub);
     if (
@@ -563,7 +564,8 @@ const activeDubId = computed(() => {
 });
 
 const activeProjectView = computed<MediaProjectView<MediaDetailDubbingProject> | undefined>(() => {
-  if (isOriginalVersion.value && movie.value?.original_language) {
+  if (originalVersionRequested.value) {
+    if (!isOriginalVersion.value || !movie.value?.original_language) return undefined;
     return {
       kind: "original",
       key: "original",

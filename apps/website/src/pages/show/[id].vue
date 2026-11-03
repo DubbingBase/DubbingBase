@@ -604,8 +604,9 @@ const aggregateCredits = computed<MediaDetailCredits>(
 const canShowOriginalVersion = computed(() =>
   hasOriginalVersion(serie.value?.original_language, aggregateCredits.value.cast),
 );
+const originalVersionRequested = computed(() => isOriginalVersionQuery(route.query.dub));
 const isOriginalVersion = computed(
-  () => canShowOriginalVersion.value && isOriginalVersionQuery(route.query.dub),
+  () => canShowOriginalVersion.value && originalVersionRequested.value,
 );
 const tvdbId = computed(() => data.value?.tvdbId);
 
@@ -622,7 +623,7 @@ const posterUrl = computed(() => {
 });
 
 const activeDubId = computed(() => {
-  if (isOriginalVersion.value) return null;
+  if (originalVersionRequested.value) return null;
   if (route.query.dub) {
     const requestedId = Number(route.query.dub);
     if (
@@ -636,7 +637,8 @@ const activeDubId = computed(() => {
 });
 
 const activeProjectView = computed<MediaProjectView<MediaDetailDubbingProject> | undefined>(() => {
-  if (isOriginalVersion.value && serie.value?.original_language) {
+  if (originalVersionRequested.value) {
+    if (!isOriginalVersion.value || !serie.value?.original_language) return undefined;
     return {
       kind: "original",
       key: "original",

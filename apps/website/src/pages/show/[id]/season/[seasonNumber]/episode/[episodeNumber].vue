@@ -637,8 +637,9 @@ const canShowOriginalVersion = computed(() =>
     episodeCast.value,
   ),
 );
+const originalVersionRequested = computed(() => isOriginalVersionQuery(route.query.dub));
 const isOriginalVersion = computed(
-  () => canShowOriginalVersion.value && isOriginalVersionQuery(route.query.dub),
+  () => canShowOriginalVersion.value && originalVersionRequested.value,
 );
 
 function projectVoiceActorCount(project: EpisodePageDubbingProject): number {
@@ -664,7 +665,7 @@ const posterUrl = computed(() => {
 });
 
 const activeDubId = computed(() => {
-  if (isOriginalVersion.value) return null;
+  if (originalVersionRequested.value) return null;
   if (route.query.dub) {
     return Number(route.query.dub);
   }
@@ -674,7 +675,8 @@ const activeDubId = computed(() => {
 const activeProjectView = computed<MediaProjectView<EpisodePageDubbingProject> | undefined>(() => {
   const originalLanguage =
     episode.value?.original_language || episode.value?.show_original_language;
-  if (isOriginalVersion.value && originalLanguage) {
+  if (originalVersionRequested.value) {
+    if (!isOriginalVersion.value || !originalLanguage) return undefined;
     return { kind: "original", key: "original", language: originalLanguage };
   }
   const project =

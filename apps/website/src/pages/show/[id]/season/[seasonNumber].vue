@@ -310,6 +310,7 @@ import { fetchSeasonPageData, type SeasonPageDubbingProject } from "../../../../
 import { computed, ref } from "vue";
 import { ClapperboardIcon, ExternalLinkIcon, StarIcon } from "lucide-vue-next";
 import ReportModal from "../../../../components/ReportModal.vue";
+import { isOriginalVersionQuery } from "../../../../utils/media-cast";
 
 const isReportModalOpen = ref(false);
 
@@ -334,7 +335,7 @@ const user = useSupabaseUser();
 const isAdmin = computed(() => {
   return user.value?.app_metadata?.role === "admin";
 });
-const isOriginalVersion = computed(() => route.query.dub === "original");
+const isOriginalVersion = computed(() => isOriginalVersionQuery(route.query.dub));
 
 const { locale, t } = useI18n();
 const localePath = useLocalePath();
