@@ -13,20 +13,6 @@ const supabaseUrl = env("SUPABASE_URL") ?? env("PUBLIC_SUPABASE_URL");
 const supabasePublishableKey = env("SUPABASE_PUBLISHABLE_KEY");
 const siteUrl = env("SITE_URL") ?? "https://dubbingbase.com";
 const ABOUT_PRERENDER_ROUTES = new Set(["/about", "/fr/about", "/es/about", "/ja/about"]);
-const PUBLIC_SITEMAP_ROUTES = [
-  "/",
-  "/about",
-  "/contribute",
-  "/guidelines",
-  "/legal",
-  "/movies",
-  "/privacy",
-  "/series",
-  "/studios",
-  "/terms",
-  "/terms-api",
-  "/voice-actors",
-];
 
 function stripAboutClientRuntime(html: string): string {
   return (
@@ -137,6 +123,7 @@ export default defineNuxtConfig({
     resendToEmail: env("RESEND_TO_EMAIL"),
     adminEmail: env("ADMIN_EMAIL"),
     public: {
+      siteUrl,
       // Temporarily enable actor-specific previews with NUXT_PUBLIC_OG_IMAGES_ENABLED=true.
       ogImagesEnabled: false,
       supabaseUrl: supabaseUrl || "https://mock.supabase.co",
@@ -239,7 +226,6 @@ export default defineNuxtConfig({
     "@vueuse/nuxt",
     "@nuxtjs/i18n",
     "@nuxtjs/supabase",
-    "@nuxtjs/sitemap",
     "@nuxtjs/robots",
     "@nuxt/image",
     "@vite-pwa/nuxt",
@@ -286,12 +272,5 @@ export default defineNuxtConfig({
   sourcemap: {
     server: true,
     client: true,
-  },
-  sitemap: {
-    // Use an explicit public-route allow-list so automatic page discovery
-    // cannot add individual database-record pages to the sitemap.
-    zeroRuntime: true,
-    excludeAppSources: true,
-    urls: PUBLIC_SITEMAP_ROUTES.map((loc) => ({ loc, _i18nTransform: true })),
   },
 });
