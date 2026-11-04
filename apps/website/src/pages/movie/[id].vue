@@ -485,10 +485,7 @@ const movieId = (Array.isArray(route.params.id) ? route.params.id[0] : route.par
 const siteUrl = useSiteConfig().url;
 const currentUrl = computed(() => new URL(route.fullPath, siteUrl).href);
 
-const user = useSupabaseUser();
-const isAdmin = computed(() => {
-  return user.value?.app_metadata?.role === "admin";
-});
+const { isAdmin } = useClientUser();
 
 const { locale, t } = useI18n();
 const localePath = useLocalePath();

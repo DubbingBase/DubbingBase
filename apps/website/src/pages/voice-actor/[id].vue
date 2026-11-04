@@ -738,10 +738,7 @@ watch(debouncedSearch, (val) => {
   searchQuery.value = val;
 });
 
-const user = useSupabaseUser();
-const isAdmin = computed(() => {
-  return user.value?.app_metadata?.role === "admin";
-});
+const { user, isAdmin } = useClientUser();
 
 const completenessScore = computed(() => {
   if (!voiceActor.value) return 0;
