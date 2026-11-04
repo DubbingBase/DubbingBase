@@ -34,7 +34,7 @@ export async function fetchShowData(event: H3Event, showId: number) {
     const { characters: characterProfilePictures, tvdbId } =
       await mediaService.getCharacterProfilePictures("tv", showId, result.media);
 
-    const aggregateCredits = result.media.aggregate_credits || (await aggregateCreditsPromise);
+    const aggregateCredits = result.media?.aggregate_credits || (await aggregateCreditsPromise);
 
     const creditsWithImages = processMedia({
       credits:
@@ -44,7 +44,7 @@ export async function fetchShowData(event: H3Event, showId: number) {
     });
     return {
       serieWithImageUrls: result.media,
-      aggregateCredits: creditsWithImages.credits,
+      aggregateCredits: creditsWithImages?.credits,
       characterProfilePictures,
       tvdbId,
     };
@@ -68,7 +68,11 @@ export async function fetchShowData(event: H3Event, showId: number) {
   // ── Lazy Wikipedia Queue Enqueue ─────────────────────────────────
   // Gated by PostHog 'enqueue-on-navigate' (server-side)
   const isProcessed = dubbingProjects.length > 0;
-  const hasWiki = !!serieWithImageUrls?.external_ids?.wikidata_id;
+  const externalIds = serieWithImageUrls?.external_ids;
+  const hasWiki =
+    typeof externalIds === "object" &&
+    externalIds !== null &&
+    !!Reflect.get(externalIds, "wikidata_id");
   const isAdult = serieWithImageUrls?.adult === true;
 
   if (!isProcessed && hasWiki && !isAdult) {

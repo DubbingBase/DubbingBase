@@ -4,8 +4,8 @@ import { normalizeCharacterName, findCharacter } from "./character";
 describe("normalizeCharacterName", () => {
   it("should return empty string for empty input", () => {
     expect(normalizeCharacterName("")).toBe("");
-    expect(normalizeCharacterName(null as any)).toBe("");
-    expect(normalizeCharacterName(undefined as any)).toBe("");
+    expect(normalizeCharacterName(null)).toBe("");
+    expect(normalizeCharacterName(undefined)).toBe("");
   });
 
   it("should convert to lowercase", () => {
@@ -35,7 +35,7 @@ describe("findCharacter", () => {
   it("should return false for falsy inputs", () => {
     expect(findCharacter("", "Batman")).toBe(false);
     expect(findCharacter("Batman", "")).toBe(false);
-    expect(findCharacter(null as any, "Batman")).toBe(false);
+    expect(findCharacter(null, "Batman")).toBe(false);
   });
 
   it("should return true for exact matches", () => {

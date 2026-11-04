@@ -236,7 +236,6 @@ export default defineNuxtConfig({
     "@nuxtjs/html-validator",
   ],
 
-  // @ts-ignore
   fonts: {
     experimental: {
       processCSSVariables: true,

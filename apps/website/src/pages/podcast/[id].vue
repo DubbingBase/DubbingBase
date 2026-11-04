@@ -192,7 +192,7 @@ const activeDubId = computed(() => activeDubProject.value?.id || 0);
 
 const getDisplayLanguage = useDubbingLanguageLabel();
 
-const podcastCrew = computed(() => toCrewCardMembers(activeDubProject.value?.dubbing_project_crew));
+const podcastCrew = computed(() => toCrewCardMembers(activeDubProject.value?.crew));
 
 const coverUrl = computed(() => {
   return podcast.value?.cover_url || null;

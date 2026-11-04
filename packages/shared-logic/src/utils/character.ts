@@ -1,4 +1,4 @@
-export const normalizeCharacterName = (name: string): string => {
+export const normalizeCharacterName = (name: string | null | undefined): string => {
   if (!name) return "";
   return name
     .toLowerCase()
@@ -52,7 +52,10 @@ export function createCharacterMatcher(roleName: string): (characterName: string
     characterNamesMatch(splitCharacterNames(characterName), normalizedRoleNames);
 }
 
-export const findCharacter = (characterName: string, roleName: string): boolean => {
+export const findCharacter = (
+  characterName: string | null | undefined,
+  roleName: string | null | undefined,
+): boolean => {
   if (!characterName || !roleName) return false;
   return characterNamesMatch(splitCharacterNames(characterName), splitCharacterNames(roleName));
 };

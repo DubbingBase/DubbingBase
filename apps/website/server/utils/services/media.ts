@@ -1,7 +1,6 @@
 import { useSupabaseAdmin } from "../db/client";
 import { TMDBClient } from "../api/tmdb";
 import { TVDBClient } from "../api/tvdb";
-import { processVoiceActor } from "../urls/supabase";
 import { buildTmdbImageUrl, processMedia, cleanCharacterName } from "../urls/tmdb";
 import { mediaPageAggregateCredits, mediaPageMovieCredits } from "../media-page-credits";
 import { useCache, useIgdbClient, useOpenLibraryClient } from "../index";
@@ -411,7 +410,7 @@ export class MediaService {
       });
     }
 
-    const voiceActorWithImages = processVoiceActor(voiceActor);
+    const voiceActorWithImages = withVoiceActorImageUrl(voiceActor);
     const workItems = voiceActor.work || [];
     const relevantActorIds = new Set<number>();
     for (const work of workItems) {
@@ -1248,7 +1247,9 @@ export class MediaService {
       contentType === "season" && options.projection === "media-page"
         ? projectSeasonForMediaPage(media)
         : media;
-    const processedMedia = processMedia(mediaForProcessing);
+    const processedMedia = processMedia(
+      typeof mediaForProcessing === "object" ? mediaForProcessing : null,
+    );
     return { media: processedMedia };
   }
 }

@@ -118,7 +118,7 @@
                 }}</span>
               </p>
               <p class="text-xs theme-text-muted mt-1">
-                {{ new Date(log.created_at).toLocaleString() }}
+                {{ log.created_at ? new Date(log.created_at).toLocaleString() : "" }}
               </p>
             </div>
             <div class="flex items-center gap-3">
@@ -140,6 +140,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
+import type { Tables } from "@app/supabase/types";
 
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
@@ -151,7 +152,7 @@ const isUpdating = ref(false);
 const updateMessage = ref("");
 const isError = ref(false);
 
-const auditLogs = ref<any[]>([]);
+const auditLogs = ref<Tables<"audit_logs">[]>([]);
 
 const updateProfile = async () => {
   if (!username.value.trim()) {

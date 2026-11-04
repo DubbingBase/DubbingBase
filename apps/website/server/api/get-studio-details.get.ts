@@ -1,8 +1,26 @@
 import { useSupabaseAdmin } from "../utils/db/client";
 import { useTmdbClient } from "../utils";
+import type { Tables } from "@app/shared-logic";
+
+type StudioProject = Pick<
+  Tables<"dubbing_projects">,
+  "id" | "content_type" | "content_id" | "language"
+>;
+type TmdbMediaDetails = Awaited<ReturnType<ReturnType<typeof useTmdbClient>["fetchMediaDetails"]>>;
+interface StudioMediaSummary {
+  title?: string | null;
+  name?: string | null;
+  poster_path?: string | null;
+}
+type StudioMedia = StudioMediaSummary | TmdbMediaDetails;
+type VoiceActorRosterEntry = Pick<
+  Tables<"voice_actors">,
+  "id" | "firstname" | "lastname" | "profile_picture"
+>;
+
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
-  const studioId = (query.studioId as string) || (query.studioid as string);
+  const studioId = asString(query.studioId) || asString(query.studioid);
   const studioPageProjection = query.projection === "studio-page";
   const supabase = useSupabaseAdmin();
 
@@ -101,10 +119,15 @@ export default defineEventHandler(async (event) => {
     }
 
     // 2. Fetch dubbed projects by studio_id
-    const { data: projects } = await supabase
-      .from("dubbing_projects")
-      .select(studioPageProjection ? "id,content_type,content_id,language" : "*")
-      .eq("studio_id", studio.id && !isNaN(Number(studio.id)) ? Number(studio.id) : 0);
+    const projectStudioId = studio.id && !isNaN(Number(studio.id)) ? Number(studio.id) : 0;
+    const { data: projectRows } = studioPageProjection
+      ? await supabase
+          .from("dubbing_projects")
+          .select("id,content_type,content_id,language")
+          .eq("studio_id", projectStudioId)
+      : await supabase.from("dubbing_projects").select("*").eq("studio_id", projectStudioId);
+
+    const projects: StudioProject[] = projectRows ?? [];
 
     // 3. Fetch media info for projects (deduplicated & batched)
     const tmdbClient = useTmdbClient();
@@ -116,10 +139,10 @@ export default defineEventHandler(async (event) => {
     const acceptLanguage = getHeader(event, "accept-language") || undefined;
 
     const uniqueMediaKeys = Array.from(
-      new Set((projects || []).map((p: any) => `${p.content_type || "movie"}:${p.content_id}`)),
+      new Set(projects.map((p) => `${p.content_type || "movie"}:${p.content_id}`)),
     );
 
-    const mediaMap = new Map<string, any>();
+    const mediaMap = new Map<string, StudioMedia | null>();
     const BATCH_SIZE = 15;
     for (let i = 0; i < uniqueMediaKeys.length; i += BATCH_SIZE) {
       const batch = uniqueMediaKeys.slice(i, i + BATCH_SIZE);
@@ -191,16 +214,16 @@ export default defineEventHandler(async (event) => {
       );
     }
 
-    const projectsWithMedia = (projects || []).map((p: any) => {
+    const projectsWithMedia = projects.map((p) => {
       const contentType = p.content_type || "movie";
       const key = `${contentType}:${p.content_id}`;
       return { ...p, media: mediaMap.get(key) || null };
     });
 
     // 4. Fetch linked voice actors from work table
-    let voiceActorsRoster: any[] = [];
-    if (projects && projects.length > 0) {
-      const projectIds = projects.map((p: any) => p.id);
+    let voiceActorsRoster: VoiceActorRosterEntry[] = [];
+    if (projects.length > 0) {
+      const projectIds = projects.map((p) => p.id);
       const { data: works } = await supabase
         .from("work")
         .select("voice_actor_id")
@@ -209,9 +232,7 @@ export default defineEventHandler(async (event) => {
 
       if (works && works.length > 0) {
         const vaIds = [
-          ...new Set(
-            works.map((w: any) => w.voice_actor_id).filter((id: any): id is number => id !== null),
-          ),
+          ...new Set(works.map((w) => w.voice_actor_id).filter((id): id is number => id !== null)),
         ];
         if (vaIds.length > 0) {
           const { data: vaData } = await supabase

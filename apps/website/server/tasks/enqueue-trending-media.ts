@@ -1,14 +1,18 @@
+interface CloudflareContext {
+  env?: Record<string, string | undefined>;
+}
+
 export default defineTask({
   meta: {
     name: "enqueue-trending-media",
     description: "Enqueues the daily trending movies and TV shows",
   },
   async run(event) {
-    const cf = (event?.context as any)?.cloudflare;
+    const cf: CloudflareContext | undefined = event?.context?.cloudflare;
     const config = useRuntimeConfig();
     const nitroApp = useNitroApp();
     const secretKey =
-      (config.supabaseSecretKey as string) ||
+      asString(config.supabaseSecretKey) ||
       cf?.env?.SUPABASE_SECRET_KEY ||
       cf?.env?.NUXT_SUPABASE_SECRET_KEY ||
       process.env.SUPABASE_SECRET_KEY ||

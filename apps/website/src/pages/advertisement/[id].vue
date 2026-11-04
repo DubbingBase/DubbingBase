@@ -238,9 +238,7 @@ const { data: castData } = await useAsyncData(
 const castTotal = computed(() => castData.value?.pagination.totalItems || 0);
 const castItems = computed(() => castData.value?.data || []);
 
-const advertisementCrew = computed(() =>
-  toCrewCardMembers(activeDubProject.value?.dubbing_project_crew),
-);
+const advertisementCrew = computed(() => toCrewCardMembers(activeDubProject.value?.crew));
 
 useHead({
   title: computed(() =>

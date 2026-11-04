@@ -1,4 +1,5 @@
 import { ref } from "vue";
+import { readErrorMessage } from "~/utils/error-message";
 
 export const useReports = () => {
   const supabase = useSupabaseClient();
@@ -21,8 +22,8 @@ export const useReports = () => {
       });
 
       return true;
-    } catch (err: any) {
-      error.value = err.message || "An error occurred while submitting the report.";
+    } catch (err: unknown) {
+      error.value = readErrorMessage(err) || "An error occurred while submitting the report.";
       console.error("Error submitting report:", err);
       return false;
     } finally {

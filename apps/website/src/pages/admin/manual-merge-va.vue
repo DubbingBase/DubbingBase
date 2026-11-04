@@ -541,6 +541,7 @@ definePageMeta({
 });
 
 import { ref, computed, watch, onMounted, onUnmounted } from "vue";
+import { readErrorMessage } from "~/utils/error-message";
 
 interface VoiceActorCandidate {
   id: number;
@@ -779,7 +780,7 @@ const mergeActors = async () => {
     reset();
   } catch (err: unknown) {
     console.error("Error merging voice actors:", err);
-    showToast(err instanceof Error ? err.message : "Failed to merge profiles", "error");
+    showToast(readErrorMessage(err) || "Failed to merge profiles", "error");
   } finally {
     merging.value = false;
   }
@@ -798,8 +799,9 @@ const formatDate = (dateStr: string) => {
 };
 
 const handleOutsideClick = (e: MouseEvent) => {
+  if (!(e.target instanceof Element)) return;
   const target = e.target;
-  if (target instanceof HTMLElement && !target.closest(".relative")) {
+  if (!target.closest(".relative")) {
     activeSearch.value = null;
   }
 };

@@ -54,7 +54,11 @@ export async function fetchMovieData(event: H3Event, movieId: number) {
   // ── Lazy Wikipedia Queue Enqueue ─────────────────────────────────
   // Gated by PostHog 'enqueue-on-navigate' (server-side)
   const isProcessed = dubbingProjects.length > 0;
-  const hasWiki = !!movieWithImageUrls?.external_ids?.wikidata_id;
+  const externalIds = movieWithImageUrls?.external_ids;
+  const hasWiki =
+    typeof externalIds === "object" &&
+    externalIds !== null &&
+    !!Reflect.get(externalIds, "wikidata_id");
   const isAdult = movieWithImageUrls?.adult === true;
 
   if (!isProcessed && hasWiki && !isAdult) {
