@@ -131,9 +131,9 @@
     "wikiLabel": "Wiki:",
     "tmdb": "TMDB",
     "tvdb": "TVDB",
-    "born": "Nacido/a:",
-    "died": "Fallecido/a:",
-    "works": "obras",
+    "born": "Nacido/a: {year}",
+    "died": "Fallecido/a: {year}",
+    "works": "{count} obras",
     "separator": "•"
   },
   "theme": {
@@ -291,7 +291,7 @@
     "oldestFirst": "Más antiguos",
     "noWorksFound": "No se encontraron obras para este actor.",
     "notFound": "Actor no encontrado.",
-    "active": "Activo/a:",
+    "active": "Activo/a: {years}",
     "noResultsFor": "No se encontró ningún actor para \"{query}\".",
     "directorySearchPlaceholder": "Buscar actores de doblaje por nombre..."
   },
@@ -301,7 +301,7 @@
     "movies": "Películas",
     "series": "Series",
     "voiceActors": "Actores de doblaje",
-    "roles": "roles",
+    "roles": "{count} roles",
     "birthdate": "Fecha de nacimiento",
     "biography": "Biografía",
     "role": "rol",
@@ -356,7 +356,7 @@
       "works": "Roles"
     },
     "topContributorsAdmin": "Principales Contribuidores (Admin)",
-    "contributions": "contribuciones"
+    "contributions": "{count} contribuciones"
   },
   "details": {
     "modify": "Modificar",
@@ -756,7 +756,7 @@
       "roleUser": "Usuario",
       "anonymousUser": "Usuario anónimo",
       "description": "Ver usuarios registrados, cambiar roles o eliminar cuentas.",
-      "registered": "Registrado:"
+      "registered": "Registrado: {date}"
     },
     "duplicates": {
       "allOtherDuplicatesMerged": ". Los demás duplicados se fusionarán en este.",
@@ -777,7 +777,7 @@
       "findDuplicates": "Encontrar duplicados",
       "merging": "Fusionando...",
       "mergeSelected": "Fusionar perfiles",
-      "matchesDetected": "coincidencias detectadas",
+      "matchesDetected": "{count} coincidencias detectadas",
       "keepId": "Conservar ID #",
       "idHash": "ID #",
       "firstName": "Nombre",
@@ -929,7 +929,7 @@
       "noPosterAvailable": "No hay póster disponible",
       "saveMappingChanges": "Guardar cambios de mapeo",
       "searchingDatabase": "Buscando en la base de datos...",
-      "released": "Estreno:",
+      "released": "Estreno: {year}",
       "noPublicCastHint": "No hay una lista de reparto pública disponible para este tipo de medio. Añade un actor de doblaje manualmente:",
       "characterNamePlaceholder": "Nombre del personaje / rol",
       "originalActorPlaceholder": "Nombre del actor original (opcional)",

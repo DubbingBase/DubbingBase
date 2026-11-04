@@ -97,7 +97,7 @@
                   {{ user.email || $t("admin.users.anonymousUser") }}
                 </div>
                 <div class="text-xs theme-text-muted">
-                  {{ $t("admin.users.registered") }}{{ formatDate(user.created_at) }}
+                  {{ $t("admin.users.registered", { date: formatDate(user.created_at) }) }}
                 </div>
               </td>
               <td class="py-4 px-6 font-mono text-xs theme-text-muted">
@@ -294,9 +294,9 @@ const updateRole = async (userObj: User) => {
     });
     showToast(`Rôle mis à jour pour ${userObj.email} (${role})`, "success");
     await fetchUsers();
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error updating user role:", err);
-    showToast(err.message || "Failed to update role", "error");
+    showToast(err instanceof Error ? err.message : "Failed to update role", "error");
   } finally {
     updatingRole.value[userObj.id] = false;
   }
@@ -321,9 +321,9 @@ const deleteUser = async () => {
     showConfirm.value = false;
     userToDelete.value = null;
     await fetchUsers();
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error deleting user:", err);
-    showToast(err.message || "Failed to delete user", "error");
+    showToast(err instanceof Error ? err.message : "Failed to delete user", "error");
   } finally {
     deleting.value = false;
   }
