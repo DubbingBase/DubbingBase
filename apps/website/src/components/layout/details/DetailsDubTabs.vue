@@ -1,17 +1,13 @@
 <template>
   <div v-if="projects.length > 0 || original" class="flex flex-wrap gap-2">
-    <NuxtLink
-      v-if="original"
-      :to="{ query: { dub: 'original' } }"
-      :class="tabClass(original.active)"
-    >
+    <NuxtLink v-if="original" :to="tabTarget('original')" :class="tabClass(original.active)">
       {{ $t("details.originalVersion") }}
       <span :class="countClass(original.active)">{{ original.count }}</span>
     </NuxtLink>
     <NuxtLink
       v-for="project in projects"
       :key="project.id"
-      :to="{ query: { dub: project.id } }"
+      :to="tabTarget(project.id)"
       :class="tabClass(activeId === project.id)"
     >
       {{ languageLabel(project.language) }}
@@ -24,14 +20,20 @@
 </template>
 
 <script setup lang="ts" generic="P extends { id: number; language?: string | null }">
-defineProps<{
+const props = defineProps<{
   projects: P[];
   activeId: number;
   languageLabel: (code: string | undefined | null) => string;
   count?: (project: P) => number;
   /** Optional "original version" tab (movies and shows). */
   original?: { active: boolean; count: number } | null;
+  /** Link to another route (e.g. the episode page) instead of the current one. */
+  path?: string;
 }>();
+
+function tabTarget(dub: number | "original") {
+  return props.path ? { path: props.path, query: { dub } } : { query: { dub } };
+}
 
 function tabClass(active: boolean): string[] {
   return [

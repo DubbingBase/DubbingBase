@@ -23,7 +23,6 @@
           :projects="dubbingProjects"
           :active-id="activeDubId"
           :language-label="getDisplayLanguage"
-          :count="detailProjectVoiceActorCount"
         />
       </template>
 
@@ -157,7 +156,7 @@ import { ref, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import MediaSkeleton from "../../components/MediaSkeleton.vue";
-import { detailProjectVoiceActorCount, toCrewCardMembers } from "../../utils/detail-dub-projects";
+import { toCrewCardMembers } from "../../utils/detail-dub-projects";
 import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
 import DetailsDubTabs from "../../components/layout/details/DetailsDubTabs.vue";
 import DetailsStudioLink from "../../components/layout/details/DetailsStudioLink.vue";
