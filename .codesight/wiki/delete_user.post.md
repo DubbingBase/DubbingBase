@@ -12,9 +12,7 @@ The Delete_user.post subsystem handles **1 routes** and touches: auth.
 ## Source Files
 
 Read these before implementing or modifying this subsystem:
-
 - `apps/website/server/api/delete_user.post.ts`
 
 ---
-
 _Back to [overview.md](./overview.md)_

@@ -239,7 +239,7 @@ pk: `content_id` (bigint) · fk: content_id
 - `product_line`: text check (product_line is
 - `release_year`: integer check (release_year is
 - `cover_url`: text check (
-  cover_url is
+    cover_url is
 
 ### gamification_task_submission_results
 
@@ -284,7 +284,7 @@ pk: `id` (uuid) · fk: igdb_game_id, igdb_character_id
 - `name`: text _(required)_
 - `igdb_character_id`: bigint check (igdb_character_id is _(fk)_
 - `wikidata_qid`: text check (
-  wikidata_qid is
+    wikidata_qid is
 - `created_by`: uuid _(required)_
 - `updated_by`: uuid _(required)_
 
@@ -296,5 +296,4 @@ Read and edit these files when adding columns, creating migrations, or changing 
 - `apps/website/server/utils/db/queries.ts` — imported by **9** files
 
 ---
-
 _Back to [overview.md](./overview.md)_

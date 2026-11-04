@@ -21,9 +21,7 @@ The Get-user-voice-actor subsystem handles **1 routes** and touches: auth.
 ## Source Files
 
 Read these before implementing or modifying this subsystem:
-
 - `apps/website/server/api/get-user-voice-actor.ts`
 
 ---
-
 _Back to [overview.md](./overview.md)_

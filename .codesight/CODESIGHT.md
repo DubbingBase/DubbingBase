@@ -5,7 +5,7 @@
 
 > 91 routes | 28 models | 135 components | 116 lib files | 64 env vars | 15 middleware | 47% test coverage
 > **Token savings:** this file is ~17,800 tokens. Without it, AI exploration would cost ~153,600 tokens. **Saves ~135,800 tokens per conversation.**
-> **Last scanned:** 2026-11-04 13:11 — re-run after significant changes
+> **Last scanned:** 2026-11-04 13:31 — re-run after significant changes
 
 ---
 
@@ -694,7 +694,7 @@
 - `apps/website/src/composables/useUrlPagination.ts` — function readUrlPage: (value) => number, function useUrlPagination: (queryKey) => void
 - `apps/website/src/composables/useVoiceActorPageData.ts` — function fetchVoiceActorPageData: (id, lang?) => Promise<VoiceActorPageDataPayload | null>
 - `apps/website/src/composables/useVoiceActorProfileRecord.ts` — function useVoiceActorProfileRecord: () => void
-- `apps/website/src/lib/media-editor-routes.ts` — function getMediaEditorRoute: ({...}, mediaId, projectId }) => string | null
+- `apps/website/src/lib/media-editor-routes.ts` — function getMediaEditorRoute: ({...}, mediaId, projectId, }) => string | null
 - `apps/website/src/lib/mediaQueue.ts` — function enqueueMedia: (params) => Promise<void>
 - `apps/website/src/utils/access-token-cache.ts` — function createAccessTokenCache: (auth) => void, interface AccessTokenAuthClient
 - `apps/website/src/utils/actor-ssr-data.ts` — function prepareActorSsrData: (payload) => void
@@ -953,11 +953,11 @@
 - `apps/website/server/utils/api/igdb.ts` — imported by **12** files
 - `apps/website/server/utils/urls/supabase.ts` — imported by **11** files
 - `apps/website/server/utils/dubbing-language.ts` — imported by **10** files
+- `apps/website/server/utils/cache/http.ts` — imported by **10** files
+- `packages/shared-logic/src/types/index.ts` — imported by **10** files
 - `apps/website/server/utils/db/queries.ts` — imported by **9** files
 - `apps/website/server/utils/urls/tmdb.ts` — imported by **9** files
-- `apps/website/server/utils/cache/http.ts` — imported by **9** files
-- `packages/shared-logic/src/types/index.ts` — imported by **9** files
-- `apps/website/server/utils/media-request.ts` — imported by **8** files
+- `apps/website/server/utils/media-request.ts` — imported by **9** files
 - `apps/website/server/utils/cache/constants.ts` — imported by **8** files
 - `e2e/helpers/mock-api.ts` — imported by **8** files
 - `apps/website/server/utils/background.ts` — imported by **7** files
@@ -976,7 +976,7 @@
 - `apps/website/server/utils/api/igdb.ts` ← `apps/website/server/api/game/[id].get.ts`, `apps/website/server/api/internal-media-credits.get.ts`, `apps/website/server/api/internal-media-metadata.get.ts`, `apps/website/server/api/media-catalog.get.ts`, `apps/website/server/api/search/index.get.ts` +7 more
 - `apps/website/server/utils/urls/supabase.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/dashboard-stats.get.ts`, `apps/website/server/api/find_duplicate_voice_actors.get.ts`, `apps/website/server/api/list-voice-actors.get.ts`, `apps/website/server/api/recent-voice-actors.get.ts` +6 more
 - `apps/website/server/utils/dubbing-language.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/internal-media-create.post.ts`, `apps/website/server/api/link-voice-actor.post.ts`, `apps/website/server/api/media-queue.post.ts` +5 more
-- `apps/website/server/utils/db/queries.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/detail-collections.get.ts`, `apps/website/server/api/game/[id].get.ts` +4 more
+- `apps/website/server/utils/cache/http.ts` ← `apps/website/server/api/admin/work-duplicates.get.ts`, `apps/website/server/api/get-media-credits.get.ts`, `apps/website/server/api/og-image/index.get.ts`, `apps/website/server/api/trending/games.get.ts`, `apps/website/server/api/trending/movies.get.ts` +5 more
 
 ---
 

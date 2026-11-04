@@ -16,9 +16,7 @@ The Upload-profile-picture.post subsystem handles **1 routes** and touches: auth
 ## Source Files
 
 Read these before implementing or modifying this subsystem:
-
 - `apps/website/server/api/upload-profile-picture.post.ts`
 
 ---
-
 _Back to [overview.md](./overview.md)_

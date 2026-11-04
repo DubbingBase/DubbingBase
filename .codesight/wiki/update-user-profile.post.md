@@ -20,9 +20,7 @@ The Update-user-profile.post subsystem handles **1 routes** and touches: auth.
 ## Source Files
 
 Read these before implementing or modifying this subsystem:
-
 - `apps/website/server/api/update-user-profile.post.ts`
 
 ---
-
 _Back to [overview.md](./overview.md)_

@@ -12,9 +12,7 @@ The Get-studio-details.get subsystem handles **1 routes**.
 ## Source Files
 
 Read these before implementing or modifying this subsystem:
-
 - `apps/website/server/api/get-studio-details.get.ts`
 
 ---
-
 _Back to [overview.md](./overview.md)_

@@ -12,9 +12,7 @@ The Prepare_game.post subsystem handles **1 routes** and touches: auth.
 ## Source Files
 
 Read these before implementing or modifying this subsystem:
-
 - `apps/website/server/api/prepare_game.post.ts`
 
 ---
-
 _Back to [overview.md](./overview.md)_

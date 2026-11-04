@@ -14,10 +14,8 @@ The Sitemaps subsystem handles **2 routes**.
 ## Source Files
 
 Read these before implementing or modifying this subsystem:
-
 - `apps/website/server/routes/sitemaps/[file].get.ts`
 - `apps/website/server/routes/sitemaps/pages.xml.ts`
 
 ---
-
 _Back to [overview.md](./overview.md)_

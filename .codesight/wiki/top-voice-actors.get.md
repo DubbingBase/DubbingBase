@@ -20,9 +20,7 @@ The Top-voice-actors.get subsystem handles **1 routes**.
 ## Source Files
 
 Read these before implementing or modifying this subsystem:
-
 - `apps/website/server/api/top-voice-actors.get.ts`
 
 ---
-
 _Back to [overview.md](./overview.md)_

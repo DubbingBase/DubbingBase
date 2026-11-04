@@ -12,9 +12,7 @@ The Media-queue.post subsystem handles **1 routes** and touches: auth, queue.
 ## Source Files
 
 Read these before implementing or modifying this subsystem:
-
 - `apps/website/server/api/media-queue.post.ts`
 
 ---
-
 _Back to [overview.md](./overview.md)_

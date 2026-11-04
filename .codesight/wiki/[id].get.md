@@ -30,7 +30,6 @@ The [id].get subsystem handles **10 routes** and touches: queue.
 ## Source Files
 
 Read these before implementing or modifying this subsystem:
-
 - `apps/website/server/api/actor/[id].get.ts`
 - `apps/website/server/api/advertisement/[id].get.ts`
 - `apps/website/server/api/audiobook/[id].get.ts`
@@ -43,5 +42,4 @@ Read these before implementing or modifying this subsystem:
 - `apps/website/server/api/voice-actor/[id].get.ts`
 
 ---
-
 _Back to [overview.md](./overview.md)_

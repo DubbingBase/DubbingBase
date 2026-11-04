@@ -12,9 +12,7 @@ The Process-media-queue.post subsystem handles **1 routes** and touches: auth, c
 ## Source Files
 
 Read these before implementing or modifying this subsystem:
-
 - `apps/website/server/api/process-media-queue.post.ts`
 
 ---
-
 _Back to [overview.md](./overview.md)_

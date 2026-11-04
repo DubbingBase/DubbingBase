@@ -12,9 +12,7 @@ The Get-media-credits.get subsystem handles **1 routes** and touches: cache.
 ## Source Files
 
 Read these before implementing or modifying this subsystem:
-
 - `apps/website/server/api/get-media-credits.get.ts`
 
 ---
-
 _Back to [overview.md](./overview.md)_

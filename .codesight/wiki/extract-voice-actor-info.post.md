@@ -20,9 +20,7 @@ The Extract-voice-actor-info.post subsystem handles **1 routes** and touches: au
 ## Source Files
 
 Read these before implementing or modifying this subsystem:
-
 - `apps/website/server/api/extract-voice-actor-info.post.ts`
 
 ---
-
 _Back to [overview.md](./overview.md)_

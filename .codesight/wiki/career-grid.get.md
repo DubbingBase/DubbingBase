@@ -12,9 +12,7 @@ The Career-grid.get subsystem handles **1 routes** and touches: cache.
 ## Source Files
 
 Read these before implementing or modifying this subsystem:
-
 - `apps/website/server/api/career-grid.get.ts`
 
 ---
-
 _Back to [overview.md](./overview.md)_

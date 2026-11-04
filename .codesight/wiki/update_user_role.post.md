@@ -20,9 +20,7 @@ The Update_user_role.post subsystem handles **1 routes** and touches: auth.
 ## Source Files
 
 Read these before implementing or modifying this subsystem:
-
 - `apps/website/server/api/update_user_role.post.ts`
 
 ---
-
 _Back to [overview.md](./overview.md)_

@@ -1,18 +1,15 @@
 # Schema
 
 ### voice_actors
-
 - id: bigint (required)
 - tmdb_id: bigint (fk)
 
 ### source
-
 - id: bigint (required)
 - user_id: bigint (fk)
 - suggested_at: timestamp without time zone (default)
 
 ### work
-
 - id: bigint (required)
 - content_id: bigint (required, fk)
 - actor_id: bigint (required, fk)
@@ -21,7 +18,6 @@
 - source_id: bigint (fk)
 
 ### user_profiles
-
 - id: uuid (pk)
 - user_id: uuid (required, fk)
 - bio: text
@@ -30,26 +26,22 @@
 - social_media_links: jsonb
 
 ### user_profile_links
-
 - id: uuid (pk)
 - user_id: uuid (required, fk)
 - profile_id: uuid (required, fk)
 
 ### user_voice_actor_links
-
 - id: uuid (pk)
 - user_id: uuid (required, fk)
 - voice_actor_id: integer (required, fk)
 
 ### votes
-
 - id: bigint (pk)
 - user_id: uuid (required, fk)
 - work_id: bigint (required, fk)
 - vote_type: text (required)
 
 ### dubbing_projects
-
 - id: bigint (pk)
 - content_id: bigint (required, fk)
 - content_type: text (required)
@@ -65,7 +57,6 @@
 - status: text
 
 ### studios
-
 - id: bigint (pk)
 - name: text (required)
 - description: text
@@ -75,19 +66,16 @@
 - logo_url: text
 
 ### dubbing_project_crew
-
 - id: bigint (pk)
 - dubbing_project_id: bigint (required, fk)
 - person_id: bigint (required, fk)
 - job: text (required)
 
 ### jobs
-
 - id: bigint (pk)
 - name: text (required)
 
 ### project_attachments
-
 - id: bigint (pk)
 - dubbing_project_id: bigint (required, fk)
 - file_path: text (required)
@@ -96,12 +84,10 @@
 - created_by: uuid (default)
 
 ### voice_actor_subscriptions
-
 - user_id: uuid (required, fk)
 - voice_actor_id: bigint (required, fk)
 
 ### user_reports
-
 - id: uuid (pk)
 - reporter_id: uuid (required, fk)
 - target_url: text (required)
@@ -109,7 +95,6 @@
 - details: text
 
 ### audit_logs
-
 - id: uuid (pk)
 - user_id: uuid (fk)
 - entity_type: text (required)
@@ -120,17 +105,14 @@
 - reverted_at: timestamp(tz)
 
 ### gamification_task_locks
-
 - category: text (required)
 - entity_id: text (required, fk)
 - locked_at: timestamp(tz) (default)
 
 ### dubbing_languages
-
 - code: text (pk)
 
 ### dubbing_language_reviews
-
 - id: bigint (pk)
 - decision: jsonb (required)
 - source_snapshot: jsonb (required)
@@ -138,7 +120,6 @@
 - applied_at: timestamp(tz) (required)
 
 ### legacy_wiki_check_reprocesses
-
 - archived_msg_id: bigint (pk, fk)
 - tmdb_id: bigint (required, fk)
 - outcome: text (required)
@@ -146,7 +127,6 @@
 - processed_at: timestamp(tz) (required)
 
 ### metadata_write_requests
-
 - actor_id: uuid (required, fk)
 - request_id: uuid (required, fk)
 - entity_type: text (required)
@@ -156,7 +136,6 @@
 - result: jsonb (required)
 
 ### voice_actor_write_requests
-
 - actor_id: uuid (required, fk)
 - request_id: uuid (required, fk)
 - voice_actor_id: bigint (required, fk)
@@ -165,7 +144,6 @@
 - result: jsonb (required)
 
 ### regional_assignment_requests
-
 - actor_id: uuid (required, fk)
 - request_id: uuid (required, fk)
 - request_fingerprint: text (required)
@@ -173,38 +151,33 @@
 - metadata: jsonb (required)
 
 ### regional_assignment_request_audits
-
 - actor_id: uuid (required, fk)
 - request_id: uuid (required, fk)
 - audit_log_id: uuid (required, fk)
 - metadata: jsonb (required)
 
 ### toy_metadata
-
 - content_id: bigint (pk, fk)
 - name: text (required)
 - manufacturer: text check (manufacturer is
 - product_line: text check (product_line is
 - release_year: integer check (release_year is
 - cover_url: text check (
-  cover_url is
+    cover_url is
 
 ### gamification_task_submission_results
-
 - claim_id: uuid (pk, fk)
 - user_id: uuid (required, fk)
 - submission_fingerprint: text (required)
 - points_awarded: integer (required)
 
 ### admin_credit_import_requests
-
 - admin_id: uuid (required, fk)
 - request_id: uuid (required, fk)
 - request_fingerprint: text (required)
 - result: jsonb (required)
 
 ### user_voice_actor_link_requests
-
 - actor_id: uuid (required, fk)
 - request_id: uuid (required, fk)
 - operation: text (required)
@@ -218,12 +191,11 @@
 - completed_at: timestamp(tz)
 
 ### game_characters
-
 - id: uuid (pk)
 - igdb_game_id: bigint (required, fk)
 - name: text (required)
 - igdb_character_id: bigint check (igdb_character_id is (fk)
 - wikidata_qid: text check (
-  wikidata_qid is
+    wikidata_qid is
 - created_by: uuid (required)
 - updated_by: uuid (required)

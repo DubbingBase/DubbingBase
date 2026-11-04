@@ -12,9 +12,7 @@ The Revert-task.post subsystem handles **1 routes** and touches: auth, db.
 ## Source Files
 
 Read these before implementing or modifying this subsystem:
-
 - `apps/website/server/api/revert-task.post.ts`
 
 ---
-
 _Back to [overview.md](./overview.md)_

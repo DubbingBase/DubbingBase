@@ -12,9 +12,7 @@ The Top-contributors.get subsystem handles **1 routes**.
 ## Source Files
 
 Read these before implementing or modifying this subsystem:
-
 - `apps/website/server/api/top-contributors.get.ts`
 
 ---
-
 _Back to [overview.md](./overview.md)_
