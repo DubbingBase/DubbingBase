@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 91 routes | 28 models | 135 components | 116 lib files | 64 env vars | 15 middleware | 47% test coverage
-> **Token savings:** this file is ~17,800 tokens. Without it, AI exploration would cost ~153,600 tokens. **Saves ~135,800 tokens per conversation.**
-> **Last scanned:** 2026-11-04 15:23 — re-run after significant changes
+> 91 routes | 28 models | 132 components | 116 lib files | 64 env vars | 15 middleware | 47% test coverage
+> **Token savings:** this file is ~17,700 tokens. Without it, AI exploration would cost ~152,600 tokens. **Saves ~134,900 tokens per conversation.**
+> **Last scanned:** 2026-11-04 19:16 — re-run after significant changes
 
 ---
 
@@ -357,20 +357,17 @@
 - **DetailsActionBar** [client] — `apps/website/src/components/layout/details/DetailsActionBar.vue`
 - **DetailsBackLink** [client] — props: to — `apps/website/src/components/layout/details/DetailsBackLink.vue`
 - **DetailsCastHeader** [client] — props: title, subtitle, searchable, placeholder — `apps/website/src/components/layout/details/DetailsCastHeader.vue`
-- **DetailsCrewCard** [client] — props: title, studioLabel, studio — `apps/website/src/components/layout/details/DetailsCrewCard.vue`
+- **DetailsCrewCard** [client] — props: title, crew — `apps/website/src/components/layout/details/DetailsCrewCard.vue`
 - **DetailsDubTabs** [client] — props: projects, activeId, languageLabel, count, original — `apps/website/src/components/layout/details/DetailsDubTabs.vue`
 - **DetailsEditLink** [client] — props: to — `apps/website/src/components/layout/details/DetailsEditLink.vue`
 - **DetailsEmptyState** [client] — `apps/website/src/components/layout/details/DetailsEmptyState.vue`
 - **DetailsExternalLink** [client] — props: href — `apps/website/src/components/layout/details/DetailsExternalLink.vue`
-- **DetailsFact** [client] — props: label, value, wide — `apps/website/src/components/layout/details/DetailsFact.vue`
-- **DetailsFacts** [client] — `apps/website/src/components/layout/details/DetailsFacts.vue`
 - **DetailsHero** [client] — props: title, backdropUrl, blurBackdrop, imageUrl, imageAspectRatio — `apps/website/src/components/layout/details/DetailsHero.vue`
-- **DetailsMetaChip** [client] — props: variant — `apps/website/src/components/layout/details/DetailsMetaChip.vue`
+- **DetailsMetaChip** [client] — props: variant, label — `apps/website/src/components/layout/details/DetailsMetaChip.vue`
 - **DetailsPage** [client] — `apps/website/src/components/layout/details/DetailsPage.vue`
 - **DetailsReportButton** [client] — `apps/website/src/components/layout/details/DetailsReportButton.vue`
 - **DetailsStudioLink** [client] — props: studio — `apps/website/src/components/layout/details/DetailsStudioLink.vue`
 - **DetailsSynopsis** [client] — props: text — `apps/website/src/components/layout/details/DetailsSynopsis.vue`
-- **DetailsTagList** [client] — props: tags — `apps/website/src/components/layout/details/DetailsTagList.vue`
 - **DetailsVoiceCastCard** [client] — props: item — `apps/website/src/components/layout/details/DetailsVoiceCastCard.vue`
 - **admin** [client] — `apps/website/src/layouts/admin.vue`
 - **about** [client] — `apps/website/src/pages/about.vue`

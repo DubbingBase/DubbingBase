@@ -46,20 +46,17 @@
 - **DetailsActionBar** [client] — `apps/website/src/components/layout/details/DetailsActionBar.vue`
 - **DetailsBackLink** [client] — props: to — `apps/website/src/components/layout/details/DetailsBackLink.vue`
 - **DetailsCastHeader** [client] — props: title, subtitle, searchable, placeholder — `apps/website/src/components/layout/details/DetailsCastHeader.vue`
-- **DetailsCrewCard** [client] — props: title, studioLabel, studio — `apps/website/src/components/layout/details/DetailsCrewCard.vue`
+- **DetailsCrewCard** [client] — props: title, crew — `apps/website/src/components/layout/details/DetailsCrewCard.vue`
 - **DetailsDubTabs** [client] — props: projects, activeId, languageLabel, count, original — `apps/website/src/components/layout/details/DetailsDubTabs.vue`
 - **DetailsEditLink** [client] — props: to — `apps/website/src/components/layout/details/DetailsEditLink.vue`
 - **DetailsEmptyState** [client] — `apps/website/src/components/layout/details/DetailsEmptyState.vue`
 - **DetailsExternalLink** [client] — props: href — `apps/website/src/components/layout/details/DetailsExternalLink.vue`
-- **DetailsFact** [client] — props: label, value, wide — `apps/website/src/components/layout/details/DetailsFact.vue`
-- **DetailsFacts** [client] — `apps/website/src/components/layout/details/DetailsFacts.vue`
 - **DetailsHero** [client] — props: title, backdropUrl, blurBackdrop, imageUrl, imageAspectRatio — `apps/website/src/components/layout/details/DetailsHero.vue`
-- **DetailsMetaChip** [client] — props: variant — `apps/website/src/components/layout/details/DetailsMetaChip.vue`
+- **DetailsMetaChip** [client] — props: variant, label — `apps/website/src/components/layout/details/DetailsMetaChip.vue`
 - **DetailsPage** [client] — `apps/website/src/components/layout/details/DetailsPage.vue`
 - **DetailsReportButton** [client] — `apps/website/src/components/layout/details/DetailsReportButton.vue`
 - **DetailsStudioLink** [client] — props: studio — `apps/website/src/components/layout/details/DetailsStudioLink.vue`
 - **DetailsSynopsis** [client] — props: text — `apps/website/src/components/layout/details/DetailsSynopsis.vue`
-- **DetailsTagList** [client] — props: tags — `apps/website/src/components/layout/details/DetailsTagList.vue`
 - **DetailsVoiceCastCard** [client] — props: item — `apps/website/src/components/layout/details/DetailsVoiceCastCard.vue`
 - **admin** [client] — `apps/website/src/layouts/admin.vue`
 - **about** [client] — `apps/website/src/pages/about.vue`
