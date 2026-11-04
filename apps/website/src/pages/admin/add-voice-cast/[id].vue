@@ -227,7 +227,7 @@
               {{ mediaTypeLabel }} · #{{ mediaId }}
             </p>
             <p v-if="media.releaseYear" class="text-xs font-semibold theme-text-muted">
-              {{ $t("admin.addVoiceCast.released") }}{{ media.releaseYear }}
+              {{ $t("admin.addVoiceCast.released", { year: media.releaseYear }) }}
             </p>
             <p
               v-if="media.description"

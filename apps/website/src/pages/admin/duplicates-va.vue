@@ -103,7 +103,7 @@
           <span
             class="text-xs theme-text-muted theme-surface-muted px-3 py-1 rounded-full border theme-border"
           >
-            {{ group.actors.length }}{{ $t("admin.duplicates.matchesDetected") }}</span
+            {{ $t("admin.duplicates.matchesDetected", { count: group.actors.length }) }}</span
           >
         </div>
 

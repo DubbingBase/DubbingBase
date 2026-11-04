@@ -131,9 +131,9 @@
     "wikiLabel": "Wiki:",
     "tmdb": "TMDB",
     "tvdb": "TVDB",
-    "born": "Born: ",
-    "died": "Died: ",
-    "works": " works",
+    "born": "Born: {year}",
+    "died": "Died: {year}",
+    "works": "{count} works",
     "separator": "•"
   },
   "theme": {
@@ -291,7 +291,7 @@
     "oldestFirst": "Oldest First",
     "noWorksFound": "No works found for this actor.",
     "notFound": "Actor not found.",
-    "active": "Active: ",
+    "active": "Active: {years}",
     "noResultsFor": "No actor found for \"{query}\".",
     "directorySearchPlaceholder": "Search voice actors by name..."
   },
@@ -301,7 +301,7 @@
     "movies": "Movies",
     "series": "Series",
     "voiceActors": "Voice Actors",
-    "roles": " roles",
+    "roles": "{count} roles",
     "birthdate": "Birthdate",
     "biography": "Biography",
     "role": "role",
@@ -356,7 +356,7 @@
       "works": "Roles"
     },
     "topContributorsAdmin": "Top Contributors (Admin)",
-    "contributions": "contributions"
+    "contributions": "{count} contributions"
   },
   "details": {
     "modify": "Modify",
@@ -756,7 +756,7 @@
       "roleUser": "User",
       "anonymousUser": "Anonymous user",
       "description": "View registered users, change roles, or delete accounts.",
-      "registered": "Registered: "
+      "registered": "Registered: {date}"
     },
     "duplicates": {
       "allOtherDuplicatesMerged": ". All other duplicates will be merged into it.",
@@ -777,7 +777,7 @@
       "findDuplicates": "Find Duplicates",
       "merging": "Merging...",
       "mergeSelected": "Merge profiles",
-      "matchesDetected": " matches detected",
+      "matchesDetected": "{count} matches detected",
       "keepId": "Keep ID #",
       "idHash": "ID #",
       "firstName": "First name",
@@ -929,7 +929,7 @@
       "noPosterAvailable": "No Poster Available",
       "saveMappingChanges": "Save Mapping Changes",
       "searchingDatabase": "Searching database...",
-      "released": "Released: ",
+      "released": "Released: {year}",
       "noPublicCastHint": "No public cast list available for this media type. Add a voice actor manually:",
       "characterNamePlaceholder": "Character / role name",
       "originalActorPlaceholder": "Original actor name (optional)",
