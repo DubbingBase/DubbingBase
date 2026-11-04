@@ -3,16 +3,44 @@ import { buildTmdbImageUrl } from "../utils/urls/tmdb";
 import { sendDiscordAdminNotification } from "../utils/notifications/discord";
 import { requireAdmin } from "../utils/auth";
 
+interface TrendingItem {
+  id: number;
+  popularity: number;
+  poster_path: string | null;
+  type: "movie" | "tv";
+}
+
+function parseTrendingResults(payload: unknown, type: TrendingItem["type"]): TrendingItem[] {
+  if (typeof payload !== "object" || payload === null) return [];
+  const results: unknown = Reflect.get(payload, "results");
+  if (!Array.isArray(results)) return [];
+
+  const items: TrendingItem[] = [];
+  for (const item of results) {
+    if (typeof item !== "object" || item === null) continue;
+    const id: unknown = Reflect.get(item, "id");
+    if (typeof id !== "number" || Reflect.get(item, "adult") === true) continue;
+
+    const popularity: unknown = Reflect.get(item, "popularity");
+    const posterPath: unknown = Reflect.get(item, "poster_path");
+    items.push({
+      id,
+      popularity: typeof popularity === "number" ? popularity : 0,
+      poster_path: typeof posterPath === "string" ? posterPath : null,
+      type,
+    });
+  }
+  return items;
+}
+
 export default defineEventHandler(async (event) => {
   const internalSecret = getHeader(event, "x-internal-secret");
   const authHeader = getHeader(event, "authorization");
   const apiKeyHeader = getHeader(event, "apikey");
-  const bearerToken = authHeader?.startsWith("Bearer ")
-    ? authHeader.slice(7).trim()
-    : null;
+  const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7).trim() : null;
   const config = useRuntimeConfig(event);
   const secretKey =
-    (config.supabaseSecretKey as string) ||
+    (typeof config.supabaseSecretKey === "string" ? config.supabaseSecretKey : "") ||
     process.env.SUPABASE_SECRET_KEY ||
     process.env.NUXT_SUPABASE_SECRET_KEY ||
     "";
@@ -61,25 +89,11 @@ export default defineEventHandler(async (event) => {
       showsResponse.json(),
     ]);
 
-    const movies = (moviesData.results || [])
-      .filter((item: any) => item.adult !== true)
-      .map((item: any) => ({
-        ...item,
-        type: "movie" as const,
-      }));
-
-    const shows = (showsData.results || [])
-      .filter((item: any) => item.adult !== true)
-      .map((item: any) => ({
-        ...item,
-        type: "tv" as const,
-      }));
-
-    const topMovies = movies
-      .sort((a: any, b: any) => b.popularity - a.popularity)
+    const topMovies = parseTrendingResults(moviesData, "movie")
+      .sort((a, b) => b.popularity - a.popularity)
       .slice(0, 10);
-    const topShows = shows
-      .sort((a: any, b: any) => b.popularity - a.popularity)
+    const topShows = parseTrendingResults(showsData, "tv")
+      .sort((a, b) => b.popularity - a.popularity)
       .slice(0, 10);
     const itemsToProcess = [...topMovies, ...topShows];
 
@@ -92,15 +106,11 @@ export default defineEventHandler(async (event) => {
       .in("content_id", contentIds);
 
     if (projectsError) {
-      throw new Error(
-        `Failed to fetch existing projects: ${projectsError.message}`,
-      );
+      throw new Error(`Failed to fetch existing projects: ${projectsError.message}`);
     }
 
     const itemsWithVoiceActors = new Set(
-      (existingProjects || []).map(
-        (p: any) => `${p.content_type}-${p.content_id}`,
-      ),
+      (existingProjects || []).map((p) => `${p.content_type}-${p.content_id}`),
     );
 
     let enqueuedCount = 0;
@@ -133,19 +143,16 @@ export default defineEventHandler(async (event) => {
 
     const summaryMessage = `Enqueued **${enqueuedCount}** items.\nSkipped **${alreadyInQueueCount}** already in queue.\nSkipped **${skippedCount}** already have voice actors.\nFailed to enqueue **${failedCount}** items.`;
     let imageUrl: string | undefined = undefined;
-    if (itemsToProcess.length > 0 && itemsToProcess[0].poster_path) {
-      imageUrl = buildTmdbImageUrl(itemsToProcess[0].poster_path) || undefined;
+    const firstPoster = itemsToProcess[0]?.poster_path;
+    if (firstPoster) {
+      imageUrl = buildTmdbImageUrl(firstPoster) || undefined;
     }
 
-    await sendDiscordAdminNotification(
-      "DubbingBase Trending Media Report",
-      summaryMessage,
-      {
-        event,
-        queue: "wiki_discovery",
-        ...(imageUrl ? { imageUrl } : {}),
-      },
-    );
+    await sendDiscordAdminNotification("DubbingBase Trending Media Report", summaryMessage, {
+      event,
+      queue: "wiki_discovery",
+      ...(imageUrl ? { imageUrl } : {}),
+    });
 
     return {
       ok: true,
@@ -158,8 +165,7 @@ export default defineEventHandler(async (event) => {
       },
     };
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error occurred";
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
     console.error("Trending media queuing failed:", errorMessage);
 
     await sendDiscordAdminNotification(

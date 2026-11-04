@@ -6,7 +6,23 @@ interface DashboardStats {
   voiceActorCount: number;
   userGrowth: { date: string; count: number }[];
   voiceActorGrowth: { date: string; count: number }[];
-  topVoiceActors: any[];
+  topVoiceActors: Record<string, unknown>[];
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function countByDay(dates: Iterable<string | null | undefined>) {
+  const grouped = new Map<string, number>();
+  for (const value of dates) {
+    const date = (value ? new Date(value) : new Date()).toISOString().split("T")[0] || "";
+    grouped.set(date, (grouped.get(date) || 0) + 1);
+  }
+
+  return [...grouped]
+    .map(([date, count]) => ({ date, count }))
+    .sort((a, b) => a.date.localeCompare(b.date));
 }
 
 async function getUserCount(): Promise<number> {
@@ -30,26 +46,12 @@ async function getUserGrowth(): Promise<{ date: string; count: number }[]> {
   const { data, error } = await supabaseAdmin.auth.admin.listUsers();
   if (error) throw error;
 
-  const grouped = (data.users || [])
-    .filter((user: any) => user.is_anonymous === false)
-    .reduce(
-      (acc: Record<string, number>, user: any) => {
-        const date =
-          new Date(user.created_at).toISOString().split("T")[0] || "";
-        acc[date] = (acc[date] || 0) + 1;
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
-
-  return Object.entries(grouped)
-    .map(([date, count]) => ({ date, count: count as number }))
-    .sort((a, b) => a.date.localeCompare(b.date));
+  return countByDay(
+    (data.users || []).filter((user) => user.is_anonymous === false).map((user) => user.created_at),
+  );
 }
 
-async function getVoiceActorGrowth(): Promise<
-  { date: string; count: number }[]
-> {
+async function getVoiceActorGrowth(): Promise<{ date: string; count: number }[]> {
   const supabase = useSupabaseAdmin();
   const PAGE_SIZE = 1000;
   let from = 0;
@@ -75,23 +77,10 @@ async function getVoiceActorGrowth(): Promise<
     }
   }
 
-  const grouped = allData.reduce(
-    (acc: Record<string, number>, va: any) => {
-      const d = va?.created_at;
-      const a = d ? new Date(d) : new Date();
-      const date = a.toISOString().split("T")[0] || "";
-      acc[date] = (acc[date] || 0) + 1;
-      return acc;
-    },
-    {} as Record<string, number>,
-  );
-
-  return Object.entries(grouped)
-    .map(([date, count]) => ({ date, count: count as number }))
-    .sort((a, b) => a.date.localeCompare(b.date));
+  return countByDay(allData.map((va) => va.created_at));
 }
 
-async function getTopVoiceActors(limit = 10): Promise<any[]> {
+async function getTopVoiceActors(limit = 10): Promise<Record<string, unknown>[]> {
   const supabase = useSupabaseAdmin();
   const { data, error } = await supabase.rpc("get_top_voice_actors", {
     limit_param: limit,
@@ -99,30 +88,31 @@ async function getTopVoiceActors(limit = 10): Promise<any[]> {
 
   if (error) throw error;
 
-  return (data || []).map((result: any) => ({
-    ...result.voice_actor,
-    role_count: result.role_count,
-    profile_picture: buildSupabaseImageUrl(result.voice_actor?.profile_picture),
-  }));
+  return (data || []).map((result) => {
+    const voiceActor = isRecord(result.voice_actor) ? result.voice_actor : {};
+    const profilePicture = voiceActor.profile_picture;
+    return {
+      ...voiceActor,
+      role_count: result.role_count,
+      profile_picture: buildSupabaseImageUrl(
+        typeof profilePicture === "string" ? profilePicture : null,
+      ),
+    };
+  });
 }
 
 export default defineEventHandler(async (event) => {
   requireAdmin(event);
 
   try {
-    const [
-      userCount,
-      voiceActorCount,
-      userGrowth,
-      voiceActorGrowth,
-      topVoiceActors,
-    ] = await Promise.all([
-      getUserCount(),
-      getVoiceActorCount(),
-      getUserGrowth(),
-      getVoiceActorGrowth(),
-      getTopVoiceActors(10),
-    ]);
+    const [userCount, voiceActorCount, userGrowth, voiceActorGrowth, topVoiceActors] =
+      await Promise.all([
+        getUserCount(),
+        getVoiceActorCount(),
+        getUserGrowth(),
+        getVoiceActorGrowth(),
+        getTopVoiceActors(10),
+      ]);
 
     const data: DashboardStats = {
       userCount,

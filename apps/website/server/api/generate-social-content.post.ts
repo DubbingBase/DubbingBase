@@ -3,11 +3,16 @@ import { requireAdmin } from "../utils/auth";
 import { llmGenerateObject } from "../utils/llm";
 import { z } from "zod";
 
+interface SocialContext {
+  name: string;
+  bio: string | null;
+  date_of_birth?: string | null;
+}
+
 export default defineEventHandler(async (event) => {
   const internalSecret = getHeader(event, "x-internal-secret");
   const config = useRuntimeConfig();
-  const isInternalTrigger =
-    Boolean(internalSecret) && internalSecret === config.supabaseSecretKey;
+  const isInternalTrigger = Boolean(internalSecret) && internalSecret === config.supabaseSecretKey;
 
   if (!isInternalTrigger) {
     requireAdmin(event);
@@ -26,20 +31,19 @@ export default defineEventHandler(async (event) => {
       .select("*")
       .like("date_of_birth", `%-${birthdaySuffix}`);
 
-    let contextData: any = null;
-    let imageContextUrl = null;
+    let contextData: SocialContext | SocialContext[] | null = null;
+    let imageContextUrl: string | null = null;
     let promptTopic = "";
 
     if (voiceActors && voiceActors.length > 0) {
-      promptTopic =
-        "C'est l'anniversaire de ces comédiens de doublage aujourd'hui !";
-      contextData = voiceActors.map((va: any) => ({
+      promptTopic = "C'est l'anniversaire de ces comédiens de doublage aujourd'hui !";
+      contextData = voiceActors.map((va) => ({
         name: `${va.firstname} ${va.lastname}`,
         bio: va.bio,
         date_of_birth: va.date_of_birth,
       }));
 
-      const imageActor = voiceActors.find((va: any) => va.profile_picture);
+      const imageActor = voiceActors.find((va) => va.profile_picture);
       if (imageActor) {
         imageContextUrl = imageActor.profile_picture;
       }
@@ -51,8 +55,7 @@ export default defineEventHandler(async (event) => {
         .limit(50);
 
       if (topActors && topActors.length > 0) {
-        const randomActor =
-          topActors[Math.floor(Math.random() * topActors.length)]!;
+        const randomActor = topActors[Math.floor(Math.random() * topActors.length)]!;
         promptTopic = "Mise en lumière sur un comédien de doublage !";
         contextData = {
           name: `${randomActor.firstname} ${randomActor.lastname}`,
@@ -129,8 +132,11 @@ Instagram constraints:
       success: true,
       message: "Content generated and email sent.",
     };
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error in generate-social-content:", error);
-    throw createError({ statusCode: 500, message: error.message });
+    throw createError({
+      statusCode: 500,
+      message: error instanceof Error ? error.message : String(error),
+    });
   }
 });
