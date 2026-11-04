@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 91 routes | 28 models | 135 components | 109 lib files | 64 env vars | 14 middleware | 46% test coverage
-> **Token savings:** this file is ~17,400 tokens. Without it, AI exploration would cost ~151,500 tokens. **Saves ~134,100 tokens per conversation.**
-> **Last scanned:** 2026-11-04 12:36 — re-run after significant changes
+> 91 routes | 28 models | 135 components | 116 lib files | 64 env vars | 15 middleware | 47% test coverage
+> **Token savings:** this file is ~17,800 tokens. Without it, AI exploration would cost ~153,600 tokens. **Saves ~135,800 tokens per conversation.**
+> **Last scanned:** 2026-11-04 13:11 — re-run after significant changes
 
 ---
 
@@ -24,7 +24,7 @@
 - `GET` `/api/advertisement/:id` params(id) [queue]
 - `GET` `/api/audiobook/:id` params(id) [queue]
 - `GET` `/api/career-grid` [cache]
-- `POST` `/api/cast-vote`
+- `POST` `/api/cast-vote` [auth]
 - `POST` `/api/count-voice-actor-works`
 - `POST` `/api/create-user-profile` [auth, db]
 - `GET` `/api/dashboard-stats` [auth]
@@ -49,7 +49,7 @@
 - `GET` `/api/get-user-profile` [auth]
 - `ALL` `/api/get-user-voice-actor` [auth]
 - `GET` `/api/get-user-voice-actors` [auth]
-- `GET` `/api/get-work-votes`
+- `GET` `/api/get-work-votes` [auth]
 - `GET` `/api/home-stats`
 - `POST` `/api/internal-media-create` [auth] ✓
 - `GET` `/api/internal-media-credits` ✓
@@ -58,7 +58,7 @@
 - `POST` `/api/link-voice-actor` [auth] ✓
 - `GET` `/api/list-voice-actors`
 - `GET` `/api/list_users` [auth]
-- `POST` `/api/manage-subscription` [db]
+- `POST` `/api/manage-subscription` [auth, db]
 - `GET` `/api/media-catalog`
 - `POST` `/api/media-queue` [auth, queue] ✓
 - `POST` `/api/merge_voice_actor_duplicates` [auth]
@@ -73,7 +73,7 @@
 - `POST` `/api/process-media-queue` [auth, cache, queue] ✓
 - `GET` `/api/recent-voice-actors`
 - `POST` `/api/request-voice-actor-page` [auth, email]
-- `POST` `/api/revert-task` [db]
+- `POST` `/api/revert-task` [auth, db]
 - `POST` `/api/save-dubbing-project` [auth] ✓
 - `POST` `/api/save-metadata` [auth] ✓
 - `POST` `/api/save-studio` [auth] ✓
@@ -83,21 +83,21 @@
 - `GET` `/api/season/index` [cache]
 - `GET` `/api/show/:id` params(id) [queue]
 - `POST` `/api/submit-task` [auth, db, upload] ✓
-- `POST` `/api/submit-user-report` [db]
+- `POST` `/api/submit-user-report` [auth, db]
 - `GET` `/api/top-contributors` ✓
 - `GET` `/api/top-voice-actors` ✓
 - `GET` `/api/toy/:id` params(id) [queue]
 - `GET` `/api/toy-metadata/:id` params(id)
 - `GET` `/api/trending/games` [cache]
-- `GET` `/api/trending/movies` [cache]
+- `GET` `/api/trending/movies` [cache] ✓
 - `GET` `/api/trending/shows` [cache]
 - `GET` `/api/trending/voice-actors`
 - `POST` `/api/update-review-status` [auth] ✓
-- `POST` `/api/update-user-profile`
+- `POST` `/api/update-user-profile` [auth]
 - `POST` `/api/update-voice-actor` [auth, upload] ✓
 - `POST` `/api/update_user_role` [auth]
 - `POST` `/api/update_voice_actor_link` [auth] ✓
-- `POST` `/api/upload-profile-picture` [db, upload] ✓
+- `POST` `/api/upload-profile-picture` [auth, db, upload] ✓
 - `GET` `/api/voice-actor/:id` params(id)
 - `ALL` `/routes/sitemap.xml`
 - `GET` `/routes/sitemaps/:file` params(file)
@@ -466,8 +466,12 @@
 - `apps/website/server/utils/api/tmdb.ts` — class TMDBClient
 - `apps/website/server/utils/api/toy.ts` — class ToyClient
 - `apps/website/server/utils/api/tvdb.ts` — class TVDBClient, const TVDB_AUTH_TOKEN_NAMESPACE
+- `apps/website/server/utils/auth-handlers.ts` — function defineUserHandler: (handler, user) => void, function defineAdminHandler: (handler, admin) => void
 - `apps/website/server/utils/auth-session.ts` — function hasSupabaseAuthCookie: (cookieHeader, cookiePrefix) => boolean
-- `apps/website/server/utils/auth.ts` — function requireUser: (event) => User, function requireAdmin: (event) => User
+- `apps/website/server/utils/auth.ts`
+  - function resolveUser: (event) => Promise<User | null>
+  - function requireUser: (event) => Promise<User>
+  - function requireAdmin: (event) => Promise<User>
 - `apps/website/server/utils/background.ts` — function scheduleBackgroundTask: (event, task, label) => void
 - `apps/website/server/utils/cache/constants.ts`
   - function hashCacheValue: (value) => string
@@ -490,6 +494,16 @@
   - type CachePolicy
   - type CacheTTLPreset
   - _...2 more_
+- `apps/website/server/utils/cache/public-pages.ts`
+  - function isPublicCacheablePage: (pathname) => boolean
+  - function shouldCachePublicPage: (request) => boolean
+  - interface PublicPageRequest
+- `apps/website/server/utils/cache/response-policy.ts`
+  - function resolveCacheDecision: (input) => CacheDecision
+  - function applyDefaultCachePolicy: (event) => void
+  - function applyCachePolicy: (event, options) => void
+  - interface CacheDecisionInput
+  - type CacheDecision
 - `apps/website/server/utils/cache/wikipedia.ts`
   - function sortLanguagesByPopularity: (languages) => string[]
   - function extractAvailableLanguages: (sitelinks, {...}) => string[]
@@ -627,6 +641,7 @@
   - interface SitemapEntity
   - interface SitemapRecord
   - _...3 more_
+- `apps/website/server/utils/testing/supabase-server-stub.ts` — function serverSupabaseClient: () => Promise<never>
 - `apps/website/server/utils/urls/supabase.ts` — function buildSupabaseImageUrl: (imagePath, bucket, size) => string | null, function processVoiceActor
 - `apps/website/server/utils/urls/tmdb.ts`
   - function buildTmdbImageUrl: (imagePath, size) => string | null
@@ -648,6 +663,7 @@
   - interface AdminLookupOption
   - type AdminLookups
 - `apps/website/src/composables/useAdminReports.ts` — function useAdminReports, const ADMIN_REPORTS_PAGE_SIZE
+- `apps/website/src/composables/useClientUser.ts` — function useClientUser: () => void
 - `apps/website/src/composables/useContribute.ts`
   - function fetchRandomTask
   - function useContribute
@@ -667,6 +683,7 @@
   - _...2 more_
 - `apps/website/src/composables/useKeyboardInset.ts` — function computeKeyboardInset, function useKeyboardInset
 - `apps/website/src/composables/useLocalePathPrefix.ts` — function useLocalePathPrefix: () => (path: string) => string
+- `apps/website/src/composables/useLocalePreference.ts` — function useLocalePreference: () => void
 - `apps/website/src/composables/useMetadataCreation.ts`
   - function isMetadataValidationError: (error) => boolean
   - function useMetadataCreation: () => void
@@ -706,6 +723,7 @@
   - interface DuplicateWorkEntry
   - interface DuplicateWorkGroup
   - _...4 more_
+- `apps/website/src/utils/locale-preference.ts` — function resolvePreferredLocale: (savedChoice, browserLanguages) => SupportedLocale | null, const LOCALE_PREFERENCE_COOKIE
 - `apps/website/src/utils/media-cast.ts`
   - function hasOriginalVersion: (language, cast) => language is string
   - function isOriginalVersionQuery: (value) => boolean
@@ -901,18 +919,19 @@
 
 ## auth
 - generate-social-content.post — `apps/website/server/api/generate-social-content.post.ts`
-- auth — `apps/website/server/middleware/auth.ts`
+- auth-handlers.test — `apps/website/server/utils/auth-handlers.test.ts`
+- auth-handlers — `apps/website/server/utils/auth-handlers.ts`
 - auth-session.test — `apps/website/server/utils/auth-session.test.ts`
 - auth-session — `apps/website/server/utils/auth-session.ts`
+- auth-usage.test — `apps/website/server/utils/auth-usage.test.ts`
+- auth.test — `apps/website/server/utils/auth.test.ts`
 - auth — `apps/website/server/utils/auth.ts`
 - auth — `apps/website/src/middleware/auth.ts`
 - authenticated-fetch — `apps/website/src/plugins/authenticated-fetch.ts`
 
 ## custom
-- 00-cache-headers — `apps/website/server/middleware/00-cache-headers.ts`
 - 00-cache — `apps/website/server/middleware/00-cache.ts`
 - 00-e2e-mock — `apps/website/server/middleware/00-e2e-mock.ts`
-- cache-headers-middleware.test — `apps/website/server/utils/cache/cache-headers-middleware.test.ts`
 - admin — `apps/website/src/middleware/admin.ts`
 - 20260618000000_migrate_to_pgmq — `packages/database/supabase/migrations/20260618000000_migrate_to_pgmq.sql`
 
@@ -926,9 +945,10 @@
 ## Most Imported Files (change these carefully)
 
 - `apps/website/server/utils/db/client.ts` — imported by **73** files
-- `apps/website/server/utils/auth.ts` — imported by **42** files
+- `apps/website/server/utils/auth-handlers.ts` — imported by **37** files
 - `apps/website/server/utils/index.ts` — imported by **27** files
 - `apps/website/server/utils/cache/index.ts` — imported by **19** files
+- `apps/website/server/utils/auth.ts` — imported by **16** files
 - `apps/website/server/utils/notifications/discord.ts` — imported by **12** files
 - `apps/website/server/utils/api/igdb.ts` — imported by **12** files
 - `apps/website/server/utils/urls/supabase.ts` — imported by **11** files
@@ -944,27 +964,26 @@
 - `apps/website/server/utils/services/media.ts` — imported by **7** files
 - `apps/website/server/utils/cache/wikipedia.ts` — imported by **5** files
 - `apps/website/server/utils/dubbing-region-detection.ts` — imported by **5** files
-- `apps/website/server/utils/error-message.ts` — imported by **5** files
 
 ## Import Map (who imports what)
 
 - `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/reprocess-legacy-wiki-check-reviews.post.ts` +68 more
-- `apps/website/server/utils/auth.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/reprocess-legacy-wiki-check-reviews.post.ts` +37 more
+- `apps/website/server/utils/auth-handlers.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/reprocess-legacy-wiki-check-reviews.post.ts` +32 more
 - `apps/website/server/utils/index.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/episode/index.get.ts` +22 more
 - `apps/website/server/utils/cache/index.ts` ← `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/season/index.get.ts`, `apps/website/server/utils/api/igdb.test.ts`, `apps/website/server/utils/api/igdb.ts`, `apps/website/server/utils/api/openlibrary.test.ts` +14 more
+- `apps/website/server/utils/auth.ts` ← `apps/website/server/api/admin/work-duplicates.get.ts`, `apps/website/server/api/cast-vote.post.ts`, `apps/website/server/api/generate-social-content.post.ts`, `apps/website/server/api/get-work-votes.get.ts`, `apps/website/server/api/manage-subscription.post.ts` +11 more
 - `apps/website/server/utils/notifications/discord.ts` ← `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/game/[id].get.ts`, `apps/website/server/api/media-queue.post.ts`, `apps/website/server/api/movie/[id].get.ts` +7 more
 - `apps/website/server/utils/api/igdb.ts` ← `apps/website/server/api/game/[id].get.ts`, `apps/website/server/api/internal-media-credits.get.ts`, `apps/website/server/api/internal-media-metadata.get.ts`, `apps/website/server/api/media-catalog.get.ts`, `apps/website/server/api/search/index.get.ts` +7 more
 - `apps/website/server/utils/urls/supabase.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/dashboard-stats.get.ts`, `apps/website/server/api/find_duplicate_voice_actors.get.ts`, `apps/website/server/api/list-voice-actors.get.ts`, `apps/website/server/api/recent-voice-actors.get.ts` +6 more
 - `apps/website/server/utils/dubbing-language.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/internal-media-create.post.ts`, `apps/website/server/api/link-voice-actor.post.ts`, `apps/website/server/api/media-queue.post.ts` +5 more
 - `apps/website/server/utils/db/queries.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/detail-collections.get.ts`, `apps/website/server/api/game/[id].get.ts` +4 more
-- `apps/website/server/utils/urls/tmdb.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/notify-subscribers.post.ts`, `apps/website/server/api/prepare-trending-media.post.ts`, `apps/website/server/api/search/index.get.ts`, `apps/website/server/api/show/[id].get.ts` +4 more
 
 ---
 
 # Test Coverage
 
-> **46%** of routes and models are covered by tests
-> 142 test files found
+> **47%** of routes and models are covered by tests
+> 147 test files found
 
 ## Covered Routes
 
@@ -995,6 +1014,7 @@
 - POST:/api/submit-task
 - GET:/api/top-contributors
 - GET:/api/top-voice-actors
+- GET:/api/trending/movies
 - POST:/api/update-review-status
 - POST:/api/update-voice-actor
 - POST:/api/update_voice_actor_link

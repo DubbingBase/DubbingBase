@@ -15,8 +15,12 @@
 - `apps/website/server/utils/api/tmdb.ts` — class TMDBClient
 - `apps/website/server/utils/api/toy.ts` — class ToyClient
 - `apps/website/server/utils/api/tvdb.ts` — class TVDBClient, const TVDB_AUTH_TOKEN_NAMESPACE
+- `apps/website/server/utils/auth-handlers.ts` — function defineUserHandler: (handler, user) => void, function defineAdminHandler: (handler, admin) => void
 - `apps/website/server/utils/auth-session.ts` — function hasSupabaseAuthCookie: (cookieHeader, cookiePrefix) => boolean
-- `apps/website/server/utils/auth.ts` — function requireUser: (event) => User, function requireAdmin: (event) => User
+- `apps/website/server/utils/auth.ts`
+  - function resolveUser: (event) => Promise<User | null>
+  - function requireUser: (event) => Promise<User>
+  - function requireAdmin: (event) => Promise<User>
 - `apps/website/server/utils/background.ts` — function scheduleBackgroundTask: (event, task, label) => void
 - `apps/website/server/utils/cache/constants.ts`
   - function hashCacheValue: (value) => string
@@ -39,6 +43,16 @@
   - type CachePolicy
   - type CacheTTLPreset
   - _...2 more_
+- `apps/website/server/utils/cache/public-pages.ts`
+  - function isPublicCacheablePage: (pathname) => boolean
+  - function shouldCachePublicPage: (request) => boolean
+  - interface PublicPageRequest
+- `apps/website/server/utils/cache/response-policy.ts`
+  - function resolveCacheDecision: (input) => CacheDecision
+  - function applyDefaultCachePolicy: (event) => void
+  - function applyCachePolicy: (event, options) => void
+  - interface CacheDecisionInput
+  - type CacheDecision
 - `apps/website/server/utils/cache/wikipedia.ts`
   - function sortLanguagesByPopularity: (languages) => string[]
   - function extractAvailableLanguages: (sitelinks, {...}) => string[]
@@ -176,6 +190,7 @@
   - interface SitemapEntity
   - interface SitemapRecord
   - _...3 more_
+- `apps/website/server/utils/testing/supabase-server-stub.ts` — function serverSupabaseClient: () => Promise<never>
 - `apps/website/server/utils/urls/supabase.ts` — function buildSupabaseImageUrl: (imagePath, bucket, size) => string | null, function processVoiceActor
 - `apps/website/server/utils/urls/tmdb.ts`
   - function buildTmdbImageUrl: (imagePath, size) => string | null
@@ -197,6 +212,7 @@
   - interface AdminLookupOption
   - type AdminLookups
 - `apps/website/src/composables/useAdminReports.ts` — function useAdminReports, const ADMIN_REPORTS_PAGE_SIZE
+- `apps/website/src/composables/useClientUser.ts` — function useClientUser: () => void
 - `apps/website/src/composables/useContribute.ts`
   - function fetchRandomTask
   - function useContribute
@@ -216,6 +232,7 @@
   - _...2 more_
 - `apps/website/src/composables/useKeyboardInset.ts` — function computeKeyboardInset, function useKeyboardInset
 - `apps/website/src/composables/useLocalePathPrefix.ts` — function useLocalePathPrefix: () => (path: string) => string
+- `apps/website/src/composables/useLocalePreference.ts` — function useLocalePreference: () => void
 - `apps/website/src/composables/useMetadataCreation.ts`
   - function isMetadataValidationError: (error) => boolean
   - function useMetadataCreation: () => void
@@ -255,6 +272,7 @@
   - interface DuplicateWorkEntry
   - interface DuplicateWorkGroup
   - _...4 more_
+- `apps/website/src/utils/locale-preference.ts` — function resolvePreferredLocale: (savedChoice, browserLanguages) => SupportedLocale | null, const LOCALE_PREFERENCE_COOKIE
 - `apps/website/src/utils/media-cast.ts`
   - function hasOriginalVersion: (language, cast) => language is string
   - function isOriginalVersionQuery: (value) => boolean

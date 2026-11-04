@@ -2,11 +2,11 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Update-user-profile.post subsystem handles **1 routes**.
+The Update-user-profile.post subsystem handles **1 routes** and touches: auth.
 
 ## Routes
 
-- `POST` `/api/update-user-profile`
+- `POST` `/api/update-user-profile` [auth]
   `apps/website/server/api/update-user-profile.post.ts`
 
 ## Related Models
