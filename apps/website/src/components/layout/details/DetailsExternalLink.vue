@@ -9,5 +9,6 @@
 </template>
 
 <script setup lang="ts">
+import { ExternalLinkIcon } from "lucide-vue-next";
 defineProps<{ href: string; label: string }>();
 </script>

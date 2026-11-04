@@ -360,11 +360,9 @@ import {
   ArrowLeftIcon,
   UserIcon,
   MicIcon,
-  SearchIcon,
   Gamepad2Icon,
   Loader2Icon,
   StarIcon,
-  ExternalLinkIcon,
 } from "lucide-vue-next";
 import ReportModal from "../../components/ReportModal.vue";
 

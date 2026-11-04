@@ -22,6 +22,7 @@
 </template>
 
 <script setup lang="ts">
+import { SearchIcon } from "lucide-vue-next";
 const search = defineModel<string>("search", { default: "" });
 withDefaults(
   defineProps<{

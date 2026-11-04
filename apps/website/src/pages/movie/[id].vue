@@ -336,15 +336,7 @@ import {
 } from "@app/shared-logic";
 import { computed, ref, watch } from "vue";
 import { refDebounced } from "@vueuse/core";
-import {
-  ArrowLeftIcon,
-  ClapperboardIcon,
-  UserIcon,
-  MicIcon,
-  SearchIcon,
-  ExternalLinkIcon,
-  StarIcon,
-} from "lucide-vue-next";
+import { ArrowLeftIcon, ClapperboardIcon, UserIcon, MicIcon, StarIcon } from "lucide-vue-next";
 import ReportModal from "../../components/ReportModal.vue";
 import {
   hasOriginalVersion,

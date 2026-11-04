@@ -148,11 +148,7 @@ import {
   resolveDetailCollectionProject,
 } from "@app/shared-logic";
 import type { DetailCollectionProject, MediaWorkCastCard, Podcast } from "@app/shared-logic";
-import {
-  ExternalLink as ExternalLinkIcon,
-  Search as SearchIcon,
-  Radio as RadioIcon,
-} from "lucide-vue-next";
+import { ExternalLink as ExternalLinkIcon, Radio as RadioIcon } from "lucide-vue-next";
 
 const route = useRoute();
 const router = useRouter();
