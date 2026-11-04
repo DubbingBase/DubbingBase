@@ -41,9 +41,7 @@
         </span>
       </div>
 
-      <div
-        class="mt-1 flex items-center gap-2 truncate text-xs theme-text-muted"
-      >
+      <div class="mt-1 flex items-center gap-2 truncate text-xs theme-text-muted">
         <span v-if="releaseYear">
           {{ releaseYear }}
         </span>
@@ -87,10 +85,7 @@ const displayName = computed(
 );
 
 const imagePath = computed(
-  () =>
-    props.result.poster_path ||
-    props.result.profile_path ||
-    props.result.cover?.url,
+  () => props.result.poster_path || props.result.profile_path || props.result.cover?.url,
 );
 const releaseYear = computed(() => {
   const date = props.result.release_date || props.result.first_air_date;

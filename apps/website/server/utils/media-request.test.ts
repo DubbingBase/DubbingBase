@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  parseEpisodeQuery,
-  parseSeasonQuery,
-  withMediaServiceTimeout,
-} from "./media-request";
+import { parseEpisodeQuery, parseSeasonQuery, withMediaServiceTimeout } from "./media-request";
 import { withTimeout } from "./with-timeout";
 
 describe("media service requests", () => {

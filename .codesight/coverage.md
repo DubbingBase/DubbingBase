@@ -1,7 +1,7 @@
 # Test Coverage
 
 > **47%** of routes and models are covered by tests
-> 141 test files found
+> 147 test files found
 
 ## Covered Routes
 
@@ -32,6 +32,7 @@
 - POST:/api/submit-task
 - GET:/api/top-contributors
 - GET:/api/top-voice-actors
+- GET:/api/trending/movies
 - POST:/api/update-review-status
 - POST:/api/update-voice-actor
 - POST:/api/update_voice_actor_link

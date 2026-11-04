@@ -168,8 +168,7 @@ export const MOCK_VOICE_ACTOR = {
         },
       },
       sortDate: "1981-06-12",
-      searchText:
-        "raiders of the lost ark indiana jones harrison ford dialogues",
+      searchText: "raiders of the lost ark indiana jones harrison ford dialogues",
     },
     {
       media: {
@@ -231,8 +230,7 @@ export const MOCK_VOICE_ACTOR = {
         },
       },
       sortDate: "1992-09-05",
-      searchText:
-        "batman the animated series bruce wayne kevin conroy dialogues",
+      searchText: "batman the animated series bruce wayne kevin conroy dialogues",
     },
     {
       media: {
@@ -263,8 +261,7 @@ export const MOCK_VOICE_ACTOR = {
         },
       },
       sortDate: "2015-05-19",
-      searchText:
-        "the witcher 3 wild hunt geralt of rivia doug cockle dialogues",
+      searchText: "the witcher 3 wild hunt geralt of rivia doug cockle dialogues",
     },
     {
       media: {
@@ -475,15 +472,13 @@ export const MOCK_MOVIE = {
             id: 1,
             firstname: "Richard",
             lastname: "Darbois",
-            profile_picture:
-              "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
+            profile_picture: "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
           },
           voice_actors: {
             id: 1,
             firstname: "Richard",
             lastname: "Darbois",
-            profile_picture:
-              "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
+            profile_picture: "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
           },
         },
       ],
@@ -498,15 +493,13 @@ export const MOCK_MOVIE = {
             id: 1,
             firstname: "Richard",
             lastname: "Darbois",
-            profile_picture:
-              "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
+            profile_picture: "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
           },
           voice_actors: {
             id: 1,
             firstname: "Richard",
             lastname: "Darbois",
-            profile_picture:
-              "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
+            profile_picture: "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
           },
         },
       ],
@@ -769,8 +762,7 @@ export const MOCK_GAME = {
     cover: {
       url: "https://images.igdb.com/igdb/image/upload/t_cover_big/witcher3.jpg",
     },
-    cover_url:
-      "https://images.igdb.com/igdb/image/upload/t_cover_big/witcher3.jpg",
+    cover_url: "https://images.igdb.com/igdb/image/upload/t_cover_big/witcher3.jpg",
     first_release_date: 1431993600,
     rating: 94.5,
   },
@@ -853,8 +845,7 @@ export const MOCK_AUDIOBOOK = {
     id: 401,
     title: "Dune",
     name: "Dune",
-    description:
-      "Set on the desert planet Arrakis, Dune is the story of the boy Paul Atreides.",
+    description: "Set on the desert planet Arrakis, Dune is the story of the boy Paul Atreides.",
     cover_url: "https://covers.openlibrary.org/b/id/8225266-L.jpg",
     first_publish_year: 1965,
     release_date: "1965-08-01",
@@ -866,8 +857,7 @@ export const MOCK_AUDIOBOOK = {
     id: 401,
     title: "Dune",
     name: "Dune",
-    description:
-      "Set on the desert planet Arrakis, Dune is the story of the boy Paul Atreides.",
+    description: "Set on the desert planet Arrakis, Dune is the story of the boy Paul Atreides.",
     cover_url: "https://covers.openlibrary.org/b/id/8225266-L.jpg",
     first_publish_year: 1965,
     release_date: "1965-08-01",
@@ -899,15 +889,13 @@ export const MOCK_AUDIOBOOK = {
             id: 1,
             firstname: "Richard",
             lastname: "Darbois",
-            profile_picture:
-              "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
+            profile_picture: "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
           },
           voice_actors: {
             id: 1,
             firstname: "Richard",
             lastname: "Darbois",
-            profile_picture:
-              "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
+            profile_picture: "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
           },
         },
       ],
@@ -921,15 +909,13 @@ export const MOCK_AUDIOBOOK = {
             id: 1,
             firstname: "Richard",
             lastname: "Darbois",
-            profile_picture:
-              "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
+            profile_picture: "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
           },
           voice_actors: {
             id: 1,
             firstname: "Richard",
             lastname: "Darbois",
-            profile_picture:
-              "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
+            profile_picture: "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
           },
         },
       ],
@@ -944,10 +930,8 @@ export const MOCK_PODCAST = {
     title: "L'Ombre du Doute",
     name: "L'Ombre du Doute",
     description: "Une saga audio policière captivante.",
-    cover_url:
-      "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=500",
-    poster_path:
-      "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=500",
+    cover_url: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=500",
+    poster_path: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=500",
     release_date: "2023-09-01",
     author: "Studio Sonore",
     author_name: "Studio Sonore",
@@ -979,15 +963,13 @@ export const MOCK_PODCAST = {
             id: 1,
             firstname: "Richard",
             lastname: "Darbois",
-            profile_picture:
-              "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
+            profile_picture: "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
           },
           voice_actors: {
             id: 1,
             firstname: "Richard",
             lastname: "Darbois",
-            profile_picture:
-              "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
+            profile_picture: "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
           },
         },
       ],
@@ -1001,15 +983,13 @@ export const MOCK_PODCAST = {
             id: 1,
             firstname: "Richard",
             lastname: "Darbois",
-            profile_picture:
-              "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
+            profile_picture: "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
           },
           voice_actors: {
             id: 1,
             firstname: "Richard",
             lastname: "Darbois",
-            profile_picture:
-              "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
+            profile_picture: "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
           },
         },
       ],
@@ -1052,8 +1032,7 @@ export const MOCK_ACTOR = {
             id: 1,
             firstname: "Richard",
             lastname: "Darbois",
-            profile_picture:
-              "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
+            profile_picture: "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
           },
         ],
         mediaDetails: {
@@ -1089,8 +1068,7 @@ export const MOCK_STUDIO = {
     country: "France",
     city: "La Plaine Saint-Denis",
     logo_url: "https://dubbingbase.com/studios/dubbing_brothers.png",
-    description:
-      "L'un des plus grands studios de doublage en France et en Europe.",
+    description: "L'un des plus grands studios de doublage en France et en Europe.",
   },
   dubbedProjects: [
     {
@@ -1156,8 +1134,7 @@ export const MOCK_SEARCH_RESULTS = [
   {
     id: 1942,
     name: "The Witcher 3: Wild Hunt",
-    poster_path:
-      "https://images.igdb.com/igdb/image/upload/t_cover_big/witcher3.jpg",
+    poster_path: "https://images.igdb.com/igdb/image/upload/t_cover_big/witcher3.jpg",
     media_type: "video_game",
     popularity: 85,
   },
@@ -1194,8 +1171,7 @@ export const MOCK_HOME_DATA = {
     {
       id: 1942,
       name: "The Witcher 3: Wild Hunt",
-      cover_url:
-        "https://images.igdb.com/igdb/image/upload/t_cover_big/witcher3.jpg",
+      cover_url: "https://images.igdb.com/igdb/image/upload/t_cover_big/witcher3.jpg",
       first_release_date: 1431993600,
     },
   ],

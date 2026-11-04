@@ -2,9 +2,9 @@
 
 > **Navigation aid.** Library inventory extracted via AST. Read the source files listed here before modifying exported functions.
 
-**106 library files** across 4 modules
+**116 library files** across 4 modules
 
-## Website (83 files)
+## Website (93 files)
 
 - `apps/website/server/utils/db/queries.ts` — getVoiceActorWithWork, getWorkByActor, getActorPageWorkByActor, getDubbingProjects, getDubbingProjectsForMediaEndpoint, getAdvertisementPageDubbingProjects, …
 - `apps/website/src/utils/voice-actor-profile-save.ts` — voiceActorProfilePayload, changedVoiceActorProfileFields, displayedSocialLinks, mergeDisplayedSocialLinks, profileUnchangedExceptPicture, refreshVoiceActorProfilePicture, …
@@ -15,6 +15,7 @@
 - `apps/website/server/utils/services/media-preparation.ts` — checkMediaDubbingSections, checkGameDubbingSections, extractMediaDubbingCredits, extractGameDubbingCredits, prepareMedia, prepareGame, …
 - `apps/website/src/utils/duplicate-work.ts` — duplicateWorkDraftHasChanges, canPrefetchDuplicateWorkPage, rankDuplicateWorks, prefillDuplicateWork, DuplicateWorkEntry, DuplicateWorkGroup, …
 - `apps/website/server/utils/queue-payload.ts` — queueRequester, queueRequesterRpcArgs, validateDiscoveryPayload, validateCheckPayload, validateExtractPayload, ValidQueueBase, …
+- `apps/website/server/utils/sitemap.ts` — localizedPath, renderUrlset, renderSitemapIndex, chunkCount, SitemapEntity, SitemapRecord, …
 - `apps/website/server/utils/cache/index.ts` — createCacheNamespace, CacheNamespace, SimpleCache, CacheKv, CachePolicy, CacheTTLPreset, …
 - `apps/website/src/composables/useEditorFormState.ts` — createEditorFormState, createUnsavedChangesLeaveGuard, useEditorFormState, createEditorRowKey, EditorFormStateOptions, EditorFormState, …
 - `apps/website/src/utils/season-data.ts` — fetchSeasonPageData, fetchEpisodePageData, fetchEpisodeProjectWorks, SeasonPageDubbingProject, EpisodePageDubbingProject, EpisodePageVoiceActor, …
@@ -25,13 +26,12 @@
 - `apps/website/server/utils/notifications/discord.ts` — normalizeDiscordUrl, buildDiscordEmbed, sendDiscordAdminNotification, DiscordWebhookOptions, QueueName, DiscordNotificationCategory
 - `apps/website/src/composables/useContribute.ts` — fetchRandomTask, useContribute, ContributionTask, ContributionCategory, ClaimedCategory, ContributionClaim
 - `apps/website/server/utils/cache/constants.ts` — hashCacheValue, buildCacheKey, SimpleKeyValidator, CacheKeyInput, CACHE_SCHEMA_VERSION
+- `apps/website/server/utils/cache/response-policy.ts` — resolveCacheDecision, applyDefaultCachePolicy, applyCachePolicy, CacheDecisionInput, CacheDecision
 - `apps/website/server/utils/prepare-payload.ts` — validatePrepareGamePayload, prepareGameFromPayload, validatePrepareMediaPayload, PrepareGameInput, PrepareMediaInput
 - `apps/website/server/utils/retryable-request.ts` — isRetryableMediaRequestError, isRetryableMediaRequestStatus, createMediaResponseError, fetchMediaRequest, RetryableMediaRequestError
 - `apps/website/server/utils/services/media.ts` — MediaService, VOICE_ACTOR_PAGE_TMDB_MEDIA_NAMESPACE, VOICE_ACTOR_PAGE_TMDB_BACKDROP_NAMESPACE, WIKIPEDIA_ACTOR_URL_NAMESPACE, MEDIA_TVDB_CHARACTERS_NAMESPACE
 - `apps/website/server/utils/services/wiki-extraction-batching.ts` — buildWikipediaExtractionBatches, deduplicateExtractedCredits, WikipediaExtractionSection, WikipediaExtractionBatch, MAX_WIKIPEDIA_EXTRACTION_PROMPT_CHARS
-- `apps/website/server/utils/api/igdb.ts` — buildIgdbImageUrl, IgdbClient, IgdbTrendingGamesResult, IgdbPopularityPrimitive
-- `apps/website/server/utils/game-character-validation.ts` — gameCharacterError, isRecord, hasOnlyKeys, isUuid
-- _…and 58 more files_
+- _…and 68 more files_
 
 ## Shared-logic (20 files)
 

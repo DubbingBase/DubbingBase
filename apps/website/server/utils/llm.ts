@@ -61,10 +61,7 @@ function getGoogleClient() {
     process.env.GOOGLE_AI_KEY ||
     process.env.GEMINI_API_KEY ||
     "";
-  if (!apiKey)
-    throw new Error(
-      "Google AI / Gemini API key is not configured (NUXT_GOOGLE_AI_KEY)",
-    );
+  if (!apiKey) throw new Error("Google AI / Gemini API key is not configured (NUXT_GOOGLE_AI_KEY)");
   return createGoogleGenerativeAI({ apiKey });
 }
 
@@ -78,8 +75,7 @@ function getGroqClient() {
     process.env.NUXT_GROQ_API_KEY ||
     process.env.GROQ_API_KEY ||
     "";
-  if (!apiKey)
-    throw new Error("Groq API key is not configured (NUXT_GROQ_API_KEY)");
+  if (!apiKey) throw new Error("Groq API key is not configured (NUXT_GROQ_API_KEY)");
   return createOpenAI({
     baseURL: "https://api.groq.com/openai/v1",
     apiKey,
@@ -119,10 +115,7 @@ function parseRemainingFromHeaders(
   return Number.isFinite(n) ? n : undefined;
 }
 
-function updateQuotaCache(
-  model: string,
-  headers?: Record<string, string> | Headers | null,
-) {
+function updateQuotaCache(model: string, headers?: Record<string, string> | Headers | null) {
   const rem = parseRemainingFromHeaders(headers);
   if (rem != null) {
     quotaRemainingCache.set(model, rem);
@@ -152,9 +145,7 @@ export function areAllLlmQuotasExhausted(): boolean {
       }
     }
     // if no fresh cache for this model, we don't know — assume not exhausted
-    if (
-      !keys.some((k) => quotaRemainingCache.has(k) && !isQuotaCacheStale(k))
-    ) {
+    if (!keys.some((k) => quotaRemainingCache.has(k) && !isQuotaCacheStale(k))) {
       return false;
     }
   }
@@ -211,13 +202,9 @@ function extractQuotaFromHeaders(
   const h = normalizeHeaders(headers as any);
   if (!h) return undefined;
   const remReq =
-    h["x-ratelimit-remaining-requests"] ??
-    h["x-ratelimit-remaining"] ??
-    h["ratelimit-remaining"];
+    h["x-ratelimit-remaining-requests"] ?? h["x-ratelimit-remaining"] ?? h["ratelimit-remaining"];
   const limitReq =
-    h["x-ratelimit-limit-requests"] ??
-    h["x-ratelimit-limit"] ??
-    h["ratelimit-limit"];
+    h["x-ratelimit-limit-requests"] ?? h["x-ratelimit-limit"] ?? h["ratelimit-limit"];
   const remTok = h["x-ratelimit-remaining-tokens"];
   const limitTok = h["x-ratelimit-limit-tokens"];
   const retryAfter = h["retry-after"];
@@ -238,14 +225,10 @@ function extractQuotaFromHeaders(
   return undefined;
 }
 
-async function runWithFallbacks<T>(
-  executions: LlmExecution<T>[],
-): Promise<LlmResult<T>> {
+async function runWithFallbacks<T>(executions: LlmExecution<T>[]): Promise<LlmResult<T>> {
   // pre-check: if we know all quotas are 0, fail fast without consuming queue element time
   if (areAllLlmQuotasExhausted()) {
-    throw new Error(
-      "LLM API Rate Limited (429) - all models quota exhausted (cached 0 remaining)",
-    );
+    throw new Error("LLM API Rate Limited (429) - all models quota exhausted (cached 0 remaining)");
   }
   const failures: { name: string; msg: string }[] = [];
   for (const exec of executions) {
@@ -274,20 +257,12 @@ async function runWithFallbacks<T>(
     }
   }
   const isRateLimit =
-    failures.length > 0 &&
-    failures.every(({ msg }) => isRateLimitError({ message: msg } as Error));
+    failures.length > 0 && failures.every(({ msg }) => isRateLimitError({ message: msg } as Error));
   // also treat as rate limit if any failure was rate limit and we exhausted all models
-  const anyRateLimit = failures.some(({ msg }) =>
-    isRateLimitError({ message: msg } as Error),
-  );
-  const finalIsRateLimit =
-    isRateLimit || (anyRateLimit && failures.length === executions.length);
-  const prefix = finalIsRateLimit
-    ? "LLM API Rate Limited (429) - "
-    : "All LLM fallbacks failed - ";
-  const detail = failures
-    .map(({ name, msg }) => `* ${name}: ${msg}`)
-    .join(" | ");
+  const anyRateLimit = failures.some(({ msg }) => isRateLimitError({ message: msg } as Error));
+  const finalIsRateLimit = isRateLimit || (anyRateLimit && failures.length === executions.length);
+  const prefix = finalIsRateLimit ? "LLM API Rate Limited (429) - " : "All LLM fallbacks failed - ";
+  const detail = failures.map(({ name, msg }) => `* ${name}: ${msg}`).join(" | ");
   throw new Error(`${prefix}${detail}`);
 }
 
@@ -334,34 +309,27 @@ export async function llmGenerate(
       }).then((r) => ({
         data: r.text,
         usage: (r as any).usage as LlmUsage | undefined,
-        headers: (r as any).response?.headers as
-          Record<string, string> | undefined,
+        headers: (r as any).response?.headers as Record<string, string> | undefined,
       })),
   };
 
-  const geminiExecs: LlmExecution<string>[] = buildGeminiCalls(
-    geminiModels,
-    (model) => ({
-      name: `Gemini (${model})`,
-      fn: () =>
-        generateText({
-          model: getGoogleClient()(model),
-          prompt,
-          system,
-          temperature,
-        }).then((r) => ({
-          data: r.text,
-          usage: (r as any).usage as LlmUsage | undefined,
-          headers: (r as any).response?.headers as
-            Record<string, string> | undefined,
-        })),
-    }),
-  );
+  const geminiExecs: LlmExecution<string>[] = buildGeminiCalls(geminiModels, (model) => ({
+    name: `Gemini (${model})`,
+    fn: () =>
+      generateText({
+        model: getGoogleClient()(model),
+        prompt,
+        system,
+        temperature,
+      }).then((r) => ({
+        data: r.text,
+        usage: (r as any).usage as LlmUsage | undefined,
+        headers: (r as any).response?.headers as Record<string, string> | undefined,
+      })),
+  }));
 
   const chain: LlmExecution<string>[] =
-    provider === "groq"
-      ? [groqExec, ...geminiExecs]
-      : [...geminiExecs, groqExec];
+    provider === "groq" ? [groqExec, ...geminiExecs] : [...geminiExecs, groqExec];
 
   const result = await runWithFallbacks(chain);
   return {
@@ -410,35 +378,28 @@ export async function llmGenerateObject<T extends z.ZodType>(
       }).then((r) => ({
         data: r.object,
         usage: (r as any).usage as LlmUsage | undefined,
-        headers: (r as any).response?.headers as
-          Record<string, string> | undefined,
+        headers: (r as any).response?.headers as Record<string, string> | undefined,
       })),
   };
 
-  const geminiExecs: LlmExecution<z.infer<T>>[] = buildGeminiCalls(
-    geminiModels,
-    (model) => ({
-      name: `Gemini (${model})`,
-      fn: () =>
-        generateObject({
-          model: getGoogleClient()(model),
-          prompt,
-          schema,
-          system,
-          temperature,
-        }).then((r) => ({
-          data: r.object,
-          usage: (r as any).usage as LlmUsage | undefined,
-          headers: (r as any).response?.headers as
-            Record<string, string> | undefined,
-        })),
-    }),
-  );
+  const geminiExecs: LlmExecution<z.infer<T>>[] = buildGeminiCalls(geminiModels, (model) => ({
+    name: `Gemini (${model})`,
+    fn: () =>
+      generateObject({
+        model: getGoogleClient()(model),
+        prompt,
+        schema,
+        system,
+        temperature,
+      }).then((r) => ({
+        data: r.object,
+        usage: (r as any).usage as LlmUsage | undefined,
+        headers: (r as any).response?.headers as Record<string, string> | undefined,
+      })),
+  }));
 
   const chain: LlmExecution<z.infer<T>>[] =
-    provider === "groq"
-      ? [groqExec, ...geminiExecs]
-      : [...geminiExecs, groqExec];
+    provider === "groq" ? [groqExec, ...geminiExecs] : [...geminiExecs, groqExec];
 
   const result = await runWithFallbacks(chain);
   return {
@@ -499,39 +460,32 @@ export async function llmVision(
       }).then((r) => ({
         data: r.text,
         usage: (r as any).usage as LlmUsage | undefined,
-        headers: (r as any).response?.headers as
-          Record<string, string> | undefined,
+        headers: (r as any).response?.headers as Record<string, string> | undefined,
       })),
   };
 
-  const geminiExecs: LlmExecution<string>[] = buildGeminiCalls(
-    geminiModels,
-    (model) => ({
-      name: `Gemini (${model})`,
-      fn: () =>
-        generateText({
-          model: getGoogleClient()(model),
-          messages: [
-            {
-              role: "user",
-              content: [{ type: "text", text: prompt }, imageContent],
-            },
-          ],
-          system,
-          temperature,
-        }).then((r) => ({
-          data: r.text,
-          usage: (r as any).usage as LlmUsage | undefined,
-          headers: (r as any).response?.headers as
-            Record<string, string> | undefined,
-        })),
-    }),
-  );
+  const geminiExecs: LlmExecution<string>[] = buildGeminiCalls(geminiModels, (model) => ({
+    name: `Gemini (${model})`,
+    fn: () =>
+      generateText({
+        model: getGoogleClient()(model),
+        messages: [
+          {
+            role: "user",
+            content: [{ type: "text", text: prompt }, imageContent],
+          },
+        ],
+        system,
+        temperature,
+      }).then((r) => ({
+        data: r.text,
+        usage: (r as any).usage as LlmUsage | undefined,
+        headers: (r as any).response?.headers as Record<string, string> | undefined,
+      })),
+  }));
 
   const chain: LlmExecution<string>[] =
-    provider === "groq"
-      ? [groqExec, ...geminiExecs]
-      : [...geminiExecs, groqExec];
+    provider === "groq" ? [groqExec, ...geminiExecs] : [...geminiExecs, groqExec];
 
   const result = await runWithFallbacks(chain);
   return {
@@ -593,40 +547,33 @@ export async function llmVisionObject<T extends z.ZodType>(
       }).then((r) => ({
         data: r.object,
         usage: (r as any).usage as LlmUsage | undefined,
-        headers: (r as any).response?.headers as
-          Record<string, string> | undefined,
+        headers: (r as any).response?.headers as Record<string, string> | undefined,
       })),
   };
 
-  const geminiExecs: LlmExecution<z.infer<T>>[] = buildGeminiCalls(
-    geminiModels,
-    (model) => ({
-      name: `Gemini (${model})`,
-      fn: () =>
-        generateObject({
-          model: getGoogleClient()(model),
-          messages: [
-            {
-              role: "user",
-              content: [{ type: "text", text: prompt }, imageContent],
-            },
-          ],
-          schema,
-          system,
-          temperature,
-        }).then((r) => ({
-          data: r.object,
-          usage: (r as any).usage as LlmUsage | undefined,
-          headers: (r as any).response?.headers as
-            Record<string, string> | undefined,
-        })),
-    }),
-  );
+  const geminiExecs: LlmExecution<z.infer<T>>[] = buildGeminiCalls(geminiModels, (model) => ({
+    name: `Gemini (${model})`,
+    fn: () =>
+      generateObject({
+        model: getGoogleClient()(model),
+        messages: [
+          {
+            role: "user",
+            content: [{ type: "text", text: prompt }, imageContent],
+          },
+        ],
+        schema,
+        system,
+        temperature,
+      }).then((r) => ({
+        data: r.object,
+        usage: (r as any).usage as LlmUsage | undefined,
+        headers: (r as any).response?.headers as Record<string, string> | undefined,
+      })),
+  }));
 
   const chain: LlmExecution<z.infer<T>>[] =
-    provider === "groq"
-      ? [groqExec, ...geminiExecs]
-      : [...geminiExecs, groqExec];
+    provider === "groq" ? [groqExec, ...geminiExecs] : [...geminiExecs, groqExec];
 
   const result = await runWithFallbacks(chain);
   return {

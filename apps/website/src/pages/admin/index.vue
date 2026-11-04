@@ -27,9 +27,7 @@
       v-if="loading"
       class="flex flex-col items-center justify-center py-24 space-y-3 theme-surface-raised theme-surface border theme-border-subtle theme-border rounded-2xl"
     >
-      <div
-        class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"
-      ></div>
+      <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
       <p class="theme-text-muted text-sm">
         {{ $t("admin.dashboard.loadingData") }}
       </p>
@@ -80,9 +78,7 @@
       <div
         class="theme-surface p-6 rounded-2xl border theme-border-subtle theme-border shadow-xl max-w-full"
       >
-        <div
-          class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6"
-        >
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <h2 class="text-lg font-bold theme-text">
             {{ $t("admin.dashboard.voiceActorGrowth") }}
           </h2>
@@ -210,10 +206,7 @@ const userRegistrationsData = ref<ChartData>({
 const voiceActorGrowthData = computed<ChartData>(() => {
   const aggregated = aggregateData(voiceActorGrowth.value, selectedUnit.value);
   const cumulative = aggregated.reduce((acc, item, index) => {
-    const prev =
-      index > 0 && acc[index - 1] !== undefined
-        ? (acc[index - 1] as number)
-        : 0;
+    const prev = index > 0 && acc[index - 1] !== undefined ? (acc[index - 1] as number) : 0;
     acc.push(prev + item.count);
     return acc;
   }, [] as number[]);
@@ -397,14 +390,13 @@ watch(
         return acc;
       }, {});
 
-      userRegistrations.value = Object.entries(userGrouped).map(
-        ([month, count]) => ({ month, count }),
-      );
+      userRegistrations.value = Object.entries(userGrouped).map(([month, count]) => ({
+        month,
+        count,
+      }));
 
       // Update user registrations chart data
-      userRegistrationsData.value.labels = userRegistrations.value.map(
-        (item) => item.month,
-      );
+      userRegistrationsData.value.labels = userRegistrations.value.map((item) => item.month);
       const userDataset = userRegistrationsData.value.datasets[0];
       if (userDataset) {
         userDataset.data = userRegistrations.value.map((item) => item.count);

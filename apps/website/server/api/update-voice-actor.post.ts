@@ -1,5 +1,5 @@
 import type { Json } from "@app/supabase/types";
-import { requireUser } from "../utils/auth";
+import { defineUserHandler } from "../utils/auth-handlers";
 import { useSupabaseAdmin } from "../utils/db/client";
 
 const voiceActorFields = new Set([
@@ -120,8 +120,7 @@ async function removeStagedPicture(
   }
 }
 
-export default defineEventHandler(async (event) => {
-  const user = requireUser(event);
+export default defineUserHandler(async (event, user) => {
   const body: unknown = await readBody(event);
 
   if (!isRecord(body) || !isRecord(body.updates) || !isJson(body.updates)) {
@@ -215,22 +214,34 @@ export default defineEventHandler(async (event) => {
       await removeStagedPicture(supabaseAdmin, stagedPicturePath);
     }
     if (error.code === "42501") {
-      throw createError({ statusCode: 403, message: "Unauthorized to update this voice actor" });
+      throw createError({
+        statusCode: 403,
+        message: "Unauthorized to update this voice actor",
+      });
     }
     if (["22023", "22007", "22008"].includes(error.code ?? "")) {
-      throw createError({ statusCode: 400, message: "Voice actor update is invalid" });
+      throw createError({
+        statusCode: 400,
+        message: "Voice actor update is invalid",
+      });
     }
     if (error.code === "P0002") {
       throw createError({ statusCode: 404, message: "Voice actor not found" });
     }
     if (["40001", "23505"].includes(error.code ?? "")) {
-      throw createError({ statusCode: 409, message: "Voice actor changed or request conflicts" });
+      throw createError({
+        statusCode: 409,
+        message: "Voice actor changed or request conflicts",
+      });
     }
     console.error(
       "Error in controlled voice actor update:",
       error.code ?? "unknown database error",
     );
-    throw createError({ statusCode: 500, message: "Failed to update voice actor" });
+    throw createError({
+      statusCode: 500,
+      message: "Failed to update voice actor",
+    });
   }
 
   if (

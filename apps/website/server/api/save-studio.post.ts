@@ -1,5 +1,5 @@
 import type { Json } from "@app/supabase";
-import { requireUser } from "../utils/auth";
+import { defineUserHandler } from "../utils/auth-handlers";
 import { useSupabaseAdmin } from "../utils/db/client";
 
 const editableFields = new Set([
@@ -109,8 +109,7 @@ function parseExpectedUpdatedAt(value: unknown): string {
   return value;
 }
 
-export default defineEventHandler(async (event) => {
-  const user = requireUser(event);
+export default defineUserHandler(async (event, user) => {
   const body: unknown = await readBody(event);
   if (!isRecord(body) || !Object.hasOwn(body, "id")) return invalidRequest();
 
@@ -130,7 +129,10 @@ export default defineEventHandler(async (event) => {
 
   if (error) {
     if (error.code === "42501") {
-      throw createError({ statusCode: 403, message: "You cannot change this studio field" });
+      throw createError({
+        statusCode: 403,
+        message: "You cannot change this studio field",
+      });
     }
     if (error.code === "P0002") {
       throw createError({ statusCode: 404, message: "Studio not found" });

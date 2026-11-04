@@ -80,7 +80,12 @@ describe("assignment filter and summary", () => {
   });
 
   it("summarizes progress and tolerates an empty cast", () => {
-    expect(summarizeCast(rows)).toEqual({ total: 3, assigned: 1, unassigned: 2, percent: 33 });
+    expect(summarizeCast(rows)).toEqual({
+      total: 3,
+      assigned: 1,
+      unassigned: 2,
+      percent: 33,
+    });
     expect(summarizeCast([]).percent).toBe(0);
   });
 });

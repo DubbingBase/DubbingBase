@@ -31,10 +31,7 @@ function getStylesheetHref(html, pagePath) {
 const firstPagePath = aboutPages[0];
 const firstPage = await readFile(resolve(publicDirectory, firstPagePath), "utf8");
 const originalStylesheetHref = getStylesheetHref(firstPage, firstPagePath);
-const originalStylesheetPath = resolve(
-  publicDirectory,
-  originalStylesheetHref.slice(1),
-);
+const originalStylesheetPath = resolve(publicDirectory, originalStylesheetHref.slice(1));
 const stylesheet = await readFile(originalStylesheetPath, "utf8");
 const fontFacePattern = /@font-face\s*\{[^{}]*\}/g;
 const fontFaces = stylesheet.match(fontFacePattern) ?? [];
@@ -43,10 +40,7 @@ const aboutStylesheet = stylesheet.replace(fontFacePattern, "");
 const hash = createHash("sha256").update(aboutStylesheet).digest("hex").slice(0, 8);
 const aboutStylesheetHref = `/_nuxt/about.${hash}.css`;
 
-await writeFile(
-  resolve(publicDirectory, aboutStylesheetHref.slice(1)),
-  aboutStylesheet,
-);
+await writeFile(resolve(publicDirectory, aboutStylesheetHref.slice(1)), aboutStylesheet);
 
 for (const pagePath of aboutPages) {
   const html = await readFile(resolve(publicDirectory, pagePath), "utf8");

@@ -22,14 +22,12 @@ test.describe("Global Search Page", () => {
     test.setTimeout(120000);
   });
 
-  test("opens from the header and searches for mixed results", async ({
-    page,
-  }) => {
+  test("opens from the header and searches for mixed results", async ({ page }) => {
     const api = await setupMockApi(page);
     await page.goto("/movie/85");
-    await expect(
-      page.getByRole("heading", { name: "Raiders of the Lost Ark" }),
-    ).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole("heading", { name: "Raiders of the Lost Ark" })).toBeVisible({
+      timeout: 15000,
+    });
 
     await waitForVueHydration(page);
     await Promise.all([
@@ -48,16 +46,14 @@ test.describe("Global Search Page", () => {
     });
     await searchInput.fill("Richard");
     await searchUrl;
-    await expect(
-      page.getByRole("option", { name: /Richard Darbois/ }),
-    ).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole("option", { name: /Richard Darbois/ })).toBeVisible({
+      timeout: 5000,
+    });
 
     api.expectNoErrors();
   });
 
-  test("submits the homepage search on Enter and shows results", async ({
-    page,
-  }) => {
+  test("submits the homepage search on Enter and shows results", async ({ page }) => {
     await setupMockApi(page);
     await openHomepage(page);
 
@@ -73,9 +69,9 @@ test.describe("Global Search Page", () => {
     await waitForVueHydration(page);
     const searchInput = page.getByTestId("search-input");
     await expect(searchInput).toHaveValue("Richard");
-    await expect(
-      page.getByRole("option", { name: /Richard Darbois/ }),
-    ).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("option", { name: /Richard Darbois/ })).toBeVisible({
+      timeout: 10000,
+    });
   });
 
   test("submits the homepage search from its button", async ({ page }) => {
@@ -113,9 +109,7 @@ test.describe("Global Search Page", () => {
     await expect(page).toHaveURL(homepageUrl);
   });
 
-  test("preserves the selected locale when submitting homepage search", async ({
-    page,
-  }) => {
+  test("preserves the selected locale when submitting homepage search", async ({ page }) => {
     await setupMockApi(page);
     await page.context().addCookies([
       {
@@ -137,20 +131,18 @@ test.describe("Global Search Page", () => {
     await expect(page.getByTestId("search-input")).toHaveValue("Richard");
   });
 
-  test("navigates from keyboard shortcuts and focuses the input", async ({
-    page,
-  }) => {
+  test("navigates from keyboard shortcuts and focuses the input", async ({ page }) => {
     await setupMockApi(page);
     await page.goto("/movie/85");
     await waitForVueHydration(page);
-    await expect(
-      page.getByRole("heading", { name: "Raiders of the Lost Ark" }),
-    ).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole("heading", { name: "Raiders of the Lost Ark" })).toBeVisible({
+      timeout: 15000,
+    });
     await page.reload({ waitUntil: "domcontentloaded" });
     await waitForVueHydration(page);
-    await expect(
-      page.getByRole("heading", { name: "Raiders of the Lost Ark" }),
-    ).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole("heading", { name: "Raiders of the Lost Ark" })).toBeVisible({
+      timeout: 15000,
+    });
     await Promise.all([
       page.waitForURL(/\/search(?:\?|$)/, { timeout: 5000 }),
       page.keyboard.press("/"),
@@ -168,9 +160,7 @@ test.describe("Global Search Page", () => {
     await expect(page.getByTestId("search-input")).toBeFocused();
   });
 
-  test("does not select stale results while a new search is loading", async ({
-    page,
-  }) => {
+  test("does not select stale results while a new search is loading", async ({ page }) => {
     await setupMockApi(page);
 
     const previousResults = [
@@ -218,16 +208,14 @@ test.describe("Global Search Page", () => {
 
     await page.goto("/search?q=Richard");
     await waitForVueHydration(page);
-    await expect(
-      page.getByRole("option", { name: /Richard Darbois/ }),
-    ).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("option", { name: /Richard Darbois/ })).toBeVisible({
+      timeout: 10000,
+    });
 
     const searchInput = page.getByTestId("search-input");
     const newSearchRequest = page.waitForRequest((request) => {
       const url = new URL(request.url());
-      return (
-        url.pathname === "/api/search" && url.searchParams.get("query") === "Al"
-      );
+      return url.pathname === "/api/search" && url.searchParams.get("query") === "Al";
     });
 
     await searchInput.fill("Al");
@@ -246,9 +234,7 @@ test.describe("Global Search Page", () => {
     });
   });
 
-  test("navigates to a voice actor page when selecting a result", async ({
-    page,
-  }) => {
+  test("navigates to a voice actor page when selecting a result", async ({ page }) => {
     await setupMockApi(page);
     await page.goto("/search?q=Richard");
     await waitForVueHydration(page);
@@ -257,12 +243,9 @@ test.describe("Global Search Page", () => {
       name: /Richard Darbois/,
     });
     await expect(resultItem).toBeVisible({ timeout: 10000 });
-    await Promise.all([
-      page.waitForURL(/\/voice-actor\/1/, { timeout: 5000 }),
-      resultItem.click(),
-    ]);
-    await expect(
-      page.getByRole("heading", { name: "Richard Darbois" }),
-    ).toBeVisible({ timeout: 10000 });
+    await Promise.all([page.waitForURL(/\/voice-actor\/1/, { timeout: 5000 }), resultItem.click()]);
+    await expect(page.getByRole("heading", { name: "Richard Darbois" })).toBeVisible({
+      timeout: 10000,
+    });
   });
 });

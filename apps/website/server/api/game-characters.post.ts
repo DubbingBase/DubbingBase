@@ -1,4 +1,4 @@
-import { requireAdmin } from "../utils/auth";
+import { defineAdminHandler } from "../utils/auth-handlers";
 import { useSupabaseAdmin } from "../utils/db/client";
 import {
   gameCharacterError,
@@ -7,8 +7,7 @@ import {
   isUuid,
 } from "../utils/game-character-validation";
 
-export default defineEventHandler(async (event) => {
-  const admin = requireAdmin(event);
+export default defineAdminHandler(async (event, admin) => {
   const body: unknown = await readBody(event);
 
   if (!isRecord(body) || !hasOnlyKeys(body, ["request_id", "igdb_game_id", "name"])) {

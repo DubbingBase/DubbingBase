@@ -8,7 +8,7 @@ import {
 } from "h3";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { useNuxtApp } from "nuxt/app";
-import cacheHeadersMiddleware from "../../middleware/00-cache-headers";
+import { applyCachePolicy, applyDefaultCachePolicy } from "../cache/response-policy";
 import {
   getCloudflareCacheControl,
   getPublicCacheControl,
@@ -87,8 +87,10 @@ beforeEach(async () => {
 afterAll(() => vi.unstubAllGlobals());
 
 async function request(path: string): Promise<Response> {
-  const app = createApp();
-  app.use("/", cacheHeadersMiddleware);
+  const app = createApp({
+    onRequest: applyDefaultCachePolicy,
+    onBeforeResponse: (event) => applyCachePolicy(event, { isDev: false }),
+  });
   app.use(
     "/",
     defineEventHandler((event) => {
@@ -146,7 +148,7 @@ function enableOgImages(): void {
 
 describe("GET /api/og-image", () => {
   it("redirects disabled image requests before any rendering or upstream work", async () => {
-    const response = await request("/?type=voice-actor&id=42");
+    const response = await request("/api/og-image?type=voice-actor&id=42");
 
     expect(response.status).toBe(302);
     expect(response.headers.get("location")).toBe("/android-chrome-512x512.png");
@@ -161,11 +163,11 @@ describe("GET /api/og-image", () => {
 
   it.each([
     ["missing type", "/?id=42"],
-    ["unsupported type", "/?type=movie&id=42"],
-    ["missing id", "/?type=voice-actor"],
-    ["malformed id", "/?type=voice-actor&id=4abc"],
-    ["zero id", "/?type=voice-actor&id=0"],
-    ["unsafe id", "/?type=voice-actor&id=9007199254740992"],
+    ["unsupported type", "/api/og-image?type=movie&id=42"],
+    ["missing id", "/api/og-image?type=voice-actor"],
+    ["malformed id", "/api/og-image?type=voice-actor&id=4abc"],
+    ["zero id", "/api/og-image?type=voice-actor&id=0"],
+    ["unsafe id", "/api/og-image?type=voice-actor&id=9007199254740992"],
   ])("keeps %s requests malformed and no-store", async (_label, path) => {
     enableOgImages();
     const response = await request(path);
@@ -180,7 +182,7 @@ describe("GET /api/og-image", () => {
     enableOgImages();
     configureActor();
 
-    const response = await request("/?type=voice-actor&id=42");
+    const response = await request("/api/og-image?type=voice-actor&id=42");
 
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toBe("image/png");
@@ -193,9 +195,12 @@ describe("GET /api/og-image", () => {
   it("keeps unknown actors no-store", async () => {
     enableOgImages();
     const query = configureActor();
-    query.single.mockResolvedValue({ data: null, error: { message: "missing" } });
+    query.single.mockResolvedValue({
+      data: null,
+      error: { message: "missing" },
+    });
 
-    const response = await request("/?type=voice-actor&id=42");
+    const response = await request("/api/og-image?type=voice-actor&id=42");
 
     expect(response.status).toBe(404);
     expectNoStore(response);
@@ -207,7 +212,7 @@ describe("GET /api/og-image", () => {
     configureActor("https://cdn.example/avatar.png");
     routeMocks.fetch.mockRejectedValue(new Error("avatar unavailable"));
 
-    const response = await request("/?type=voice-actor&id=42");
+    const response = await request("/api/og-image?type=voice-actor&id=42");
 
     expect(response.status).toBe(200);
     expectNoStore(response);
@@ -219,7 +224,7 @@ describe("GET /api/og-image", () => {
     configureActor();
     routeMocks.satori.mockRejectedValue(new Error("render failed"));
 
-    const response = await request("/?type=voice-actor&id=42");
+    const response = await request("/api/og-image?type=voice-actor&id=42");
 
     expect(response.status).toBe(500);
     expectNoStore(response);
@@ -232,7 +237,7 @@ describe("GET /api/og-image", () => {
       asPng: vi.fn(() => new Uint8Array()),
     });
 
-    const response = await request("/?type=voice-actor&id=42");
+    const response = await request("/api/og-image?type=voice-actor&id=42");
 
     expect(response.status).toBe(500);
     expectNoStore(response);
@@ -246,7 +251,7 @@ describe("GET /api/og-image", () => {
     });
 
     for (let attempt = 0; attempt < 2; attempt++) {
-      const response = await request("/?type=voice-actor&id=42");
+      const response = await request("/api/og-image?type=voice-actor&id=42");
 
       expect(response.status).toBe(500);
       expectNoStore(response);

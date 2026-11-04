@@ -1,5 +1,5 @@
 import type { Json } from "@app/supabase";
-import { requireAdmin } from "../utils/auth";
+import { defineAdminHandler } from "../utils/auth-handlers";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { buildSupabaseImageUrl } from "../utils/urls/supabase";
 
@@ -40,7 +40,10 @@ function isDuplicateVoiceActor(value: Json): value is DuplicateVoiceActor {
 
 function projectDuplicateVoiceActor(value: Json): DuplicateVoiceActor {
   if (!isDuplicateVoiceActor(value)) {
-    throw createError({ statusCode: 500, message: "Invalid duplicate voice actor" });
+    throw createError({
+      statusCode: 500,
+      message: "Invalid duplicate voice actor",
+    });
   }
   return {
     id: value.id,
@@ -55,8 +58,7 @@ function projectDuplicateVoiceActor(value: Json): DuplicateVoiceActor {
   };
 }
 
-export default defineEventHandler(async (event) => {
-  requireAdmin(event);
+export default defineAdminHandler(async (event) => {
   const supabaseAdmin = useSupabaseAdmin();
   const { data, error } = await supabaseAdmin.rpc("find_duplicate_voice_actors_rpc");
 
@@ -64,12 +66,18 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 500, message: error.message });
   }
   if (!isJsonArray(data)) {
-    throw createError({ statusCode: 500, message: "Invalid duplicate voice actor response" });
+    throw createError({
+      statusCode: 500,
+      message: "Invalid duplicate voice actor response",
+    });
   }
 
   return data.map((value) => {
     if (!isRecord(value) || !isJsonArray(value.actors)) {
-      throw createError({ statusCode: 500, message: "Invalid duplicate voice actor group" });
+      throw createError({
+        statusCode: 500,
+        message: "Invalid duplicate voice actor group",
+      });
     }
     return { actors: value.actors.map(projectDuplicateVoiceActor) };
   });

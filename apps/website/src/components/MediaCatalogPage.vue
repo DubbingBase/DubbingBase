@@ -41,10 +41,7 @@
       @page-change="changePage"
     >
       <template #default="{ item }">
-        <NuxtLink
-          :to="localePath(item.href)"
-          class="group block"
-        >
+        <NuxtLink :to="localePath(item.href)" class="group block">
           <div
             class="mb-3 flex aspect-[2/3] items-center justify-center overflow-hidden rounded-xl theme-surface-muted"
           >

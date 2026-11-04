@@ -218,7 +218,11 @@ describe("dubbing project detail queries", () => {
       },
     ]);
     expect(result.voiceActors).toHaveLength(1);
-    expect(result.voiceActors[0]).toMatchObject({ id: 5, firstname: "Voice", lastname: "Actor" });
+    expect(result.voiceActors[0]).toMatchObject({
+      id: 5,
+      firstname: "Voice",
+      lastname: "Actor",
+    });
     expect(queryMocks.selectedColumns[0]).not.toContain("performance");
     expect(queryMocks.selectedColumns[0]).not.toContain("voice_actor_name");
   });
@@ -237,7 +241,11 @@ describe("dubbing project detail queries", () => {
       {
         id: 17,
         language: "fr-FR",
-        studio_data: { id: 3, name: "Studio", logo_url: "https://example.com/logo.png" },
+        studio_data: {
+          id: 3,
+          name: "Studio",
+          logo_url: "https://example.com/logo.png",
+        },
         works: [
           {
             id: 12,
@@ -278,7 +286,11 @@ describe("dubbing project detail queries", () => {
       {
         id: 17,
         language: "fr-FR",
-        studio_data: { id: 3, name: "Studio", logo_url: "https://example.com/logo.png" },
+        studio_data: {
+          id: 3,
+          name: "Studio",
+          logo_url: "https://example.com/logo.png",
+        },
         works: [
           {
             id: 12,
@@ -286,7 +298,12 @@ describe("dubbing project detail queries", () => {
             character_name: "Character",
             performance: "Role",
             note: "Note",
-            voice_actor: { id: 5, firstname: "Voice", lastname: "Actor", profile_picture: null },
+            voice_actor: {
+              id: 5,
+              firstname: "Voice",
+              lastname: "Actor",
+              profile_picture: null,
+            },
           },
         ],
         crew: [
@@ -295,7 +312,12 @@ describe("dubbing project detail queries", () => {
             person_id: 5,
             job_id: 9,
             job: { name: "Director" },
-            person: { id: 5, firstname: "Voice", lastname: "Actor", profile_picture: null },
+            person: {
+              id: 5,
+              firstname: "Voice",
+              lastname: "Actor",
+              profile_picture: null,
+            },
           },
         ],
       },
@@ -328,7 +350,11 @@ describe("dubbing project detail queries", () => {
         content_type: "movie",
         language: "fr-FR",
         extra: "project metadata",
-        studio_data: { id: 3, name: "Studio", logo_url: "https://example.com/logo.png" },
+        studio_data: {
+          id: 3,
+          name: "Studio",
+          logo_url: "https://example.com/logo.png",
+        },
         works: [
           {
             id: 12,
@@ -434,7 +460,11 @@ describe("dubbing project detail queries", () => {
       {
         id: 21,
         language: "fr-FR",
-        studio_data: { id: 7, name: "Game Studio", logo_url: "https://example.com/logo.jpg" },
+        studio_data: {
+          id: 7,
+          name: "Game Studio",
+          logo_url: "https://example.com/logo.jpg",
+        },
         works: [
           {
             id: 91,
@@ -474,7 +504,11 @@ describe("dubbing project detail queries", () => {
       {
         id: 17,
         language: "fr-FR",
-        studio_data: { id: 3, name: "Studio", logo_url: "https://example.com/studio.png" },
+        studio_data: {
+          id: 3,
+          name: "Studio",
+          logo_url: "https://example.com/studio.png",
+        },
         works: [
           { voice_actor: { id: 5 } },
           { voice_actor: { id: 5 } },

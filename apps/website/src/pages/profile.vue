@@ -17,8 +17,7 @@
             active-class="theme-selected"
             exact-active-class="theme-selected"
             :class="[
-              route.path === localePath('/profile') ||
-              route.path === localePath('/profile/')
+              route.path === localePath('/profile') || route.path === localePath('/profile/')
                 ? 'theme-selected'
                 : 'theme-text-secondary theme-hover-surface-muted',
             ]"
@@ -62,9 +61,7 @@
 
       <!-- Main Content Area -->
       <main class="flex-1">
-        <div
-          class="theme-surface shadow-xl rounded-2xl border theme-border-subtle p-6 md:p-8"
-        >
+        <div class="theme-surface shadow-xl rounded-2xl border theme-border-subtle p-6 md:p-8">
           <NuxtPage />
         </div>
       </main>

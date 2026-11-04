@@ -1,10 +1,4 @@
-export type {
-  Tables,
-  Database,
-  TablesInsert,
-  TablesUpdate,
-  Enums,
-} from "@app/supabase";
+export type { Tables, Database, TablesInsert, TablesUpdate, Enums } from "@app/supabase";
 
 export type { PaginatedResponse, PaginationMeta } from "./pagination";
 
@@ -273,10 +267,7 @@ export interface GameResponse {
   game: IgdbGame | null;
   characters: IgdbCharacter[];
   dubbingProjects: any[];
-  votes: Record<
-    number,
-    { up_count: number; down_count: number; user_vote: string | null }
-  >;
+  votes: Record<number, { up_count: number; down_count: number; user_vote: string | null }>;
 }
 
 export interface OpenLibraryAuthor {
@@ -308,10 +299,7 @@ export interface Audiobook {
 export interface AudiobookResponse {
   audiobook: Audiobook | null;
   dubbingProjects: any[];
-  votes: Record<
-    number,
-    { up_count: number; down_count: number; user_vote: string | null }
-  >;
+  votes: Record<number, { up_count: number; down_count: number; user_vote: string | null }>;
 }
 
 export interface Advertisement {
@@ -332,10 +320,7 @@ export interface Advertisement {
 export interface AdvertisementResponse {
   advertisement: Advertisement | null;
   dubbingProjects: any[];
-  votes: Record<
-    number,
-    { up_count: number; down_count: number; user_vote: string | null }
-  >;
+  votes: Record<number, { up_count: number; down_count: number; user_vote: string | null }>;
 }
 
 export interface PodcastEpisode {
@@ -365,10 +350,7 @@ export interface Podcast {
 export interface PodcastResponse {
   podcast: Podcast | null;
   dubbingProjects: any[];
-  votes: Record<
-    number,
-    { up_count: number; down_count: number; user_vote: string | null }
-  >;
+  votes: Record<number, { up_count: number; down_count: number; user_vote: string | null }>;
 }
 
 export interface Toy {
@@ -426,10 +408,7 @@ export interface ToyDubbingProject {
 export interface ToyResponse {
   toy: Toy | null;
   dubbingProjects: ToyDubbingProject[];
-  votes: Record<
-    number,
-    { up_count: number; down_count: number; user_vote: string | null }
-  >;
+  votes: Record<number, { up_count: number; down_count: number; user_vote: string | null }>;
 }
 
 export interface Role {

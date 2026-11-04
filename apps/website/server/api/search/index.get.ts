@@ -105,15 +105,17 @@ function calculateScore(item: SearchItem, queryLower: string, now: number): numb
 
   const displayNames = [
     (typeof item.title === "string" && item.title) ||
-    (typeof item.name === "string" && item.name) ||
-    (typeof item.voice_actor_name === "string" && item.voice_actor_name) ||
-    "",
+      (typeof item.name === "string" && item.name) ||
+      (typeof item.voice_actor_name === "string" && item.voice_actor_name) ||
+      "",
     item.original_title,
     item.original_name,
     typeof item.product_line === "string" ? item.product_line : "",
     typeof item.manufacturer === "string" ? item.manufacturer : "",
     typeof item.brand === "string" ? item.brand : "",
-    typeof item.firstname === "string" && typeof item.lastname === "string" ? `${item.firstname} ${item.lastname}` : "",
+    typeof item.firstname === "string" && typeof item.lastname === "string"
+      ? `${item.firstname} ${item.lastname}`
+      : "",
   ].filter((name): name is string => typeof name === "string" && name.length > 0);
   const itemNames = displayNames.map(normalizeString);
 
@@ -375,15 +377,17 @@ export default defineEventHandler(async (event) => {
     })();
 
     const enrichedTmdbSearchPromise = tmdbSearchPromise.then(async (tmdbResults) => {
-      const tmdbIds = [...new Set(
-        tmdbResults
-          .filter(
-            (item) =>
-              (item.media_type === "movie" || item.media_type === "tv") &&
-              typeof item.id === "number",
-          )
-          .map((item) => Number(item.id)),
-      )];
+      const tmdbIds = [
+        ...new Set(
+          tmdbResults
+            .filter(
+              (item) =>
+                (item.media_type === "movie" || item.media_type === "tv") &&
+                typeof item.id === "number",
+            )
+            .map((item) => Number(item.id)),
+        ),
+      ];
       if (tmdbIds.length === 0) return tmdbResults;
 
       try {
@@ -414,7 +418,10 @@ export default defineEventHandler(async (event) => {
           if (item.media_type !== "movie" && item.media_type !== "tv") return item;
           const names = studioNamesByMedia.get(`${item.media_type}:${item.id}`);
           return names
-            ? { ...item, studio_names: [...names].sort((a, b) => a.localeCompare(b)) }
+            ? {
+                ...item,
+                studio_names: [...names].sort((a, b) => a.localeCompare(b)),
+              }
             : item;
         });
       } catch (error) {
@@ -443,7 +450,10 @@ export default defineEventHandler(async (event) => {
     ]);
 
     if (successfulTracks === 0) {
-      throw createError({ statusCode: 503, statusMessage: "Search providers unavailable" });
+      throw createError({
+        statusCode: 503,
+        statusMessage: "Search providers unavailable",
+      });
     }
 
     let resp: SearchItem[] = [...tmdbResults];
@@ -550,7 +560,11 @@ export default defineEventHandler(async (event) => {
       uniqueResults.set(key, {
         ...previous,
         ...item,
-        ...(studioNames.size > 0 ? { studio_names: [...studioNames].sort((a, b) => a.localeCompare(b)) } : {}),
+        ...(studioNames.size > 0
+          ? {
+              studio_names: [...studioNames].sort((a, b) => a.localeCompare(b)),
+            }
+          : {}),
       });
     }
     resp = [...uniqueResults.values()];
@@ -563,10 +577,13 @@ export default defineEventHandler(async (event) => {
         ...item,
         score: calculateScore(item, trimmedQuery, now),
       }))
-      .sort((a, b) =>
-        (b.score ?? 0) - (a.score ?? 0) ||
-        String(a.media_type ?? "").localeCompare(String(b.media_type ?? "")) ||
-        String(a.id ?? "").localeCompare(String(b.id ?? ""), undefined, { numeric: true }),
+      .sort(
+        (a, b) =>
+          (b.score ?? 0) - (a.score ?? 0) ||
+          String(a.media_type ?? "").localeCompare(String(b.media_type ?? "")) ||
+          String(a.id ?? "").localeCompare(String(b.id ?? ""), undefined, {
+            numeric: true,
+          }),
       );
     return getQuery(event).projection === "search-page"
       ? results.map(projectSearchResult)

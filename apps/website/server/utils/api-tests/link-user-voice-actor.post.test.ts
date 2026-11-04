@@ -24,7 +24,14 @@ beforeEach(() => {
   vi.clearAllMocks();
   actor = { id: actorId, app_metadata: { role: "admin" } };
   rpcMock.mockResolvedValue({
-    data: [{ link_id: "link-id", created: true, audit_log_id: "audit-id", replayed: false }],
+    data: [
+      {
+        link_id: "link-id",
+        created: true,
+        audit_log_id: "audit-id",
+        replayed: false,
+      },
+    ],
     error: null,
   });
 });
@@ -87,14 +94,28 @@ describe("POST /api/link-user-voice-actor", () => {
 
   it("treats an identical existing relationship as a retry without another audit", async () => {
     rpcMock.mockResolvedValue({
-      data: [{ link_id: "link-id", created: false, audit_log_id: "audit-id", replayed: false }],
+      data: [
+        {
+          link_id: "link-id",
+          created: false,
+          audit_log_id: "audit-id",
+          replayed: false,
+        },
+      ],
       error: null,
     });
 
-    const response = await post({ request_id: requestId, targetUserId, voice_actor_id: "41" });
+    const response = await post({
+      request_id: requestId,
+      targetUserId,
+      voice_actor_id: "41",
+    });
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({ success: true, alreadyLinked: true });
+    expect(await response.json()).toMatchObject({
+      success: true,
+      alreadyLinked: true,
+    });
   });
 
   it("rejects non-admins and unknown or mismatched fields before the RPC", async () => {
@@ -151,7 +172,11 @@ describe("POST /api/link-user-voice-actor", () => {
       voice_actor_id: 41,
     });
     rpcMock.mockResolvedValueOnce({ data: null, error: { code: "XX000" } });
-    const failed = await post({ request_id: requestId, user_id: targetUserId, voice_actor_id: 41 });
+    const failed = await post({
+      request_id: requestId,
+      user_id: targetUserId,
+      voice_actor_id: 41,
+    });
 
     expect(conflict.status).toBe(409);
     expect(failed.status).toBe(500);
@@ -159,7 +184,14 @@ describe("POST /api/link-user-voice-actor", () => {
 
   it("returns the original result for a stable request retry", async () => {
     rpcMock.mockResolvedValue({
-      data: [{ link_id: "link-id", created: true, audit_log_id: "audit-id", replayed: true }],
+      data: [
+        {
+          link_id: "link-id",
+          created: true,
+          audit_log_id: "audit-id",
+          replayed: true,
+        },
+      ],
       error: null,
     });
 

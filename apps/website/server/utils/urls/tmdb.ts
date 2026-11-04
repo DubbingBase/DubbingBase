@@ -17,10 +17,7 @@ export function buildTmdbImageUrl(
 export const cleanCharacterName = (name: string): string => {
   if (!name) return name;
   return name
-    .replace(
-      /\s*\([^)]*(?:voice|uncredited|voix|non cr[ée]dit[ée]?)[^)]*\)\s*/gi,
-      "",
-    )
+    .replace(/\s*\([^)]*(?:voice|uncredited|voix|non cr[ée]dit[ée]?)[^)]*\)\s*/gi, "")
     .trim();
 };
 

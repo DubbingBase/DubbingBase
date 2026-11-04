@@ -8,9 +8,7 @@ test.describe("Website theme accessibility", () => {
   test.describe.configure({ mode: "serial" });
 
   for (const theme of themes) {
-    test(`${theme} theme exposes semantic tokens and remains accessible`, async ({
-      page,
-    }) => {
+    test(`${theme} theme exposes semantic tokens and remains accessible`, async ({ page }) => {
       test.setTimeout(90000);
       const api = await setupMockApi(page);
 
@@ -30,9 +28,7 @@ test.describe("Website theme accessibility", () => {
         const bodyStyle = getComputedStyle(document.body);
         return {
           dataTheme: document.documentElement.dataset.theme,
-          background: rootStyle
-            .getPropertyValue("--app-color-background")
-            .trim(),
+          background: rootStyle.getPropertyValue("--app-color-background").trim(),
           surface: rootStyle.getPropertyValue("--app-color-surface").trim(),
           text: rootStyle.getPropertyValue("--app-color-text").trim(),
           border: rootStyle.getPropertyValue("--app-color-border").trim(),
@@ -59,9 +55,7 @@ test.describe("Website theme accessibility", () => {
   }
 
   for (const theme of themes) {
-    test(`${theme} theme keeps detail and form surfaces readable`, async ({
-      page,
-    }) => {
+    test(`${theme} theme keeps detail and form surfaces readable`, async ({ page }) => {
       test.setTimeout(90000);
       const api = await setupMockApi(page);
 
@@ -74,9 +68,9 @@ test.describe("Website theme accessibility", () => {
       ]);
       await page.goto("/movie/85", { waitUntil: "domcontentloaded" });
       await waitForVueHydration(page);
-      await expect(
-        page.getByRole("heading", { name: "Raiders of the Lost Ark" }),
-      ).toBeVisible({ timeout: 15000 });
+      await expect(page.getByRole("heading", { name: "Raiders of the Lost Ark" })).toBeVisible({
+        timeout: 15000,
+      });
 
       const detailAccessibility = await new AxeBuilder({ page })
         .exclude("nuxt-devtools-frame")
@@ -86,9 +80,9 @@ test.describe("Website theme accessibility", () => {
 
       await page.goto("/actor/3", { waitUntil: "domcontentloaded" });
       await waitForVueHydration(page);
-      await expect(
-        page.getByRole("heading", { name: "Harrison Ford" }),
-      ).toBeVisible({ timeout: 15000 });
+      await expect(page.getByRole("heading", { name: "Harrison Ford" })).toBeVisible({
+        timeout: 15000,
+      });
 
       const reportButton = page.getByRole("button", {
         name: /report|signaler/i,
@@ -105,9 +99,9 @@ test.describe("Website theme accessibility", () => {
 
       await page.goto("/voice-actor/1", { waitUntil: "domcontentloaded" });
       await waitForVueHydration(page);
-      await expect(
-        page.getByRole("heading", { name: "Richard Darbois" }),
-      ).toBeVisible({ timeout: 15000 });
+      await expect(page.getByRole("heading", { name: "Richard Darbois" })).toBeVisible({
+        timeout: 15000,
+      });
 
       const voiceActorAccessibility = await new AxeBuilder({ page })
         .exclude("nuxt-devtools-frame")

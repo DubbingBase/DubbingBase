@@ -26,9 +26,7 @@ export function voiceActorGenerator(params: VoiceActorOgParams) {
           >
             ${params.name}
           </h1>
-          <p
-            style="font-size: 32px; color: #9ca3af; margin-top: 16px; margin-bottom: 0;"
-          >
+          <p style="font-size: 32px; color: #9ca3af; margin-top: 16px; margin-bottom: 0;">
             Voice Actor • ${params.worksCount} Works
           </p>
         </div>

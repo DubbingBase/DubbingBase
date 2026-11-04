@@ -106,9 +106,7 @@ describe("TVDB authentication", () => {
             : response({}, status),
       });
 
-      await expect(harness.client.getSeriesById(42)).rejects.toThrow(
-        `TVDB API error: ${status}`,
-      );
+      await expect(harness.client.getSeriesById(42)).rejects.toThrow(`TVDB API error: ${status}`);
 
       expect(harness.fetchMock).toHaveBeenCalledTimes(2);
       expect(harness.writes).toEqual([]);

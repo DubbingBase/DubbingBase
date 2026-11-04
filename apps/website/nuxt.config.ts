@@ -13,20 +13,6 @@ const supabaseUrl = env("SUPABASE_URL") ?? env("PUBLIC_SUPABASE_URL");
 const supabasePublishableKey = env("SUPABASE_PUBLISHABLE_KEY");
 const siteUrl = env("SITE_URL") ?? "https://dubbingbase.com";
 const ABOUT_PRERENDER_ROUTES = new Set(["/about", "/fr/about", "/es/about", "/ja/about"]);
-const PUBLIC_SITEMAP_ROUTES = [
-  "/",
-  "/about",
-  "/contribute",
-  "/guidelines",
-  "/legal",
-  "/movies",
-  "/privacy",
-  "/series",
-  "/studios",
-  "/terms",
-  "/terms-api",
-  "/voice-actors",
-];
 
 function stripAboutClientRuntime(html: string): string {
   return (
@@ -72,7 +58,9 @@ export default defineNuxtConfig({
 
   nitro: {
     preset: process.env.NITRO_PRESET || "node-server",
-    ignore: ["**/*.test.ts"],
+    // The Playwright mock interceptor is only compiled for E2E runs so its
+    // fixtures never ship in (or add a per-request check to) the production bundle.
+    ignore: ["**/*.test.ts", ...(process.env.E2E_TEST ? [] : ["**/middleware/00-e2e-mock.ts"])],
     prerender: {
       routes: [...ABOUT_PRERENDER_ROUTES, "/robots.txt"],
     },
@@ -137,6 +125,7 @@ export default defineNuxtConfig({
     resendToEmail: env("RESEND_TO_EMAIL"),
     adminEmail: env("ADMIN_EMAIL"),
     public: {
+      siteUrl,
       // Temporarily enable actor-specific previews with NUXT_PUBLIC_OG_IMAGES_ENABLED=true.
       ogImagesEnabled: false,
       supabaseUrl: supabaseUrl || "https://mock.supabase.co",
@@ -239,7 +228,6 @@ export default defineNuxtConfig({
     "@vueuse/nuxt",
     "@nuxtjs/i18n",
     "@nuxtjs/supabase",
-    "@nuxtjs/sitemap",
     "@nuxtjs/robots",
     "@nuxt/image",
     "@vite-pwa/nuxt",
@@ -275,23 +263,15 @@ export default defineNuxtConfig({
     defaultLocale: DEFAULT_LOCALE,
     strategy: "prefix_except_default",
     baseUrl: siteUrl,
-    detectBrowserLanguage: {
-      useCookie: true,
-      cookieKey: "user_lang",
-      redirectOn: "root",
-    },
+    // No automatic redirect or server-side cookie: the URL decides the language
+    // and LanguageBanner only suggests the visitor's preferred one, so HTML is
+    // identical for every visitor and cacheable.
+    detectBrowserLanguage: false,
   },
 
   srcDir: "src/",
   sourcemap: {
     server: true,
     client: true,
-  },
-  sitemap: {
-    // Use an explicit public-route allow-list so automatic page discovery
-    // cannot add individual database-record pages to the sitemap.
-    zeroRuntime: true,
-    excludeAppSources: true,
-    urls: PUBLIC_SITEMAP_ROUTES.map((loc) => ({ loc, _i18nTransform: true })),
   },
 });

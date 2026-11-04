@@ -17,10 +17,7 @@ function parsePositiveInteger(value: unknown, fallback: number): number {
 
 export function parsePagination(options: PaginationOptions): ParsedPagination {
   const page = parsePositiveInteger(options.page, 1);
-  const requestedPageSize = parsePositiveInteger(
-    options.pageSize,
-    DEFAULT_PAGE_SIZE,
-  );
+  const requestedPageSize = parsePositiveInteger(options.pageSize, DEFAULT_PAGE_SIZE);
   const pageSize = Math.min(requestedPageSize, MAX_PAGE_SIZE);
 
   return {

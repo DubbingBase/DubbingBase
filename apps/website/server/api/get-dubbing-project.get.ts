@@ -1,8 +1,7 @@
 import { useSupabaseAdmin } from "../utils/db/client";
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
-  const numericId =
-    query.numericId !== undefined ? Number(query.numericId) : undefined;
+  const numericId = query.numericId !== undefined ? Number(query.numericId) : undefined;
 
   if (numericId === undefined || isNaN(numericId)) {
     throw createError({
@@ -72,13 +71,11 @@ export default defineEventHandler(async (event) => {
       },
     };
   } catch (error) {
-    if (error && typeof error === "object" && "statusCode" in error)
-      throw error;
+    if (error && typeof error === "object" && "statusCode" in error) throw error;
     console.error("Error in get-dubbing-project route:", error);
     throw createError({
       statusCode: 500,
-      message:
-        error instanceof Error ? error.message : "An unknown error occurred",
+      message: error instanceof Error ? error.message : "An unknown error occurred",
     });
   }
 });

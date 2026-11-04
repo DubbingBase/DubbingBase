@@ -23,12 +23,9 @@ export async function fetchStudioDetails(
   projection?: "studio-page",
 ): Promise<StudioDetailsResponse | null> {
   try {
-    const data = await $fetch<StudioDetailsResponse>(
-      "/api/get-studio-details",
-      {
-        params: { studioId, ...(projection ? { projection } : {}) },
-      },
-    );
+    const data = await $fetch<StudioDetailsResponse>("/api/get-studio-details", {
+      params: { studioId, ...(projection ? { projection } : {}) },
+    });
     return data;
   } catch (e) {
     console.error("Error fetching studio details:", e);
@@ -53,9 +50,7 @@ export function useStudioData(
   const studios = ref<Studio[]>(initialStudios || []);
   const studio = ref<Studio | null>(initialStudioDetails?.studio || null);
   const dubbedProjects = ref<any[]>(initialStudioDetails?.dubbedProjects || []);
-  const voiceActorsRoster = ref<any[]>(
-    initialStudioDetails?.voiceActorsRoster || [],
-  );
+  const voiceActorsRoster = ref<any[]>(initialStudioDetails?.voiceActorsRoster || []);
   const loading = ref(false);
   const error = ref<string | null>(null);
 

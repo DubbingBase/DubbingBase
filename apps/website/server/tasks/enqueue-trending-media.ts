@@ -26,9 +26,7 @@ export default defineTask({
 
     if (!response.ok) {
       const errorBody = await response.text().catch(() => "");
-      throw new Error(
-        `Trending media enqueue returned status ${response.status}: ${errorBody}`,
-      );
+      throw new Error(`Trending media enqueue returned status ${response.status}: ${errorBody}`);
     }
 
     const result = await response.json();

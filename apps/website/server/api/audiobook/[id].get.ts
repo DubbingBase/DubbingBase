@@ -15,7 +15,10 @@ export default defineEventHandler(async (event): Promise<AudiobookResponse> => {
 
   const bookId = Number(id);
   if (!Number.isSafeInteger(bookId) || bookId < 1) {
-    throw createError({ statusCode: 404, statusMessage: "Audiobook not found" });
+    throw createError({
+      statusCode: 404,
+      statusMessage: "Audiobook not found",
+    });
   }
   const openLibraryClient = useOpenLibraryClient();
   // Fetch OpenLibrary book data + DB dubbing projects concurrently
@@ -27,7 +30,11 @@ export default defineEventHandler(async (event): Promise<AudiobookResponse> => {
   ]);
 
   const book = apiData;
-  if (!book) throw createError({ statusCode: 404, statusMessage: "Audiobook not found" });
+  if (!book)
+    throw createError({
+      statusCode: 404,
+      statusMessage: "Audiobook not found",
+    });
   const dubbingProjects = dbData;
 
   // Lazy enqueue if not yet processed - Gated by PostHog 'enqueue-on-navigate' (server-side)

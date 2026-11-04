@@ -13,7 +13,12 @@ const rows: Row[] = [
   { id: 1, firstname: "John", lastname: "Doe", profile_picture: null },
   { id: 2, firstname: "Johnny", lastname: "Depp", profile_picture: null },
   { id: 3, firstname: "Jane", lastname: "Doe", profile_picture: null },
-  { id: 4, firstname: 'Dan "Dee"', lastname: "O'Neil, Jr", profile_picture: null },
+  {
+    id: 4,
+    firstname: 'Dan "Dee"',
+    lastname: "O'Neil, Jr",
+    profile_picture: null,
+  },
   { id: 5, firstname: "Solo", lastname: null, profile_picture: null },
 ];
 

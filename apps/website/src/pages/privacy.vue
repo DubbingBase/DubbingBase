@@ -15,9 +15,7 @@
     </h2>
     <p class="mb-6">
       {{ $t("legal.privacy.dataControllerBody")
-      }}<a
-        href="mailto:contact@dubbingbase.com"
-        class="theme-primary-text hover:underline"
+      }}<a href="mailto:contact@dubbingbase.com" class="theme-primary-text hover:underline"
         >contact@dubbingbase.com</a
       >.
     </p>
@@ -26,8 +24,7 @@
       {{ $t("legal.privacy.technicalData") }}
     </h2>
     <p class="mb-4">
-      {{ $t("legal.privacy.weUse")
-      }}<strong>{{ $t("legal.privacy.supabaseName") }}</strong
+      {{ $t("legal.privacy.weUse") }}<strong>{{ $t("legal.privacy.supabaseName") }}</strong
       >{{ $t("legal.privacy.supabaseBackend") }}
     </p>
     <ul class="list-disc pl-6 mb-6 space-y-2">
@@ -111,8 +108,7 @@
       {{ $t("legal.privacy.cookies") }}
     </h2>
     <p class="mb-4">
-      {{ $t("legal.privacy.weUse")
-      }}<strong>{{ $t("legal.privacy.posthogName") }}</strong
+      {{ $t("legal.privacy.weUse") }}<strong>{{ $t("legal.privacy.posthogName") }}</strong
       >{{ $t("legal.privacy.posthogPurpose") }}
     </p>
     <ul class="list-disc pl-6 mb-12 space-y-2">
@@ -138,8 +134,7 @@ useHead({
   meta: [
     {
       name: "description",
-      content:
-        "Privacy Policy and GDPR compliance information for DubbingBase.",
+      content: "Privacy Policy and GDPR compliance information for DubbingBase.",
     },
   ],
 });

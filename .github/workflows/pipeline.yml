@@ -119,7 +119,7 @@ jobs:
           expected_types="$(mktemp --suffix=.ts)"
           trap 'rm -f "$expected_types"' EXIT
           git show "HEAD:packages/database/src/database.types.ts" > "$expected_types"
-          pnpm exec prettier --write "$expected_types" packages/database/src/database.types.ts
+          pnpm exec oxfmt --write "$expected_types" packages/database/src/database.types.ts
           cmp -s "$expected_types" packages/database/src/database.types.ts || {
             diff -u "$expected_types" packages/database/src/database.types.ts || true
             echo "::error::Generated database types differ after formatting."

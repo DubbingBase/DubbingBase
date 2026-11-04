@@ -12,7 +12,9 @@ export const useAdminReports = () => {
     const firstRow = (page - 1) * ADMIN_REPORTS_PAGE_SIZE;
     const { data, count, error } = await supabase
       .from("user_reports")
-      .select("id,reason,details,target_url,reporter_id,status,created_at", { count: "exact" })
+      .select("id,reason,details,target_url,reporter_id,status,created_at", {
+        count: "exact",
+      })
       .order("created_at", { ascending: false })
       .order("id", { ascending: true })
       .range(firstRow, firstRow + ADMIN_REPORTS_PAGE_SIZE - 1);

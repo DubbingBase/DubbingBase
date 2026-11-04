@@ -1,8 +1,5 @@
 import { sendRedirect } from "h3";
-import {
-  setNoCacheHeaders,
-  setPublicCacheHeaders,
-} from "../../utils/cache/http";
+import { setNoCacheHeaders, setPublicCacheHeaders } from "../../utils/cache/http";
 import { isVoiceActorOgImagesEnabled } from "../../../src/utils/voice-actor-og-image";
 
 const STATIC_OG_IMAGE_PATH = "/android-chrome-512x512.png";
@@ -75,17 +72,12 @@ async function loadAsset(path: string): Promise<Uint8Array> {
 }
 
 function toArrayBuffer(data: Uint8Array): ArrayBuffer {
-  return data.buffer.slice(
-    data.byteOffset,
-    data.byteOffset + data.byteLength,
-  ) as ArrayBuffer;
+  return data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) as ArrayBuffer;
 }
 
 async function initialize() {
   if (!fontDataRegular) {
-    fontDataRegular = toArrayBuffer(
-      await loadAsset("og-image/Inter-Regular.ttf"),
-    );
+    fontDataRegular = toArrayBuffer(await loadAsset("og-image/Inter-Regular.ttf"));
   }
 
   if (!fontDataBold) {
@@ -177,8 +169,7 @@ function buildVoiceActorOg(params: {
         justifyContent: "center",
         width: "1200px",
         height: "630px",
-        background:
-          "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)",
+        background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)",
         color: "white",
         fontFamily: "Inter",
         padding: "64px 80px",
@@ -343,9 +334,7 @@ export default defineEventHandler(async (event) => {
       const supabaseAdmin = useSupabaseAdmin();
       const { data: voiceActor, error } = await supabaseAdmin
         .from("voice_actors")
-        .select(
-          "id, firstname, lastname, voice_actor_name, profile_picture, nationality, work(id)",
-        )
+        .select("id, firstname, lastname, voice_actor_name, profile_picture, nationality, work(id)")
         .eq("id", Number(id))
         .single();
 
@@ -441,8 +430,7 @@ export default defineEventHandler(async (event) => {
     setNoCacheHeaders(event);
     console.error("Error generating OG image:", error);
     if (error instanceof Error && "statusCode" in error) throw error;
-    const detail =
-      error instanceof Error ? error.stack || error.message : String(error);
+    const detail = error instanceof Error ? error.stack || error.message : String(error);
     throw createError({
       statusCode: 500,
       message: `Failed to generate OG image: ${error instanceof Error ? error.message : String(error)} | ${detail}`,

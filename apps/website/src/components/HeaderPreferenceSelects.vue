@@ -105,7 +105,10 @@ watch(
 
 onMounted(() => emit("ready"));
 
+const { rememberLocale } = useLocalePreference();
+
 const setLocale = (value: SupportedLocale): void => {
+  rememberLocale(value);
   void navigateTo(switchLocalePath(value));
 };
 </script>

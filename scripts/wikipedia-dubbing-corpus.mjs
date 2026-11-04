@@ -29,24 +29,13 @@ function hash(text) {
 }
 
 function validateExpected(expected, label) {
-  assert(
-    expected && typeof expected === "object",
-    `${label}: missing expected outcome`,
-  );
-  assert(
-    Array.isArray(expected.resolved),
-    `${label}: expected.resolved must be an array`,
-  );
-  assert(
-    Array.isArray(expected.unresolved),
-    `${label}: expected.unresolved must be an array`,
-  );
+  assert(expected && typeof expected === "object", `${label}: missing expected outcome`);
+  assert(Array.isArray(expected.resolved), `${label}: expected.resolved must be an array`);
+  assert(Array.isArray(expected.unresolved), `${label}: expected.unresolved must be an array`);
   for (const result of [...expected.resolved, ...expected.unresolved]) {
     assert(
       Array.isArray(result.sectionIndexes) &&
-        result.sectionIndexes.every(
-          (index) => Number.isSafeInteger(index) && index >= 0,
-        ),
+        result.sectionIndexes.every((index) => Number.isSafeInteger(index) && index >= 0),
       `${label}: outcome sectionIndexes must be nonnegative integers`,
     );
   }
@@ -70,26 +59,18 @@ function validatePage(page) {
     "Page ID must contain lowercase letters, digits, or hyphens",
   );
   assert(
-    typeof page.language === "string" &&
-      /^[a-z][a-z0-9-]*$/.test(page.language),
+    typeof page.language === "string" && /^[a-z][a-z0-9-]*$/.test(page.language),
     `${page.id}: invalid Wikipedia language`,
   );
-  assert(
-    typeof page.title === "string" && page.title.length > 0,
-    `${page.id}: missing title`,
-  );
+  assert(typeof page.title === "string" && page.title.length > 0, `${page.id}: missing title`);
   assert(
     Number.isSafeInteger(page.revisionId) && page.revisionId > 0,
     `${page.id}: invalid revision ID`,
   );
-  assert(
-    ["movie", "show"].includes(page.kind),
-    `${page.id}: kind must be movie or show`,
-  );
+  assert(["movie", "show"].includes(page.kind), `${page.id}: kind must be movie or show`);
   const source = new URL(page.url);
   assert(
-    source.protocol === "https:" &&
-      source.hostname === `${page.language}.wikipedia.org`,
+    source.protocol === "https:" && source.hostname === `${page.language}.wikipedia.org`,
     `${page.id}: source must be its Wikipedia edition`,
   );
   assert(
@@ -119,20 +100,13 @@ function validatePage(page) {
     );
     if (section.sha256 !== undefined) {
       assert(
-        typeof section.sha256 === "string" &&
-          /^[a-f0-9]{64}$/.test(section.sha256),
+        typeof section.sha256 === "string" && /^[a-f0-9]{64}$/.test(section.sha256),
         `${label}: invalid SHA-256`,
       );
-      assert(
-        section.sha256 === hash(section.wikitext),
-        `${label}: raw wikitext SHA-256 mismatch`,
-      );
+      assert(section.sha256 === hash(section.wikitext), `${label}: raw wikitext SHA-256 mismatch`);
     }
     validateExpected(section.expected, label);
-    for (const result of [
-      ...section.expected.resolved,
-      ...section.expected.unresolved,
-    ]) {
+    for (const result of [...section.expected.resolved, ...section.expected.unresolved]) {
       assert(
         result.sectionIndexes.every((index) =>
           page.sections.some((entry) => entry.index === index),
@@ -162,10 +136,7 @@ async function parse(page, properties, section) {
   });
   assert(response.ok, `${page.id}: HTTP ${response.status} (${url})`);
   const body = await response.json();
-  assert(
-    !body.error,
-    `${page.id}: Wikipedia API error ${body.error?.code}: ${body.error?.info}`,
-  );
+  assert(!body.error, `${page.id}: Wikipedia API error ${body.error?.code}: ${body.error?.info}`);
   assert(
     body.parse && body.parse.revid === page.revisionId,
     `${page.id}: API returned the wrong revision`,
@@ -174,26 +145,14 @@ async function parse(page, properties, section) {
 }
 
 async function fetchPage(page) {
-  const directory = join(
-    root,
-    "scripts/scratch/wikipedia-dubbing-corpus",
-    page.id,
-  );
+  const directory = join(root, "scripts/scratch/wikipedia-dubbing-corpus", page.id);
   await mkdir(directory, { recursive: true });
   const toc = await parse(page, "tocdata|revid");
-  assert(
-    Array.isArray(toc.parse.tocdata?.sections),
-    `${page.id}: missing TOC sections`,
-  );
-  await writeFile(
-    join(directory, "tocdata.json"),
-    `${JSON.stringify(toc, null, 2)}\n`,
-  );
+  assert(Array.isArray(toc.parse.tocdata?.sections), `${page.id}: missing TOC sections`);
+  await writeFile(join(directory, "tocdata.json"), `${JSON.stringify(toc, null, 2)}\n`);
   for (const section of page.sections) {
     assert(
-      toc.parse.tocdata.sections.some(
-        (entry) => String(entry.index) === String(section.index),
-      ),
+      toc.parse.tocdata.sections.some((entry) => String(entry.index) === String(section.index)),
       `${page.id}/${section.index}: pinned TOC has no matching index`,
     );
     const body = await parse(page, "wikitext|revid", section.index);
@@ -205,10 +164,7 @@ async function fetchPage(page) {
       join(directory, `section-${section.index}.json`),
       `${JSON.stringify(body, null, 2)}\n`,
     );
-    await writeFile(
-      join(directory, `section-${section.index}.wikitext`),
-      body.parse.wikitext,
-    );
+    await writeFile(join(directory, `section-${section.index}.wikitext`), body.parse.wikitext);
     const matches = hash(body.parse.wikitext) === hash(section.wikitext);
     assert(
       matches,
@@ -248,10 +204,7 @@ async function main() {
       pageId = args[++i];
       assert(pageId && !pageId.startsWith("-"), "--page needs a manifest ID");
     } else {
-      assert(
-        !args[i].startsWith("-") && !manifestGiven,
-        `Unexpected argument: ${args[i]}`,
-      );
+      assert(!args[i].startsWith("-") && !manifestGiven, `Unexpected argument: ${args[i]}`);
       manifestPath = resolve(args[i]);
       manifestGiven = true;
     }
@@ -267,9 +220,7 @@ async function main() {
     assert(!ids.has(page.id), `Duplicate page ID: ${page.id}`);
     ids.add(page.id);
   }
-  const pages = pageId
-    ? manifest.pages.filter((page) => page.id === pageId)
-    : manifest.pages;
+  const pages = pageId ? manifest.pages.filter((page) => page.id === pageId) : manifest.pages;
   assert(pages.length > 0, `No manifest page found: ${pageId}`);
   for (const page of pages) validatePage(page);
   console.log(

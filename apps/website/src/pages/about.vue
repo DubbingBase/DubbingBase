@@ -17,9 +17,7 @@
             <h3 class="font-semibold theme-text mb-2">
               {{ t("about.usersTitle") }}
             </h3>
-            <p
-              class="theme-text-secondary theme-text-muted text-sm leading-relaxed"
-            >
+            <p class="theme-text-secondary theme-text-muted text-sm leading-relaxed">
               {{ t("about.usersDescription") }}
             </p>
           </div>
@@ -33,9 +31,7 @@
             <h3 class="font-semibold theme-text mb-2">
               {{ t("about.tvdbTitle") }}
             </h3>
-            <p
-              class="theme-text-secondary theme-text-muted text-sm leading-relaxed"
-            >
+            <p class="theme-text-secondary theme-text-muted text-sm leading-relaxed">
               {{ t("about.tvdbDescription") }}
             </p>
           </a>
@@ -49,9 +45,7 @@
             <h3 class="font-semibold theme-text mb-2">
               {{ t("about.tmdbTitle") }}
             </h3>
-            <p
-              class="theme-text-secondary theme-text-muted text-sm leading-relaxed"
-            >
+            <p class="theme-text-secondary theme-text-muted text-sm leading-relaxed">
               {{ t("about.tmdbDescription") }}
             </p>
           </a>
@@ -65,9 +59,7 @@
             <h3 class="font-semibold theme-text mb-2">
               {{ t("about.igdbTitle") }}
             </h3>
-            <p
-              class="theme-text-secondary theme-text-muted text-sm leading-relaxed"
-            >
+            <p class="theme-text-secondary theme-text-muted text-sm leading-relaxed">
               {{ t("about.igdbDescription") }}
             </p>
           </a>

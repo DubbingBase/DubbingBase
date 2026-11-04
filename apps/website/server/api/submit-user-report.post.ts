@@ -1,8 +1,9 @@
+import { resolveUser } from "../utils/auth";
 import { sendDiscordAdminNotification } from "../utils/notifications/discord";
 import { useSupabaseAdmin } from "../utils/db/client";
 
 export default defineEventHandler(async (event) => {
-  const user = event.context.user;
+  const user = await resolveUser(event);
   if (!user) {
     throw createError({ statusCode: 401, message: "Unauthorized" });
   }
@@ -47,7 +48,7 @@ export default defineEventHandler(async (event) => {
     );
 
     return { success: true, data };
-  } catch (err: any) {
+  } catch (err) {
     if (err && typeof err === "object" && "statusCode" in err) throw err;
     console.error("Exception in submit-user-report:", err);
     throw createError({ statusCode: 500, message: "Internal server error" });

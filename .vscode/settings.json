@@ -6,9 +6,7 @@
     "pwa-node": "/home/armaldio/.local/share/mise/shims/node"
   },
   "deno.enable": true,
-  "deno.enablePaths": [
-    "./packages/database/supabase/functions"
-  ],
+  "deno.enablePaths": ["./packages/database/supabase/functions"],
   "deno.lint": true,
   "deno.path": "/home/armaldio/.local/share/mise/shims/deno",
   "deno.unstable": [
@@ -26,11 +24,7 @@
     "http",
     "net"
   ],
-  "i18n-ally.localesPaths": [
-    "packages/locales"
-  ],
-  "i18n-ally.enabledFrameworks": [
-    "vue"
-  ],
+  "i18n-ally.localesPaths": ["packages/locales"],
+  "i18n-ally.enabledFrameworks": ["vue"],
   "java.configuration.updateBuildConfiguration": "disabled"
 }

@@ -33,10 +33,7 @@ export default defineEventHandler(async (event) => {
           knownActorsText =
             "\nHere is the list of known actors and their roles in this media:\n" +
             actors
-              .map(
-                (a: any) =>
-                  `- ${a.name} (ID: ${a.id}) | Roles: ${a.roles.join(", ")}`,
-              )
+              .map((a: any) => `- ${a.name} (ID: ${a.id}) | Roles: ${a.roles.join(", ")}`)
               .join("\n");
         }
       } catch (e) {
@@ -64,21 +61,13 @@ export default defineEventHandler(async (event) => {
         ),
       });
 
-      const parsed = await llmVisionObject(
-        promptText,
-        imageBase64,
-        schemaWithMatch,
-        mimeType,
-        {
-          temperature: 0,
-        },
-      );
+      const parsed = await llmVisionObject(promptText, imageBase64, schemaWithMatch, mimeType, {
+        temperature: 0,
+      });
 
       return {
         ok: true,
-        result: parsed.data.extract.filter((r) =>
-          isExploitableVoiceActorName(r.voiceActor),
-        ),
+        result: parsed.data.extract.filter((r) => isExploitableVoiceActorName(r.voiceActor)),
         llmModel: parsed.model,
         llmQuota: parsed.quota,
       };
@@ -88,27 +77,18 @@ export default defineEventHandler(async (event) => {
       extract: z.array(baseCreditSchema),
     });
 
-    const parsed = await llmVisionObject(
-      promptText,
-      imageBase64,
-      schema,
-      mimeType,
-      {
-        temperature: 0,
-      },
-    );
+    const parsed = await llmVisionObject(promptText, imageBase64, schema, mimeType, {
+      temperature: 0,
+    });
 
     return {
       ok: true,
-      result: parsed.data.extract.filter((r) =>
-        isExploitableVoiceActorName(r.voiceActor),
-      ),
+      result: parsed.data.extract.filter((r) => isExploitableVoiceActorName(r.voiceActor)),
       llmModel: parsed.model,
       llmQuota: parsed.quota,
     };
   } catch (error: any) {
-    if (error && typeof error === "object" && "statusCode" in error)
-      throw error;
+    if (error && typeof error === "object" && "statusCode" in error) throw error;
     console.error("Error extracting credits:", error);
     throw createError({
       statusCode: 500,

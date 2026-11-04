@@ -19,12 +19,12 @@
         <span
           v-if="voiceActor.date_of_birth"
           class="theme-text font-medium text-sm md:text-base theme-surface-overlay backdrop-blur-md px-3 py-1.5 rounded-lg"
-          >{{ $t("common.born") }}{{ voiceActor.date_of_birth.split("-")[0] }}
+          >{{ $t("common.born", { year: voiceActor.date_of_birth.split("-")[0] }) }}
         </span>
         <span
           v-if="voiceActor.years_active"
           class="theme-text font-medium text-sm md:text-base theme-surface-overlay backdrop-blur-md px-3 py-1.5 rounded-lg"
-          >{{ $t("voiceActor.active") }}{{ voiceActor.years_active }}
+          >{{ $t("voiceActor.active", { years: voiceActor.years_active }) }}
         </span>
       </template>
 
@@ -469,7 +469,7 @@
                       {{ group.actor.name || $t("voiceActor.unknownActor") }}
                     </h3>
                     <p class="text-sm theme-text-muted">
-                      {{ group.worksCount }}{{ $t("common.works") }}
+                      {{ $t("common.works", { count: group.worksCount }) }}
                     </p>
                   </div>
                 </NuxtLink>
@@ -496,7 +496,7 @@
                       {{ group.actor.name || $t("voiceActor.unknownActor") }}
                     </h3>
                     <p class="text-sm theme-text-muted">
-                      {{ group.worksCount }}{{ $t("common.works") }}
+                      {{ $t("common.works", { count: group.worksCount }) }}
                     </p>
                   </div>
                 </div>
@@ -738,10 +738,7 @@ watch(debouncedSearch, (val) => {
   searchQuery.value = val;
 });
 
-const user = useSupabaseUser();
-const isAdmin = computed(() => {
-  return user.value?.app_metadata?.role === "admin";
-});
+const { user, isAdmin } = useClientUser();
 
 const completenessScore = computed(() => {
   if (!voiceActor.value) return 0;

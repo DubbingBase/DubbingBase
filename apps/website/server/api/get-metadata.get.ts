@@ -52,13 +52,11 @@ export default defineEventHandler(async (event) => {
       message: "Invalid type parameter",
     });
   } catch (error: any) {
-    if (error && typeof error === "object" && "statusCode" in error)
-      throw error;
+    if (error && typeof error === "object" && "statusCode" in error) throw error;
     console.error("Error in get-metadata route:", error);
     throw createError({
       statusCode: 500,
-      message:
-        error instanceof Error ? error.message : "An unknown error occurred",
+      message: error instanceof Error ? error.message : "An unknown error occurred",
     });
   }
 });

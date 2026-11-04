@@ -1,7 +1,5 @@
 <template>
-  <div
-    class="min-h-screen theme-bg theme-text py-12 px-4 sm:px-6 lg:px-8 font-sans"
-  >
+  <div class="min-h-screen theme-bg theme-text py-12 px-4 sm:px-6 lg:px-8 font-sans">
     <div class="max-w-5xl mx-auto space-y-12">
       <!-- Header Section -->
       <div class="text-center space-y-4">
@@ -42,9 +40,7 @@
             <span>{{ $t("contribute.progressToSilver") }}</span>
             <span>{{ $t("contribute.pts2000") }}</span>
           </div>
-          <div
-            class="w-full theme-surface-muted rounded-full h-3 overflow-hidden"
-          >
+          <div class="w-full theme-surface-muted rounded-full h-3 overflow-hidden">
             <div
               class="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full"
               style="width: 62%"
@@ -73,9 +69,7 @@
           <div
             class="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"
           ></div>
-          <span class="relative z-10">{{
-            $t("contribute.startContributing")
-          }}</span>
+          <span class="relative z-10">{{ $t("contribute.startContributing") }}</span>
           <svg
             class="w-6 h-6 relative z-10 group-hover:translate-x-1 transition-transform"
             fill="none"

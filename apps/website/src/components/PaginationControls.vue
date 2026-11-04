@@ -17,9 +17,7 @@ const emit = defineEmits<{
 const totalPages = computed(() =>
   Math.max(1, Math.ceil(props.totalItems / Math.max(1, props.pageSize))),
 );
-const currentPage = computed(() =>
-  Math.min(Math.max(1, props.page), totalPages.value),
-);
+const currentPage = computed(() => Math.min(Math.max(1, props.page), totalPages.value));
 
 function setPage(page: number) {
   emit("update:page", Math.min(Math.max(1, page), totalPages.value));

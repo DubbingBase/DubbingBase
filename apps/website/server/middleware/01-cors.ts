@@ -1,9 +1,6 @@
 import { API_CLIENT_HEADER } from "@app/shared-logic";
 
-const ALLOWED_ORIGINS = new Set([
-  "https://dubbingbase.com",
-  "https://www.dubbingbase.com",
-]);
+const ALLOWED_ORIGINS = new Set(["https://dubbingbase.com", "https://www.dubbingbase.com"]);
 
 function isAllowedOrigin(origin: string, host: string): boolean {
   if (host && (origin === `http://${host}` || origin === `https://${host}`)) {
@@ -27,11 +24,7 @@ export default defineEventHandler((event) => {
     });
   }
 
-  setResponseHeader(
-    event,
-    "Access-Control-Allow-Methods",
-    "GET, POST, PUT, DELETE, OPTIONS",
-  );
+  setResponseHeader(event, "Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   setResponseHeader(
     event,
     "Access-Control-Allow-Headers",

@@ -2,11 +2,11 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Submit-user-report.post subsystem handles **1 routes** and touches: db.
+The Submit-user-report.post subsystem handles **1 routes** and touches: auth, db.
 
 ## Routes
 
-- `POST` `/api/submit-user-report` [db]
+- `POST` `/api/submit-user-report` [auth, db]
   `apps/website/server/api/submit-user-report.post.ts`
 
 ## Related Models

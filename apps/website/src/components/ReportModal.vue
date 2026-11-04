@@ -1,9 +1,7 @@
 <template>
   <DialogRoot v-model:open="isOpen">
     <DialogPortal>
-      <DialogOverlay
-        class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity"
-      />
+      <DialogOverlay class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity" />
       <DialogContent
         class="fixed top-[20%] left-1/2 -translate-x-1/2 w-[90vw] max-w-md z-50 theme-surface border theme-border rounded-2xl shadow-2xl p-6 overflow-hidden focus:outline-none flex flex-col"
       >
@@ -11,21 +9,14 @@
           t("report.title", "Signaler cette fiche")
         }}</DialogTitle>
         <DialogDescription class="theme-text-muted text-sm mb-4">
-          {{
-            t(
-              "report.description",
-              "Veuillez sélectionner la raison de votre signalement.",
-            )
-          }}
+          {{ t("report.description", "Veuillez sélectionner la raison de votre signalement.") }}
         </DialogDescription>
 
         <form @submit.prevent="submit" class="flex flex-col gap-4">
           <div>
-            <label
-              class="block text-sm font-medium theme-text-secondary mb-1"
-              for="reason"
-              >{{ t("report.reason", "Raison") }}</label
-            >
+            <label class="block text-sm font-medium theme-text-secondary mb-1" for="reason">{{
+              t("report.reason", "Raison")
+            }}</label>
             <select
               id="reason"
               v-model="reason"
@@ -36,22 +27,13 @@
                 {{ t("report.selectReason", "Sélectionnez une raison...") }}
               </option>
               <option value="copyright">
-                {{
-                  t("report.reasons.copyright", "Atteinte aux droits d'auteur")
-                }}
+                {{ t("report.reasons.copyright", "Atteinte aux droits d'auteur") }}
               </option>
               <option value="inappropriate">
-                {{
-                  t(
-                    "report.reasons.inappropriate",
-                    "Contenu inapproprié ou illicite",
-                  )
-                }}
+                {{ t("report.reasons.inappropriate", "Contenu inapproprié ou illicite") }}
               </option>
               <option value="error">
-                {{
-                  t("report.reasons.error", "Erreur manifeste dans les données")
-                }}
+                {{ t("report.reasons.error", "Erreur manifeste dans les données") }}
               </option>
               <option value="other">
                 {{ t("report.reasons.other", "Autre") }}
@@ -60,22 +42,15 @@
           </div>
 
           <div>
-            <label
-              class="block text-sm font-medium theme-text-secondary mb-1"
-              for="details"
-              >{{ t("report.details", "Détails") }}</label
-            >
+            <label class="block text-sm font-medium theme-text-secondary mb-1" for="details">{{
+              t("report.details", "Détails")
+            }}</label>
             <textarea
               id="details"
               v-model="details"
               rows="3"
               class="w-full theme-input border theme-border-strong rounded-lg px-3 py-2 theme-text theme-focus resize-none"
-              :placeholder="
-                t(
-                  'report.detailsPlaceholder',
-                  'Veuillez préciser le problème...',
-                )
-              "
+              :placeholder="t('report.detailsPlaceholder', 'Veuillez préciser le problème...')"
             ></textarea>
           </div>
 
@@ -84,12 +59,7 @@
           </div>
 
           <div v-if="success" class="theme-status-success-text text-sm">
-            {{
-              t(
-                "report.successMessage",
-                "Merci, votre signalement a été envoyé.",
-              )
-            }}
+            {{ t("report.successMessage", "Merci, votre signalement a été envoyé.") }}
           </div>
 
           <div class="flex justify-end gap-3 mt-4">
@@ -169,11 +139,7 @@ const submit = async () => {
   success.value = false;
   if (!reason.value) return;
 
-  const result = await submitReport(
-    props.targetUrl,
-    reason.value,
-    details.value,
-  );
+  const result = await submitReport(props.targetUrl, reason.value, details.value);
   if (result) {
     success.value = true;
     setTimeout(() => {

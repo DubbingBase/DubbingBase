@@ -31,7 +31,11 @@ test("skips hidden season data on episode routes and loads it when returning", a
 }) => {
   test.setTimeout(60000);
   const api = await setupMockApi(page);
-  const seasonRequests: Array<{ id: string | null; season: string | null; locale: string }> = [];
+  const seasonRequests: Array<{
+    id: string | null;
+    season: string | null;
+    locale: string;
+  }> = [];
   let episodeRequests = 0;
 
   await page.route("**/api/season?**", async (route) => {
@@ -90,7 +94,11 @@ test("skips hidden season data on episode routes and loads it when returning", a
   await expect.poll(() => seasonRequests.length).toBe(2);
   const frenchSeasonRequest = seasonRequests[1];
   if (!frenchSeasonRequest) throw new Error("French season request was not recorded");
-  expect(frenchSeasonRequest).toEqual({ id: "108978", season: "2", locale: "fr" });
+  expect(frenchSeasonRequest).toEqual({
+    id: "108978",
+    season: "2",
+    locale: "fr",
+  });
   await expect(page.getByText(`Season data 108978/2/${frenchSeasonRequest.locale}`)).toBeVisible();
 
   const seasonResponse = await page.goto("/show/1396/season/1", {

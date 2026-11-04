@@ -7,11 +7,7 @@ type BackgroundTask = () => Promise<void>;
  * Cloudflare keeps the promise alive with waitUntil; local Node requests
  * still start the task but do not wait for it.
  */
-export function scheduleBackgroundTask(
-  event: H3Event,
-  task: BackgroundTask,
-  label: string,
-): void {
+export function scheduleBackgroundTask(event: H3Event, task: BackgroundTask, label: string): void {
   const promise = task().catch((error: unknown) => {
     console.error(`[Background:${label}]`, error);
   });

@@ -287,10 +287,7 @@ export interface GameResponse {
   game: IgdbGame | null;
   characters: IgdbCharacter[];
   dubbingProjects: any[];
-  votes: Record<
-    number,
-    { up_count: number; down_count: number; user_vote: string | null }
-  >;
+  votes: Record<number, { up_count: number; down_count: number; user_vote: string | null }>;
 }
 
 export interface OpenLibraryAuthor {
@@ -322,10 +319,7 @@ export interface Audiobook {
 export interface AudiobookResponse {
   audiobook: Audiobook | null;
   dubbingProjects: any[];
-  votes: Record<
-    number,
-    { up_count: number; down_count: number; user_vote: string | null }
-  >;
+  votes: Record<number, { up_count: number; down_count: number; user_vote: string | null }>;
 }
 
 export interface Advertisement {
@@ -346,10 +340,7 @@ export interface Advertisement {
 export interface AdvertisementResponse {
   advertisement: Advertisement | null;
   dubbingProjects: any[];
-  votes: Record<
-    number,
-    { up_count: number; down_count: number; user_vote: string | null }
-  >;
+  votes: Record<number, { up_count: number; down_count: number; user_vote: string | null }>;
 }
 
 export interface PodcastEpisode {
@@ -379,10 +370,7 @@ export interface Podcast {
 export interface PodcastResponse {
   podcast: Podcast | null;
   dubbingProjects: any[];
-  votes: Record<
-    number,
-    { up_count: number; down_count: number; user_vote: string | null }
-  >;
+  votes: Record<number, { up_count: number; down_count: number; user_vote: string | null }>;
 }
 
 export interface Toy {
@@ -400,8 +388,5 @@ export interface Toy {
 export interface ToyResponse {
   toy: Toy | null;
   dubbingProjects: any[];
-  votes: Record<
-    number,
-    { up_count: number; down_count: number; user_vote: string | null }
-  >;
+  votes: Record<number, { up_count: number; down_count: number; user_vote: string | null }>;
 }

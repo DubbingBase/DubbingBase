@@ -16,12 +16,12 @@
         <span
           v-if="actor.birthday"
           class="theme-text font-semibold text-base md:text-lg theme-surface-overlay backdrop-blur-md px-3 py-1 rounded-lg"
-          >{{ $t("common.born") }}{{ actor.birthday.split("-")[0] }}</span
+          >{{ $t("common.born", { year: actor.birthday.split("-")[0] }) }}</span
         >
         <span
           v-if="actor.deathday"
           class="theme-text font-semibold text-base md:text-lg theme-surface-overlay backdrop-blur-md px-3 py-1 rounded-lg"
-          >{{ $t("common.died") }}{{ actor.deathday.split("-")[0] }}</span
+          >{{ $t("common.died", { year: actor.deathday.split("-")[0] }) }}</span
         >
       </template>
 
@@ -149,9 +149,9 @@
                   <span class="block font-bold text-center text-sm theme-text">
                     {{ va.firstname }} {{ va.lastname }}
                   </span>
-                  <span class="text-xs theme-text-muted mt-1"
-                    >{{ va.rolesCount }}{{ $t("actor.roles") }}</span
-                  >
+                  <span class="text-xs theme-text-muted mt-1">{{
+                    $t("actor.roles", { count: va.rolesCount })
+                  }}</span>
                 </a>
               </template>
             </PaginatedResponsiveGrid>

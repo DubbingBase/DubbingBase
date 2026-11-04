@@ -7,7 +7,9 @@ const routeMocks = vi.hoisted(() => ({
 }));
 
 vi.mock("../auth", () => ({ requireUser: routeMocks.requireUser }));
-vi.mock("../db/client", () => ({ useSupabaseAdmin: routeMocks.useSupabaseAdmin }));
+vi.mock("../db/client", () => ({
+  useSupabaseAdmin: routeMocks.useSupabaseAdmin,
+}));
 
 let handler: typeof import("../../api/save-studio.post").default;
 
@@ -69,7 +71,11 @@ describe("POST /api/save-studio", () => {
   it.each([
     { id: "1 OR 1=1", requestId, updates: { name: "Studio" } },
     { id: null, requestId, updates: { name: "Studio", is_admin: true } },
-    { id: null, requestId, updates: { name: "Studio", website_url: "javascript:alert(1)" } },
+    {
+      id: null,
+      requestId,
+      updates: { name: "Studio", website_url: "javascript:alert(1)" },
+    },
     { id: null, updates: { name: "Studio" } },
     { id: null, requestId: "bad-key", updates: { name: "Studio" } },
     { id: "7", requestId, updates: { city: "Paris" } },
@@ -149,6 +155,9 @@ describe("POST /api/save-studio", () => {
         error: null,
       },
     });
-    await expect(response.json()).resolves.toMatchObject({ replayed: true, studioId: 7 });
+    await expect(response.json()).resolves.toMatchObject({
+      replayed: true,
+      studioId: 7,
+    });
   });
 });

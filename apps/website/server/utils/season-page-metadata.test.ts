@@ -87,7 +87,11 @@ beforeEach(() => {
       content_id: 42,
       content_type: "tv",
       language: "fr-FR",
-      studio_data: { id: 3, name: "Studio", logo_url: "https://example.com/logo.png" },
+      studio_data: {
+        id: 3,
+        name: "Studio",
+        logo_url: "https://example.com/logo.png",
+      },
       works: [
         {
           id: 12,
@@ -111,7 +115,11 @@ beforeEach(() => {
     {
       id: 7,
       language: "fr-FR",
-      studio_data: { id: 3, name: "Studio", logo_url: "https://example.com/logo.png" },
+      studio_data: {
+        id: 3,
+        name: "Studio",
+        logo_url: "https://example.com/logo.png",
+      },
       works: [
         {
           id: 12,
@@ -140,7 +148,11 @@ beforeEach(() => {
     {
       id: 7,
       language: "fr-FR",
-      studio_data: { id: 3, name: "Studio", logo_url: "https://example.com/logo.png" },
+      studio_data: {
+        id: 3,
+        name: "Studio",
+        logo_url: "https://example.com/logo.png",
+      },
       has_voice_actor: true,
       voice_actor_count: 1,
       work_count: 1,
@@ -183,7 +195,11 @@ describe("GET /api/season parent metadata", () => {
           content_id: 42,
           content_type: "tv",
           language: "fr-FR",
-          studio_data: { id: 3, name: "Studio", logo_url: "https://example.com/logo.png" },
+          studio_data: {
+            id: 3,
+            name: "Studio",
+            logo_url: "https://example.com/logo.png",
+          },
           works: [
             {
               id: 12,
@@ -233,7 +249,11 @@ describe("GET /api/season parent metadata", () => {
       {
         id: 7,
         language: "fr-FR",
-        studio_data: { id: 3, name: "Studio", logo_url: "https://example.com/logo.png" },
+        studio_data: {
+          id: 3,
+          name: "Studio",
+          logo_url: "https://example.com/logo.png",
+        },
         has_voice_actor: true,
         voice_actor_count: 1,
         work_count: 1,

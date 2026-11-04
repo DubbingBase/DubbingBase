@@ -14,9 +14,12 @@ describe("getMediaEditorRoute", () => {
     expect(getMediaEditorRoute({ contentType, mediaId: 42, projectId: 7 })).toBe(expected);
   });
 
-  it.each(["movie", "tv", "video_game", "audiobook"])("rejects direct creation for %s", (contentType) => {
-    expect(getMediaEditorRoute({ contentType })).toBeNull();
-  });
+  it.each(["movie", "tv", "video_game", "audiobook"])(
+    "rejects direct creation for %s",
+    (contentType) => {
+      expect(getMediaEditorRoute({ contentType })).toBeNull();
+    },
+  );
 
   it("builds a project creation route for known media", () => {
     expect(getMediaEditorRoute({ contentType: "tv", mediaId: 42 })).toBe("/show/42/projects/new");

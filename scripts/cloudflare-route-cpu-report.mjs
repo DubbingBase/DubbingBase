@@ -79,8 +79,7 @@ function samplePayload(entry) {
 }
 
 function invocationCpuMs(entry) {
-  const value =
-    entry.cpuTime ?? entry.cpuTimeMs ?? entry.CPUTimeMs ?? entry.cpu_time_ms;
+  const value = entry.cpuTime ?? entry.cpuTimeMs ?? entry.CPUTimeMs ?? entry.cpu_time_ms;
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
@@ -130,18 +129,15 @@ function addInvocation(entry) {
   const wallMs = invocationWallMs(entry);
   if (wallMs !== null) bucket.wallMs.push(wallMs);
   const status = entry.event?.response?.status ?? entry.response?.status;
-  if (Number.isInteger(status))
-    bucket.statuses[status] = (bucket.statuses[status] ?? 0) + 1;
+  if (Number.isInteger(status)) bucket.statuses[status] = (bucket.statuses[status] ?? 0) + 1;
   buckets.set(key, bucket);
 }
 
 function emitBucket(bucket, now, forcePartial = false) {
   const windowEnd = bucket.windowStart + WINDOW_MS;
-  const complete =
-    !forcePartial && STARTED_AT <= bucket.windowStart && now >= windowEnd;
+  const complete = !forcePartial && STARTED_AT <= bucket.windowStart && now >= windowEnd;
   const values = bucket.cpuMs;
-  const mean =
-    values.reduce((total, value) => total + value, 0) / values.length;
+  const mean = values.reduce((total, value) => total + value, 0) / values.length;
   process.stdout.write(
     `${JSON.stringify({
       windowStart: new Date(bucket.windowStart).toISOString(),

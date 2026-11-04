@@ -13,20 +13,14 @@ const WIKI_LANG = process.env.WIKI_LANG || "fr";
 // high-volume batch filter only.
 export const DUBBING_HEADING_PATTERN =
   /={2,}\s*(distribution|doublages?|voix|casting|voice[- ]?(cast|over|acting)?|dubbing|starring|besetzung|synchronbesetzung|reparto|doblaj[oe]s?|dobragem|dublagem|doppiaggio|nasynchronisatie|röster|stemmer|głos|znění|dabing|znenie|szinkron|дублир|дубляж|закадров|дублюванн|dublaj|μεταγλώττιση|דיבוב|دبلجة|alih suara|lồng tiếng|พากย์|डबिंग|더빙|配音|声優|吹き替え|synchronisation|sincronización)[^=]*={2,}/i;
-const STATE_FILE = path.join(
-  process.cwd(),
-  "scripts",
-  `.scraping_state.${WIKI_LANG}.json`,
-);
+const STATE_FILE = path.join(process.cwd(), "scripts", `.scraping_state.${WIKI_LANG}.json`);
 
 const supabaseUrl = process.env.SUPABASE_URL || "http://localhost:54321";
 const supabaseKey = process.env.SUPABASE_SECRET_KEY?.trim();
 
 if (!supabaseKey) {
   console.error("Missing SUPABASE_SECRET_KEY environment variable.");
-  console.error(
-    "Please run with: tsx --env-file=.env.development scripts/discover-media.ts",
-  );
+  console.error("Please run with: tsx --env-file=.env.development scripts/discover-media.ts");
   process.exit(1);
 }
 
@@ -56,11 +50,7 @@ async function saveState(state: any) {
 }
 
 // SQLite Cache to prevent duplicate checks
-const CACHE_DB_FILE = path.join(
-  process.cwd(),
-  "scripts",
-  `.scraping_cache.${WIKI_LANG}.sqlite`,
-);
+const CACHE_DB_FILE = path.join(process.cwd(), "scripts", `.scraping_cache.${WIKI_LANG}.sqlite`);
 const db = new DatabaseSync(CACHE_DB_FILE);
 
 db.exec(`
@@ -71,9 +61,7 @@ db.exec(`
 `);
 
 function getLastChecked(tmdbId: number): number | null {
-  const stmt = db.prepare(
-    "SELECT last_checked FROM checked_media WHERE tmdb_id = ?",
-  );
+  const stmt = db.prepare("SELECT last_checked FROM checked_media WHERE tmdb_id = ?");
   const row = stmt.get(tmdbId) as { last_checked: number } | undefined;
   return row ? row.last_checked : null;
 }
@@ -87,8 +75,7 @@ function markAsChecked(tmdbId: number) {
   stmt.run(tmdbId, Date.now());
 }
 
-const WIKIPEDIA_USER_AGENT =
-  "DubbingBase/1.0 (https://dubbingbase.com; contact@dubbingbase.com)";
+const WIKIPEDIA_USER_AGENT = "DubbingBase/1.0 (https://dubbingbase.com; contact@dubbingbase.com)";
 
 // Wikipedia API helper
 async function checkWikipediaBatchForDubbing(
@@ -114,16 +101,12 @@ async function checkWikipediaBatchForDubbing(
       if (retryCount < 3) {
         return checkWikipediaBatchForDubbing(titles, retryCount + 1);
       } else {
-        throw new Error(
-          `Max retries reached for Wikipedia batch of ${titles.length} titles`,
-        );
+        throw new Error(`Max retries reached for Wikipedia batch of ${titles.length} titles`);
       }
     }
 
     if (!response.ok) {
-      console.warn(
-        `[WIKIPEDIA API ERROR] Failed to fetch batch (${response.status})`,
-      );
+      console.warn(`[WIKIPEDIA API ERROR] Failed to fetch batch (${response.status})`);
       return {};
     }
 
@@ -154,8 +137,7 @@ async function checkWikipediaBatchForDubbing(
       const page = pagesByTitle[normTitle];
       let hasDubbing = false;
       if (page && page.revisions && page.revisions.length > 0) {
-        const wikitext =
-          page.revisions[0].slots?.main?.["*"] || page.revisions[0]["*"] || "";
+        const wikitext = page.revisions[0].slots?.main?.["*"] || page.revisions[0]["*"] || "";
         if (wikitext.match(DUBBING_HEADING_PATTERN)) {
           hasDubbing = true;
         }
@@ -252,9 +234,7 @@ async function performDiscoveryBatch(state: any) {
     });
 
     if (!response.ok) {
-      console.error(
-        `Wikidata SPARQL query failed: ${response.status} ${response.statusText}`,
-      );
+      console.error(`Wikidata SPARQL query failed: ${response.status} ${response.statusText}`);
       return false; // Yield on failure
     }
 
@@ -338,9 +318,7 @@ async function runScraper() {
   console.log("Starting media discovery scrape...");
   const state = await getState();
 
-  console.log(
-    `Resuming scrape from: ${state.last_fetched_at || "2001-01-01T00:00:00Z"}`,
-  );
+  console.log(`Resuming scrape from: ${state.last_fetched_at || "2001-01-01T00:00:00Z"}`);
 
   while (true) {
     const hasMore = await performDiscoveryBatch(state);

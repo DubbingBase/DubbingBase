@@ -85,7 +85,12 @@ export function mockEpisodePageResponse(episode: typeof MOCK_EPISODE) {
   });
   const voiceActors = new Map<
     number,
-    { id: number; firstname?: string; lastname?: string; profile_picture?: string | null }
+    {
+      id: number;
+      firstname?: string;
+      lastname?: string;
+      profile_picture?: string | null;
+    }
   >();
   for (const project of episode.dubbingProjects) {
     for (const work of project.works || project.work || []) {
@@ -162,7 +167,11 @@ export async function setupMockApi(page: Page, options: MockApiOptions = {}) {
       projects: Array<{
         id: number;
         language: string;
-        studio_data?: { id: number; name: string; logo_url?: string | null } | null;
+        studio_data?: {
+          id: number;
+          name: string;
+          logo_url?: string | null;
+        } | null;
         studios?: { id: number; name: string; logo_url?: string | null } | null;
         works: Array<{ voice_actor?: { id: number } | null }>;
       }>,
@@ -320,7 +329,10 @@ export async function setupMockApi(page: Page, options: MockApiOptions = {}) {
       const audiobookData = options.audiobook || MOCK_AUDIOBOOK;
       const response =
         url.searchParams.get("projection") === "media-summary"
-          ? { ...audiobookData, dubbingProjects: mediaSummaries(audiobookData.dubbingProjects) }
+          ? {
+              ...audiobookData,
+              dubbingProjects: mediaSummaries(audiobookData.dubbingProjects),
+            }
           : audiobookData;
       return route.fulfill({
         status: 200,
@@ -334,7 +346,10 @@ export async function setupMockApi(page: Page, options: MockApiOptions = {}) {
       const podcastData = options.podcast || MOCK_PODCAST;
       const response =
         url.searchParams.get("projection") === "media-summary"
-          ? { ...podcastData, dubbingProjects: mediaSummaries(podcastData.dubbingProjects) }
+          ? {
+              ...podcastData,
+              dubbingProjects: mediaSummaries(podcastData.dubbingProjects),
+            }
           : podcastData;
       return route.fulfill({
         status: 200,

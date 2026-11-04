@@ -50,7 +50,7 @@ function measure(fn, locale, codes, missingFallback, iterations) {
   return { medianMs: samples[Math.floor(samples.length / 2)], checksum };
 }
 
-for (const locale of ["fr-FR", "invalid_locale"] ) {
+for (const locale of ["fr-FR", "invalid_locale"]) {
   for (const [label, codes, missingFallback] of [
     ["8 languages", languages, "Unknown"],
     ["7 languages + missing", [...languages.slice(0, 7), null], "Not specified"],

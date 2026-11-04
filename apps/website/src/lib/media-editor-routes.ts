@@ -31,10 +31,16 @@ type MediaEditorRouteInput = {
 };
 
 function isPresentId(value: number | string | null | undefined): value is number | string {
-  return value !== null && value !== undefined && String(value).trim() !== "" && String(value) !== "0";
+  return (
+    value !== null && value !== undefined && String(value).trim() !== "" && String(value) !== "0"
+  );
 }
 
-export function getMediaEditorRoute({ contentType, mediaId, projectId }: MediaEditorRouteInput): string | null {
+export function getMediaEditorRoute({
+  contentType,
+  mediaId,
+  projectId,
+}: MediaEditorRouteInput): string | null {
   if (!contentType) return null;
 
   const routePrefix = MEDIA_EDITOR_ROUTE_PREFIXES[contentType];

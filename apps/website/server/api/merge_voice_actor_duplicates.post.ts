@@ -1,4 +1,4 @@
-import { requireAdmin } from "../utils/auth";
+import { defineAdminHandler } from "../utils/auth-handlers";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { z } from "zod";
 
@@ -35,18 +35,14 @@ const bodySchema = z
   })
   .strict();
 
-export default defineEventHandler(async (event) => {
-  requireAdmin(event);
-
+export default defineAdminHandler(async (event) => {
   const parsedBody = bodySchema.safeParse(await readBody(event));
   if (!parsedBody.success) {
     throw createError({ statusCode: 400, message: "Invalid merge input" });
   }
 
   const { keepId: normalizedKeepId, ids, updates } = parsedBody.data;
-  const otherIds = [...new Set(ids)].filter(
-    (id: number) => id !== normalizedKeepId,
-  );
+  const otherIds = [...new Set(ids)].filter((id: number) => id !== normalizedKeepId);
   if (otherIds.length === 0) {
     throw createError({
       statusCode: 400,
@@ -56,14 +52,11 @@ export default defineEventHandler(async (event) => {
 
   const supabaseAdmin = useSupabaseAdmin(event);
 
-  const { data, error: rpcError } = await supabaseAdmin.rpc(
-    "merge_voice_actor_duplicates_atomic",
-    {
-      p_keep_id: normalizedKeepId,
-      p_other_ids: otherIds,
-      p_updates: updates,
-    },
-  );
+  const { data, error: rpcError } = await supabaseAdmin.rpc("merge_voice_actor_duplicates_atomic", {
+    p_keep_id: normalizedKeepId,
+    p_other_ids: otherIds,
+    p_updates: updates,
+  });
 
   if (rpcError) {
     throw createError({ statusCode: 500, message: rpcError.message });

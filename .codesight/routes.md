@@ -13,7 +13,7 @@
 - `GET` `/api/advertisement/:id` params(id) [queue]
 - `GET` `/api/audiobook/:id` params(id) [queue]
 - `GET` `/api/career-grid` [cache]
-- `POST` `/api/cast-vote`
+- `POST` `/api/cast-vote` [auth]
 - `POST` `/api/count-voice-actor-works`
 - `POST` `/api/create-user-profile` [auth, db]
 - `GET` `/api/dashboard-stats` [auth]
@@ -38,7 +38,7 @@
 - `GET` `/api/get-user-profile` [auth]
 - `ALL` `/api/get-user-voice-actor` [auth]
 - `GET` `/api/get-user-voice-actors` [auth]
-- `GET` `/api/get-work-votes`
+- `GET` `/api/get-work-votes` [auth]
 - `GET` `/api/home-stats`
 - `POST` `/api/internal-media-create` [auth] ✓
 - `GET` `/api/internal-media-credits` ✓
@@ -47,7 +47,7 @@
 - `POST` `/api/link-voice-actor` [auth] ✓
 - `GET` `/api/list-voice-actors`
 - `GET` `/api/list_users` [auth]
-- `POST` `/api/manage-subscription` [db]
+- `POST` `/api/manage-subscription` [auth, db]
 - `GET` `/api/media-catalog`
 - `POST` `/api/media-queue` [auth, queue] ✓
 - `POST` `/api/merge_voice_actor_duplicates` [auth]
@@ -62,7 +62,7 @@
 - `POST` `/api/process-media-queue` [auth, cache, queue] ✓
 - `GET` `/api/recent-voice-actors`
 - `POST` `/api/request-voice-actor-page` [auth, email]
-- `POST` `/api/revert-task` [db]
+- `POST` `/api/revert-task` [auth, db]
 - `POST` `/api/save-dubbing-project` [auth] ✓
 - `POST` `/api/save-metadata` [auth] ✓
 - `POST` `/api/save-studio` [auth] ✓
@@ -72,19 +72,22 @@
 - `GET` `/api/season/index` [cache]
 - `GET` `/api/show/:id` params(id) [queue]
 - `POST` `/api/submit-task` [auth, db, upload] ✓
-- `POST` `/api/submit-user-report` [db]
+- `POST` `/api/submit-user-report` [auth, db]
 - `GET` `/api/top-contributors` ✓
 - `GET` `/api/top-voice-actors` ✓
 - `GET` `/api/toy/:id` params(id) [queue]
 - `GET` `/api/toy-metadata/:id` params(id)
 - `GET` `/api/trending/games` [cache]
-- `GET` `/api/trending/movies` [cache]
+- `GET` `/api/trending/movies` [cache] ✓
 - `GET` `/api/trending/shows` [cache]
 - `GET` `/api/trending/voice-actors`
 - `POST` `/api/update-review-status` [auth] ✓
-- `POST` `/api/update-user-profile`
+- `POST` `/api/update-user-profile` [auth]
 - `POST` `/api/update-voice-actor` [auth, upload] ✓
 - `POST` `/api/update_user_role` [auth]
 - `POST` `/api/update_voice_actor_link` [auth] ✓
-- `POST` `/api/upload-profile-picture` [db, upload] ✓
+- `POST` `/api/upload-profile-picture` [auth, db, upload] ✓
 - `GET` `/api/voice-actor/:id` params(id)
+- `ALL` `/routes/sitemap.xml`
+- `GET` `/routes/sitemaps/:file` params(file)
+- `ALL` `/routes/sitemaps/pages.xml`

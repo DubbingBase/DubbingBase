@@ -19,6 +19,9 @@
 import { APP_LOCALES } from "@app/shared-logic";
 
 const { effectiveTheme } = useTheme();
+// Applies the saved theme (cookie, falling back to the OS preference) before
+// first paint, because server-rendered HTML always uses the dark default.
+const THEME_INIT_SCRIPT = `(function(){try{var m=document.cookie.match(/(?:^|; )dubbingbase-theme=([^;]*)/);var t=m?decodeURIComponent(m[1]).replace(/"/g,""):"system";if(t!=="light"&&t!=="dark"){t=window.matchMedia("(prefers-color-scheme: light)").matches?"light":"dark"}document.documentElement.setAttribute("data-theme",t)}catch(e){}})()`;
 const route = useRoute();
 const isAdminRoute = computed(() => {
   const middleware = route.meta.middleware;
@@ -44,6 +47,7 @@ const defaultLocaleUrl = computed(
 );
 
 useHead(() => ({
+  script: [{ key: "theme-init", innerHTML: THEME_INIT_SCRIPT }],
   htmlAttrs: {
     "data-theme": effectiveTheme.value,
     lang: i18nHead.value.htmlAttrs?.lang || "en",

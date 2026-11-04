@@ -1,4 +1,4 @@
-import { requireUser } from "../utils/auth";
+import { defineUserHandler } from "../utils/auth-handlers";
 import { useSupabaseAdmin } from "../utils/db/client";
 
 const PERFORMANCES = [
@@ -55,8 +55,7 @@ function mapRpcError(code: string): never {
   throw updateError(500, "Performance update failed; no changes were saved");
 }
 
-export default defineEventHandler(async (event) => {
-  const user = requireUser(event);
+export default defineUserHandler(async (event, user) => {
   const body: unknown = await readBody(event);
   if (!isRecord(body)) {
     throw updateError(400, "Invalid voice actor performance request");
@@ -101,5 +100,9 @@ export default defineEventHandler(async (event) => {
     });
     throw updateError(500, "Performance was saved but could not be loaded; retry safely");
   }
-  return { ...work, auditLogId: mutation.audit_log_id, replayed: mutation.replayed };
+  return {
+    ...work,
+    auditLogId: mutation.audit_log_id,
+    replayed: mutation.replayed,
+  };
 });

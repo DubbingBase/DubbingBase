@@ -2,11 +2,11 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Manage-subscription.post subsystem handles **1 routes** and touches: db.
+The Manage-subscription.post subsystem handles **1 routes** and touches: auth, db.
 
 ## Routes
 
-- `POST` `/api/manage-subscription` [db]
+- `POST` `/api/manage-subscription` [auth, db]
   `apps/website/server/api/manage-subscription.post.ts`
 
 ## Source Files

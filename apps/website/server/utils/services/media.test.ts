@@ -164,7 +164,10 @@ describe("MediaService voice actor media indexing", () => {
         return new Response(
           JSON.stringify({
             id: 89,
-            credits: { cast: [{ id: 1 }], crew: [{ id: 3, name: "Crew member" }] },
+            credits: {
+              cast: [{ id: 1 }],
+              crew: [{ id: 3, name: "Crew member" }],
+            },
           }),
         );
       }),
@@ -302,7 +305,13 @@ describe("MediaService voice actor media indexing", () => {
                   profile_path: "/lead.jpg",
                   credit_id: "unused-credit",
                   popularity: 17,
-                  roles: [{ character: "Lead", episode_count: 2, credit_id: "unused-role" }],
+                  roles: [
+                    {
+                      character: "Lead",
+                      episode_count: 2,
+                      credit_id: "unused-role",
+                    },
+                  ],
                 },
               ],
               crew: [{ id: 9, job: "Director" }],
@@ -448,7 +457,11 @@ describe("MediaService voice actor media indexing", () => {
       {},
       { credits: null },
       { credits: { cast: "not-a-cast-array" } },
-      { credits: { cast: [{ id: "42", name: "String id", profile_path: null }] } },
+      {
+        credits: {
+          cast: [{ id: "42", name: "String id", profile_path: null }],
+        },
+      },
     ];
 
     for (const [index, media] of malformedCredits.entries()) {

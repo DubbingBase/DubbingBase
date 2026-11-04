@@ -9,9 +9,7 @@
         {{ $t("settings.apiKeysDescription") }}
       </p>
 
-      <div
-        class="theme-surface-raised p-6 rounded-xl border theme-border-subtle text-center"
-      >
+      <div class="theme-surface-raised p-6 rounded-xl border theme-border-subtle text-center">
         <div
           class="inline-flex items-center justify-center w-12 h-12 rounded-full theme-status-info mb-4"
         >

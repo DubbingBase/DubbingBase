@@ -89,7 +89,12 @@ describe("checkMediaDubbingSections", () => {
       const url = String(input);
       const body = url.includes("action=query")
         ? { query: { pages: { "55": { pageid: 55 } } } }
-        : { parse: { revid: 123, tocdata: { sections: [{ index: 2, line: "Cast" }] } } };
+        : {
+            parse: {
+              revid: 123,
+              tocdata: { sections: [{ index: 2, line: "Cast" }] },
+            },
+          };
       return new Response(JSON.stringify(body), {
         status: 200,
         headers: { "content-type": "application/json" },
@@ -481,7 +486,9 @@ describe("batched media credit extraction", () => {
           });
         }
         return new Response(
-          JSON.stringify({ parse: { revid: 900, wikitext: "validated game credits" } }),
+          JSON.stringify({
+            parse: { revid: 900, wikitext: "validated game credits" },
+          }),
           { status: 200, headers: { "content-type": "application/json" } },
         );
       }),

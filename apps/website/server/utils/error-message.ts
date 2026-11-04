@@ -18,7 +18,5 @@ export function getErrorMessage(error: unknown): string {
     }
   }
 
-  return String(error) === "[object Object]"
-    ? "Unknown structured error"
-    : String(error);
+  return String(error) === "[object Object]" ? "Unknown structured error" : String(error);
 }

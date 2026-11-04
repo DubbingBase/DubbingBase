@@ -11,7 +11,13 @@ describe("mediaPageAggregateCredits", () => {
             name: "Localized name",
             original_name: "Provider original name",
             profile_path: "/actor.jpg",
-            roles: [{ character: "Lead", episode_count: 12, credit_id: "unused-credit" }],
+            roles: [
+              {
+                character: "Lead",
+                episode_count: 12,
+                credit_id: "unused-credit",
+              },
+            ],
           },
         ],
         crew: [{ id: 2, name: "Unused crew" }],
@@ -54,8 +60,18 @@ describe("mediaPageMovieCredits", () => {
       }),
     ).toEqual({
       cast: [
-        { id: 2, name: "Second actor", profile_path: "/second.jpg", character: "Second role" },
-        { id: 1, name: "First actor", profile_path: "/first.jpg", character: "First role" },
+        {
+          id: 2,
+          name: "Second actor",
+          profile_path: "/second.jpg",
+          character: "Second role",
+        },
+        {
+          id: 1,
+          name: "First actor",
+          profile_path: "/first.jpg",
+          character: "First role",
+        },
       ],
     });
   });

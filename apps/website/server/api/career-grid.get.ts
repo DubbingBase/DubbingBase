@@ -64,8 +64,7 @@ function buildHomeOgImage(lang: string) {
           flexDirection: "column",
           width: "1200px",
           height: "630px",
-          background:
-            "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)",
+          background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)",
           color: "white",
           fontFamily: "Inter",
           alignItems: "center",
@@ -109,11 +108,7 @@ function buildHomeOgImage(lang: string) {
   };
 }
 
-function buildMediaOgImage(
-  media: any,
-  posterDataUri: string | null,
-  lang: string,
-) {
+function buildMediaOgImage(media: any, posterDataUri: string | null, lang: string) {
   const isFr = lang.startsWith("fr");
   const title = media.title || media.name || "Unknown";
   const releaseDate = media.release_date || media.first_air_date || "";
@@ -130,8 +125,7 @@ function buildMediaOgImage(
           display: "flex",
           width: "1200px",
           height: "630px",
-          background:
-            "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)",
+          background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)",
           color: "white",
           fontFamily: "Inter",
           padding: "60px",
@@ -211,10 +205,7 @@ function buildMediaOgImage(
                       maxHeight: "180px",
                       overflow: "hidden",
                     },
-                    children:
-                      overview.length > 200
-                        ? overview.substring(0, 200) + "..."
-                        : overview,
+                    children: overview.length > 200 ? overview.substring(0, 200) + "..." : overview,
                   },
                 },
                 {
@@ -295,8 +286,7 @@ function buildCareerGridImage(params: {
   const gridX = (svgWidth - rowWidth) / 2;
   const gridHeight = Math.max(0, rows * WORK_HEIGHT + (rows - 1) * WORK_GAP);
 
-  const totalHeight =
-    PADDING + HEADER_HEIGHT + PADDING + gridHeight + PADDING + FOOTER_HEIGHT;
+  const totalHeight = PADDING + HEADER_HEIGHT + PADDING + gridHeight + PADDING + FOOTER_HEIGHT;
 
   const avatarNode = params.avatarDataUri
     ? {
@@ -335,8 +325,7 @@ function buildCareerGridImage(params: {
     const col = i % MAX_COLS;
     const row = Math.floor(i / MAX_COLS);
     const x = gridX + col * (WORK_WIDTH + WORK_GAP);
-    const y =
-      PADDING + HEADER_HEIGHT + PADDING + row * (WORK_HEIGHT + WORK_GAP);
+    const y = PADDING + HEADER_HEIGHT + PADDING + row * (WORK_HEIGHT + WORK_GAP);
 
     const mediaPoster = work.mediaDataUri
       ? {
@@ -439,9 +428,7 @@ function buildCareerGridImage(params: {
                       overflow: "hidden",
                       textOverflow: "ellipsis",
                     },
-                    children: work.characterName
-                      ? `${tAs} ${work.characterName}`
-                      : "",
+                    children: work.characterName ? `${tAs} ${work.characterName}` : "",
                   },
                 },
               ],
@@ -464,8 +451,7 @@ function buildCareerGridImage(params: {
           flexDirection: "column",
           width: `${svgWidth}px`,
           height: `${totalHeight}px`,
-          background:
-            "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)",
+          background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)",
           color: "white",
           fontFamily: "Inter",
           padding: `${PADDING}px`,
@@ -598,9 +584,7 @@ export default defineEventHandler(async (event) => {
 
       let posterDataUri = null;
       if (media.poster_path) {
-        posterDataUri = await fetchImageAsDataUri(
-          media.poster_path.replace("/w500/", "/w780/"),
-        );
+        posterDataUri = await fetchImageAsDataUri(media.poster_path.replace("/w500/", "/w780/"));
       }
 
       const result = buildMediaOgImage(media, posterDataUri, langParam);
@@ -617,10 +601,7 @@ export default defineEventHandler(async (event) => {
         throw createError({ statusCode: 400, message: "Invalid id parameter" });
       }
 
-      const result = await mediaService.getVoiceActorWithWorkAndMedia(
-        id,
-        langParam,
-      );
+      const result = await mediaService.getVoiceActorWithWorkAndMedia(id, langParam);
 
       if (!result?.voiceActor) {
         throw createError({
@@ -629,15 +610,13 @@ export default defineEventHandler(async (event) => {
         });
       }
 
-      const { voiceActor, enhancedWorks, medias, characterProfilePictures } =
-        result;
+      const { voiceActor, enhancedWorks, medias, characterProfilePictures } = result;
 
       let mappedWorks: any[] = [];
 
       if (enhancedWorks && Array.isArray(enhancedWorks)) {
         mappedWorks = enhancedWorks.map((item: any) => {
-          let characterName =
-            item.data?.character || item.work?.performance || "";
+          let characterName = item.data?.character || item.work?.performance || "";
           if (characterName.toLowerCase().includes("dialogue")) {
             characterName = "";
           }
@@ -669,9 +648,7 @@ export default defineEventHandler(async (event) => {
 
           if (!media || !media.credits?.cast) return acc;
 
-          const castMember = media.credits.cast.find(
-            (c: any) => c.id === w.actor_id,
-          );
+          const castMember = media.credits.cast.find((c: any) => c.id === w.actor_id);
           if (!castMember) return acc;
 
           let characterName = castMember.character || w.performance || "";
@@ -737,9 +714,7 @@ export default defineEventHandler(async (event) => {
 
       const worksPromises = mappedWorks.map(async (work: any) => {
         const [mediaDataUri, characterDataUri] = await Promise.all([
-          work.mediaPosterUrl
-            ? fetchImageAsDataUri(work.mediaPosterUrl)
-            : Promise.resolve(null),
+          work.mediaPosterUrl ? fetchImageAsDataUri(work.mediaPosterUrl) : Promise.resolve(null),
           work.characterImageUrl
             ? fetchImageAsDataUri(work.characterImageUrl)
             : Promise.resolve(null),

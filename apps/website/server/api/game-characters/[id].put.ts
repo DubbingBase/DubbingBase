@@ -1,4 +1,4 @@
-import { requireAdmin } from "../../utils/auth";
+import { defineAdminHandler } from "../../utils/auth-handlers";
 import { useIgdbClient } from "../../utils";
 import { useSupabaseAdmin } from "../../utils/db/client";
 import {
@@ -12,8 +12,7 @@ function isExpectedTimestamp(value: unknown): value is string {
   return typeof value === "string" && Number.isFinite(Date.parse(value));
 }
 
-export default defineEventHandler(async (event) => {
-  const admin = requireAdmin(event);
+export default defineAdminHandler(async (event, admin) => {
   const gameCharacterId = getRouterParam(event, "id");
   const body: unknown = await readBody(event);
 

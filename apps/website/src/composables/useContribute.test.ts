@@ -190,7 +190,9 @@ describe("contribution claims", () => {
 
     expect(
       await state.submitTask({
-        file: new File(["image"], "selected-image.gif", { type: "image/gif" }),
+        file: new File(["image"], "selected-image.gif", {
+          type: "image/gif",
+        }),
       }),
     ).toBeNull();
     expect(state.error.value).toBe(messageKey);

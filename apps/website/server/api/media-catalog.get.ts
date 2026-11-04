@@ -145,7 +145,10 @@ export default defineEventHandler(async (event): Promise<PaginatedResponse<Catal
 
   if (error || !data?.[0]) {
     console.error(`[media-catalog] Failed to load ${category} IDs:`, error);
-    throw createError({ statusCode: 500, message: "Failed to load media catalog" });
+    throw createError({
+      statusCode: 500,
+      message: "Failed to load media catalog",
+    });
   }
 
   const page = data[0];

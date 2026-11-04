@@ -1,23 +1,28 @@
-import { computed, onMounted } from "vue";
+import { computed, onMounted, ref, type Ref } from "vue";
 
 type Theme = "dark" | "light" | "system";
 
 export function useTheme() {
-  const theme = useCookie<Theme>("dubbingbase-theme", {
-    default: () => "system",
-    maxAge: 60 * 60 * 24 * 365, // 1 year
-    path: "/",
-    watch: true, // ensure reactivity across tabs if needed
-  });
+  // The cookie is only read and written in the browser so that server
+  // rendering never touches it (no Set-Cookie, no per-visitor HTML).
+  const theme: Ref<Theme> = import.meta.server
+    ? ref<Theme>("system")
+    : useCookie<Theme>("dubbingbase-theme", {
+        default: () => "system",
+        maxAge: 60 * 60 * 24 * 365, // 1 year
+        path: "/",
+        watch: true, // ensure reactivity across tabs if needed
+      });
 
   const getSystemTheme = () => {
     if (typeof window === "undefined") return "dark"; // Default SSR assumption
-    return window.matchMedia("(prefers-color-scheme: light)").matches
-      ? "light"
-      : "dark";
+    return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
   };
 
   const effectiveTheme = computed(() => {
+    // Server HTML must not vary by visitor so it can be cached at the edge.
+    // The inline script in app.vue applies the real theme before first paint.
+    if (import.meta.server) return "dark";
     if (theme.value === "system") return getSystemTheme();
     return theme.value;
   });
@@ -31,16 +36,14 @@ export function useTheme() {
 
   // Keep system theme responsive to OS changes
   onMounted(() => {
-    window
-      .matchMedia("(prefers-color-scheme: light)")
-      .addEventListener("change", () => {
-        // Trigger reactivity by touching the theme ref, or use a separate ref for system theme.
-        // Actually, effectiveTheme won't automatically re-compute when system preference changes
-        // unless we make getSystemTheme reactive.
-        if (theme.value === "system") {
-          document.documentElement.setAttribute("data-theme", getSystemTheme());
-        }
-      });
+    window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => {
+      // Trigger reactivity by touching the theme ref, or use a separate ref for system theme.
+      // Actually, effectiveTheme won't automatically re-compute when system preference changes
+      // unless we make getSystemTheme reactive.
+      if (theme.value === "system") {
+        document.documentElement.setAttribute("data-theme", getSystemTheme());
+      }
+    });
   });
 
   return { theme, toggleTheme, effectiveTheme };

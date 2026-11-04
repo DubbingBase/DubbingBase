@@ -78,16 +78,18 @@ describe("ToyClient", () => {
       select: vi.fn(),
       or: vi.fn(),
       limit: vi.fn(async () => ({
-        data: [{
-          content_id: 1,
-          name: "Storyteller",
-          manufacturer: "Lunii",
-          product_line: "My Fabulous Storyteller",
-          release_year: null,
-          cover_url: null,
-          description: null,
-          updated_at: "2026-10-23T12:00:00Z",
-        }],
+        data: [
+          {
+            content_id: 1,
+            name: "Storyteller",
+            manufacturer: "Lunii",
+            product_line: "My Fabulous Storyteller",
+            release_year: null,
+            cover_url: null,
+            description: null,
+            updated_at: "2026-10-23T12:00:00Z",
+          },
+        ],
         error: null,
       })),
     };

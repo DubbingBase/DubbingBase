@@ -7,7 +7,9 @@ const routeMocks = vi.hoisted(() => ({
 }));
 
 vi.mock("../auth", () => ({ requireAdmin: routeMocks.requireAdmin }));
-vi.mock("../db/client", () => ({ useSupabaseAdmin: routeMocks.useSupabaseAdmin }));
+vi.mock("../db/client", () => ({
+  useSupabaseAdmin: routeMocks.useSupabaseAdmin,
+}));
 
 let handler: typeof import("../../api/save-toy-metadata.post").default;
 
@@ -20,7 +22,10 @@ beforeAll(async () => {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  routeMocks.requireAdmin.mockReturnValue({ id: "admin-1", app_metadata: { role: "admin" } });
+  routeMocks.requireAdmin.mockReturnValue({
+    id: "admin-1",
+    app_metadata: { role: "admin" },
+  });
 });
 
 afterAll(() => vi.unstubAllGlobals());

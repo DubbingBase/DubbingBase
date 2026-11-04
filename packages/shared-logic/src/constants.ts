@@ -27,8 +27,7 @@ export function resolveLocaleLanguage(value?: string): string | null {
 
   const normalized = value.trim();
   const locale = APP_LOCALES.find(
-    (candidate) =>
-      candidate.code === normalized || candidate.language === normalized,
+    (candidate) => candidate.code === normalized || candidate.language === normalized,
   );
 
   return locale?.language ?? null;

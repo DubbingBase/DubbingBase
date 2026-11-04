@@ -131,9 +131,9 @@
     "wikiLabel": "Wiki：",
     "tmdb": "TMDB",
     "tvdb": "TVDB",
-    "born": "生年月日：",
-    "died": "没年月日：",
-    "works": "作品",
+    "born": "生年月日：{year}",
+    "died": "没年月日：{year}",
+    "works": "{count}作品",
     "separator": "•"
   },
   "theme": {
@@ -291,7 +291,7 @@
     "oldestFirst": "古い順",
     "noWorksFound": "この声優の作品は見つかりませんでした。",
     "notFound": "俳優が見つかりません。",
-    "active": "活動期間：",
+    "active": "活動期間：{years}",
     "noResultsFor": "「{query}」に一致する声優は見つかりませんでした。",
     "directorySearchPlaceholder": "声優を名前で検索..."
   },
@@ -301,7 +301,7 @@
     "movies": "映画",
     "series": "テレビ番組",
     "voiceActors": "声優",
-    "roles": "役",
+    "roles": "{count}役",
     "birthdate": "生年月日",
     "biography": "略歴",
     "role": "役",
@@ -356,7 +356,7 @@
       "works": "役"
     },
     "topContributorsAdmin": "トップコントリビューター（管理者）",
-    "contributions": "コントリビューション"
+    "contributions": "{count}件のコントリビューション"
   },
   "details": {
     "modify": "修正",
@@ -756,7 +756,7 @@
       "roleUser": "ユーザー",
       "anonymousUser": "匿名ユーザー",
       "description": "登録ユーザーを表示、役割を変更、またはアカウントを削除します。",
-      "registered": "登録日："
+      "registered": "登録日：{date}"
     },
     "duplicates": {
       "allOtherDuplicatesMerged": "。他のすべての重複がここにマージされます。",
@@ -777,7 +777,7 @@
       "findDuplicates": "重複を検出",
       "merging": "マージ中...",
       "mergeSelected": "プロフィールをマージ",
-      "matchesDetected": "件の一致を検出",
+      "matchesDetected": "{count}件の一致を検出",
       "keepId": "ID # を保持",
       "idHash": "ID #",
       "firstName": "名",
@@ -929,7 +929,7 @@
       "noPosterAvailable": "ポスターなし",
       "saveMappingChanges": "マッピング変更を保存",
       "searchingDatabase": "データベースを検索中...",
-      "released": "公開日：",
+      "released": "公開日：{year}",
       "noPublicCastHint": "このメディアタイプには公開キャストリストがありません。声優を手動で追加してください：",
       "characterNamePlaceholder": "キャラクター / 役名",
       "originalActorPlaceholder": "オリジナル俳優名（任意）",

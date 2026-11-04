@@ -3,7 +3,10 @@ import { deferPosthogPrefetch, type ClientManifestEntry } from "./posthog-prefet
 
 describe("deferPosthogPrefetch", () => {
   it("disables only prefetch for the dynamic PostHog module", () => {
-    const posthog: ClientManifestEntry & { preload?: boolean; module?: boolean } = {
+    const posthog: ClientManifestEntry & {
+      preload?: boolean;
+      module?: boolean;
+    } = {
       src: "../../../node_modules/.pnpm/posthog-js@1.429.2/node_modules/posthog-js/dist/module.mjs",
       isDynamicEntry: true,
       prefetch: true,
@@ -22,7 +25,11 @@ describe("deferPosthogPrefetch", () => {
 
     deferPosthogPrefetch({ posthog, app, staticPosthogAsset });
 
-    expect(posthog).toMatchObject({ prefetch: false, preload: true, module: true });
+    expect(posthog).toMatchObject({
+      prefetch: false,
+      preload: true,
+      module: true,
+    });
     expect(app.prefetch).toBe(true);
     expect(staticPosthogAsset.prefetch).toBe(true);
   });

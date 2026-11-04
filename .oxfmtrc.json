@@ -1,0 +1,9 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "ignorePatterns": [
+    "packages/database/supabase/functions/_shared/database.types.ts",
+    "pnpm-lock.yaml",
+    ".codesight/**",
+    ".changeset/**"
+  ]
+}

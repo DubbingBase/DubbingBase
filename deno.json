@@ -2,8 +2,6 @@
   "nodeModulesDir": "none",
   "lock": false,
   "fmt": {
-    "exclude": [
-      "packages/database/src/database.types.ts"
-    ]
+    "exclude": ["packages/database/src/database.types.ts"]
   }
 }

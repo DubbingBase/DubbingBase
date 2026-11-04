@@ -1,4 +1,4 @@
-import { requireUser } from "../utils/auth";
+import { defineUserHandler } from "../utils/auth-handlers";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -38,8 +38,7 @@ function mapRpcError(code: string): never {
   throw unlinkError(500, "Failed to unlink user from voice actor; no changes were saved");
 }
 
-export default defineEventHandler(async (event) => {
-  const user = requireUser(event);
+export default defineUserHandler(async (event, user) => {
   const body: unknown = await readBody(event);
   if (!isRecord(body)) throw unlinkError(400, "Invalid user voice-actor unlink request");
   const allowedKeys = [

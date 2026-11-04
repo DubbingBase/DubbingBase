@@ -1,7 +1,23 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@app/shared-logic";
 import { useSupabaseAdmin } from "../utils/db/client";
-import { requireUser } from "../utils/auth";
-export default defineEventHandler(async (event) => {
-  const user = requireUser(event);
+import { defineUserHandler } from "../utils/auth-handlers";
+async function fetchVoiceActors(supabaseAdmin: SupabaseClient<Database>, voiceActorIds: number[]) {
+  if (voiceActorIds.length === 0) return [];
+
+  const { data, error } = await supabaseAdmin
+    .from("voice_actors")
+    .select("*")
+    .in("id", voiceActorIds);
+
+  if (error) {
+    console.error("Error fetching voice actors:", error);
+    return [];
+  }
+  return data || [];
+}
+
+export default defineUserHandler(async (event, user) => {
   const supabaseAdmin = useSupabaseAdmin();
 
   try {
@@ -35,22 +51,8 @@ export default defineEventHandler(async (event) => {
     }
 
     // Fetch voice actor profiles in a single query
-    const voiceActorIds =
-      voiceActorLinks?.map((l: any) => l.voice_actor_id) || [];
-    let voiceActors: any[] = [];
-
-    if (voiceActorIds.length > 0) {
-      const { data: vaData, error: vaError } = await supabaseAdmin
-        .from("voice_actors")
-        .select("*")
-        .in("id", voiceActorIds);
-
-      if (vaError) {
-        console.error("Error fetching voice actors:", vaError);
-      } else {
-        voiceActors = vaData || [];
-      }
-    }
+    const voiceActorIds = voiceActorLinks?.map((l) => l.voice_actor_id) || [];
+    const voiceActors = await fetchVoiceActors(supabaseAdmin, voiceActorIds);
 
     const primaryVoiceActor = voiceActors.length > 0 ? voiceActors[0] : null;
 

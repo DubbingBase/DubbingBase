@@ -1289,13 +1289,20 @@ export default defineEventHandler(async (event) => {
       media_id: media.id,
       media_type: "movie",
     })),
-    medias: data.enhancedWorks.map(({ media }) => ({ ...media, media_type: "movie" })),
+    medias: data.enhancedWorks.map(({ media }) => ({
+      ...media,
+      media_type: "movie",
+    })),
   });
   const summarizeProjects = (
     projects: Array<{
       id: number;
       language: string;
-      studio_data?: { id: number; name: string; logo_url?: string | null } | null;
+      studio_data?: {
+        id: number;
+        name: string;
+        logo_url?: string | null;
+      } | null;
       works: Array<{ voice_actor?: { id: number } | null }>;
     }>,
   ) =>
@@ -1601,7 +1608,10 @@ export default defineEventHandler(async (event) => {
     }
     const response =
       url.searchParams.get("projection") === "media-summary"
-        ? { ...MOCK_AUDIOBOOK, dubbingProjects: summarizeProjects(MOCK_AUDIOBOOK.dubbingProjects) }
+        ? {
+            ...MOCK_AUDIOBOOK,
+            dubbingProjects: summarizeProjects(MOCK_AUDIOBOOK.dubbingProjects),
+          }
         : MOCK_AUDIOBOOK;
     return send(event, JSON.stringify(response), "application/json");
   }
@@ -1610,7 +1620,10 @@ export default defineEventHandler(async (event) => {
   if (path.startsWith("/api/podcast/")) {
     const response =
       url.searchParams.get("projection") === "media-summary"
-        ? { ...MOCK_PODCAST, dubbingProjects: summarizeProjects(MOCK_PODCAST.dubbingProjects) }
+        ? {
+            ...MOCK_PODCAST,
+            dubbingProjects: summarizeProjects(MOCK_PODCAST.dubbingProjects),
+          }
         : MOCK_PODCAST;
     return send(event, JSON.stringify(response), "application/json");
   }

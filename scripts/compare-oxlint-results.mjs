@@ -1,7 +1,6 @@
 import { readFileSync } from "node:fs";
 
-const [baseFile, baseStatusText, headFile, headStatusText] =
-  process.argv.slice(2);
+const [baseFile, baseStatusText, headFile, headStatusText] = process.argv.slice(2);
 
 if (!baseFile || !baseStatusText || !headFile || !headStatusText) {
   console.error(
@@ -13,9 +12,7 @@ if (!baseFile || !baseStatusText || !headFile || !headStatusText) {
 function readResults(file, statusText) {
   const status = Number(statusText);
   if (!Number.isInteger(status) || status < 0 || status > 1) {
-    throw new Error(
-      `Oxlint exited unexpectedly with status ${statusText}: ${file}`,
-    );
+    throw new Error(`Oxlint exited unexpectedly with status ${statusText}: ${file}`);
   }
 
   const result = JSON.parse(readFileSync(file, "utf8"));
@@ -23,18 +20,14 @@ function readResults(file, statusText) {
     throw new Error(`Oxlint JSON did not include diagnostics: ${file}`);
   }
   if (status === 1 && result.diagnostics.length === 0) {
-    throw new Error(
-      `Oxlint exited with status 1 but reported no diagnostics: ${file}`,
-    );
+    throw new Error(`Oxlint exited with status 1 but reported no diagnostics: ${file}`);
   }
 
   return result.diagnostics;
 }
 
 function diagnosticKey(diagnostic) {
-  const filename = diagnostic.filename
-    .replaceAll("\\", "/")
-    .replace(/^\.\//, "");
+  const filename = diagnostic.filename.replaceAll("\\", "/").replace(/^\.\//, "");
   const location = diagnostic.labels?.[0]?.span;
   return JSON.stringify([
     filename,
@@ -73,9 +66,7 @@ if (introduced.length > 0) {
   for (const diagnostic of introduced) {
     const location = diagnostic.labels?.[0]?.span;
     const line = location ? `:${location.line}:${location.column}` : "";
-    console.error(
-      `  ${diagnostic.filename}${line} ${diagnostic.code}: ${diagnostic.message}`,
-    );
+    console.error(`  ${diagnostic.filename}${line} ${diagnostic.code}: ${diagnostic.message}`);
   }
   process.exit(1);
 }
