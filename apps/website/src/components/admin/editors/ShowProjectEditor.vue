@@ -520,13 +520,14 @@ import {
   createDubbingProjectSaveClient,
   getDubbingProjectSaveErrorMessage,
   getEditableDubbingProjectStatus,
+  type DubbingProjectStatus,
   type DubbingProjectCastSaveRow,
   type DubbingProjectSaveResponse,
-  type WorkExpectedValues,
 } from "~/utils/dubbing-project-save";
 import { useAdminLookups, type AdminLookupOption } from "~/composables/useAdminLookups";
 import { createEditorRowKey, useEditorFormState } from "~/composables/useEditorFormState";
 import type {
+  EditorCastRowBase,
   EditorProjectCrew,
   EditorProjectRecord,
   EditorProjectTab,
@@ -563,7 +564,7 @@ const mediaTitle = ref("");
 const contentType = ref("tv");
 const dubbingLanguage = ref("");
 const posterUrl = ref("");
-const status = ref<"validated" | "pending" | "draft">("validated");
+const status = ref<DubbingProjectStatus>("validated");
 const selectedStudioId = ref<number | null>(null);
 const projectUpdatedAt = ref<string | null>(null);
 
@@ -590,18 +591,9 @@ let pendingStudioSelect: ((id: number) => void) | null = null;
 let pendingVaSelect: ((id: number) => void) | null = null;
 
 // Cast Rows
-interface CastRow {
-  /** Client-only stable identity for keyed rendering and row actions. */
-  key: string;
-  id?: number;
+interface CastRow extends EditorCastRowBase {
   actor_id: number | string | null;
-  character_name: string;
-  voice_actor_id: number | null;
-  performance: string;
-  note: string;
   highlight: boolean;
-  expectedUpdatedAt?: string | null;
-  expected?: WorkExpectedValues;
 }
 const castRows = ref<CastRow[]>([]);
 

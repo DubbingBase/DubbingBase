@@ -1,7 +1,7 @@
 import { asString } from "../utils/narrow";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { useTmdbClient } from "../utils";
-import type { Tables } from "@app/shared-logic";
+import type { StudioRosterVoiceActor, Tables } from "@app/shared-logic";
 
 type StudioProject = Pick<
   Tables<"dubbing_projects">,
@@ -14,10 +14,6 @@ interface StudioMediaSummary {
   poster_path?: string | null;
 }
 type StudioMedia = StudioMediaSummary | TmdbMediaDetails;
-type VoiceActorRosterEntry = Pick<
-  Tables<"voice_actors">,
-  "id" | "firstname" | "lastname" | "profile_picture"
->;
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
@@ -222,7 +218,7 @@ export default defineEventHandler(async (event) => {
     });
 
     // 4. Fetch linked voice actors from work table
-    let voiceActorsRoster: VoiceActorRosterEntry[] = [];
+    let voiceActorsRoster: StudioRosterVoiceActor[] = [];
     if (projects.length > 0) {
       const projectIds = projects.map((p) => p.id);
       const { data: works } = await supabase

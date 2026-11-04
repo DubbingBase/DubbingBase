@@ -1,26 +1,5 @@
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { buildSupabaseImageUrl } from "../../utils/urls/supabase";
-import type { Json } from "@app/supabase/types";
-
-type VoiceActorRecord = Record<string, Json> & {
-  id: number;
-  firstname: string;
-  lastname: string;
-  profile_picture: string | null;
-};
-
-function isVoiceActorRecord(value: Json): value is VoiceActorRecord {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    !Array.isArray(value) &&
-    typeof Reflect.get(value, "id") === "number" &&
-    typeof Reflect.get(value, "firstname") === "string" &&
-    typeof Reflect.get(value, "lastname") === "string" &&
-    (typeof Reflect.get(value, "profile_picture") === "string" ||
-      Reflect.get(value, "profile_picture") === null)
-  );
-}
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);

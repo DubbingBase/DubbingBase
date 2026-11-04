@@ -281,8 +281,7 @@
 
 <script setup lang="ts">
 import { ref, shallowRef, computed, watch, onUnmounted } from "vue";
-import type { Database } from "@app/supabase";
-import type { Json } from "@app/supabase/types";
+import type { Json, Tables } from "@app/supabase/types";
 
 const supabase = useSupabaseClient();
 const localePath = useLocalePath();
@@ -293,7 +292,7 @@ definePageMeta({
 });
 
 type VoiceActor = Pick<
-  Database["public"]["Tables"]["voice_actors"]["Row"],
+  Tables<"voice_actors">,
   | "id"
   | "firstname"
   | "lastname"

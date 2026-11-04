@@ -178,13 +178,12 @@ definePageMeta({
 
 import { ref, onMounted, onUnmounted } from "vue";
 import { readErrorMessage } from "~/utils/error-message";
+import type { Tables } from "@app/supabase/types";
 
-interface VoiceActorCandidate {
-  id: number;
-  firstname: string;
-  lastname: string;
-  profile_picture?: string | null;
-}
+type VoiceActorCandidate = Pick<
+  Tables<"voice_actors">,
+  "id" | "firstname" | "lastname" | "profile_picture"
+>;
 
 const searchQuery = ref("");
 const searchResults = ref<VoiceActorCandidate[]>([]);

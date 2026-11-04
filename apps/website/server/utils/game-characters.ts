@@ -1,9 +1,8 @@
-import type { IgdbCharacter } from "@app/shared-logic";
-import type { Database } from "@app/supabase/types";
+import type { IgdbCharacter, Tables } from "@app/shared-logic";
 import { useSupabaseAdmin } from "./db/client";
 
 type LocalGameCharacter = Pick<
-  Database["public"]["Tables"]["game_characters"]["Row"],
+  Tables<"game_characters">,
   "id" | "igdb_game_id" | "name" | "igdb_character_id" | "wikidata_qid" | "updated_at"
 >;
 

@@ -1,3 +1,5 @@
+import type { Tables } from "@app/shared-logic";
+
 export const editableWorkFields = [
   "performance",
   "status",
@@ -11,30 +13,18 @@ export const editableWorkFields = [
 
 export type EditableWorkField = (typeof editableWorkFields)[number];
 
-export interface DuplicateWorkEntry {
-  id: number;
-  dubbing_project_id: number;
-  actor_id: number | null;
-  character_id: number | null;
-  voice_actor_id: number | null;
-  character_name: string | null;
-  performance: string | null;
-  status: string | null;
+/**
+ * Work row as returned by the admin duplicates API. `game_character_id` is a
+ * database column the API does not project, so it is excluded here.
+ */
+export type DuplicateWorkEntry = Omit<Tables<"work">, "reviewed_status" | "game_character_id"> & {
   reviewed_status: "waiting" | "accepted" | "rejected" | null;
-  note: string | null;
-  highlight: boolean | null;
-  source_id: number | null;
   sourceName: string | null;
-  suggestions: string | null;
-  created_at: string | null;
-  created_by: string | null;
-  updated_at: string;
-  updated_by: string | null;
   voteCount: number;
   upVotes: number;
   downVotes: number;
   voiceActor: { id: number; firstName: string; lastName: string } | null;
-}
+};
 
 export interface DuplicateWorkGroup {
   groupId: number;

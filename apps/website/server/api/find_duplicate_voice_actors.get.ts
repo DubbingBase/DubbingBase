@@ -1,19 +1,20 @@
-import type { Json } from "@app/supabase";
+import type { Json, Tables } from "@app/supabase";
 import { defineAdminHandler } from "../utils/auth-handlers";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { buildSupabaseImageUrl } from "../utils/urls/supabase";
 
-type DuplicateVoiceActor = {
-  id: number;
-  firstname: string;
-  lastname: string;
-  bio: string | null;
-  nationality: string | null;
-  date_of_birth: string | null;
-  tmdb_id: number | null;
-  wikidata_id: string | null;
-  profile_picture: string | null;
-};
+type DuplicateVoiceActor = Pick<
+  Tables<"voice_actors">,
+  | "id"
+  | "firstname"
+  | "lastname"
+  | "bio"
+  | "nationality"
+  | "date_of_birth"
+  | "tmdb_id"
+  | "wikidata_id"
+  | "profile_picture"
+>;
 
 function isJsonArray(value: Json | null | undefined): value is Json[] {
   return Array.isArray(value);

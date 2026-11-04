@@ -472,6 +472,7 @@ definePageMeta({
 });
 
 import { ref, computed, onMounted, watch } from "vue";
+import type { Tables } from "@app/supabase/types";
 
 interface Actor {
   id: number;
@@ -480,12 +481,7 @@ interface Actor {
   profile_path: string | null;
 }
 
-interface VoiceActor {
-  id: number;
-  firstname: string;
-  lastname: string;
-  profile_picture: string | null;
-}
+type VoiceActor = Pick<Tables<"voice_actors">, "id" | "firstname" | "lastname" | "profile_picture">;
 
 interface WorkAndVoiceActor {
   work_id: number;

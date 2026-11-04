@@ -331,20 +331,7 @@ interface User {
   email: string;
 }
 
-interface VoiceActor {
-  id: number;
-  firstname: string;
-  lastname: string;
-  profile_picture: string | null;
-}
-
-interface ExistingLinkDisplay {
-  id: string;
-  user_id: string;
-  userEmail: string;
-  voiceActorName: string;
-  voiceActorImage: string | null;
-}
+type VoiceActor = Pick<Tables<"voice_actors">, "id" | "firstname" | "lastname" | "profile_picture">;
 
 // Selections
 const selectedUser = ref<User | null>(null);
@@ -372,7 +359,13 @@ const pendingLinkRequest = ref<{
   voiceActorId: number;
 } | null>(null);
 
-const existingLinks = ref<ExistingLinkDisplay[]>([]);
+type ExistingLink = Pick<Tables<"user_voice_actor_links">, "id" | "user_id"> & {
+  userEmail: string;
+  voiceActorName: string;
+  voiceActorImage: string | null;
+};
+
+const existingLinks = ref<ExistingLink[]>([]);
 const linksLoading = ref(false);
 
 // Debouncing helpers

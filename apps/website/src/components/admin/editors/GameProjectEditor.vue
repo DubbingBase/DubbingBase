@@ -604,11 +604,18 @@ import {
   createStableRequestIdFactory,
   getDubbingProjectSaveErrorMessage,
   getEditableDubbingProjectStatus,
+  type DubbingProjectStatus,
   serializeGameProjectCastRows,
   type GameProjectCastEditorRow,
   type DubbingProjectSaveResponse,
 } from "~/utils/dubbing-project-save";
 import { useAdminLookups, type AdminLookupOption } from "~/composables/useAdminLookups";
+import type { Tables } from "@app/supabase/types";
+import type {
+  EditorProjectCrew,
+  EditorProjectRecord,
+  EditorProjectWork,
+} from "~/utils/admin-project-editor-types";
 import { createEditorRowKey, useEditorFormState } from "~/composables/useEditorFormState";
 
 const supabase = useSupabaseClient();
@@ -646,7 +653,7 @@ const mediaTitle = ref("");
 const contentType = ref("video_game");
 const dubbingLanguage = ref("");
 const posterUrl = ref("");
-const status = ref<"validated" | "pending" | "draft">("validated");
+const status = ref<DubbingProjectStatus>("validated");
 const selectedStudioId = ref<number | null>(null);
 const projectUpdatedAt = ref<string | null>(null);
 
@@ -683,36 +690,12 @@ type GameProjectTab = {
   studio_id: number | null;
   studios: { name: string | null } | null;
 };
-type GameProjectCrew = {
-  job_id: number;
-  person_id: number;
-  voice_actors: { firstname: string | null; lastname: string | null } | null;
-};
-type GameProjectWork = {
-  id: number;
-  actor_id: number | null;
-  character_id: number | null;
-  game_character_id: string | null;
-  character_name: string | null;
-  voice_actor_id: number | null;
-  performance: string | null;
-  note: string | null;
-  highlight: boolean | null;
-  status: string | null;
-  updated_at: string | null;
-  voice_actors: { firstname: string | null; lastname: string | null } | null;
-};
-type GameProjectRecord = {
-  id: number;
-  content_id: number;
-  content_type: string;
-  language: string | null;
-  status: string | null;
-  studio_id: number | null;
-  updated_at: string | null;
-  studios: { name: string | null } | null;
-  work: GameProjectWork[];
-};
+type GameProjectCrew = EditorProjectCrew;
+type GameProjectWork = Omit<EditorProjectWork, "voice_actors"> &
+  Pick<Tables<"work">, "game_character_id"> & {
+    voice_actors: Pick<Tables<"voice_actors">, "firstname" | "lastname"> | null;
+  };
+type GameProjectRecord = Omit<EditorProjectRecord, "work"> & { work: GameProjectWork[] };
 type GameApiResponse = {
   game: { name: string; cover?: { url?: string | null } | null } | null;
   characters: GameCharacterApiRow[];

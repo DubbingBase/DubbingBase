@@ -173,8 +173,11 @@
 
 <script setup lang="ts">
 import { ref, watch } from "vue";
-import type { Database } from "@app/supabase";
-import { ADMIN_REPORTS_PAGE_SIZE, useAdminReports } from "~/composables/useAdminReports";
+import {
+  ADMIN_REPORTS_PAGE_SIZE,
+  useAdminReports,
+  type UserReport,
+} from "~/composables/useAdminReports";
 
 definePageMeta({
   layout: "admin",
@@ -184,8 +187,6 @@ definePageMeta({
 const localePath = useLocalePath();
 const { t } = useI18n();
 const { fetchReports: fetchReportPage, updateReportStatus } = useAdminReports();
-
-type UserReport = Database["public"]["Tables"]["user_reports"]["Row"];
 
 const page = ref(1);
 const reports = ref<UserReport[]>([]);

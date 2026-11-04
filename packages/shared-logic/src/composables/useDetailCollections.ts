@@ -1,4 +1,4 @@
-import type { PaginatedResponse } from "../types";
+import type { MediaDubbingProject, PaginatedResponse } from "../types";
 import type { IgdbCharacter } from "../types";
 
 export type DetailCollection =
@@ -25,13 +25,10 @@ export type DetailCollectionParams = {
   pageSize?: string | number;
 };
 
-export type DetailCollectionProject = {
-  id: number;
-  language?: string | null;
-  has_voice_actor?: boolean;
-  voice_actor_count?: number;
-  work_count?: number;
-  studio_data?: { id: number; name: string; logo_url?: string | null } | null;
+export type DetailCollectionProject = Pick<
+  MediaDubbingProject,
+  "id" | "language" | "has_voice_actor" | "voice_actor_count" | "work_count" | "studio_data"
+> & {
   crew?: Array<{
     id: number;
     job?: { name: string } | null;

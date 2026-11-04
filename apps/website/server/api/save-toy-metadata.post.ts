@@ -1,9 +1,9 @@
-import type { Json, Database } from "@app/supabase/types";
-import type { Toy, ToyMetadataInput, ToyMetadataSaveResponse } from "@app/shared-logic";
+import type { Json } from "@app/supabase/types";
+import type { Tables, Toy, ToyMetadataInput, ToyMetadataSaveResponse } from "@app/shared-logic";
 import { requireAdmin } from "../utils/auth";
 import { useSupabaseAdmin } from "../utils/db/client";
 
-type ToyMetadataRow = Database["public"]["Tables"]["toy_metadata"]["Row"];
+type ToyMetadataRow = Tables<"toy_metadata">;
 
 function metadataError(statusCode: number, message: string): never {
   throw createError({ statusCode, statusMessage: message, message });

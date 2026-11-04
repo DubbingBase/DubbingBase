@@ -3,18 +3,12 @@ import { defineUserHandler } from "../utils/auth-handlers";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { useIgdbClient, useOpenLibraryClient, usePodcastClient, useTmdbClient } from "../utils";
 import { requireDubbingLanguage } from "../utils/dubbing-language";
+import {
+  DUBBING_PROJECT_MEDIA_TYPES,
+  type DubbingProjectMediaType,
+} from "../../src/utils/dubbing-project-save";
 
-type MediaType = "movie" | "tv" | "video_game" | "audiobook" | "podcast" | "advertisement" | "toy";
-
-const MEDIA_TYPES: readonly MediaType[] = [
-  "movie",
-  "tv",
-  "video_game",
-  "audiobook",
-  "podcast",
-  "advertisement",
-  "toy",
-];
+type MediaType = DubbingProjectMediaType;
 
 const PERFORMANCES = [
   "dialogues",
@@ -62,7 +56,7 @@ function isUuid(value: unknown): value is string {
 }
 
 function isMediaType(value: unknown): value is MediaType {
-  return MEDIA_TYPES.some((mediaType) => mediaType === value);
+  return DUBBING_PROJECT_MEDIA_TYPES.some((mediaType) => mediaType === value);
 }
 
 function isPerformance(value: unknown): value is (typeof PERFORMANCES)[number] {

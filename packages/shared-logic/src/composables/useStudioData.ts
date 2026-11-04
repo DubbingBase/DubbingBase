@@ -1,17 +1,7 @@
 import { ref } from "vue";
 import type { Tables } from "../types";
 
-export type Studio = {
-  id: number;
-  name: string;
-  city: string | null;
-  country: string | null;
-  created_at: string | null;
-  description: string | null;
-  logo_url: string | null;
-  updated_at: string | null;
-  website_url: string | null;
-};
+export type Studio = Omit<Tables<"studios">, "social_media_links">;
 
 export type StudioDubbedProject = Pick<
   Tables<"dubbing_projects">,

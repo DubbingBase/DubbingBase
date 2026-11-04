@@ -23,7 +23,7 @@ export async function fetchVoiceActorData(
 }
 
 import { ref, shallowRef, computed, watch, unref, type MaybeRef } from "vue";
-import type { MovieModel, SerieModel, PersonData, Actor } from "../types";
+import type { MovieModel, SerieModel, PersonData, Actor, Tables } from "../types";
 
 type VoiceActorCastMember = {
   id: number;
@@ -40,39 +40,41 @@ type VoiceActorMedia = (MovieModel | SerieModel) & {
   credits?: { cast?: VoiceActorCastMember[] };
 };
 
+/** Work row with the dubbing project (and its studio) nested, as returned by the voice actor route. */
+type VoiceActorWork = Pick<
+  Tables<"work">,
+  | "id"
+  | "actor_id"
+  | "highlight"
+  | "performance"
+  | "source_id"
+  | "status"
+  | "suggestions"
+  | "voice_actor_id"
+> & {
+  dubbing_projects?: Pick<Tables<"dubbing_projects">, "content_id" | "content_type"> & {
+    studios?: Pick<Tables<"studios">, "id" | "name" | "logo_url"> | null;
+  };
+};
+
 export type VoiceActorResponse = {
-  voiceActor: {
-    id: number;
-    firstname: string;
-    lastname: string;
-    bio: string | null;
-    nationality: string | null;
-    date_of_birth: string | null;
-    awards: string | null;
-    years_active: string | null;
+  voiceActor: Pick<
+    Tables<"voice_actors">,
+    | "id"
+    | "firstname"
+    | "lastname"
+    | "bio"
+    | "nationality"
+    | "date_of_birth"
+    | "awards"
+    | "years_active"
+    | "profile_picture"
+    | "voice_actor_name"
+  > & {
+    // Narrowed from the database `Json` column; the route returns string maps only.
     social_media_links: Record<string, string> | null;
-    profile_picture: string | null;
-    voice_actor_name: string | null;
     user_voice_actor_links?: { id: string }[];
-    work: {
-      id: number;
-      actor_id: number;
-      dubbing_projects?: {
-        content_id: number;
-        content_type: string | null;
-        studios?: {
-          id: number;
-          name: string;
-          logo_url: string | null;
-        } | null;
-      };
-      highlight: boolean | null;
-      performance: string | null;
-      source_id: number | null;
-      status: string | null;
-      suggestions: string | null;
-      voice_actor_id: number | null;
-    }[];
+    work: VoiceActorWork[];
   };
   enhancedWorks?: EnhancedWorkItem[];
   medias: VoiceActorMedia[];
@@ -89,20 +91,7 @@ export type VoiceActorResponse = {
 
 export type EnhancedWorkItem = {
   media: VoiceActorMedia;
-  work: {
-    id: number;
-    actor_id: number;
-    performance?: string | null;
-    dubbing_projects?: {
-      content_id: number;
-      content_type: string | null;
-      studios?: {
-        id: number;
-        name: string;
-        logo_url: string | null;
-      } | null;
-    };
-  };
+  work: VoiceActorWork;
   data: {
     character: string | undefined;
     characterImage?: string;

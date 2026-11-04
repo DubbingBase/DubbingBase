@@ -1,7 +1,7 @@
-import type { Database } from "@app/supabase";
+import type { Enums, Tables } from "@app/supabase/types";
 
-type UserReport = Database["public"]["Tables"]["user_reports"]["Row"];
-type UserReportStatus = Database["public"]["Enums"]["user_report_status"];
+export type UserReport = Tables<"user_reports">;
+type UserReportStatus = Enums<"user_report_status">;
 
 export const ADMIN_REPORTS_PAGE_SIZE = 50;
 

@@ -3,67 +3,23 @@ import { defineAdminHandler } from "../utils/auth-handlers";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { useIgdbClient, useOpenLibraryClient, usePodcastClient, useTmdbClient } from "../utils";
 import { requireDubbingLanguage } from "../utils/dubbing-language";
-
-type MediaType = "movie" | "tv" | "video_game" | "audiobook" | "podcast" | "advertisement" | "toy";
-const MEDIA_TYPES: readonly MediaType[] = [
-  "movie",
-  "tv",
-  "video_game",
-  "audiobook",
-  "podcast",
-  "advertisement",
-  "toy",
-];
+import {
+  DUBBING_PROJECT_MEDIA_TYPES,
+  type DubbingProjectCastSaveRow,
+  type DubbingProjectCrewSaveRow,
+  type DubbingProjectMediaType,
+  type DubbingProjectSaveRequest,
+  type WorkExpectedValues,
+} from "../../src/utils/dubbing-project-save";
 
 function projectSaveError(statusCode: number, message: string) {
   return createError({ statusCode, statusMessage: message, message });
 }
 
-interface WorkExpectedValues {
-  actor_id: number | null;
-  character_id: number | null;
-  game_character_id?: string | null;
-  character_name: string | null;
-  voice_actor_id: number | null;
-  performance: string | null;
-  note: string | null;
-  highlight: boolean | null;
-  status: string | null;
-}
-
-interface CastSaveRow {
-  id?: number;
-  expected_updated_at?: string | null;
-  expected?: WorkExpectedValues;
-  actor_id?: number | null;
-  character_id?: number | null;
-  game_character_id?: string | null;
-  character_name?: string | null;
-  voice_actor_id?: number | null;
-  performance?: string | null;
-  note?: string | null;
-  highlight?: boolean | null;
-}
-
-interface CrewSaveRow {
-  job_id: number;
-  person_id: number;
-}
-
-interface ProjectSaveBody {
-  request_id: string;
-  project_id: number | null;
-  expected_updated_at: string | null;
-  project: {
-    content_id: number;
-    content_type: MediaType;
-    language: string;
-    studio_id: number | null;
-    status: "validated" | "pending" | "draft";
-  };
-  crew: CrewSaveRow[];
-  cast: CastSaveRow[];
-}
+type ProjectSaveBody = DubbingProjectSaveRequest & { request_id: string };
+type CastSaveRow = DubbingProjectCastSaveRow;
+type CrewSaveRow = DubbingProjectCrewSaveRow;
+type MediaType = DubbingProjectMediaType;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -74,7 +30,7 @@ function hasOnlyKeys(value: Record<string, unknown>, allowed: readonly string[])
 }
 
 function isMediaType(value: unknown): value is MediaType {
-  return MEDIA_TYPES.some((mediaType) => mediaType === value);
+  return DUBBING_PROJECT_MEDIA_TYPES.some((mediaType) => mediaType === value);
 }
 
 function isPositiveId(value: unknown): value is number {

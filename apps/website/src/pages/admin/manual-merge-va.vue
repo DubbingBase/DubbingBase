@@ -542,18 +542,15 @@ definePageMeta({
 
 import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import { readErrorMessage } from "~/utils/error-message";
+import type { Tables } from "@app/supabase/types";
 
-interface VoiceActorCandidate {
-  id: number;
-  firstname: string;
-  lastname: string;
-  bio?: string | null;
-  nationality?: string | null;
-  date_of_birth?: string | null;
-  tmdb_id?: number | null;
-  wikidata_id?: string | null;
-  profile_picture?: string | null;
-}
+type VoiceActorCandidate = Pick<Tables<"voice_actors">, "id" | "firstname" | "lastname"> &
+  Partial<
+    Pick<
+      Tables<"voice_actors">,
+      "bio" | "nationality" | "date_of_birth" | "tmdb_id" | "wikidata_id" | "profile_picture"
+    >
+  >;
 
 // State
 const actorA = ref<VoiceActorCandidate | null>(null);

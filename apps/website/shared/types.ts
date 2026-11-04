@@ -33,10 +33,8 @@ export type {
   Toy,
   ToyResponse,
   TrendingResponse,
-  VoiceActorDetails,
   WithCast,
   WithExtrernalIds,
-  WorkAndVoiceActor,
 } from "@app/shared-logic";
 
 export interface LlmMovieExtractOutput {

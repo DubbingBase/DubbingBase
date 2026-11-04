@@ -1,7 +1,7 @@
-import type { Database } from "@app/supabase";
+import type { Tables } from "@app/supabase/types";
 
 export type AdminAuditLog = Pick<
-  Database["public"]["Tables"]["audit_logs"]["Row"],
+  Tables<"audit_logs">,
   | "id"
   | "user_id"
   | "created_at"
