@@ -130,9 +130,9 @@
     "wikiLabel": "Wiki :",
     "tmdb": "TMDB",
     "tvdb": "TVDB",
-    "born": "Né(e) le :",
-    "died": "Décédé(e) le :",
-    "works": "œuvres",
+    "born": "Né(e) le : ",
+    "died": "Décédé(e) le : ",
+    "works": " œuvres",
     "separator": "•"
   },
   "theme": {
@@ -290,7 +290,7 @@
     "oldestFirst": "Plus anciens",
     "noWorksFound": "Aucune œuvre trouvée pour ce comédien.",
     "notFound": "Acteur introuvable.",
-    "active": "Actif(ve) :",
+    "active": "Actif(ve) : ",
     "noResultsFor": "Aucun comédien trouvé pour \"{query}\".",
     "directorySearchPlaceholder": "Rechercher des comédiens par nom..."
   },
@@ -300,7 +300,7 @@
     "movies": "Films",
     "series": "Séries",
     "voiceActors": "Doubleurs",
-    "roles": "rôles",
+    "roles": " rôles",
     "birthdate": "Date de naissance",
     "biography": "Biographie",
     "role": "rôle",
@@ -755,7 +755,7 @@
       "roleUser": "Utilisateur",
       "anonymousUser": "Utilisateur anonyme",
       "description": "Voir les utilisateurs enregistrés, modifier les rôles ou supprimer des comptes.",
-      "registered": "Inscrit(e) :"
+      "registered": "Inscrit(e) : "
     },
     "duplicates": {
       "allOtherDuplicatesMerged": ". Les autres doublons seront fusionnés dans celui-ci.",
@@ -776,7 +776,7 @@
       "findDuplicates": "Trouver les doublons",
       "merging": "Fusion en cours...",
       "mergeSelected": "Fusionner les profils",
-      "matchesDetected": "correspondances détectées",
+      "matchesDetected": " correspondances détectées",
       "keepId": "Conserver l'ID #",
       "idHash": "ID #",
       "firstName": "Prénom",
@@ -928,7 +928,7 @@
       "noPosterAvailable": "Aucune affiche disponible",
       "saveMappingChanges": "Enregistrer les modifications de correspondance",
       "searchingDatabase": "Recherche dans la base de données...",
-      "released": "Sortie :",
+      "released": "Sortie : ",
       "noPublicCastHint": "Aucune liste de casting publique n'est disponible pour ce type de média. Ajoutez manuellement un comédien :",
       "characterNamePlaceholder": "Nom du personnage / rôle",
       "originalActorPlaceholder": "Nom de l'acteur original (optionnel)",

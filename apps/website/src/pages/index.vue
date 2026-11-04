@@ -259,7 +259,7 @@
                     {{ contributor.raw_user_meta_data?.username || "Utilisateur" }}
                   </h3>
                   <p class="text-xs theme-text-muted">
-                    {{ contributor.score }}{{ $t("home.contributions") }}
+                    {{ contributor.score }} {{ $t("home.contributions") }}
                   </p>
                 </div>
               </div>
