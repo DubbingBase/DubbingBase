@@ -1,3 +1,5 @@
+import { getGlobalEnv } from "./global-env";
+import { asString } from "./narrow";
 import { generateText, generateObject } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAI } from "@ai-sdk/openai";

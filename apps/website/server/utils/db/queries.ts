@@ -1,5 +1,5 @@
 import { useSupabaseAdmin } from "./client";
-import { processVoiceActor } from "../urls/supabase";
+import { processVoiceActor, withVoiceActorImageUrl } from "../urls/supabase";
 import type { MediaDetailVoiceActor, ToyDubbingProject } from "@app/shared-logic";
 
 export async function getVoiceActorWithWork(id: number) {

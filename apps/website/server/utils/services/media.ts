@@ -1,3 +1,4 @@
+import { withVoiceActorImageUrl } from "../urls/supabase";
 import { useSupabaseAdmin } from "../db/client";
 import { TMDBClient } from "../api/tmdb";
 import { TVDBClient } from "../api/tvdb";

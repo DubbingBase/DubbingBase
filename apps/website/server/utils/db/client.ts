@@ -1,3 +1,5 @@
+import { getCloudflareEnv } from "../global-env";
+import { asString } from "../narrow";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { H3Event } from "h3";
 import type { Database } from "@app/shared-logic";

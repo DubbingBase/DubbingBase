@@ -1,3 +1,4 @@
+import { asString } from "../utils/narrow";
 import { useSupabaseAdmin } from "../utils/db/client";
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
