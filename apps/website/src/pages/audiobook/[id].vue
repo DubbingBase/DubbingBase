@@ -9,92 +9,38 @@
       :loading="pending"
     >
       <template #metadata>
-        <span
-          v-if="audiobook.first_publish_year"
-          class="theme-text font-semibold text-base md:text-lg theme-surface-overlay backdrop-blur-md px-3 py-1 rounded-lg"
-        >
+        <DetailsMetaChip v-if="audiobook.first_publish_year">
           {{ audiobook.first_publish_year }}
-        </span>
-        <span
-          v-if="authorsText"
-          class="theme-text font-medium text-sm md:text-base theme-surface-overlay backdrop-blur-md px-3 py-1 rounded-lg truncate max-w-[200px] md:max-w-xs"
-          :title="authorsText"
-        >
+        </DetailsMetaChip>
+        <DetailsMetaChip v-if="authorsText" variant="text" :title="authorsText">
           {{ authorsText }}
-        </span>
+        </DetailsMetaChip>
         <div class="flex gap-2 ml-2">
-          <a
+          <DetailsExternalLink
             v-if="audiobook.id"
             :href="`https://openlibrary.org/works/OL${audiobook.id}W`"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg theme-surface-overlay theme-text theme-hover-surface-muted transition-colors backdrop-blur-md uppercase tracking-wider"
-            >{{ $t("audiobook.openLibrary") }}<ExternalLinkIcon class="w-3 h-3 opacity-70" />
-          </a>
+            :label="$t('audiobook.openLibrary')"
+          />
         </div>
       </template>
 
       <template #actions-left>
-        <div v-if="dubbingProjects.length > 0" class="flex flex-wrap gap-2">
-          <NuxtLink
-            v-for="project in dubbingProjects"
-            :key="project.id"
-            :to="{ query: { dub: project.id } }"
-            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border theme-border-subtle theme-border flex items-center gap-1.5"
-            :class="
-              activeDubId === project.id
-                ? 'theme-primary-bg theme-primary-border'
-                : 'theme-surface theme-text-secondary theme-hover-surface-muted'
-            "
-          >
-            {{ getDisplayLanguage(project.language) }}
-            <span
-              class="text-xs px-1.5 py-0.5 rounded-full font-medium transition-colors"
-              :class="
-                activeDubId === project.id
-                  ? 'bg-black/15 text-black'
-                  : 'theme-surface-raised theme-surface-muted theme-text-muted'
-              "
-            >
-              {{ projectVoiceActorCount(project) }}
-            </span>
-          </NuxtLink>
-        </div>
-        <div v-else class="text-sm theme-text-muted font-medium">
-          {{ $t("details.noDubbingProjects") }}
-        </div>
+        <DetailsDubTabs
+          :projects="dubbingProjects"
+          :active-id="activeDubId ?? 0"
+          :language-label="getDisplayLanguage"
+          :count="detailProjectVoiceActorCount"
+        />
       </template>
 
       <template #actions-right>
-        <template v-if="activeDubProject?.studio_data">
-          <NuxtLink
-            :to="localePath(`/studio/${activeDubProject.studio_data.id}`)"
-            class="flex items-center gap-2 px-3 py-1.5 rounded-lg border theme-border-subtle theme-border theme-hover-primary-border transition-colors group theme-surface-raised theme-surface"
-            :title="$t('studio.recordingStudio')"
-          >
-            <div
-              class="w-6 h-6 rounded flex items-center justify-center overflow-hidden shrink-0 theme-surface-muted"
-            >
-              <img
-                v-if="activeDubProject.studio_data.logo_url"
-                :src="activeDubProject.studio_data.logo_url"
-                class="w-full h-full object-contain p-0.5"
-              />
-              <span v-else class="font-bold text-xs theme-text-muted">
-                {{ activeDubProject.studio_data.name?.charAt(0) || "" }}
-              </span>
-            </div>
-            <span
-              class="font-medium text-xs theme-hover-primary-text transition-colors truncate max-w-[120px]"
-            >
-              {{ activeDubProject.studio_data.name }}
-            </span>
-          </NuxtLink>
-          <div class="h-6 w-px theme-surface-muted"></div>
-        </template>
+        <DetailsStudioLink
+          v-if="activeDubProject?.studio_data"
+          :studio="activeDubProject.studio_data"
+        />
 
         <ClientOnly>
-          <NuxtLink
+          <DetailsEditLink
             v-if="isAdmin && audiobook?.id"
             :to="
               localePath(
@@ -103,133 +49,50 @@
                   : `/audiobook/${audiobook.id}/projects/new`,
               )
             "
-            class="text-sm theme-primary-text theme-hover-primary-text transition-colors flex items-center gap-1.5 font-medium"
-          >
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-              />
-            </svg>
-            <span class="hidden sm:inline">{{ $t("common.edit") }}</span>
-          </NuxtLink>
+            :label="$t('common.edit')"
+          />
         </ClientOnly>
 
         <ForceEnqueueButton v-if="audiobook?.id" media-type="audiobook" :media-id="audiobook.id" />
 
-        <button
-          @click="isReportModalOpen = true"
-          class="text-sm theme-text-muted theme-hover-danger-text transition-colors flex items-center gap-1.5"
-          :title="$t('report.title')"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="w-4 h-4"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
-            <line x1="4" y1="22" x2="4" y2="15" />
-          </svg>
-        </button>
+        <DetailsReportButton @click="isReportModalOpen = true" />
       </template>
 
       <template #content>
-        <!-- Overview -->
-        <div class="mb-12 max-w-4xl">
-          <section>
-            <h2 class="text-2xl font-bold mb-4">
-              {{ $t("details.synopsis") }}
-            </h2>
-            <p class="theme-text-secondary leading-relaxed text-lg mb-8 whitespace-pre-line">
-              {{ audiobook.description || $t("audiobook.noDescription") }}
-            </p>
-
-            <div
-              class="grid grid-cols-2 md:grid-cols-4 gap-6 theme-surface p-6 rounded-xl border theme-border-subtle theme-border shadow-sm"
+        <DetailsSynopsis :text="audiobook.description" :empty-label="$t('audiobook.noDescription')">
+          <DetailsFacts>
+            <DetailsFact :label="$t('audiobook.author')" :value="authorsText" />
+            <DetailsFact
+              :label="$t('audiobook.publishYear')"
+              :value="audiobook.first_publish_year || audiobook.first_publish_date"
+            />
+            <DetailsFact
+              v-if="audiobook.isbn"
+              :label="$t('audiobook.isbn')"
+              :value="audiobook.isbn"
+            />
+            <DetailsFact
+              v-if="audiobook.subjects && audiobook.subjects.length > 0"
+              :label="$t('audiobook.subjects')"
+              wide
             >
-              <div>
-                <h3 class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2">
-                  {{ $t("audiobook.author") }}
-                </h3>
-                <p class="font-medium text-sm">
-                  {{ authorsText || "-" }}
-                </p>
-              </div>
-              <div>
-                <h3 class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2">
-                  {{ $t("audiobook.publishYear") }}
-                </h3>
-                <p class="font-medium text-sm">
-                  {{ audiobook.first_publish_year || audiobook.first_publish_date || "-" }}
-                </p>
-              </div>
-              <div v-if="audiobook.isbn">
-                <h3 class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2">
-                  {{ $t("audiobook.isbn") }}
-                </h3>
-                <p class="font-medium text-sm">
-                  {{ audiobook.isbn }}
-                </p>
-              </div>
-              <div
-                v-if="audiobook.subjects && audiobook.subjects.length > 0"
-                class="col-span-2 md:col-span-1"
-              >
-                <h3 class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2">
-                  {{ $t("audiobook.subjects") }}
-                </h3>
-                <div class="flex flex-wrap gap-1.5">
-                  <span
-                    v-for="(sub, sIdx) in audiobook.subjects.slice(0, 4)"
-                    :key="sIdx"
-                    class="px-2 py-0.5 theme-surface-raised theme-surface-muted text-xs font-medium rounded-md theme-text-secondary"
-                  >
-                    {{ sub }}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </section>
-        </div>
+              <DetailsTagList :tags="audiobook.subjects.slice(0, 4)" />
+            </DetailsFact>
+          </DetailsFacts>
+        </DetailsSynopsis>
 
         <!-- Voice Cast / Narrators -->
         <section>
-          <div class="flex flex-col mb-6 gap-2">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
-              <div>
-                <h2 class="text-2xl font-bold">
-                  {{ $t("details.castAndCrew") }}
-                </h2>
-                <div class="theme-text-muted text-sm mt-1">
-                  {{
-                    $t("audiobook.castCount", {
-                      shown: castItems.length,
-                      total: castTotal,
-                    })
-                  }}
-                </div>
-              </div>
-
-              <div class="relative w-full sm:w-64">
-                <SearchIcon
-                  class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 theme-text-muted"
-                />
-                <input
-                  v-model="searchInput"
-                  type="search"
-                  :placeholder="$t('search.placeholder')"
-                  class="w-full theme-input border theme-border-subtle theme-border rounded-xl pl-10 pr-4 py-2 text-sm theme-focus transition-all theme-text"
-                />
-              </div>
-            </div>
-          </div>
+          <DetailsCastHeader
+            v-model:search="searchInput"
+            :title="$t('details.castAndCrew')"
+            :subtitle="
+              $t('audiobook.castCount', {
+                shown: castItems.length,
+                total: castTotal,
+              })
+            "
+          />
 
           <div
             v-if="castTotal === 0"
@@ -324,7 +187,19 @@ import { useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { refDebounced } from "@vueuse/core";
 import MediaSkeleton from "../../components/MediaSkeleton.vue";
+import { detailProjectVoiceActorCount } from "../../utils/detail-dub-projects";
 import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
+import DetailsDubTabs from "../../components/layout/details/DetailsDubTabs.vue";
+import DetailsStudioLink from "../../components/layout/details/DetailsStudioLink.vue";
+import DetailsEditLink from "../../components/layout/details/DetailsEditLink.vue";
+import DetailsReportButton from "../../components/layout/details/DetailsReportButton.vue";
+import DetailsMetaChip from "../../components/layout/details/DetailsMetaChip.vue";
+import DetailsExternalLink from "../../components/layout/details/DetailsExternalLink.vue";
+import DetailsSynopsis from "../../components/layout/details/DetailsSynopsis.vue";
+import DetailsFacts from "../../components/layout/details/DetailsFacts.vue";
+import DetailsFact from "../../components/layout/details/DetailsFact.vue";
+import DetailsTagList from "../../components/layout/details/DetailsTagList.vue";
+import DetailsCastHeader from "../../components/layout/details/DetailsCastHeader.vue";
 import ReportModal from "../../components/ReportModal.vue";
 import { fetchAudiobookData } from "@app/shared-logic";
 import type { Audiobook, DetailCollectionProject, MediaWorkCastCard } from "@app/shared-logic";
@@ -352,7 +227,10 @@ const { page: castPage, setPage: setCastPage } = useUrlPagination("castPage");
 // Instant Hydration Data Fetching
 const { data, pending, error } = await useAsyncData(
   `audiobook-${audiobookId.value}-${locale.value}`,
-  () => fetchAudiobookData(audiobookId.value, locale.value, { projection: "media-summary" }),
+  () =>
+    fetchAudiobookData(audiobookId.value, locale.value, {
+      projection: "media-summary",
+    }),
   {
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
@@ -366,16 +244,6 @@ const dubbingProjects = computed(() => {
       p.has_voice_actor || (p.works || []).some((w) => w.voice_actor || w.voice_actor_id),
   );
 });
-
-function projectVoiceActorCount(project: DetailCollectionProject): number {
-  if (project.voice_actor_count !== undefined) return project.voice_actor_count;
-  const ids = new Set<number>();
-  for (const w of project.works || []) {
-    const id = w.voice_actor?.id || w.voice_actor_id;
-    if (id) ids.add(id);
-  }
-  return ids.size;
-}
 
 const activeDubProject = computed(() =>
   resolveDetailCollectionProject(dubbingProjects.value, route.query.dub),
@@ -394,9 +262,7 @@ const authorsText = computed(() => {
   return audiobook.value.author_name || "";
 });
 
-function getDisplayLanguage(langCode?: string | null): string {
-  return langCode ? displayDubbingLanguage(langCode, locale.value) : t("details.notSpecified");
-}
+const getDisplayLanguage = useDubbingLanguageLabel();
 
 // Client-side search with debounce
 const searchInput = ref("");

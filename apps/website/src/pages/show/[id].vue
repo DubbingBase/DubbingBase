@@ -9,130 +9,57 @@
       :loading="pending"
     >
       <template #metadata>
-        <span
-          class="theme-text font-semibold text-base md:text-lg theme-surface-overlay backdrop-blur-md px-3 py-1 rounded-lg"
-        >
+        <DetailsMetaChip>
           {{ serie.first_air_date ? serie.first_air_date.split("-")[0] : "" }}
           <template v-if="serie.number_of_seasons"
             >{{ $t("common.separator") }}{{ serie.number_of_seasons }}
             {{ $t("details.seasons") }}</template
           >
-        </span>
-        <span
-          v-if="serie.original_name !== serie.name"
-          class="theme-text-secondary font-medium text-sm md:text-base theme-surface-overlay backdrop-blur-md px-3 py-1.5 rounded-lg"
-        >
+        </DetailsMetaChip>
+        <DetailsMetaChip v-if="serie.original_name !== serie.name" variant="secondary">
           {{ serie.original_name }}
-        </span>
-        <span
-          class="flex items-center gap-1.5 theme-text font-bold text-sm md:text-base theme-surface-overlay backdrop-blur-md px-3 py-1 rounded-lg"
-        >
+        </DetailsMetaChip>
+        <DetailsMetaChip variant="rating">
           <StarIcon class="w-4 h-4 theme-rating fill-current" />
           {{ serie.vote_average?.toFixed(1) }}
-        </span>
+        </DetailsMetaChip>
         <div class="flex gap-2 ml-2">
-          <a
+          <DetailsExternalLink
             :href="`https://www.themoviedb.org/tv/${serie.id}`"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg theme-surface-overlay theme-text theme-hover-surface-muted transition-colors backdrop-blur-md uppercase tracking-wider"
-            >{{ $t("common.tmdb") }}<ExternalLinkIcon class="w-3 h-3 opacity-70" />
-          </a>
-          <a
+            :label="$t('common.tmdb')"
+          />
+          <DetailsExternalLink
             v-if="tvdbId"
             :href="`https://thetvdb.com/search?query=${tvdbId}`"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg theme-surface-overlay theme-text theme-hover-surface-muted transition-colors backdrop-blur-md uppercase tracking-wider"
-            >{{ $t("common.tvdb") }}<ExternalLinkIcon class="w-3 h-3 opacity-70" />
-          </a>
+            :label="$t('common.tvdb')"
+          />
         </div>
       </template>
 
       <template #actions-left>
-        <div
-          v-if="dubbingProjects.length > 0 || canShowOriginalVersion"
-          class="flex flex-wrap gap-2"
-        >
-          <NuxtLink
-            v-if="canShowOriginalVersion"
-            :to="{ query: { dub: 'original' } }"
-            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border theme-border-subtle theme-border flex items-center gap-1.5"
-            :class="
-              isOriginalVersion
-                ? 'theme-primary-bg theme-primary-border'
-                : 'theme-surface theme-text-secondary theme-hover-surface-muted'
-            "
-          >
-            {{ $t("details.originalVersion") }}
-            <span
-              class="text-xs px-1.5 py-0.5 rounded-full font-medium"
-              :class="
-                isOriginalVersion
-                  ? 'bg-black/15 text-black'
-                  : 'theme-surface-raised theme-surface-muted theme-text-muted'
-              "
-            >
-              {{ aggregateCredits.cast?.length || 0 }}
-            </span>
-          </NuxtLink>
-          <NuxtLink
-            v-for="project in dubbingProjects"
-            :key="project.id"
-            :to="{ query: { dub: project.id } }"
-            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border theme-border-subtle theme-border flex items-center gap-1.5"
-            :class="
-              activeDubId === project.id
-                ? 'theme-primary-bg theme-primary-border'
-                : 'theme-surface theme-text-secondary theme-hover-surface-muted'
-            "
-          >
-            {{ getDisplayLanguage(project.language) }}
-            <span
-              class="text-xs px-1.5 py-0.5 rounded-full font-medium transition-colors"
-              :class="
-                activeDubId === project.id
-                  ? 'bg-black/15 text-black'
-                  : 'theme-surface-raised theme-surface-muted theme-text-muted'
-              "
-            >
-              {{ projectVoiceActorCount(project) }}
-            </span>
-          </NuxtLink>
-        </div>
-        <div v-else class="text-sm theme-text-muted font-medium">
-          {{ $t("details.noDubbingProjects") }}
-        </div>
+        <DetailsDubTabs
+          :projects="dubbingProjects"
+          :active-id="activeDubId ?? 0"
+          :language-label="getDisplayLanguage"
+          :count="projectVoiceActorCount"
+          :original="
+            canShowOriginalVersion
+              ? {
+                  active: isOriginalVersion,
+                  count: aggregateCredits.cast?.length || 0,
+                }
+              : null
+          "
+        />
       </template>
 
       <template #actions-right>
-        <template v-if="activeDubProject?.studio_data">
-          <NuxtLink
-            :to="localePath(`/studio/${activeDubProject.studio_data.id}`)"
-            class="flex items-center gap-2 px-3 py-1.5 rounded-lg border theme-border-subtle theme-border theme-hover-primary-border transition-colors group theme-surface-raised theme-surface"
-            :title="$t('details.dubbingStudio')"
-          >
-            <div
-              class="w-6 h-6 rounded flex items-center justify-center overflow-hidden shrink-0 theme-surface-muted"
-            >
-              <img
-                v-if="activeDubProject.studio_data.logo_url"
-                :src="activeDubProject.studio_data.logo_url"
-                class="w-full h-full object-contain p-0.5"
-              />
-              <span v-else class="font-bold text-xs theme-text-muted">{{
-                activeDubProject.studio_data.name?.charAt(0) || ""
-              }}</span>
-            </div>
-            <span
-              class="font-medium text-xs theme-hover-primary-text transition-colors truncate max-w-[120px]"
-              >{{ activeDubProject.studio_data.name }}</span
-            >
-          </NuxtLink>
-          <div class="h-6 w-px theme-surface-muted"></div>
-        </template>
+        <DetailsStudioLink
+          v-if="activeDubProject?.studio_data"
+          :studio="activeDubProject.studio_data"
+        />
 
-        <NuxtLink
+        <DetailsEditLink
           v-if="isAdmin && serie?.id && !isOriginalVersion"
           :to="
             localePath(
@@ -141,57 +68,19 @@
                 : `/show/${serie.id}/projects/new`,
             )
           "
-          class="text-sm theme-primary-text theme-hover-primary-text transition-colors flex items-center gap-1.5 font-medium"
-        >
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-            />
-          </svg>
-          <span class="hidden sm:inline">{{ $t("details.modify") }}</span>
-        </NuxtLink>
+          :label="$t('common.edit')"
+        />
 
         <ForceEnqueueButton v-if="serie?.id" media-type="tv" :media-id="serie.id" />
 
-        <button
-          @click="isReportModalOpen = true"
-          class="text-sm theme-text-muted theme-hover-danger-text transition-colors flex items-center gap-1.5"
-          :title="$t('report.title')"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="w-4 h-4"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
-            <line x1="4" y1="22" x2="4" y2="15" />
-          </svg>
-        </button>
+        <DetailsReportButton @click="isReportModalOpen = true" />
       </template>
 
       <template #content>
-        <!-- Overview -->
-        <div class="mb-12 max-w-4xl">
-          <section>
-            <h2 class="text-2xl font-bold mb-4">
-              {{ $t("details.synopsis") }}
-            </h2>
-            <p class="theme-text-secondary leading-relaxed text-lg">
-              {{ serie.overview || $t("details.noSynopsis") }}
-            </p>
-          </section>
-        </div>
+        <DetailsSynopsis :text="serie.overview" />
 
         <!-- Seasons -->
-        <section v-if="seasonTotal > 0" class="mb-12">
+        <section v-if="seasonTotal > 0" class="mb-10">
           <h2 class="text-2xl font-bold mb-6">
             {{ $t("details.seasons") }}
           </h2>
@@ -253,38 +142,20 @@
 
         <!-- Voice Cast -->
         <section>
-          <div class="flex flex-col mb-6 gap-2">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
-              <div>
-                <h2 class="text-2xl font-bold">
-                  {{ $t("details.castAndCrew") }}
-                </h2>
-                <span v-if="isOriginalVersion" class="theme-text-muted text-sm">
-                  {{ $t("details.originalAudio") }}
-                </span>
-                <div class="theme-text-muted text-sm mt-1">
-                  {{
-                    $t("media.rolesCount", {
-                      shown: castItems.length,
-                      total: castTotal,
-                    })
-                  }}
-                </div>
-              </div>
-
-              <div class="relative w-full sm:w-64">
-                <SearchIcon
-                  class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 theme-text-muted"
-                />
-                <input
-                  v-model="searchInput"
-                  type="search"
-                  :placeholder="$t('search.placeholder')"
-                  class="w-full theme-input border theme-border-subtle theme-border rounded-xl pl-10 pr-4 py-2 text-sm theme-focus transition-all theme-text"
-                />
-              </div>
-            </div>
-          </div>
+          <DetailsCastHeader
+            v-model:search="searchInput"
+            :title="$t('details.castAndCrew')"
+            :subtitle="
+              $t('media.rolesCount', {
+                shown: castItems.length,
+                total: castTotal,
+              })
+            "
+          >
+            <span v-if="isOriginalVersion" class="theme-text-muted text-sm">
+              {{ $t("details.originalAudio") }}
+            </span>
+          </DetailsCastHeader>
 
           <PaginatedResponsiveGrid
             :key="searchQuery"
@@ -495,6 +366,14 @@
 
 <script setup lang="ts">
 import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
+import DetailsDubTabs from "../../components/layout/details/DetailsDubTabs.vue";
+import DetailsStudioLink from "../../components/layout/details/DetailsStudioLink.vue";
+import DetailsEditLink from "../../components/layout/details/DetailsEditLink.vue";
+import DetailsReportButton from "../../components/layout/details/DetailsReportButton.vue";
+import DetailsMetaChip from "../../components/layout/details/DetailsMetaChip.vue";
+import DetailsExternalLink from "../../components/layout/details/DetailsExternalLink.vue";
+import DetailsSynopsis from "../../components/layout/details/DetailsSynopsis.vue";
+import DetailsCastHeader from "../../components/layout/details/DetailsCastHeader.vue";
 import { useRoute, useRouter } from "vue-router";
 import type { Link as HeadLink } from "@unhead/vue";
 import { NuxtLink } from "#components";
@@ -506,15 +385,7 @@ import type {
 } from "@app/shared-logic";
 import { computed, ref, watch } from "vue";
 import { refDebounced } from "@vueuse/core";
-import {
-  ArrowLeftIcon,
-  ClapperboardIcon,
-  UserIcon,
-  MicIcon,
-  SearchIcon,
-  ExternalLinkIcon,
-  StarIcon,
-} from "lucide-vue-next";
+import { ArrowLeftIcon, ClapperboardIcon, UserIcon, MicIcon, StarIcon } from "lucide-vue-next";
 import ReportModal from "../../components/ReportModal.vue";
 import {
   hasOriginalVersion,
@@ -545,13 +416,6 @@ const isAdmin = computed(() => {
 
 const { locale, t } = useI18n();
 const localePath = useLocalePath();
-const languageDisplayNames = computed(() => {
-  try {
-    return new Intl.DisplayNames([locale.value || "en"], { type: "language" });
-  } catch {
-    return undefined;
-  }
-});
 const pageUrl = computed(() => new URL(localePath(`/show/${showId.value}`), siteUrl).href);
 
 const showPageRequest = useShowPageData(showId, locale);
@@ -683,27 +547,7 @@ const activeDubProject = computed(() =>
 );
 const activeIsOriginal = computed(() => activeProjectView.value?.kind === "original");
 
-const displayLanguageCache = new Map<string, string>();
-
-const getDisplayLanguage = (langCode: string | undefined | null) => {
-  if (!langCode) return t("details.notSpecified");
-  const cacheKey = `${locale.value || "en"}:${langCode}`;
-  const cachedName = displayLanguageCache.get(cacheKey);
-  if (cachedName !== undefined) return cachedName;
-
-  let displayName = langCode;
-  try {
-    const name = languageDisplayNames.value?.of(langCode);
-    if (typeof name === "string" && name.length > 0) {
-      displayName = name.charAt(0).toUpperCase() + name.slice(1);
-    }
-  } catch {
-    displayName = langCode;
-  }
-
-  displayLanguageCache.set(cacheKey, displayName);
-  return displayName;
-};
+const getDisplayLanguage = useDubbingLanguageLabel();
 
 // Format cast and attach voice actors
 type ShowDisplayCastActor = DisplayCastActor & {

@@ -9,86 +9,33 @@
       :loading="pending"
     >
       <template #metadata>
-        <span
-          class="theme-text font-semibold text-base md:text-lg theme-surface-overlay backdrop-blur-md px-3 py-1 rounded-lg"
-        >
-          {{ formatReleaseYear(game.first_release_date) }}
-        </span>
-        <span
-          v-if="game.rating"
-          class="flex items-center gap-1.5 theme-text font-bold text-sm md:text-base theme-surface-overlay backdrop-blur-md px-3 py-1 rounded-lg"
-        >
+        <DetailsMetaChip>{{ formatReleaseYear(game.first_release_date) }}</DetailsMetaChip>
+        <DetailsMetaChip v-if="game.rating" variant="rating">
           <StarIcon class="w-4 h-4 theme-rating fill-current" />
           {{ (game.rating / 10).toFixed(1) }}
-        </span>
+        </DetailsMetaChip>
         <div class="flex gap-2 ml-2">
-          <a
+          <DetailsExternalLink
             :href="`https://www.igdb.com/games/${game.slug}`"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg theme-surface-overlay theme-text theme-hover-surface-muted transition-colors backdrop-blur-md uppercase tracking-wider"
-            >{{ $t("game.igdb") }}<ExternalLinkIcon class="w-3 h-3 opacity-70" />
-          </a>
+            :label="$t('game.igdb')"
+          />
         </div>
       </template>
 
       <template #actions-left>
-        <div v-if="dubbingProjects.length > 0" class="flex flex-wrap gap-2">
-          <NuxtLink
-            v-for="project in dubbingProjects"
-            :key="project.id"
-            :to="{ query: { dub: project.id } }"
-            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border theme-border-subtle theme-border flex items-center gap-1.5"
-            :class="
-              activeDubId === project.id
-                ? 'theme-primary-bg theme-primary-border'
-                : 'theme-surface theme-text-secondary theme-hover-surface-muted'
-            "
-          >
-            {{ getDisplayLanguage(project.language) }}
-            <span
-              class="text-xs px-1.5 py-0.5 rounded-full font-medium transition-colors"
-              :class="
-                activeDubId === project.id
-                  ? 'bg-black/15 text-black'
-                  : 'theme-surface-raised theme-surface-muted theme-text-muted'
-              "
-            >
-              {{ projectVoiceActorCount(project) }}
-            </span>
-          </NuxtLink>
-        </div>
-        <div v-else class="text-sm theme-text-muted font-medium">
-          {{ $t("game.noDubbingProjects") }}
-        </div>
+        <DetailsDubTabs
+          :projects="dubbingProjects"
+          :active-id="activeDubId ?? 0"
+          :language-label="getDisplayLanguage"
+          :count="projectVoiceActorCount"
+        />
       </template>
 
       <template #actions-right>
-        <template v-if="activeDubProject?.studio_data">
-          <NuxtLink
-            :to="localePath(`/studio/${activeDubProject.studio_data.id}`)"
-            class="flex items-center gap-2 px-3 py-1.5 rounded-lg border theme-border-subtle theme-border theme-hover-primary-border transition-colors group theme-surface-raised theme-surface"
-            :title="$t('details.dubbingStudio')"
-          >
-            <div
-              class="w-6 h-6 rounded flex items-center justify-center overflow-hidden shrink-0 theme-surface-muted"
-            >
-              <img
-                v-if="activeDubProject.studio_data.logo_url"
-                :src="activeDubProject.studio_data.logo_url"
-                class="w-full h-full object-contain p-0.5"
-              />
-              <span v-else class="font-bold text-xs theme-text-muted">{{
-                activeDubProject.studio_data.name?.charAt(0) || ""
-              }}</span>
-            </div>
-            <span
-              class="font-medium text-xs theme-hover-primary-text transition-colors truncate max-w-[120px]"
-              >{{ activeDubProject.studio_data.name }}</span
-            >
-          </NuxtLink>
-          <div class="h-6 w-px theme-surface-muted"></div>
-        </template>
+        <DetailsStudioLink
+          v-if="activeDubProject?.studio_data"
+          :studio="activeDubProject.studio_data"
+        />
 
         <ClientOnly>
           <button
@@ -102,7 +49,7 @@
             <span class="hidden sm:inline">{{ $t("game.prepareCredits") }}</span>
           </button>
 
-          <NuxtLink
+          <DetailsEditLink
             v-if="isAdmin && game?.id"
             :to="
               localePath(
@@ -111,136 +58,41 @@
                   : `/game/${game.id}/projects/new`,
               )
             "
-            class="text-sm theme-primary-text theme-hover-primary-text transition-colors flex items-center gap-1.5 font-medium"
-          >
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-              />
-            </svg>
-            <span class="hidden sm:inline">{{ $t("common.edit") }}</span>
-          </NuxtLink>
+            :label="$t('common.edit')"
+          />
         </ClientOnly>
 
         <ForceEnqueueButton v-if="game?.id" media-type="video_game" :media-id="game.id" />
 
-        <button
-          @click="isReportModalOpen = true"
-          class="text-sm theme-text-muted theme-hover-danger-text transition-colors flex items-center gap-1.5"
-          :title="$t('report.title')"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="w-4 h-4"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
-            <line x1="4" y1="22" x2="4" y2="15" />
-          </svg>
-        </button>
+        <DetailsReportButton @click="isReportModalOpen = true" />
       </template>
 
       <template #content>
-        <!-- Overview -->
-        <div class="mb-12 max-w-4xl">
-          <section>
-            <h2 class="text-2xl font-bold mb-4">
-              {{ $t("details.synopsis") }}
-            </h2>
-            <p class="theme-text-secondary leading-relaxed text-lg mb-8">
-              {{ game.summary || $t("details.noSynopsis") }}
-            </p>
-
-            <div
-              class="grid grid-cols-2 md:grid-cols-4 gap-6 theme-surface p-6 rounded-xl border theme-border-subtle theme-border shadow-sm"
-            >
-              <div>
-                <h3 class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2">
-                  {{ $t("game.developer") }}
-                </h3>
-                <p class="font-medium text-sm">
-                  {{ getDevelopers(game) || "-" }}
-                </p>
-              </div>
-              <div>
-                <h3 class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2">
-                  {{ $t("game.publisher") }}
-                </h3>
-                <p class="font-medium text-sm">
-                  {{ getPublishers(game) || "-" }}
-                </p>
-              </div>
-              <div class="col-span-2 md:col-span-1">
-                <h3 class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2">
-                  {{ $t("game.genres") }}
-                </h3>
-                <div class="flex flex-wrap gap-1.5">
-                  <span
-                    v-for="genre in game.genres"
-                    :key="genre.id"
-                    class="px-2 py-0.5 theme-surface-raised theme-surface-muted text-xs font-medium rounded-md theme-text-secondary"
-                  >
-                    {{ genre.name }}
-                  </span>
-                </div>
-              </div>
-              <div class="col-span-2 md:col-span-1">
-                <h3 class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2">
-                  {{ $t("game.platforms") }}
-                </h3>
-                <div class="flex flex-wrap gap-1.5">
-                  <span
-                    v-for="platform in game.platforms"
-                    :key="platform.id"
-                    class="px-2 py-0.5 theme-surface-raised theme-surface-muted text-xs font-medium rounded-md theme-text-secondary"
-                  >
-                    {{ platform.name }}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </section>
-        </div>
+        <DetailsSynopsis :text="game.summary">
+          <DetailsFacts>
+            <DetailsFact :label="$t('game.developer')" :value="getDevelopers(game)" />
+            <DetailsFact :label="$t('game.publisher')" :value="getPublishers(game)" />
+            <DetailsFact :label="$t('game.genres')" wide>
+              <DetailsTagList :tags="game.genres?.map((genre) => genre.name) ?? []" />
+            </DetailsFact>
+            <DetailsFact :label="$t('game.platforms')" wide>
+              <DetailsTagList :tags="game.platforms?.map((platform) => platform.name) ?? []" />
+            </DetailsFact>
+          </DetailsFacts>
+        </DetailsSynopsis>
 
         <!-- Voice Cast -->
         <section>
-          <div class="flex flex-col mb-6 gap-2">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
-              <div>
-                <h2 class="text-2xl font-bold">
-                  {{ $t("details.castAndCrew") }}
-                </h2>
-                <div class="theme-text-muted text-sm mt-1">
-                  {{
-                    $t("media.rolesCount", {
-                      shown: castItems.length,
-                      total: castTotal,
-                    })
-                  }}
-                </div>
-              </div>
-
-              <div class="relative w-full sm:w-64">
-                <SearchIcon
-                  class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 theme-text-muted"
-                />
-                <input
-                  v-model="searchInput"
-                  type="search"
-                  :placeholder="$t('search.placeholder')"
-                  class="w-full theme-input border theme-border-subtle theme-border rounded-xl pl-10 pr-4 py-2 text-sm theme-focus transition-all theme-text"
-                />
-              </div>
-            </div>
-          </div>
+          <DetailsCastHeader
+            v-model:search="searchInput"
+            :title="$t('details.castAndCrew')"
+            :subtitle="
+              $t('media.rolesCount', {
+                shown: castItems.length,
+                total: castTotal,
+              })
+            "
+          />
 
           <PaginatedResponsiveGrid
             :key="searchQuery"
@@ -464,6 +316,17 @@
 <script setup lang="ts">
 import MediaSkeleton from "../../components/MediaSkeleton.vue";
 import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
+import DetailsDubTabs from "../../components/layout/details/DetailsDubTabs.vue";
+import DetailsStudioLink from "../../components/layout/details/DetailsStudioLink.vue";
+import DetailsEditLink from "../../components/layout/details/DetailsEditLink.vue";
+import DetailsReportButton from "../../components/layout/details/DetailsReportButton.vue";
+import DetailsMetaChip from "../../components/layout/details/DetailsMetaChip.vue";
+import DetailsExternalLink from "../../components/layout/details/DetailsExternalLink.vue";
+import DetailsSynopsis from "../../components/layout/details/DetailsSynopsis.vue";
+import DetailsFacts from "../../components/layout/details/DetailsFacts.vue";
+import DetailsFact from "../../components/layout/details/DetailsFact.vue";
+import DetailsTagList from "../../components/layout/details/DetailsTagList.vue";
+import DetailsCastHeader from "../../components/layout/details/DetailsCastHeader.vue";
 import { useRoute, useRouter } from "vue-router";
 import {
   fetchGameData,
@@ -497,11 +360,9 @@ import {
   ArrowLeftIcon,
   UserIcon,
   MicIcon,
-  SearchIcon,
   Gamepad2Icon,
   Loader2Icon,
   StarIcon,
-  ExternalLinkIcon,
 } from "lucide-vue-next";
 import ReportModal from "../../components/ReportModal.vue";
 
@@ -587,25 +448,7 @@ const activeDubProject = computed(() =>
 );
 const activeDubId = computed(() => activeDubProject.value?.id || null);
 
-const languageDisplayNames = computed(() => {
-  try {
-    return new Intl.DisplayNames([locale.value || "en"], { type: "language" });
-  } catch {
-    return undefined;
-  }
-});
-
-const getDisplayLanguage = (langCode: string | undefined | null) => {
-  if (!langCode) return "Unknown";
-  try {
-    const name = languageDisplayNames.value?.of(langCode);
-    return typeof name === "string" && name.length > 0
-      ? name.charAt(0).toUpperCase() + name.slice(1)
-      : langCode;
-  } catch {
-    return langCode;
-  }
-};
+const getDisplayLanguage = useDubbingLanguageLabel();
 
 const getDevelopers = (g: IgdbGame) =>
   g.involved_companies
