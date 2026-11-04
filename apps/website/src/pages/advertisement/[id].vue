@@ -13,8 +13,26 @@
     >
       <template #metadata>
         <DetailsMetaChip v-if="advertisement.year">{{ advertisement.year }}</DetailsMetaChip>
-        <DetailsMetaChip v-if="advertisement.brand" variant="text" :title="advertisement.brand">
+        <DetailsMetaChip
+          v-if="advertisement.brand && advertisement.brand !== activeDubProject?.studio_data?.name"
+          variant="text"
+          :title="advertisement.brand"
+        >
           {{ advertisement.brand }}
+        </DetailsMetaChip>
+        <DetailsMetaChip
+          v-if="advertisement.agency"
+          variant="tag"
+          :label="$t('advertisement.agencyLabel')"
+        >
+          {{ advertisement.agency }}
+        </DetailsMetaChip>
+        <DetailsMetaChip
+          v-if="advertisement.country"
+          variant="tag"
+          :label="$t('advertisement.countryBroadcast')"
+        >
+          {{ advertisement.country }}
         </DetailsMetaChip>
       </template>
 
@@ -56,25 +74,7 @@
       </template>
 
       <template #content>
-        <DetailsSynopsis v-if="advertisement.description" :text="advertisement.description">
-          <DetailsFacts v-if="advertisement.brand || advertisement.agency || advertisement.country">
-            <DetailsFact
-              v-if="advertisement.brand"
-              :label="$t('advertisement.brand')"
-              :value="advertisement.brand"
-            />
-            <DetailsFact
-              v-if="advertisement.agency"
-              :label="$t('advertisement.agencyLabel')"
-              :value="advertisement.agency"
-            />
-            <DetailsFact
-              v-if="advertisement.country"
-              :label="$t('advertisement.countryBroadcast')"
-              :value="advertisement.country"
-            />
-          </DetailsFacts>
-        </DetailsSynopsis>
+        <DetailsSynopsis v-if="advertisement.description" :text="advertisement.description" />
 
         <section
           v-if="advertisement.video_id"
@@ -102,12 +102,7 @@
           </div>
         </section>
 
-        <DetailsCrewCard
-          :title="$t('advertisement.studioAndSoundProduction')"
-          :studio-label="$t('studio.recordingStudio')"
-          :studio="activeDubProject?.studios"
-          :crew="advertisementCrew"
-        />
+        <DetailsCrewCard :title="$t('podcast.productionTeam')" :crew="advertisementCrew" />
 
         <section>
           <DetailsCastHeader
@@ -164,8 +159,6 @@ import DetailsEditLink from "../../components/layout/details/DetailsEditLink.vue
 import DetailsReportButton from "../../components/layout/details/DetailsReportButton.vue";
 import DetailsMetaChip from "../../components/layout/details/DetailsMetaChip.vue";
 import DetailsSynopsis from "../../components/layout/details/DetailsSynopsis.vue";
-import DetailsFacts from "../../components/layout/details/DetailsFacts.vue";
-import DetailsFact from "../../components/layout/details/DetailsFact.vue";
 import DetailsCrewCard from "../../components/layout/details/DetailsCrewCard.vue";
 import DetailsCastHeader from "../../components/layout/details/DetailsCastHeader.vue";
 import DetailsEmptyState from "../../components/layout/details/DetailsEmptyState.vue";

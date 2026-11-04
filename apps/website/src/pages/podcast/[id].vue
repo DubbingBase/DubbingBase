@@ -70,12 +70,7 @@
       <template #content>
         <DetailsSynopsis v-if="podcast.description" :text="podcast.description" />
 
-        <DetailsCrewCard
-          :title="$t('podcast.productionTeam')"
-          :studio-label="$t('studio.recordingStudio')"
-          :studio="activeDubProject?.studios"
-          :crew="podcastCrew"
-        />
+        <DetailsCrewCard :title="$t('podcast.productionTeam')" :crew="podcastCrew" />
 
         <section>
           <DetailsCastHeader

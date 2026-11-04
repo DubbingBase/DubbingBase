@@ -12,6 +12,9 @@
       <template #metadata>
         <DetailsMetaChip v-if="toy.manufacturer">{{ toy.manufacturer }}</DetailsMetaChip>
         <DetailsMetaChip v-if="toy.release_year">{{ toy.release_year }}</DetailsMetaChip>
+        <DetailsMetaChip v-if="toy.product_line" variant="tag" :label="$t('toy.productLine')">
+          {{ toy.product_line }}
+        </DetailsMetaChip>
       </template>
 
       <template #actions-left>
@@ -23,6 +26,11 @@
       </template>
 
       <template #actions-right>
+        <DetailsStudioLink
+          v-if="activeDubProject?.studio_data"
+          :studio="activeDubProject.studio_data"
+        />
+
         <ClientOnly>
           <DetailsEditLink
             v-if="isAdmin"
@@ -43,30 +51,7 @@
       <template #content>
         <DetailsSynopsis v-if="toy.description" :text="toy.description" />
 
-        <DetailsFacts v-if="toy.product_line || toy.manufacturer || toy.release_year" class="mb-10">
-          <DetailsFact
-            v-if="toy.manufacturer"
-            :label="$t('toy.manufacturerLabel')"
-            :value="toy.manufacturer"
-          />
-          <DetailsFact
-            v-if="toy.product_line"
-            :label="$t('toy.productLine')"
-            :value="toy.product_line"
-          />
-          <DetailsFact
-            v-if="toy.release_year"
-            :label="$t('toy.releaseYear')"
-            :value="toy.release_year"
-          />
-        </DetailsFacts>
-
-        <DetailsCrewCard
-          :title="$t('toy.studioAndProduction')"
-          :studio-label="$t('common.production')"
-          :studio="activeDubProject?.studio_data"
-          :crew="toyCrew"
-        />
+        <DetailsCrewCard :title="$t('podcast.productionTeam')" :crew="toyCrew" />
 
         <section>
           <DetailsCastHeader
@@ -115,12 +100,11 @@ import { useI18n } from "vue-i18n";
 import MediaSkeleton from "../../components/MediaSkeleton.vue";
 import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
 import DetailsDubTabs from "../../components/layout/details/DetailsDubTabs.vue";
+import DetailsStudioLink from "../../components/layout/details/DetailsStudioLink.vue";
 import DetailsEditLink from "../../components/layout/details/DetailsEditLink.vue";
 import DetailsReportButton from "../../components/layout/details/DetailsReportButton.vue";
 import DetailsMetaChip from "../../components/layout/details/DetailsMetaChip.vue";
 import DetailsSynopsis from "../../components/layout/details/DetailsSynopsis.vue";
-import DetailsFacts from "../../components/layout/details/DetailsFacts.vue";
-import DetailsFact from "../../components/layout/details/DetailsFact.vue";
 import DetailsCrewCard from "../../components/layout/details/DetailsCrewCard.vue";
 import DetailsCastHeader from "../../components/layout/details/DetailsCastHeader.vue";
 import DetailsEmptyState from "../../components/layout/details/DetailsEmptyState.vue";
