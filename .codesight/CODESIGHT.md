@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 88 routes | 28 models | 120 components | 104 lib files | 64 env vars | 14 middleware | 47% test coverage
-> **Token savings:** this file is ~16,600 tokens. Without it, AI exploration would cost ~143,800 tokens. **Saves ~127,200 tokens per conversation.**
-> **Last scanned:** 2026-11-04 08:56 — re-run after significant changes
+> 88 routes | 28 models | 135 components | 106 lib files | 64 env vars | 14 middleware | 47% test coverage
+> **Token savings:** this file is ~17,200 tokens. Without it, AI exploration would cost ~149,200 tokens. **Saves ~132,000 tokens per conversation.**
+> **Last scanned:** 2026-11-04 12:26 — re-run after significant changes
 
 ---
 
@@ -352,8 +352,23 @@
 - **MediaDetailsLayout** [client] — props: title, backdropUrl, posterUrl, loading — `apps/website/src/components/layout/MediaDetailsLayout.vue`
 - **PersonDetailsLayout** [client] — props: name, profileUrl, backdropUrl, loading — `apps/website/src/components/layout/PersonDetailsLayout.vue`
 - **DetailsActionBar** [client] — `apps/website/src/components/layout/details/DetailsActionBar.vue`
+- **DetailsBackLink** [client] — props: to — `apps/website/src/components/layout/details/DetailsBackLink.vue`
+- **DetailsCastHeader** [client] — props: title, subtitle, searchable, placeholder — `apps/website/src/components/layout/details/DetailsCastHeader.vue`
+- **DetailsCrewCard** [client] — props: title, studioLabel, studio — `apps/website/src/components/layout/details/DetailsCrewCard.vue`
+- **DetailsDubTabs** [client] — props: projects, activeId, languageLabel, count, original — `apps/website/src/components/layout/details/DetailsDubTabs.vue`
+- **DetailsEditLink** [client] — props: to — `apps/website/src/components/layout/details/DetailsEditLink.vue`
+- **DetailsEmptyState** [client] — `apps/website/src/components/layout/details/DetailsEmptyState.vue`
+- **DetailsExternalLink** [client] — props: href — `apps/website/src/components/layout/details/DetailsExternalLink.vue`
+- **DetailsFact** [client] — props: label, value, wide — `apps/website/src/components/layout/details/DetailsFact.vue`
+- **DetailsFacts** [client] — `apps/website/src/components/layout/details/DetailsFacts.vue`
 - **DetailsHero** [client] — props: title, backdropUrl, blurBackdrop, imageUrl, imageAspectRatio — `apps/website/src/components/layout/details/DetailsHero.vue`
+- **DetailsMetaChip** [client] — props: variant — `apps/website/src/components/layout/details/DetailsMetaChip.vue`
 - **DetailsPage** [client] — `apps/website/src/components/layout/details/DetailsPage.vue`
+- **DetailsReportButton** [client] — `apps/website/src/components/layout/details/DetailsReportButton.vue`
+- **DetailsStudioLink** [client] — props: studio — `apps/website/src/components/layout/details/DetailsStudioLink.vue`
+- **DetailsSynopsis** [client] — props: text — `apps/website/src/components/layout/details/DetailsSynopsis.vue`
+- **DetailsTagList** [client] — props: tags — `apps/website/src/components/layout/details/DetailsTagList.vue`
+- **DetailsVoiceCastCard** [client] — props: item — `apps/website/src/components/layout/details/DetailsVoiceCastCard.vue`
 - **admin** [client] — `apps/website/src/layouts/admin.vue`
 - **about** [client] — `apps/website/src/pages/about.vue`
 - **[id]** [client] — `apps/website/src/pages/actor/[id].vue`
@@ -628,6 +643,7 @@
   - type ClaimedCategory
   - type ContributionClaim
 - `apps/website/src/composables/useDragScroll.ts` — function useDragScroll: (scrollRef) => void
+- `apps/website/src/composables/useDubbingLanguageLabel.ts` — function useDubbingLanguageLabel: () => void
 - `apps/website/src/composables/useEditorFormState.ts`
   - function createEditorFormState: (options) => EditorFormState
   - function createUnsavedChangesLeaveGuard: (isDirty) => void
@@ -660,6 +676,7 @@
   - type CastFilter
   - const ORIGINAL_CAST_SEED_LIMIT
   - _...1 more_
+- `apps/website/src/utils/detail-dub-projects.ts` — function detailProjectVoiceActorCount: (project) => number, function toCrewCardMembers: (rows) => void
 - `apps/website/src/utils/dubbing-project-save.ts`
   - function getEditableDubbingProjectStatus: (value) => DubbingProjectStatus
   - function serializeGameProjectCastRows: (rows) => DubbingProjectCastSaveRow[]

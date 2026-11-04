@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Component inventory and prop signatures extracted via AST. Read the source files before adding props or modifying component logic.
 
-**120 components** (vue)
+**135 components** (vue)
 
 ## Client Components
 
@@ -50,8 +50,23 @@
 - **MediaDetailsLayout** — props: title, backdropUrl, posterUrl, loading — `apps/website/src/components/layout/MediaDetailsLayout.vue`
 - **PersonDetailsLayout** — props: name, profileUrl, backdropUrl, loading — `apps/website/src/components/layout/PersonDetailsLayout.vue`
 - **DetailsActionBar** — `apps/website/src/components/layout/details/DetailsActionBar.vue`
+- **DetailsBackLink** — props: to — `apps/website/src/components/layout/details/DetailsBackLink.vue`
+- **DetailsCastHeader** — props: title, subtitle, searchable, placeholder — `apps/website/src/components/layout/details/DetailsCastHeader.vue`
+- **DetailsCrewCard** — props: title, studioLabel, studio — `apps/website/src/components/layout/details/DetailsCrewCard.vue`
+- **DetailsDubTabs** — props: projects, activeId, languageLabel, count, original — `apps/website/src/components/layout/details/DetailsDubTabs.vue`
+- **DetailsEditLink** — props: to — `apps/website/src/components/layout/details/DetailsEditLink.vue`
+- **DetailsEmptyState** — `apps/website/src/components/layout/details/DetailsEmptyState.vue`
+- **DetailsExternalLink** — props: href — `apps/website/src/components/layout/details/DetailsExternalLink.vue`
+- **DetailsFact** — props: label, value, wide — `apps/website/src/components/layout/details/DetailsFact.vue`
+- **DetailsFacts** — `apps/website/src/components/layout/details/DetailsFacts.vue`
 - **DetailsHero** — props: title, backdropUrl, blurBackdrop, imageUrl, imageAspectRatio — `apps/website/src/components/layout/details/DetailsHero.vue`
+- **DetailsMetaChip** — props: variant — `apps/website/src/components/layout/details/DetailsMetaChip.vue`
 - **DetailsPage** — `apps/website/src/components/layout/details/DetailsPage.vue`
+- **DetailsReportButton** — `apps/website/src/components/layout/details/DetailsReportButton.vue`
+- **DetailsStudioLink** — props: studio — `apps/website/src/components/layout/details/DetailsStudioLink.vue`
+- **DetailsSynopsis** — props: text — `apps/website/src/components/layout/details/DetailsSynopsis.vue`
+- **DetailsTagList** — props: tags — `apps/website/src/components/layout/details/DetailsTagList.vue`
+- **DetailsVoiceCastCard** — props: item — `apps/website/src/components/layout/details/DetailsVoiceCastCard.vue`
 - **admin** — `apps/website/src/layouts/admin.vue`
 - **about** — `apps/website/src/pages/about.vue`
 - **[id]** — `apps/website/src/pages/actor/[id].vue`

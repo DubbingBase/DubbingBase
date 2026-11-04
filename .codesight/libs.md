@@ -195,6 +195,7 @@
   - type ClaimedCategory
   - type ContributionClaim
 - `apps/website/src/composables/useDragScroll.ts` — function useDragScroll: (scrollRef) => void
+- `apps/website/src/composables/useDubbingLanguageLabel.ts` — function useDubbingLanguageLabel: () => void
 - `apps/website/src/composables/useEditorFormState.ts`
   - function createEditorFormState: (options) => EditorFormState
   - function createUnsavedChangesLeaveGuard: (isDirty) => void
@@ -227,6 +228,7 @@
   - type CastFilter
   - const ORIGINAL_CAST_SEED_LIMIT
   - _...1 more_
+- `apps/website/src/utils/detail-dub-projects.ts` — function detailProjectVoiceActorCount: (project) => number, function toCrewCardMembers: (rows) => void
 - `apps/website/src/utils/dubbing-project-save.ts`
   - function getEditableDubbingProjectStatus: (value) => DubbingProjectStatus
   - function serializeGameProjectCastRows: (rows) => DubbingProjectCastSaveRow[]

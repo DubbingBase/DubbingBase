@@ -2,9 +2,9 @@
 
 > **Navigation aid.** Library inventory extracted via AST. Read the source files listed here before modifying exported functions.
 
-**104 library files** across 4 modules
+**106 library files** across 4 modules
 
-## Website (81 files)
+## Website (83 files)
 
 - `apps/website/server/utils/db/queries.ts` — getVoiceActorWithWork, getWorkByActor, getActorPageWorkByActor, getDubbingProjects, getDubbingProjectsForMediaEndpoint, getAdvertisementPageDubbingProjects, …
 - `apps/website/src/utils/voice-actor-profile-save.ts` — voiceActorProfilePayload, changedVoiceActorProfileFields, displayedSocialLinks, mergeDisplayedSocialLinks, profileUnchangedExceptPicture, refreshVoiceActorProfilePicture, …
@@ -31,7 +31,7 @@
 - `apps/website/server/utils/services/wiki-extraction-batching.ts` — buildWikipediaExtractionBatches, deduplicateExtractedCredits, WikipediaExtractionSection, WikipediaExtractionBatch, MAX_WIKIPEDIA_EXTRACTION_PROMPT_CHARS
 - `apps/website/server/utils/api/igdb.ts` — buildIgdbImageUrl, IgdbClient, IgdbTrendingGamesResult, IgdbPopularityPrimitive
 - `apps/website/server/utils/game-character-validation.ts` — gameCharacterError, isRecord, hasOnlyKeys, isUuid
-- _…and 56 more files_
+- _…and 58 more files_
 
 ## Shared-logic (20 files)
 

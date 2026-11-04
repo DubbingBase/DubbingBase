@@ -8,7 +8,7 @@
 
 ## Scale
 
-88 API routes · 28 database models · 120 UI components · 104 library files · 14 middleware layers · 64 environment variables
+88 API routes · 28 database models · 135 UI components · 106 library files · 14 middleware layers · 64 environment variables
 
 ## Subsystems
 
@@ -84,9 +84,9 @@
 
 **Database:** unknown, 28 models — see [database.md](./database.md)
 
-**UI:** 120 components (vue) — see [ui.md](./ui.md)
+**UI:** 135 components (vue) — see [ui.md](./ui.md)
 
-**Libraries:** 104 files — see [libraries.md](./libraries.md)
+**Libraries:** 106 files — see [libraries.md](./libraries.md)
 
 ## High-Impact Files
 
