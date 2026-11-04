@@ -1,24 +1,40 @@
 <template>
-  <div class="min-h-screen">
+  <div>
     <!-- Skeleton loader during SSR/fetch -->
     <MediaSkeleton v-if="pending && !data" />
 
     <!-- Main Content -->
     <MediaDetailsLayout
       v-else-if="advertisement"
-      :backdrop-src="null"
-      :poster-src="posterUrl"
       :title="advertisement.title"
-      :original-title="advertisement.brand"
-      :media-type="'advertisement'"
-      :release-year="advertisement.year ? String(advertisement.year) : undefined"
-      :overview="advertisement.description"
-      :dubbing-projects="dubbingProjects"
-      :active-dub-id="activeDubId"
+      :backdrop-url="null"
+      :poster-url="posterUrl"
+      :loading="pending"
     >
-      <template #header-actions>
-        <div class="flex items-center gap-2">
-          <NuxtLink
+      <template #metadata>
+        <DetailsMetaChip v-if="advertisement.year">{{ advertisement.year }}</DetailsMetaChip>
+        <DetailsMetaChip v-if="advertisement.brand" variant="text" :title="advertisement.brand">
+          {{ advertisement.brand }}
+        </DetailsMetaChip>
+      </template>
+
+      <template #actions-left>
+        <DetailsDubTabs
+          :projects="dubbingProjects"
+          :active-id="activeDubId"
+          :language-label="getDisplayLanguage"
+          :count="detailProjectVoiceActorCount"
+        />
+      </template>
+
+      <template #actions-right>
+        <DetailsStudioLink
+          v-if="activeDubProject?.studio_data"
+          :studio="activeDubProject.studio_data"
+        />
+
+        <ClientOnly>
+          <DetailsEditLink
             v-if="isAdmin"
             :to="
               localePath(
@@ -27,59 +43,53 @@
                   : `/advertisement/${advertisement.id}/projects/new`,
               )
             "
-            class="px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 theme-status-success-text text-xs font-semibold rounded-xl border border-emerald-500/30 flex items-center gap-1.5 transition-colors"
-          >
-            <span>{{
-              activeDubProject ? $t("advertisement.editProject") : $t("advertisement.createProject")
-            }}</span>
-          </NuxtLink>
-
-          <ForceEnqueueButton
-            v-if="advertisement?.id"
-            media-type="advertisement"
-            :media-id="advertisement.id"
+            :label="activeDubProject ? $t('common.edit') : $t('common.create')"
           />
-        </div>
+        </ClientOnly>
+
+        <ForceEnqueueButton
+          v-if="advertisement?.id"
+          media-type="advertisement"
+          :media-id="advertisement.id"
+        />
+
+        <DetailsReportButton @click="isReportModalOpen = true" />
       </template>
 
-      <template #details-extra>
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-4 border-t theme-border">
-          <div v-if="advertisement.brand">
-            <span class="text-xs theme-text-muted block mb-0.5">{{
-              $t("advertisement.brand")
-            }}</span>
-            <span class="text-sm font-semibold theme-text">{{ advertisement.brand }}</span>
-          </div>
+      <template #content>
+        <DetailsSynopsis v-if="advertisement.description" :text="advertisement.description">
+          <DetailsFacts v-if="advertisement.brand || advertisement.agency || advertisement.country">
+            <DetailsFact
+              v-if="advertisement.brand"
+              :label="$t('advertisement.brand')"
+              :value="advertisement.brand"
+            />
+            <DetailsFact
+              v-if="advertisement.agency"
+              :label="$t('advertisement.agencyLabel')"
+              :value="advertisement.agency"
+            />
+            <DetailsFact
+              v-if="advertisement.country"
+              :label="$t('advertisement.countryBroadcast')"
+              :value="advertisement.country"
+            />
+          </DetailsFacts>
+        </DetailsSynopsis>
 
-          <div v-if="advertisement.agency">
-            <span class="text-xs theme-text-muted block mb-0.5">{{
-              $t("advertisement.agencyLabel")
-            }}</span>
-            <span class="text-sm font-semibold theme-text">{{ advertisement.agency }}</span>
-          </div>
-
-          <div v-if="advertisement.country">
-            <span class="text-xs theme-text-muted block mb-0.5">{{
-              $t("advertisement.countryBroadcast")
-            }}</span>
-            <span class="text-sm font-semibold theme-text">{{ advertisement.country }}</span>
-          </div>
-        </div>
-      </template>
-
-      <!-- Video Player Embed if YouTube/video ID present -->
-      <template #media-extra>
-        <div
+        <section
           v-if="advertisement.video_id"
-          class="theme-surface-overlay border theme-border rounded-2xl p-6 space-y-4 mb-8 shadow-xl"
+          class="theme-surface-overlay border theme-border-subtle theme-border rounded-2xl p-6 space-y-4 mb-10 shadow-xl"
         >
-          <h3 class="text-xs font-bold theme-text-muted uppercase tracking-wider">
+          <h2 class="text-xs font-bold theme-text-muted uppercase tracking-wider">
             {{ $t("advertisement.videoSpot") }}
-          </h3>
+          </h2>
           <div class="aspect-video w-full rounded-xl overflow-hidden bg-black shadow-lg">
             <iframe
               :src="`https://www.youtube.com/embed/${advertisement.video_id}`"
+              :title="advertisement.title"
               class="w-full h-full"
+              loading="lazy"
               allowfullscreen
               allow="
                 accelerometer;
@@ -91,77 +101,30 @@
               "
             ></iframe>
           </div>
-        </div>
-      </template>
+        </section>
 
-      <!-- Technical Crew / Studio Section -->
-      <template #crew-section>
-        <div
-          v-if="activeDubProject?.studios || activeDubProject?.dubbing_project_crew?.length"
-          class="theme-surface-overlay backdrop-blur border theme-border rounded-2xl p-6 space-y-4 mb-8 shadow-xl"
-        >
-          <h3 class="text-xs font-bold theme-text-muted uppercase tracking-wider">
-            {{ $t("advertisement.studioAndSoundProduction") }}
-          </h3>
+        <DetailsCrewCard
+          :title="$t('advertisement.studioAndSoundProduction')"
+          :studio-label="$t('studio.recordingStudio')"
+          :studio="activeDubProject?.studios"
+          :crew="advertisementCrew"
+        />
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            <div v-if="activeDubProject?.studios" class="space-y-1">
-              <span class="text-xs theme-text-muted">{{ $t("studio.recordingStudio") }}</span>
-              <NuxtLink
-                :to="localePath(`/studio/${activeDubProject.studios.id}`)"
-                class="text-sm font-semibold theme-status-success-text hover:underline block"
-              >
-                {{ activeDubProject.studios.name }}
-              </NuxtLink>
-            </div>
+        <section>
+          <DetailsCastHeader
+            :title="$t('advertisementEditor.voiceOffActors')"
+            :subtitle="
+              $t('media.rolesCount', {
+                shown: castItems.length,
+                total: castTotal,
+              })
+            "
+            :searchable="false"
+          />
 
-            <div
-              v-for="member in activeDubProject?.dubbing_project_crew || []"
-              :key="member.id"
-              class="space-y-1"
-            >
-              <span class="text-xs theme-text-muted">{{
-                member.jobs?.name || $t("common.team")
-              }}</span>
-              <NuxtLink
-                v-if="member.voice_actors"
-                :to="localePath(`/voice-actor/${member.voice_actors.id}`)"
-                class="text-sm font-semibold text-white hover:underline block"
-              >
-                {{ member.voice_actors.firstname }}
-                {{ member.voice_actors.lastname }}
-              </NuxtLink>
-            </div>
-          </div>
-        </div>
-      </template>
-
-      <!-- Voice Cast Section -->
-      <template #cast-section>
-        <section class="space-y-6">
-          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h2 class="text-xl font-bold text-white flex items-center gap-2">
-                <span>{{ $t("advertisementEditor.voiceOffActors") }}</span>
-                <span
-                  v-if="castTotal > 0"
-                  class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/10 theme-status-success-text font-semibold border border-emerald-500/20"
-                >
-                  {{ castTotal }}
-                </span>
-              </h2>
-              <p class="text-xs theme-text-muted mt-1">
-                {{ $t("advertisement.voiceCastDescription") }}
-              </p>
-            </div>
-          </div>
-
-          <div
-            v-if="castTotal === 0"
-            class="text-center py-16 theme-surface-overlay rounded-2xl border theme-border theme-text-muted text-sm"
-          >
+          <DetailsEmptyState v-if="castTotal === 0">
             {{ $t("advertisement.noVoicesYet") }}
-          </div>
+          </DetailsEmptyState>
 
           <PaginatedResponsiveGrid
             v-else
@@ -174,41 +137,7 @@
             @update:page="setCastPage"
           >
             <template #default="{ item }">
-              <div
-                :key="item.work_id"
-                class="theme-surface-overlay border theme-border rounded-2xl p-4 flex gap-4 items-center theme-hover-border transition-colors group shadow-md"
-              >
-                <NuxtLink
-                  :to="localePath(`/voice-actor/${item.voice_actor_id}`)"
-                  class="relative w-14 h-14 rounded-full overflow-hidden theme-surface-muted shrink-0 border theme-border group-hover:border-emerald-500 transition-colors flex items-center justify-center"
-                >
-                  <NuxtImg
-                    v-if="item.profile_picture"
-                    :src="item.profile_picture"
-                    :alt="item.firstname + ' ' + item.lastname"
-                    class="w-full h-full object-cover"
-                    decoding="async"
-                  />
-                  <span v-else class="text-sm font-bold theme-text-muted">
-                    {{ item.firstname?.[0] }}{{ item.lastname?.[0] }}
-                  </span>
-                </NuxtLink>
-
-                <div class="flex-1 min-w-0">
-                  <NuxtLink
-                    :to="localePath(`/voice-actor/${item.voice_actor_id}`)"
-                    class="text-sm font-bold text-white theme-status-success-text transition-colors truncate block"
-                  >
-                    {{ item.firstname }} {{ item.lastname }}
-                  </NuxtLink>
-                  <span class="text-xs theme-text-muted block truncate mt-0.5">
-                    {{ item.character_name || item.performance || $t("advertisement.voiceOver") }}
-                  </span>
-                  <span v-if="item.note" class="text-xs theme-text-muted block truncate mt-1">{{
-                    item.note
-                  }}</span>
-                </div>
-              </div>
+              <DetailsVoiceCastCard :item="item" :fallback-role="$t('advertisement.voiceOver')" />
             </template>
           </PaginatedResponsiveGrid>
         </section>
@@ -228,7 +157,20 @@ import { ref, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import MediaSkeleton from "../../components/MediaSkeleton.vue";
+import { detailProjectVoiceActorCount, toCrewCardMembers } from "../../utils/detail-dub-projects";
 import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
+import DetailsDubTabs from "../../components/layout/details/DetailsDubTabs.vue";
+import DetailsStudioLink from "../../components/layout/details/DetailsStudioLink.vue";
+import DetailsEditLink from "../../components/layout/details/DetailsEditLink.vue";
+import DetailsReportButton from "../../components/layout/details/DetailsReportButton.vue";
+import DetailsMetaChip from "../../components/layout/details/DetailsMetaChip.vue";
+import DetailsSynopsis from "../../components/layout/details/DetailsSynopsis.vue";
+import DetailsFacts from "../../components/layout/details/DetailsFacts.vue";
+import DetailsFact from "../../components/layout/details/DetailsFact.vue";
+import DetailsCrewCard from "../../components/layout/details/DetailsCrewCard.vue";
+import DetailsCastHeader from "../../components/layout/details/DetailsCastHeader.vue";
+import DetailsEmptyState from "../../components/layout/details/DetailsEmptyState.vue";
+import DetailsVoiceCastCard from "../../components/layout/details/DetailsVoiceCastCard.vue";
 import ReportModal from "../../components/ReportModal.vue";
 import {
   fetchAdvertisementData,
@@ -259,7 +201,10 @@ const currentUrl = computed(() => route.fullPath);
 // Instant Hydration Data Fetching
 const { data, pending, error } = await useAsyncData(
   `ad-${adId.value}-${locale.value}`,
-  () => fetchAdvertisementData(adId.value, locale.value, { projection: "media-summary" }),
+  () =>
+    fetchAdvertisementData(adId.value, locale.value, {
+      projection: "media-summary",
+    }),
   {
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
@@ -268,6 +213,7 @@ if (import.meta.server && error.value) throw error.value;
 
 const advertisement = computed<Advertisement | null>(() => data.value?.advertisement || null);
 const dubbingProjects = computed(() => data.value?.dubbingProjects || []);
+const getDisplayLanguage = useDubbingLanguageLabel();
 
 const activeDubProject = computed(() =>
   resolveDetailCollectionProject(dubbingProjects.value, route.query.dub),
@@ -299,6 +245,10 @@ const { data: castData } = await useAsyncData(
 );
 const castTotal = computed(() => castData.value?.pagination.totalItems || 0);
 const castItems = computed(() => castData.value?.data || []);
+
+const advertisementCrew = computed(() =>
+  toCrewCardMembers(activeDubProject.value?.dubbing_project_crew),
+);
 
 useHead({
   title: computed(() =>
