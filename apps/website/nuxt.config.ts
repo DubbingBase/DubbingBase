@@ -261,11 +261,10 @@ export default defineNuxtConfig({
     defaultLocale: DEFAULT_LOCALE,
     strategy: "prefix_except_default",
     baseUrl: siteUrl,
-    detectBrowserLanguage: {
-      useCookie: true,
-      cookieKey: "user_lang",
-      redirectOn: "root",
-    },
+    // No automatic redirect or server-side cookie: the URL decides the language
+    // and LanguageBanner only suggests the visitor's preferred one, so HTML is
+    // identical for every visitor and cacheable.
+    detectBrowserLanguage: false,
   },
 
   srcDir: "src/",
