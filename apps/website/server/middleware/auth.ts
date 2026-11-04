@@ -4,6 +4,11 @@ import { useSupabaseAdmin } from "../utils/db/client";
 import { hasSupabaseAuthCookie } from "../utils/auth-session";
 
 export default defineEventHandler(async (event) => {
+  // Only API handlers read `event.context.user`/`supabaseAdmin`. Page requests
+  // resolve the user through the Supabase Nuxt module, so skip the per-request
+  // `auth.getUser()` round trip for SSR.
+  if (!getRequestURL(event).pathname.startsWith("/api/")) return;
+
   const config = useRuntimeConfig();
 
   // Attach supabaseAdmin client to event context (skip during builds/prerender
