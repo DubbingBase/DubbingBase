@@ -1,5 +1,6 @@
+import { resolveUser } from "../utils/auth";
 export default defineEventHandler(async (event) => {
-  const user = event.context.user;
+  const user = await resolveUser(event);
   if (!user) {
     throw createError({ statusCode: 401, message: "Unauthorized" });
   }

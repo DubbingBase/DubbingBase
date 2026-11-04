@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { requireAdmin } from "../../../utils/auth";
+import { defineAdminHandler } from "../../../utils/auth-handlers";
 import { useSupabaseAdmin } from "../../../utils/db/client";
 
 const editableValuesSchema = z
@@ -23,8 +23,7 @@ const bodySchema = z
   })
   .strict();
 
-export default defineEventHandler(async (event) => {
-  const admin = requireAdmin(event);
+export default defineAdminHandler(async (event, admin) => {
   const parsedBody = bodySchema.safeParse(await readBody(event));
   if (!parsedBody.success) {
     throw createError({
@@ -34,10 +33,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const { canonicalId, workIds, updates } = parsedBody.data;
-  if (
-    new Set(workIds).size !== workIds.length ||
-    !workIds.includes(canonicalId)
-  ) {
+  if (new Set(workIds).size !== workIds.length || !workIds.includes(canonicalId)) {
     throw createError({
       statusCode: 400,
       message: "Invalid duplicate merge group",
@@ -45,15 +41,12 @@ export default defineEventHandler(async (event) => {
   }
 
   const supabaseAdmin = useSupabaseAdmin(event);
-  const { data, error } = await supabaseAdmin.rpc(
-    "merge_work_duplicates_atomic",
-    {
-      p_canonical_id: canonicalId,
-      p_work_ids: workIds,
-      p_updates: updates,
-      p_admin_id: admin.id,
-    },
-  );
+  const { data, error } = await supabaseAdmin.rpc("merge_work_duplicates_atomic", {
+    p_canonical_id: canonicalId,
+    p_work_ids: workIds,
+    p_updates: updates,
+    p_admin_id: admin.id,
+  });
 
   if (error?.code === "40001") {
     throw createError({

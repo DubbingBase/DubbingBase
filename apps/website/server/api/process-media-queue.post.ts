@@ -172,7 +172,7 @@ export default defineEventHandler(async (event) => {
 
   if (!isInternalTrigger) {
     try {
-      requireAdmin(event);
+      await requireAdmin(event);
     } catch (authErr) {
       if (internalSecret || bearerToken || apiKeyHeader) {
         console.error(

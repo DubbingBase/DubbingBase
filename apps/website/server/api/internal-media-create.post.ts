@@ -1,4 +1,4 @@
-import { requireAdmin } from "../utils/auth";
+import { defineAdminHandler } from "../utils/auth-handlers";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { requireDubbingLanguage } from "../utils/dubbing-language";
 
@@ -18,8 +18,7 @@ function hasOnlyKeys(value: Record<string, unknown>, allowed: readonly string[])
   return Object.keys(value).every((key) => allowed.includes(key));
 }
 
-export default defineEventHandler(async (event) => {
-  const user = requireAdmin(event);
+export default defineAdminHandler(async (event, user) => {
   const body: unknown = await readBody(event);
   if (
     !isRecord(body) ||

@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { z } from "zod";
 import { useSupabaseAdmin } from "../utils/db/client";
-import { requireAdmin } from "../utils/auth";
+import { defineAdminHandler } from "../utils/auth-handlers";
 import { requireDubbingLanguage } from "../utils/dubbing-language";
 
 const creditSchema = z
@@ -51,8 +51,7 @@ function createStableCreditRequestId(
   return `${digest.slice(0, 8)}-${digest.slice(8, 12)}-8${digest.slice(13, 16)}-${variant.toString(16)}${digest.slice(17, 20)}-${digest.slice(20, 32)}`;
 }
 
-export default defineEventHandler(async (event) => {
-  const user = requireAdmin(event);
+export default defineAdminHandler(async (event, user) => {
   try {
     const parsedBody = requestSchema.safeParse(await readBody(event));
     if (!parsedBody.success) {

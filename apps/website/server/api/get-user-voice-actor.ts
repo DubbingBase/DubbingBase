@@ -1,5 +1,5 @@
 import { useSupabaseAdmin } from "../utils/db/client";
-import { requireUser } from "../utils/auth";
+import { defineUserHandler } from "../utils/auth-handlers";
 import { useTmdbClient } from "../utils";
 
 interface TmdbCastMember {
@@ -91,8 +91,7 @@ async function loadVoiceActor(
   return { voiceActor: voiceActorData, medias: populatedWorkEntries };
 }
 
-export default defineEventHandler(async (event) => {
-  const user = requireUser(event);
+export default defineUserHandler(async (event, user) => {
   const supabaseAdmin = useSupabaseAdmin();
   const tmdbClient = useTmdbClient();
 

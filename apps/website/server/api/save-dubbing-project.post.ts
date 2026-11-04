@@ -1,5 +1,5 @@
 import type { H3Event as H3EventType } from "h3";
-import { requireAdmin } from "../utils/auth";
+import { defineAdminHandler } from "../utils/auth-handlers";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { useIgdbClient, useOpenLibraryClient, usePodcastClient, useTmdbClient } from "../utils";
 import { requireDubbingLanguage } from "../utils/dubbing-language";
@@ -441,8 +441,7 @@ async function validateExternalReferences(body: ProjectSaveBody, event: H3EventT
   }
 }
 
-export default defineEventHandler(async (event) => {
-  const user = requireAdmin(event);
+export default defineAdminHandler(async (event, user) => {
   const body = parseBody(await readBody(event));
   await validateExternalReferences(body, event);
 

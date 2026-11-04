@@ -51,7 +51,7 @@ export default defineEventHandler(async (event) => {
       (Boolean(apiKeyHeader) && apiKeyHeader === secretKey));
 
   if (!isInternalTrigger) {
-    requireAdmin(event);
+    await requireAdmin(event);
   }
 
   try {

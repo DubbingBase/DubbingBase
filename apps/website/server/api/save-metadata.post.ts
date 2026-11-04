@@ -1,5 +1,5 @@
 import type { Json } from "@app/supabase/types";
-import { requireAdmin } from "../utils/auth";
+import { defineAdminHandler } from "../utils/auth-handlers";
 import { useSupabaseAdmin } from "../utils/db/client";
 
 const voiceActorFields = new Set([
@@ -35,8 +35,7 @@ function badRequest(message: string): never {
   throw createError({ statusCode: 400, message });
 }
 
-export default defineEventHandler(async (event) => {
-  const user = requireAdmin(event);
+export default defineAdminHandler(async (event, user) => {
   const body: unknown = await readBody(event);
 
   if (!isRecord(body) || !isRecord(body.payload) || !isJson(body.payload)) {

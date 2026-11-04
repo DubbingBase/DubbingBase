@@ -1,4 +1,4 @@
-import { requireUser } from "../utils/auth";
+import { defineUserHandler } from "../utils/auth-handlers";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -39,8 +39,7 @@ function mapRpcError(code: string): never {
   throw linkError(500, "Failed to link user to voice actor; no changes were saved");
 }
 
-export default defineEventHandler(async (event) => {
-  const user = requireUser(event);
+export default defineUserHandler(async (event, user) => {
   if (user.app_metadata?.role !== "admin") {
     throw linkError(403, "Unauthorized: Admin access required");
   }
