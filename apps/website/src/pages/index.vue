@@ -277,10 +277,7 @@ import type { HomeDataPayload } from "@app/shared-logic";
 import { useDragScroll } from "../composables/useDragScroll";
 import { ref, computed, watch, type MaybeRefOrGetter } from "vue";
 
-const user = useSupabaseUser();
-const isAdmin = computed(() => {
-  return user.value?.app_metadata?.role === "admin";
-});
+const { isAdmin } = useClientUser();
 
 const { t, locale } = useI18n();
 const localePath = useLocalePath();

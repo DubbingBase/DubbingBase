@@ -1,10 +1,8 @@
-import { requireUser } from "../utils/auth";
+import { defineUserHandler } from "../utils/auth-handlers";
 import { prepareGame } from "../utils/services/media-preparation";
 import { prepareGameFromPayload } from "../utils/prepare-payload";
 
-export default defineEventHandler(async (event) => {
-  requireUser(event);
-
+export default defineUserHandler(async (event) => {
   const result = await prepareGameFromPayload(await readBody(event), prepareGame);
   if (!result.ok) {
     throw createError({

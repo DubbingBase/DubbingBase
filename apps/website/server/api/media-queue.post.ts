@@ -25,7 +25,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const requestingUser = action === "enqueue" ? requireUser(event) : null;
+  const requestingUser = action === "enqueue" ? await requireUser(event) : null;
 
   const supabaseAdmin = useSupabaseAdmin();
   const rawTargetId = tmdbId || mediaId;

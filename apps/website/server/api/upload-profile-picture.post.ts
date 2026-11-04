@@ -1,3 +1,4 @@
+import { resolveUser } from "../utils/auth";
 import { getRequestHeader, getRequestIP, type H3Event } from "h3";
 import { randomUUID } from "node:crypto";
 import { useSupabaseAdmin } from "../utils/db/client";
@@ -170,7 +171,7 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 404, message: "Voice actor not found" });
     }
 
-    const user = event.context.user;
+    const user = await resolveUser(event);
     const isAdmin = user?.app_metadata?.role === "admin";
     const previousPicture = voiceActor.profile_picture;
     const isFirstUpload = previousPicture === null || previousPicture === "";

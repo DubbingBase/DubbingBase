@@ -1,9 +1,7 @@
-import { requireAdmin } from "../../../utils/auth";
+import { defineAdminHandler } from "../../../utils/auth-handlers";
 import { useSupabaseAdmin } from "../../../utils/db/client";
 
-export default defineEventHandler(async (event) => {
-  requireAdmin(event);
-
+export default defineAdminHandler(async (event) => {
   const { error } = await useSupabaseAdmin(event).rpc("clear_media_queue");
   if (error) {
     throw createError({

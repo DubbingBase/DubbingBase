@@ -1,4 +1,4 @@
-import { requireAdmin } from "../../../utils/auth";
+import { defineAdminHandler } from "../../../utils/auth-handlers";
 import { useSupabaseAdmin } from "../../../utils/db/client";
 
 const validQueueNames = ["wiki_scan", "wiki_extract", "wiki_check", "wiki_discovery"];
@@ -8,9 +8,7 @@ type DeleteQueueItemBody = {
   queueName?: unknown;
 };
 
-export default defineEventHandler(async (event) => {
-  requireAdmin(event);
-
+export default defineAdminHandler(async (event) => {
   const body = await readBody<DeleteQueueItemBody>(event);
   if (typeof body !== "object" || body === null) {
     throw createError({ statusCode: 400, message: "Invalid queue item" });

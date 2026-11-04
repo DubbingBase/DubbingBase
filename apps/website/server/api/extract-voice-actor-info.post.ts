@@ -1,4 +1,4 @@
-import { requireAdmin } from "../utils/auth";
+import { defineAdminHandler } from "../utils/auth-handlers";
 
 const WIKIPEDIA_USER_AGENT = "DubbingBase/1.0 (https://dubbingbase.com; contact@dubbingbase.com)";
 
@@ -15,9 +15,7 @@ function getImageFromFilename(filename: string, lang: string) {
   return `https://${lang}.wikipedia.org/w/api.php?action=query&titles=File:${encodeURIComponent(filename)}&prop=imageinfo&iiprop=url&format=json`;
 }
 
-export default defineEventHandler(async (event) => {
-  requireAdmin(event);
-
+export default defineAdminHandler(async (event) => {
   const body = await readBody(event);
   const { wikipediaUrl } = body;
 

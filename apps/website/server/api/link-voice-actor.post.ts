@@ -1,5 +1,5 @@
 import type { H3Event } from "h3";
-import { requireUser } from "../utils/auth";
+import { defineUserHandler } from "../utils/auth-handlers";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { useIgdbClient, useOpenLibraryClient, usePodcastClient, useTmdbClient } from "../utils";
 import { requireDubbingLanguage } from "../utils/dubbing-language";
@@ -282,8 +282,7 @@ function mapRpcError(code: string) {
   throw linkError(500, "Voice actor work link failed; no changes were saved");
 }
 
-export default defineEventHandler(async (event) => {
-  const user = requireUser(event);
+export default defineUserHandler(async (event, user) => {
   const body = parseBody(await readBody(event));
   const dubbingLanguage = requireDubbingLanguage(body.dubbing_language);
   const supabase = event.context.supabaseAdmin || useSupabaseAdmin(event);

@@ -2,7 +2,7 @@ import { createEvent, isError, type EventHandler } from "h3";
 import { IncomingMessage, ServerResponse } from "node:http";
 import { Socket } from "node:net";
 import { beforeAll, describe, expect, it } from "vitest";
-import cacheHeadersMiddleware from "../../middleware/00-cache-headers";
+import { applyCachePolicy, applyDefaultCachePolicy } from "../cache/response-policy";
 import { NO_STORE_CACHE_CONTROL } from "../cache/http";
 
 let aboutPreferenceHandler: EventHandler;
@@ -25,14 +25,14 @@ async function request(path: string, cookie?: string): Promise<TestResponse> {
 
   const nodeResponse = new ServerResponse(nodeRequest);
   const event = createEvent(nodeRequest, nodeResponse);
-  cacheHeadersMiddleware(event);
-
+  applyDefaultCachePolicy(event);
   try {
     await aboutPreferenceHandler(event);
   } catch (error) {
     if (!isError(error)) throw error;
     nodeResponse.statusCode = error.statusCode;
   }
+  applyCachePolicy(event, { isDev: false });
 
   const headers = new Headers();
   for (const [name, value] of Object.entries(nodeResponse.getHeaders())) {

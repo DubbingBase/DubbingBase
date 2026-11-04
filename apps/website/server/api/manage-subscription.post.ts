@@ -1,7 +1,10 @@
+import { resolveUser } from "../utils/auth";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@app/shared-logic";
 import { useSupabaseAdmin } from "../utils/db/client";
 
 export default defineEventHandler(async (event) => {
-  const user = event.context.user;
+  const user = await resolveUser(event);
   if (!user) {
     throw createError({ statusCode: 401, message: "Unauthorized" });
   }
@@ -18,7 +21,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const supabaseAdmin = event.context.supabaseAdmin || useSupabaseAdmin();
+  const supabaseAdmin: SupabaseClient<Database> = event.context.supabaseAdmin || useSupabaseAdmin();
 
   if (action === "list") {
     const { data, error } = await supabaseAdmin
@@ -31,7 +34,7 @@ export default defineEventHandler(async (event) => {
       throw error;
     }
 
-    const subscriptions = data.map((sub: any) => ({
+    const subscriptions = data.map((sub) => ({
       voice_actor_id: sub.voice_actor_id,
       firstname: Array.isArray(sub.voice_actors)
         ? sub.voice_actors[0]?.firstname
@@ -58,10 +61,7 @@ export default defineEventHandler(async (event) => {
         .insert({ user_id: userId, voice_actor_id: voiceActorId });
 
       if (error && error.code !== "23505") {
-        console.error(
-          "[manage-subscription] DB Error during subscribe:",
-          error,
-        );
+        console.error("[manage-subscription] DB Error during subscribe:", error);
         throw error;
       }
     } else if (action === "unsubscribe") {
@@ -72,10 +72,7 @@ export default defineEventHandler(async (event) => {
         .eq("voice_actor_id", voiceActorId);
 
       if (error) {
-        console.error(
-          "[manage-subscription] DB Error during unsubscribe:",
-          error,
-        );
+        console.error("[manage-subscription] DB Error during unsubscribe:", error);
         throw error;
       }
     }

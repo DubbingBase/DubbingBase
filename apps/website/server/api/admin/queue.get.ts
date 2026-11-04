@@ -1,4 +1,4 @@
-import { requireAdmin } from "../../utils/auth";
+import { defineAdminHandler } from "../../utils/auth-handlers";
 import { useSupabaseAdmin } from "../../utils/db/client";
 const QUEUE_NAMES = ["wiki_scan", "wiki_discovery", "wiki_check", "wiki_extract"] as const;
 const QUEUE_STATUSES = [
@@ -36,8 +36,7 @@ function queryInteger(
   return parsed;
 }
 
-export default defineEventHandler(async (event) => {
-  requireAdmin(event);
+export default defineAdminHandler(async (event) => {
   const query = getQuery(event);
   const queueName = queryValue(query.queue, "queue");
   const status = queryValue(query.status, "status");

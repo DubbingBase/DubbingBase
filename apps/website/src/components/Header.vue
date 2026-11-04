@@ -181,7 +181,7 @@ import { useRoute } from "vue-router";
 import { UserIcon, SearchIcon } from "lucide-vue-next";
 const { t, locale } = useI18n();
 const localePath = useLocalePathPrefix();
-const user = useSupabaseUser();
+const { user, isAdmin } = useClientUser();
 const supabaseCookiePrefix = useRuntimeConfig().public.supabase.cookiePrefix;
 const route = useRoute();
 const ABOUT_ROUTES = new Set(["/about", "/fr/about", "/es/about", "/ja/about"]);
@@ -201,10 +201,6 @@ const aboutLanguageTarget = (language: string): string => {
 const isHomePage = computed(() => {
   const homePath = localePath("/");
   return route.path === homePath;
-});
-
-const isAdmin = computed(() => {
-  return user.value?.app_metadata?.role === "admin";
 });
 
 const focusSearchInput = (): void => {

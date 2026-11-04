@@ -1,4 +1,4 @@
-import { requireAdmin } from "../../utils/auth";
+import { defineAdminHandler } from "../../utils/auth-handlers";
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { requireDubbingLanguage } from "../../utils/dubbing-language";
 import type { Json } from "@app/supabase";
@@ -24,8 +24,7 @@ function isOptionalPositiveId(value: unknown): value is number | null {
   return value === null || isPositiveId(value);
 }
 
-export default defineEventHandler(async (event) => {
-  const admin = requireAdmin(event);
+export default defineAdminHandler(async (event, admin) => {
   const body: unknown = await readBody(event);
   if (
     !isRecord(body) ||

@@ -118,7 +118,7 @@ function mapToy(row: ToyMetadataRow): Toy {
 }
 
 export default defineEventHandler(async (event): Promise<ToyMetadataSaveResponse> => {
-  const user = requireAdmin(event);
+  const user = await requireAdmin(event);
   const body: unknown = await readBody(event);
 
   if (
