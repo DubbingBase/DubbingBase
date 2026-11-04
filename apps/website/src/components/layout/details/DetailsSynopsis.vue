@@ -1,7 +1,8 @@
 <template>
-  <section class="mb-10" :aria-label="$t('details.synopsis')">
+  <section class="mb-10">
     <div class="max-w-4xl min-w-0">
-      <!-- No visible heading: a paragraph right under the hero is understood as the plot. -->
+      <!-- Visually hidden heading: a paragraph right under the hero is understood as the plot. -->
+      <h2 class="sr-only">{{ $t("details.synopsis") }}</h2>
       <p
         :class="[
           'theme-text-secondary leading-relaxed text-base md:text-lg whitespace-pre-line',
