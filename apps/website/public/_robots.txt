@@ -1,2 +1,13 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /login
+Disallow: /register
+Disallow: /profile
+Disallow: /search
+Disallow: /*/admin
+Disallow: /*/login
+Disallow: /*/register
+Disallow: /*/profile
+Disallow: /*/search
+Disallow: /*/projects/

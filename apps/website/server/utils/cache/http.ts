@@ -1,10 +1,6 @@
 import { removeResponseHeader, setHeader, type H3Event } from "h3";
 
-export type CacheProfile =
-  | "discovery"
-  | "static"
-  | "og-image"
-  | "og-image-redirect";
+export type CacheProfile = "discovery" | "static" | "og-image" | "og-image-redirect" | "sitemap";
 
 export const NO_STORE_CACHE_CONTROL = "no-store, no-cache, must-revalidate";
 
@@ -13,6 +9,7 @@ const PUBLIC_CACHE_CONTROL: Record<CacheProfile, string> = {
   static: "public, max-age=86400, stale-while-revalidate=2592000",
   "og-image": "public, max-age=3600",
   "og-image-redirect": "public, max-age=60",
+  sitemap: "public, max-age=3600, stale-while-revalidate=86400",
 };
 
 const CLOUDFLARE_CACHE_CONTROL: Record<CacheProfile, string> = {
@@ -20,6 +17,7 @@ const CLOUDFLARE_CACHE_CONTROL: Record<CacheProfile, string> = {
   static: "public, max-age=604800, stale-while-revalidate=2592000",
   "og-image": "public, max-age=86400",
   "og-image-redirect": "public, max-age=60",
+  sitemap: "public, max-age=86400, stale-while-revalidate=86400",
 };
 
 export function getPublicCacheControl(profile: CacheProfile): string {
@@ -40,10 +38,7 @@ export function setNoCacheHeaders(event: H3Event): void {
 /**
  * Sets standardized public cache headers on the H3 event.
  */
-export function setPublicCacheHeaders(
-  event: H3Event,
-  profile: CacheProfile,
-): void {
+export function setPublicCacheHeaders(event: H3Event, profile: CacheProfile): void {
   if (import.meta.dev || process.env.NODE_ENV === "development") {
     setNoCacheHeaders(event);
     return;
@@ -52,9 +47,5 @@ export function setPublicCacheHeaders(
   removeResponseHeader(event, "Pragma");
   removeResponseHeader(event, "Expires");
   setHeader(event, "Cache-Control", getPublicCacheControl(profile));
-  setHeader(
-    event,
-    "Cloudflare-CDN-Cache-Control",
-    getCloudflareCacheControl(profile),
-  );
+  setHeader(event, "Cloudflare-CDN-Cache-Control", getCloudflareCacheControl(profile));
 }
