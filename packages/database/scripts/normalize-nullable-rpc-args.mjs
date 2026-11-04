@@ -56,10 +56,7 @@ for (const [functionName, argumentTypes] of Object.entries(nullableArguments)) {
   let args = functionMatch[2];
 
   for (const [argumentName, expectedType] of Object.entries(argumentTypes)) {
-    const argumentPattern = new RegExp(
-      `\\b${argumentName}:\\s*([^;\\n}]+)`,
-      "m",
-    );
+    const argumentPattern = new RegExp(`\\b${argumentName}:\\s*([^;\\n}]+)`, "m");
     const argumentMatch = argumentPattern.exec(args);
 
     if (!argumentMatch || argumentMatch[1].trim() !== expectedType) {
@@ -68,10 +65,7 @@ for (const [functionName, argumentTypes] of Object.entries(nullableArguments)) {
       );
     }
 
-    args = args.replace(
-      argumentPattern,
-      `${argumentName}: ${expectedType} | null`,
-    );
+    args = args.replace(argumentPattern, `${argumentName}: ${expectedType} | null`);
   }
 
   types = [
@@ -101,15 +95,10 @@ for (const [functionName, returnTypes] of Object.entries(nullableReturns)) {
     const columnMatch = columnPattern.exec(returns);
 
     if (!columnMatch || columnMatch[1].trim() !== expectedType) {
-      throw new Error(
-        `Expected ${functionName}.${columnName} to be generated as ${expectedType}.`,
-      );
+      throw new Error(`Expected ${functionName}.${columnName} to be generated as ${expectedType}.`);
     }
 
-    returns = returns.replace(
-      columnPattern,
-      `${columnName}: ${expectedType} | null`,
-    );
+    returns = returns.replace(columnPattern, `${columnName}: ${expectedType} | null`);
   }
 
   types = [

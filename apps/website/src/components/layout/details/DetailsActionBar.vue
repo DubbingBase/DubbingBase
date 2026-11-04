@@ -11,9 +11,7 @@
       </div>
 
       <!-- Right actions -->
-      <div
-        class="flex w-full min-w-0 items-center flex-wrap gap-2 md:w-auto md:justify-end"
-      >
+      <div class="flex w-full min-w-0 items-center flex-wrap gap-2 md:w-auto md:justify-end">
         <slot name="right"></slot>
       </div>
     </div>

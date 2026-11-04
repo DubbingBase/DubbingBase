@@ -37,9 +37,7 @@ export class ToyClient {
       .replaceAll("\\", "\\\\")
       .replaceAll("%", "\\%")
       .replaceAll("_", "\\_");
-    const ilikePattern = `"%${escapedLikeQuery
-      .replaceAll("\\", "\\\\")
-      .replaceAll('"', '\\"')}%"`;
+    const ilikePattern = `"%${escapedLikeQuery.replaceAll("\\", "\\\\").replaceAll('"', '\\"')}%"`;
 
     try {
       const supabase = useSupabaseAdmin();

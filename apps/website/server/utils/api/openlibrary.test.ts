@@ -62,7 +62,10 @@ describe("OpenLibrary persistence policy", () => {
   it("returns missing books as null and preserves provider failures", async () => {
     vi.stubGlobal("fetch", async () => new Response("", { status: 404 }));
     const client = new OpenLibraryClient(
-      new SimpleCache(() => ({ get: async () => null, put: async () => undefined })),
+      new SimpleCache(() => ({
+        get: async () => null,
+        put: async () => undefined,
+      })),
     );
     await expect(client.getBook(42)).resolves.toBeNull();
 
@@ -92,7 +95,11 @@ describe("OpenLibrary persistence policy", () => {
     await client.getAuthorName("/authors/OL1A");
     await client.getAuthorName("OL1A");
 
-    const key = buildCacheKey({ provider: "openlibrary", resource: "author", id: "OL1A" });
+    const key = buildCacheKey({
+      provider: "openlibrary",
+      resource: "author",
+      id: "OL1A",
+    });
     expect(reads).toEqual([key, key]);
     expect(writes).toEqual([key]);
     expect(fetchMock).toHaveBeenCalledTimes(1);

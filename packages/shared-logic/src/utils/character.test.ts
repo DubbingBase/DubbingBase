@@ -13,19 +13,13 @@ describe("normalizeCharacterName", () => {
   });
 
   it("should remove text in parentheses", () => {
-    expect(normalizeCharacterName("Spider-Man (Peter Parker)")).toBe(
-      "spider-man",
-    );
+    expect(normalizeCharacterName("Spider-Man (Peter Parker)")).toBe("spider-man");
     expect(normalizeCharacterName("Batman (uncredited)")).toBe("batman");
   });
 
   it("should remove text in quotes", () => {
-    expect(normalizeCharacterName('James "Logan" Howlett')).toBe(
-      "james howlett",
-    );
-    expect(normalizeCharacterName("Dwayne 'The Rock' Johnson")).toBe(
-      "dwayne johnson",
-    );
+    expect(normalizeCharacterName('James "Logan" Howlett')).toBe("james howlett");
+    expect(normalizeCharacterName("Dwayne 'The Rock' Johnson")).toBe("dwayne johnson");
   });
 
   it("should normalize spaces", () => {
@@ -33,9 +27,7 @@ describe("normalizeCharacterName", () => {
   });
 
   it("should handle combination of modifications", () => {
-    expect(
-      normalizeCharacterName('  Peter   "Spider-Man" Parker (young) '),
-    ).toBe("peter parker");
+    expect(normalizeCharacterName('  Peter   "Spider-Man" Parker (young) ')).toBe("peter parker");
   });
 });
 
@@ -53,9 +45,7 @@ describe("findCharacter", () => {
 
   it("should match multiple characters separated by slash", () => {
     expect(findCharacter("Peter Parker / Spider-Man", "Spider-Man")).toBe(true);
-    expect(findCharacter("Peter Parker", "Peter Parker / Spider-Man")).toBe(
-      true,
-    );
+    expect(findCharacter("Peter Parker", "Peter Parker / Spider-Man")).toBe(true);
     expect(findCharacter("Batman / Bruce Wayne", "Bruce Wayne")).toBe(true);
   });
 
@@ -74,13 +64,9 @@ describe("findCharacter", () => {
   });
 
   it("should handle complex names with parentheses and quotes", () => {
-    expect(findCharacter("Peter Parker (Spider-Man)", "Peter Parker")).toBe(
-      true,
-    );
+    expect(findCharacter("Peter Parker (Spider-Man)", "Peter Parker")).toBe(true);
     // Since parentheses are removed in normalization: 'Peter Parker (Spider-Man)' becomes 'peter parker'
-    expect(findCharacter("Peter Parker (Spider-Man)", "Spider-Man")).toBe(
-      false,
-    );
+    expect(findCharacter("Peter Parker (Spider-Man)", "Spider-Man")).toBe(false);
 
     // Test with quotes
     expect(findCharacter('James "Logan" Howlett', "James Howlett")).toBe(true);

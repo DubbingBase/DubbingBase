@@ -524,9 +524,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
     expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledTimes(1);
     expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledWith(
       "Queue Item Processed [EN]",
-      expect.stringContaining(
-        "Existing overlaps: **2**; mismatched: **1** (existing values kept)",
-      ),
+      expect.stringContaining("Existing overlaps: **2**; mismatched: **1** (existing values kept)"),
       expect.objectContaining({ queue: "wiki_extract" }),
     );
   });

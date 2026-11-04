@@ -29,7 +29,9 @@ describe("POST /api/extract-voice-actor-info Wikipedia source URL", () => {
       new Request("http://localhost/", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ wikipediaUrl: "https://simple.wikipedia.org/wiki/Example" }),
+        body: JSON.stringify({
+          wikipediaUrl: "https://simple.wikipedia.org/wiki/Example",
+        }),
       }),
     );
 

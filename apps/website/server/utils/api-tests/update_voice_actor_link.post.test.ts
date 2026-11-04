@@ -7,7 +7,9 @@ const routeMocks = vi.hoisted(() => ({
 }));
 
 vi.mock("../auth", () => ({ requireUser: routeMocks.requireUser }));
-vi.mock("../db/client", () => ({ useSupabaseAdmin: routeMocks.useSupabaseAdmin }));
+vi.mock("../db/client", () => ({
+  useSupabaseAdmin: routeMocks.useSupabaseAdmin,
+}));
 
 let handler: typeof import("../../api/update_voice_actor_link.post").default;
 
@@ -33,7 +35,11 @@ const body = {
 };
 
 function createSupabaseMock(result: {
-  data: Array<{ work_id: number; audit_log_id: string; replayed: boolean }> | null;
+  data: Array<{
+    work_id: number;
+    audit_log_id: string;
+    replayed: boolean;
+  }> | null;
   error: { code: string } | null;
 }) {
   const rpc = vi.fn(async () => result);
@@ -108,7 +114,10 @@ describe("POST /api/update_voice_actor_link", () => {
   });
 
   it("returns a conflict for a stale expected version", async () => {
-    const { rpc } = createSupabaseMock({ data: null, error: { code: "40001" } });
+    const { rpc } = createSupabaseMock({
+      data: null,
+      error: { code: "40001" },
+    });
 
     const response = await post(body);
 
@@ -120,7 +129,10 @@ describe("POST /api/update_voice_actor_link", () => {
   });
 
   it("does not report a failed audit transaction as a successful update", async () => {
-    const { rpc } = createSupabaseMock({ data: null, error: { code: "XX000" } });
+    const { rpc } = createSupabaseMock({
+      data: null,
+      error: { code: "XX000" },
+    });
 
     const response = await post(body);
 
@@ -142,7 +154,10 @@ describe("POST /api/update_voice_actor_link", () => {
     const workQuery = {
       select: vi.fn(() => workQuery),
       eq: vi.fn(() => workQuery),
-      single: vi.fn(async () => ({ data: { id: 73, performance: "chant" }, error: null })),
+      single: vi.fn(async () => ({
+        data: { id: 73, performance: "chant" },
+        error: null,
+      })),
     };
     routeMocks.useSupabaseAdmin.mockReturnValue({
       from: vi.fn(() => workQuery),

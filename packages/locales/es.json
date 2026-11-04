@@ -71,8 +71,7 @@
     "editImage": "Editar imagen",
     "unlink": "Desvincular",
     "confirmUnlinkTitle": "Confirmar desvinculación",
-    "unlinkVoiceActor": "Desvincular actor de doblaje"
-  ,
+    "unlinkVoiceActor": "Desvincular actor de doblaje",
     "pagination": "Paginación"
   },
   "theme": {
@@ -241,7 +240,7 @@
       "works": "Roles"
     }
   },
-"details": {
+  "details": {
     "modify": "Modificar",
     "dubbing": "Doblaje ({lang})",
     "synopsis": "Sinopsis",
@@ -498,8 +497,7 @@
       "saveStudioProfile": "Guardar perfil del estudio",
       "studioSaved": "Estudio guardado exitosamente",
       "failedToSave": "Error al guardar el estudio"
-    }
-  ,
+    },
     "spreadsheet": {
       "previous": "Anterior",
       "next": "Siguiente",
@@ -539,16 +537,14 @@
     "details": "Detalles",
     "detailsPlaceholder": "Proporcione detalles adicionales sobre el problema...",
     "successMessage": "Reporte enviado exitosamente"
-  }
-,
+  },
   "footer": {
     "search": "Buscar",
     "contribute": "Colaborar",
     "resources": "Recursos",
     "about": "Acerca de",
     "apiTerms": "Condiciones de la API"
-  }
-,
+  },
   "browse": {
     "title": "Explorar {type}",
     "description": "Descubre {type} con créditos de doblaje en DubbingBase.",

@@ -34,7 +34,12 @@ export async function applyExtractedCredits(
 ): Promise<AppliedExtractedCredits> {
   requireDubbingLanguage(dubbingLanguage);
   if (credits.length === 0) {
-    return { newVoiceActors: 0, creditsAdded: 0, creditsOverlapped: 0, creditsMismatched: 0 };
+    return {
+      newVoiceActors: 0,
+      creditsAdded: 0,
+      creditsOverlapped: 0,
+      creditsMismatched: 0,
+    };
   }
 
   const payload: Json = credits.map((credit) => ({

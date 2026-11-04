@@ -50,6 +50,8 @@ describe("Podcast persistence policy", () => {
     await expect(client.getPodcast(42)).resolves.toBeNull();
 
     vi.stubGlobal("fetch", async () => new Response("", { status: 503 }));
-    await expect(client.getPodcast(42)).rejects.toMatchObject({ statusCode: 503 });
+    await expect(client.getPodcast(42)).rejects.toMatchObject({
+      statusCode: 503,
+    });
   });
 });

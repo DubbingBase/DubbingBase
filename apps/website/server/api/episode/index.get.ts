@@ -110,7 +110,10 @@ export default defineEventHandler(async (event) => {
       dubbingProjects: dbData.dubbingProjects,
       ...(episodePageProjection ? { voiceActors: dbData.voiceActors } : {}),
       ...(episodePageProjection
-        ? { activeProjectId: dbData.activeProjectId, activeProjectWorks: dbData.activeProjectWorks }
+        ? {
+            activeProjectId: dbData.activeProjectId,
+            activeProjectWorks: dbData.activeProjectWorks,
+          }
         : {}),
       characterProfilePictures: apiData.characterProfilePictures,
       votes: dbData.voteData,

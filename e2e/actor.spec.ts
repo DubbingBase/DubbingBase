@@ -7,17 +7,15 @@ test.describe("Original Actor Profile & Localized Voices", () => {
     await setupMockApi(page);
   });
 
-  test("renders Actor details and voice actors by language", async ({
-    page,
-  }) => {
+  test("renders Actor details and voice actors by language", async ({ page }) => {
     const api = await setupMockApi(page);
     await page.goto("/actor/3", { waitUntil: "domcontentloaded" });
     await waitForVueHydration(page);
 
     // Verify actor name and biography
-    await expect(
-      page.getByRole("heading", { name: "Harrison Ford" }),
-    ).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole("heading", { name: "Harrison Ford" })).toBeVisible({
+      timeout: 15000,
+    });
     await expect(page.locator("body")).toContainText("Harrison Ford");
 
     // Verify localized voice actor is displayed
@@ -26,32 +24,24 @@ test.describe("Original Actor Profile & Localized Voices", () => {
     });
 
     // Verify filmography credits section
-    await expect(page.locator("body")).toContainText(
-      "Raiders of the Lost Ark",
-      { timeout: 10000 },
-    );
+    await expect(page.locator("body")).toContainText("Raiders of the Lost Ark", { timeout: 10000 });
 
     api.expectNoErrors();
   });
 
-  test("navigates to voice actor page from actor voice card", async ({
-    page,
-  }) => {
+  test("navigates to voice actor page from actor voice card", async ({ page }) => {
     await page.goto("/actor/3", { waitUntil: "domcontentloaded" });
     await waitForVueHydration(page);
 
-    await expect(
-      page.getByRole("heading", { name: "Harrison Ford" }),
-    ).toBeVisible({ timeout: 20000 });
+    await expect(page.getByRole("heading", { name: "Harrison Ford" })).toBeVisible({
+      timeout: 20000,
+    });
 
     const vaCard = page.locator("a[href*='/voice-actor/1']").first();
     await expect(vaCard).toBeVisible({ timeout: 5000 });
-    await Promise.all([
-      page.waitForURL(/\/voice-actor\/1/, { timeout: 10000 }),
-      vaCard.click(),
-    ]);
-    await expect(
-      page.getByRole("heading", { name: "Richard Darbois" }),
-    ).toBeVisible({ timeout: 20000 });
+    await Promise.all([page.waitForURL(/\/voice-actor\/1/, { timeout: 10000 }), vaCard.click()]);
+    await expect(page.getByRole("heading", { name: "Richard Darbois" })).toBeVisible({
+      timeout: 20000,
+    });
   });
 });

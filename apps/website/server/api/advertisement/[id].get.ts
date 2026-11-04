@@ -14,7 +14,10 @@ export default defineEventHandler(async (event): Promise<AdvertisementResponse> 
 
   const adId = Number(id);
   if (!Number.isSafeInteger(adId) || adId === 0) {
-    throw createError({ statusCode: 404, statusMessage: "Advertisement not found" });
+    throw createError({
+      statusCode: 404,
+      statusMessage: "Advertisement not found",
+    });
   }
   const adClient = useAdvertisementClient();
   const projection = getQuery(event).projection;
@@ -26,7 +29,10 @@ export default defineEventHandler(async (event): Promise<AdvertisementResponse> 
   ]);
 
   if (!ad) {
-    throw createError({ statusCode: 404, statusMessage: "Advertisement not found" });
+    throw createError({
+      statusCode: 404,
+      statusMessage: "Advertisement not found",
+    });
   }
   const dubbingProjects = dbData;
 

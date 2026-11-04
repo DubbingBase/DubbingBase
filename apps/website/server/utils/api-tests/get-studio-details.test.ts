@@ -3,7 +3,9 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 
 const routeMocks = vi.hoisted(() => ({ useSupabaseAdmin: vi.fn() }));
 
-vi.mock("../db/client", () => ({ useSupabaseAdmin: routeMocks.useSupabaseAdmin }));
+vi.mock("../db/client", () => ({
+  useSupabaseAdmin: routeMocks.useSupabaseAdmin,
+}));
 
 type StudioRow = {
   id: number;
@@ -79,21 +81,23 @@ async function getStudios(query: string) {
   });
 
   const app = createApp();
-  app.use("/", defineEventHandler((event) => handler(event)));
-  const response = await toWebHandler(app)(
-    new Request(`http://localhost/${query}`),
+  app.use(
+    "/",
+    defineEventHandler((event) => handler(event)),
   );
+  const response = await toWebHandler(app)(new Request(`http://localhost/${query}`));
   return { builder, response, studio };
 }
 
 describe("GET /api/get-studio-details directory listing", () => {
   it("selects only fields used by the studios directory when requested", async () => {
-    const { builder, response, studio } = await getStudios(
-      "?limit=20&offset=0&view=directory",
-    );
+    const { builder, response, studio } = await getStudios("?limit=20&offset=0&view=directory");
 
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({ studios: [studio], total: 1 });
+    await expect(response.json()).resolves.toEqual({
+      studios: [studio],
+      total: 1,
+    });
     expect(builder.columns).toBe("id,name,city,country,logo_url");
     expect(builder.options).toEqual({ count: "exact" });
   });
@@ -102,7 +106,10 @@ describe("GET /api/get-studio-details directory listing", () => {
     const { builder, response, studio } = await getStudios("?limit=20&offset=0");
 
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({ studios: [studio], total: 1 });
+    await expect(response.json()).resolves.toEqual({
+      studios: [studio],
+      total: 1,
+    });
     expect(builder.columns).toBe("*");
     expect(builder.options).toEqual({ count: "exact" });
   });

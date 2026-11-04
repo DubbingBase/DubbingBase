@@ -27,9 +27,7 @@ describe("character picture index", () => {
       { name: "Work Name", image: "/work.jpg" },
     ]);
 
-    expect(findCharacterImage(index, ["First Role", "Second Role", "Work Name"])).toBe(
-      "/role.jpg",
-    );
+    expect(findCharacterImage(index, ["First Role", "Second Role", "Work Name"])).toBe("/role.jpg");
     expect(findCharacterImage(index, ["First Role", "Work Name"])).toBe("/work.jpg");
   });
 });

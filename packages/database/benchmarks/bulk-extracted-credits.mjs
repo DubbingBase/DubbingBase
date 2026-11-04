@@ -6,27 +6,18 @@ const output = execFileSync("pnpm", ["supabase", "status", "-o", "env"], {
   encoding: "utf8",
 });
 const environment = Object.fromEntries(
-  [...output.matchAll(/^([A-Z_]+)="([^"]+)"$/gm)].map((match) => [
-    match[1],
-    match[2],
-  ]),
+  [...output.matchAll(/^([A-Z_]+)="([^"]+)"$/gm)].map((match) => [match[1], match[2]]),
 );
 const apiUrl = environment.API_URL;
 const serviceKey = environment.SERVICE_ROLE_KEY;
-if (
-  !apiUrl ||
-  !serviceKey ||
-  !/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(apiUrl)
-) {
+if (!apiUrl || !serviceKey || !/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(apiUrl)) {
   throw new Error("Benchmark requires a running local Supabase backend.");
 }
 
 const batchSize = Number(process.env.BENCH_CREDITS ?? 10);
 const repetitions = Number(process.env.BENCH_REPETITIONS ?? 3);
 const median = (values) =>
-  [...values].sort((left, right) => left - right)[
-    Math.floor(values.length / 2)
-  ];
+  [...values].sort((left, right) => left - right)[Math.floor(values.length / 2)];
 const runId = Math.floor(Date.now() / 1000);
 const firstName = `Bench${runId}`;
 const contentId = 9_000_000_000_000 + runId;
@@ -42,10 +33,7 @@ async function request(path, options = {}) {
     headers: { ...headers, ...options.headers },
   });
   const body = await response.text();
-  if (!response.ok)
-    throw new Error(
-      `Local benchmark request failed (${response.status}): ${body}`,
-    );
+  if (!response.ok) throw new Error(`Local benchmark request failed (${response.status}): ${body}`);
   return body ? JSON.parse(body) : null;
 }
 
@@ -100,9 +88,7 @@ async function bulkPath() {
     }),
   });
   if (result.credits_added !== batchSize) {
-    throw new Error(
-      `Bulk RPC returned an unexpected credit count: ${JSON.stringify(result)}`,
-    );
+    throw new Error(`Bulk RPC returned an unexpected credit count: ${JSON.stringify(result)}`);
   }
 }
 
@@ -166,9 +152,7 @@ try {
       bulkPathRequestsPerBatch: 1,
       oldPathMedianMs: median(before),
       bulkPathMedianMs: median(after),
-      elapsedReductionPercent: Math.round(
-        (1 - median(after) / median(before)) * 100,
-      ),
+      elapsedReductionPercent: Math.round((1 - median(after) / median(before)) * 100),
     }),
   );
 } finally {

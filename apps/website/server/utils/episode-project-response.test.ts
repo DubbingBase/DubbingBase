@@ -30,7 +30,9 @@ vi.mock("./media-request", () => ({
 vi.mock("./with-timeout", () => ({
   withTimeout: (request: Promise<unknown>) => request,
 }));
-vi.mock("./cache/constants", () => ({ buildCacheKey: () => "episode-test-key" }));
+vi.mock("./cache/constants", () => ({
+  buildCacheKey: () => "episode-test-key",
+}));
 vi.mock("./cache", () => ({ createCacheNamespace: () => ({}) }));
 
 let handler: typeof import("../api/episode/index.get").default;
@@ -55,7 +57,11 @@ beforeEach(() => {
       content_id: 42,
       content_type: "tv",
       language: "fr-FR",
-      studio_data: { id: 3, name: "Studio", logo_url: "https://example.com/studio.png" },
+      studio_data: {
+        id: 3,
+        name: "Studio",
+        logo_url: "https://example.com/studio.png",
+      },
       works: [
         {
           id: 12,
@@ -79,7 +85,11 @@ beforeEach(() => {
     {
       id: 7,
       language: "fr-FR",
-      studio_data: { id: 3, name: "Studio", logo_url: "https://example.com/studio.png" },
+      studio_data: {
+        id: 3,
+        name: "Studio",
+        logo_url: "https://example.com/studio.png",
+      },
       works: [
         {
           id: 12,
@@ -137,7 +147,11 @@ describe("GET /api/episode dubbing project response", () => {
             {
               id: 12,
               actor_id: 55,
-              voice_actor: { id: 5, tmdb_id: 88, profile_picture: "https://example.com/voice.png" },
+              voice_actor: {
+                id: 5,
+                tmdb_id: 88,
+                profile_picture: "https://example.com/voice.png",
+              },
             },
           ],
           crew: [{ id: 20, person_id: 6, job_id: 2 }],
@@ -156,7 +170,11 @@ describe("GET /api/episode dubbing project response", () => {
         {
           id: 7,
           language: "fr-FR",
-          studio_data: { id: 3, name: "Studio", logo_url: "https://example.com/studio.png" },
+          studio_data: {
+            id: 3,
+            name: "Studio",
+            logo_url: "https://example.com/studio.png",
+          },
           works: [
             {
               id: 12,
@@ -179,13 +197,9 @@ describe("GET /api/episode dubbing project response", () => {
       "tv",
       "media-page",
     );
-    expect(routeMocks.getMedia).toHaveBeenCalledWith(
-      "episode",
-      42,
-      2,
-      3,
-      { projection: "media-page" },
-    );
+    expect(routeMocks.getMedia).toHaveBeenCalledWith("episode", 42, 2, 3, {
+      projection: "media-page",
+    });
     expect(routeMocks.getMediaPageDubbingProjects).toHaveBeenCalledWith(42, "tv");
     expect(routeMocks.getDubbingProjects).not.toHaveBeenCalled();
   });

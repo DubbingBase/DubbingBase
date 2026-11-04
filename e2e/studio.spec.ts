@@ -7,16 +7,14 @@ test.describe("Studio Profile & Dubbed Projects", () => {
     await setupMockApi(page);
   });
 
-  test("renders Studio details, roster, and dubbed projects", async ({
-    page,
-  }) => {
+  test("renders Studio details, roster, and dubbed projects", async ({ page }) => {
     const api = await setupMockApi(page);
     await page.goto("/studio/10", { waitUntil: "domcontentloaded" });
 
     // Verify studio name and info
-    await expect(
-      page.getByRole("heading", { name: "Dubbing Brothers" }),
-    ).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("heading", { name: "Dubbing Brothers" })).toBeVisible({
+      timeout: 10000,
+    });
     await expect(page.locator("body")).toContainText("France");
 
     // Verify dubbed project is shown
@@ -24,9 +22,10 @@ test.describe("Studio Profile & Dubbed Projects", () => {
 
     // Verify voice actor roster
     await expect(page.locator("body")).toContainText("Richard Darbois");
-    await expect(
-      page.getByRole("img", { name: "Richard Darbois" }).first(),
-    ).toHaveAttribute("loading", "lazy");
+    await expect(page.getByRole("img", { name: "Richard Darbois" }).first()).toHaveAttribute(
+      "loading",
+      "lazy",
+    );
 
     api.expectNoErrors();
   });

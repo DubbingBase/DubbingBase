@@ -19,7 +19,9 @@ vi.mock("../../utils", () => ({
   useIgdbClient: routeMocks.useIgdbClient,
 }));
 vi.mock("../../utils/api/igdb", () => ({ buildIgdbImageUrl: vi.fn() }));
-vi.mock("../../utils/game-characters", () => ({ loadGameCharacterCatalog: vi.fn() }));
+vi.mock("../../utils/game-characters", () => ({
+  loadGameCharacterCatalog: vi.fn(),
+}));
 
 let handler: typeof import("../../api/internal-media-credits.get").default;
 
@@ -34,7 +36,9 @@ beforeAll(async () => {
 beforeEach(() => {
   vi.clearAllMocks();
   routeMocks.fetchMediaCredits.mockResolvedValue({ cast: [] });
-  routeMocks.useTmdbClient.mockReturnValue({ fetchMediaCredits: routeMocks.fetchMediaCredits });
+  routeMocks.useTmdbClient.mockReturnValue({
+    fetchMediaCredits: routeMocks.fetchMediaCredits,
+  });
 });
 
 afterAll(() => vi.unstubAllGlobals());

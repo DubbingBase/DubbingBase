@@ -1,16 +1,12 @@
 <template>
   <div class="theme-surface-raised theme-bg min-h-screen">
     <!-- Hero Section Skeleton -->
-    <div
-      class="relative w-full h-[50vh] min-h-[400px] theme-surface-muted theme-surface"
-    >
+    <div class="relative w-full h-[50vh] min-h-[400px] theme-surface-muted theme-surface">
       <div
         class="absolute inset-0 bg-gradient-to-t from-[var(--app-color-background)] to-transparent"
       ></div>
 
-      <div
-        class="absolute bottom-0 left-0 w-full p-8 flex flex-col md:flex-row gap-6 items-end"
-      >
+      <div class="absolute bottom-0 left-0 w-full p-8 flex flex-col md:flex-row gap-6 items-end">
         <!-- Profile Image -->
         <div
           class="w-32 md:w-48 aspect-[2/3] theme-surface-muted rounded-lg shadow-xl shrink-0"
@@ -40,15 +36,11 @@
       >
         <!-- Left side actions -->
         <div class="flex flex-wrap gap-2">
-          <div
-            class="h-9 w-24 theme-surface-muted rounded-lg animate-pulse"
-          ></div>
+          <div class="h-9 w-24 theme-surface-muted rounded-lg animate-pulse"></div>
         </div>
         <!-- Right side actions -->
         <div class="flex items-center gap-4">
-          <div
-            class="h-9 w-32 theme-surface-muted rounded-lg animate-pulse"
-          ></div>
+          <div class="h-9 w-32 theme-surface-muted rounded-lg animate-pulse"></div>
         </div>
       </div>
     </div>
@@ -73,18 +65,14 @@
       </div>
 
       <!-- Works Grid -->
-      <div
-        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6"
-      >
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         <div
           v-for="i in 6"
           :key="i"
           class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm"
         >
           <div class="flex flex-col sm:grid sm:grid-cols-3 gap-4 h-full">
-            <div
-              class="w-16 sm:w-full aspect-[2/3] rounded-xl theme-surface-muted shrink-0"
-            ></div>
+            <div class="w-16 sm:w-full aspect-[2/3] rounded-xl theme-surface-muted shrink-0"></div>
             <div class="flex flex-col gap-2 col-span-2">
               <div class="h-4 w-full theme-surface-muted rounded"></div>
               <div class="h-3 w-2/3 theme-surface-muted rounded"></div>

@@ -11,7 +11,8 @@
     "build:website": "turbo run build --filter=@app/website",
     "dev": "turbo run dev",
     "lint": "oxlint -c .oxlintrc.json",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "format": "oxfmt --write",
+    "format:check": "oxfmt --check",
     "typecheck": "turbo run typecheck",
     "test:e2e": "playwright test",
     "discover:media": "npx --yes tsx --env-file=.env.development scripts/discover-media.ts",
@@ -27,7 +28,6 @@
     "lint-staged": "^17.3.0",
     "oxfmt": "^0.70.0",
     "oxlint": "^1.76.0",
-    "prettier": "^3.9.6",
     "turbo": "^2.10.7",
     "vue-i18n-extract": "^2.0.7",
     "wrangler": "^4.115.0"
@@ -37,8 +37,7 @@
       "oxlint --fix -c .oxlintrc.json --vue-plugin",
       "oxfmt --write"
     ],
-    "*.{json,jsonc}": "oxfmt --write",
-    "*.md": "prettier --write"
+    "!(*.js|*.jsx|*.ts|*.tsx|*.vue)": "oxfmt --write --no-error-on-unmatched-pattern"
   },
   "packageManager": "pnpm@12.4.1",
   "pnpm": {

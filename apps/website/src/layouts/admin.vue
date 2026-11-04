@@ -1,7 +1,5 @@
 <template>
-  <div
-    class="flex flex-col lg:flex-row w-full min-h-screen theme-bg theme-text"
-  >
+  <div class="flex flex-col lg:flex-row w-full min-h-screen theme-bg theme-text">
     <!-- Mobile Admin Nav Bar -->
     <div
       class="lg:hidden sticky top-[72px] md:top-[80px] z-40 theme-surface-raised theme-surface border-b theme-border-subtle theme-border px-4 py-3 flex items-center justify-between shadow-sm"
@@ -11,12 +9,7 @@
         @click="isSidebarOpen = !isSidebarOpen"
         class="theme-text-muted theme-hover-text theme-text-muted theme-hover-text"
       >
-        <svg
-          class="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
+        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path
             v-if="!isSidebarOpen"
             stroke-linecap="round"

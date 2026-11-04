@@ -7,7 +7,9 @@ const routeMocks = vi.hoisted(() => ({
 }));
 
 vi.mock("../auth", () => ({ requireUser: routeMocks.requireUser }));
-vi.mock("../db/client", () => ({ useSupabaseAdmin: routeMocks.useSupabaseAdmin }));
+vi.mock("../db/client", () => ({
+  useSupabaseAdmin: routeMocks.useSupabaseAdmin,
+}));
 
 let handler: typeof import("../../api/update-review-status.post").default;
 
@@ -33,7 +35,11 @@ const request = {
 };
 
 function createSupabaseMock(result: {
-  data: Array<{ work_id: number; audit_log_id: string | null; replayed: boolean }> | null;
+  data: Array<{
+    work_id: number;
+    audit_log_id: string | null;
+    replayed: boolean;
+  }> | null;
   error: { code: string } | null;
 }) {
   const rpc = vi.fn(async () => result);
@@ -47,7 +53,10 @@ function createSupabaseMock(result: {
   const query = {
     select: vi.fn(() => query),
     eq: vi.fn(() => query),
-    maybeSingle: vi.fn(async () => ({ data: { updated_at: updatedAt }, error: null })),
+    maybeSingle: vi.fn(async () => ({
+      data: { updated_at: updatedAt },
+      error: null,
+    })),
     single: vi.fn(async () => ({ data: workRow, error: null })),
   };
   const from = vi.fn(() => query);
@@ -121,8 +130,14 @@ describe("POST /api/update-review-status", () => {
     const { rpc } = createSupabaseMock({ data: null, error: null });
 
     const extraField = await post({ ...request, performance: "voice" });
-    const invalidStatus = await post({ ...request, reviewed_status: "pending" });
-    const impersonation = await post({ ...request, targetUserId: "another-user" });
+    const invalidStatus = await post({
+      ...request,
+      reviewed_status: "pending",
+    });
+    const impersonation = await post({
+      ...request,
+      targetUserId: "another-user",
+    });
 
     expect(extraField.status).toBe(400);
     expect(invalidStatus.status).toBe(400);
@@ -131,7 +146,10 @@ describe("POST /api/update-review-status", () => {
   });
 
   it("maps unauthorized ownership and stale versions to controlled errors", async () => {
-    const { rpc } = createSupabaseMock({ data: null, error: { code: "42501" } });
+    const { rpc } = createSupabaseMock({
+      data: null,
+      error: { code: "42501" },
+    });
     const forbidden = await post(request);
     expect(forbidden.status).toBe(403);
 
@@ -144,7 +162,10 @@ describe("POST /api/update-review-status", () => {
   });
 
   it("does not report success when the audited database transaction fails", async () => {
-    const { rpc, from } = createSupabaseMock({ data: null, error: { code: "XX000" } });
+    const { rpc, from } = createSupabaseMock({
+      data: null,
+      error: { code: "XX000" },
+    });
 
     const response = await post(request);
 
@@ -181,7 +202,10 @@ describe("POST /api/update-review-status", () => {
       eq: vi.fn(() => query),
       single: vi.fn(async () => ({ data: { id: 73 }, error: null })),
     };
-    routeMocks.useSupabaseAdmin.mockReturnValue({ rpc, from: vi.fn(() => query) });
+    routeMocks.useSupabaseAdmin.mockReturnValue({
+      rpc,
+      from: vi.fn(() => query),
+    });
 
     const first = await post(request);
     const retry = await post(request);

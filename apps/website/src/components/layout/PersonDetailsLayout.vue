@@ -28,9 +28,9 @@
 </template>
 
 <script setup lang="ts">
-import DetailsPage from './details/DetailsPage.vue';
-import DetailsHero from './details/DetailsHero.vue';
-import DetailsActionBar from './details/DetailsActionBar.vue';
+import DetailsPage from "./details/DetailsPage.vue";
+import DetailsHero from "./details/DetailsHero.vue";
+import DetailsActionBar from "./details/DetailsActionBar.vue";
 defineProps<{
   name?: string;
   profileUrl?: string | null;

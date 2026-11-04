@@ -40,7 +40,10 @@ function isDuplicateVoiceActor(value: Json): value is DuplicateVoiceActor {
 
 function projectDuplicateVoiceActor(value: Json): DuplicateVoiceActor {
   if (!isDuplicateVoiceActor(value)) {
-    throw createError({ statusCode: 500, message: "Invalid duplicate voice actor" });
+    throw createError({
+      statusCode: 500,
+      message: "Invalid duplicate voice actor",
+    });
   }
   return {
     id: value.id,
@@ -63,12 +66,18 @@ export default defineAdminHandler(async (event) => {
     throw createError({ statusCode: 500, message: error.message });
   }
   if (!isJsonArray(data)) {
-    throw createError({ statusCode: 500, message: "Invalid duplicate voice actor response" });
+    throw createError({
+      statusCode: 500,
+      message: "Invalid duplicate voice actor response",
+    });
   }
 
   return data.map((value) => {
     if (!isRecord(value) || !isJsonArray(value.actors)) {
-      throw createError({ statusCode: 500, message: "Invalid duplicate voice actor group" });
+      throw createError({
+        statusCode: 500,
+        message: "Invalid duplicate voice actor group",
+      });
     }
     return { actors: value.actors.map(projectDuplicateVoiceActor) };
   });

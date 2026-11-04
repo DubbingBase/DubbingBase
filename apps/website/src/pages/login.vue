@@ -19,11 +19,9 @@
         <form class="space-y-5" @submit.prevent="handleLogin">
           <!-- Email Field -->
           <div class="space-y-2">
-            <label
-              for="email"
-              class="text-sm font-medium theme-text-secondary"
-              >{{ $t("auth.email") }}</label
-            >
+            <label for="email" class="text-sm font-medium theme-text-secondary">{{
+              $t("auth.email")
+            }}</label>
             <input
               id="email"
               v-model="email"
@@ -36,11 +34,9 @@
 
           <!-- Password Field -->
           <div class="space-y-2">
-            <label
-              for="password"
-              class="text-sm font-medium theme-text-secondary"
-              >{{ $t("auth.password") }}</label
-            >
+            <label for="password" class="text-sm font-medium theme-text-secondary">{{
+              $t("auth.password")
+            }}</label>
             <input
               id="password"
               v-model="password"
@@ -67,9 +63,7 @@
                 clip-rule="evenodd"
               />
             </svg>
-            <span class="text-sm font-medium theme-status-danger-text">{{
-              loginError
-            }}</span>
+            <span class="text-sm font-medium theme-status-danger-text">{{ loginError }}</span>
           </div>
 
           <!-- Link to Register -->
@@ -92,9 +86,7 @@
               v-if="loading"
               class="animate-spin rounded-full h-5 w-5 border-b-2 theme-border mr-2"
             ></span>
-            <span>{{
-              loading ? $t("auth.login.signingIn") : $t("auth.signIn")
-            }}</span>
+            <span>{{ loading ? $t("auth.login.signingIn") : $t("auth.signIn") }}</span>
           </button>
         </form>
       </div>

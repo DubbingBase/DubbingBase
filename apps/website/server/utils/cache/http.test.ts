@@ -25,15 +25,9 @@ describe("HTTP cache headers", () => {
       "public, max-age=604800, stale-while-revalidate=2592000",
     );
     expect(getPublicCacheControl("og-image")).toBe("public, max-age=3600");
-    expect(getCloudflareCacheControl("og-image")).toBe(
-      "public, max-age=86400",
-    );
-    expect(getPublicCacheControl("og-image-redirect")).toBe(
-      "public, max-age=60",
-    );
-    expect(getCloudflareCacheControl("og-image-redirect")).toBe(
-      "public, max-age=60",
-    );
+    expect(getCloudflareCacheControl("og-image")).toBe("public, max-age=86400");
+    expect(getPublicCacheControl("og-image-redirect")).toBe("public, max-age=60");
+    expect(getCloudflareCacheControl("og-image-redirect")).toBe("public, max-age=60");
   });
 
   it("defines the no-store value for dynamic responses", () => {
@@ -51,9 +45,7 @@ describe("HTTP cache headers", () => {
     );
     const response = await toWebHandler(app)(new Request("http://localhost/"));
 
-    expect(response.headers.get("cache-control")).toBe(
-      getPublicCacheControl("discovery"),
-    );
+    expect(response.headers.get("cache-control")).toBe(getPublicCacheControl("discovery"));
     expect(response.headers.get("cloudflare-cdn-cache-control")).toBe(
       getCloudflareCacheControl("discovery"),
     );
@@ -83,12 +75,10 @@ describe("HTTP cache headers", () => {
       defineEventHandler(async (event) => {
         setNoCacheHeaders(event);
         requestCount += 1;
-        const metadata = await cache.getOrFetch(
-          namespace,
-          "tmdb:movie:1",
-          fetchProviderMetadata,
-          { cachePolicy: "persistent", ttl: "STABLE" },
-        );
+        const metadata = await cache.getOrFetch(namespace, "tmdb:movie:1", fetchProviderMetadata, {
+          cachePolicy: "persistent",
+          ttl: "STABLE",
+        });
         return { metadata, dubbingProjects: [`request-${requestCount}`] };
       }),
     );
@@ -99,12 +89,8 @@ describe("HTTP cache headers", () => {
     const secondResponse = await handler(new Request("http://localhost/"));
     const secondBody = await secondResponse.json();
 
-    expect(firstResponse.headers.get("cache-control")).toBe(
-      NO_STORE_CACHE_CONTROL,
-    );
-    expect(secondResponse.headers.get("cache-control")).toBe(
-      NO_STORE_CACHE_CONTROL,
-    );
+    expect(firstResponse.headers.get("cache-control")).toBe(NO_STORE_CACHE_CONTROL);
+    expect(secondResponse.headers.get("cache-control")).toBe(NO_STORE_CACHE_CONTROL);
     expect(firstBody).toEqual({
       metadata: { title: "Provider title" },
       dubbingProjects: ["request-1"],
@@ -120,36 +106,30 @@ describe("HTTP cache headers", () => {
 
 describe("OpenLibrary author caching", () => {
   const invalidResponses: Array<[string, () => Response]> = [
-    [
-      "empty author responses",
-      () => new Response(JSON.stringify({}), { status: 200 }),
-    ],
+    ["empty author responses", () => new Response(JSON.stringify({}), { status: 200 })],
     ["upstream errors", () => new Response("unavailable", { status: 503 })],
   ];
 
-  it.each(invalidResponses)(
-    "does not cache %s",
-    async (_label, makeResponse) => {
-      let writes = 0;
-      const client = new OpenLibraryClient(
-        new SimpleCache(() => ({
-          get: async () => null,
-          put: async () => {
-            writes += 1;
-          },
-        })),
-      );
-      const fetchMock = vi.fn(async () => makeResponse());
-      vi.stubGlobal("fetch", fetchMock);
+  it.each(invalidResponses)("does not cache %s", async (_label, makeResponse) => {
+    let writes = 0;
+    const client = new OpenLibraryClient(
+      new SimpleCache(() => ({
+        get: async () => null,
+        put: async () => {
+          writes += 1;
+        },
+      })),
+    );
+    const fetchMock = vi.fn(async () => makeResponse());
+    vi.stubGlobal("fetch", fetchMock);
 
-      try {
-        await expect(client.getAuthorName("OL123A")).resolves.toBe("");
-        await expect(client.getAuthorName("OL123A")).resolves.toBe("");
-        expect(fetchMock).toHaveBeenCalledTimes(2);
-        expect(writes).toBe(0);
-      } finally {
-        vi.unstubAllGlobals();
-      }
-    },
-  );
+    try {
+      await expect(client.getAuthorName("OL123A")).resolves.toBe("");
+      await expect(client.getAuthorName("OL123A")).resolves.toBe("");
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(writes).toBe(0);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
 });

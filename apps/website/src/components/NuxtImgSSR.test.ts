@@ -46,7 +46,9 @@ describe("Vue deduplication & NuxtImg SSR stability", () => {
     });
 
     expect(() => {
-      const wrapper = mount(TestComponent, { global: { components: { NuxtImg } } });
+      const wrapper = mount(TestComponent, {
+        global: { components: { NuxtImg } },
+      });
       expect(wrapper.exists()).toBe(true);
     }).not.toThrow();
   });

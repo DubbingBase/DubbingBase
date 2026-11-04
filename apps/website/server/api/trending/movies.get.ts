@@ -23,12 +23,8 @@ function isTrendingMovie(value: unknown): value is {
     Number.isFinite(id) &&
     (title === undefined || typeof title === "string") &&
     (adult === undefined || typeof adult === "boolean") &&
-    (backdropPath === undefined ||
-      backdropPath === null ||
-      typeof backdropPath === "string") &&
-    (posterPath === undefined ||
-      posterPath === null ||
-      typeof posterPath === "string")
+    (backdropPath === undefined || backdropPath === null || typeof backdropPath === "string") &&
+    (posterPath === undefined || posterPath === null || typeof posterPath === "string")
   );
 }
 
@@ -36,11 +32,7 @@ export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   const rawLanguage = query.lang;
   const language = resolveLocaleLanguage(
-    rawLanguage === undefined
-      ? undefined
-      : typeof rawLanguage === "string"
-        ? rawLanguage
-        : "",
+    rawLanguage === undefined ? undefined : typeof rawLanguage === "string" ? rawLanguage : "",
   );
   if (language === null) {
     throw createError({ statusCode: 400, message: "Unsupported language" });
@@ -65,7 +57,11 @@ export default defineEventHandler(async (event) => {
         const posterPath = buildTmdbImageUrl(result.poster_path, "w342");
 
         if (query.projection === "card") {
-          return { id: result.id, title: result.title, poster_path: posterPath };
+          return {
+            id: result.id,
+            title: result.title,
+            poster_path: posterPath,
+          };
         }
 
         return {

@@ -12,7 +12,9 @@ The Games.get subsystem handles **1 routes** and touches: cache.
 ## Source Files
 
 Read these before implementing or modifying this subsystem:
+
 - `apps/website/server/api/trending/games.get.ts`
 
 ---
+
 _Back to [overview.md](./overview.md)_

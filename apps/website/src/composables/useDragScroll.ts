@@ -16,9 +16,7 @@ export function useDragScroll(scrollRef: Ref<HTMLElement | null>) {
       isDragging = true;
       hasDragged = false;
 
-      originalSnapType = window
-        .getComputedStyle(ele)
-        .getPropertyValue("scroll-snap-type");
+      originalSnapType = window.getComputedStyle(ele).getPropertyValue("scroll-snap-type");
       ele.style.setProperty("scroll-snap-type", "none", "important");
       ele.style.cursor = "grabbing";
       ele.style.userSelect = "none";

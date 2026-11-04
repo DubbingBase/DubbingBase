@@ -7,9 +7,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 function usageAndExit() {
-  console.log(
-    "Usage: deno run --allow-env --allow-net update_user_role.ts <user_id> <new_role>",
-  );
+  console.log("Usage: deno run --allow-env --allow-net update_user_role.ts <user_id> <new_role>");
   Deno.exit(1);
 }
 

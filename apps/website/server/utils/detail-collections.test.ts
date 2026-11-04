@@ -495,7 +495,12 @@ describe("GET /api/detail-collections", () => {
             actor_id: null,
             character_id: null,
           },
-          { id: 403, actor_id: null, character_id: null, character_name: "Unassigned" },
+          {
+            id: 403,
+            actor_id: null,
+            character_id: null,
+            character_name: "Unassigned",
+          },
         ],
       },
     );

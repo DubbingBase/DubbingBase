@@ -16,7 +16,9 @@ The Delete-work-entry.post subsystem handles **1 routes** and touches: auth, db.
 ## Source Files
 
 Read these before implementing or modifying this subsystem:
+
 - `apps/website/server/api/delete-work-entry.post.ts`
 
 ---
+
 _Back to [overview.md](./overview.md)_

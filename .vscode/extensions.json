@@ -1,6 +1,3 @@
 {
-  "recommendations": [
-    "denoland.vscode-deno",
-    "Webnative.webnative"
-  ]
+  "recommendations": ["denoland.vscode-deno", "Webnative.webnative"]
 }

@@ -77,10 +77,7 @@ export default {
       auth: "user",
     });
     if (error) {
-      return Response.json(
-        { message: error.message, code: error.code },
-        { status: error.status },
-      );
+      return Response.json({ message: error.message, code: error.code }, { status: error.status });
     }
     const { data } = await ctx.supabase.from("todos").select();
     return Response.json(data);
@@ -148,11 +145,7 @@ For Next.js / SvelteKit / Remix, **compose `@supabase/server` with [`@supabase/s
 ```ts
 // Key imports for building the adapter
 import { createServerClient } from "@supabase/ssr";
-import {
-  verifyCredentials,
-  createContextClient,
-  createAdminClient,
-} from "@supabase/server/core";
+import { verifyCredentials, createContextClient, createAdminClient } from "@supabase/server/core";
 ```
 
 ### Server-to-server (secret key auth)
@@ -249,10 +242,9 @@ export default {
     const { orderId } = await req.json();
 
     // Calls process-order with the secret key automatically
-    const { data, error } = await ctx.supabaseAdmin.functions.invoke(
-      "process-order",
-      { body: { orderId } },
-    );
+    const { data, error } = await ctx.supabaseAdmin.functions.invoke("process-order", {
+      body: { orderId },
+    });
 
     if (error) {
       return Response.json({ error: error.message }, { status: 500 });

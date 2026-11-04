@@ -62,10 +62,7 @@ const setPage = (page: number) => {
 <template>
   <div>
     <div :class="gridClass">
-      <template
-        v-for="(item, index) in visibleItems"
-        :key="itemKey?.(item, index) ?? index"
-      >
+      <template v-for="(item, index) in visibleItems" :key="itemKey?.(item, index) ?? index">
         <slot :item="item" :index="(currentPage - 1) * pageSize + index" />
       </template>
     </div>

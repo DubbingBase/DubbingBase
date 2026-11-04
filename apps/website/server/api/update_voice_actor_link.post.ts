@@ -100,5 +100,9 @@ export default defineUserHandler(async (event, user) => {
     });
     throw updateError(500, "Performance was saved but could not be loaded; retry safely");
   }
-  return { ...work, auditLogId: mutation.audit_log_id, replayed: mutation.replayed };
+  return {
+    ...work,
+    auditLogId: mutation.audit_log_id,
+    replayed: mutation.replayed,
+  };
 });

@@ -29,13 +29,10 @@ export function useMetadataCreation() {
     payload: VoiceActorCreationPayload,
     requestId: string,
   ): Promise<{ data: Tables<"voice_actors"> }> {
-    return await $fetch<{ data: Tables<"voice_actors"> }>(
-      "/api/save-metadata",
-      {
-        method: "POST",
-        body: { type: "voice_actor", payload, request_id: requestId },
-      },
-    );
+    return await $fetch<{ data: Tables<"voice_actors"> }>("/api/save-metadata", {
+      method: "POST",
+      body: { type: "voice_actor", payload, request_id: requestId },
+    });
   }
 
   return { createVoiceActor };

@@ -9,6 +9,7 @@ The UI has 178 components. See components.md for the full list with props.
 Middleware includes: auth, custom, cors.
 
 High-impact files (most imported, changes here affect many other files):
+
 - apps/website/server/utils/db/client.ts (imported by 61 files)
 - apps/website/server/utils/auth.ts (imported by 26 files)
 - apps/website/server/utils/index.ts (imported by 22 files)
@@ -19,6 +20,7 @@ High-impact files (most imported, changes here affect many other files):
 - apps/website/server/utils/api/igdb.ts (imported by 8 files)
 
 Required environment variables (no defaults):
+
 - ANDROID_HOME (.env.example)
 - CI (apps/mobile/capacitor.config.ts)
 - DEV (apps/mobile/src/api/supabase.ts)

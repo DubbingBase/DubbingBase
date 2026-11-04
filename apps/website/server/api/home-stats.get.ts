@@ -5,9 +5,7 @@ export default defineEventHandler(async (event) => {
 
     const [vaResult, dpResult, workResult] = await Promise.all([
       supabase.from("voice_actors").select("*", { count: "exact", head: true }),
-      supabase
-        .from("dubbing_projects")
-        .select("*", { count: "exact", head: true }),
+      supabase.from("dubbing_projects").select("*", { count: "exact", head: true }),
       supabase.from("work").select("*", { count: "exact", head: true }),
     ]);
 

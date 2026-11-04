@@ -85,7 +85,12 @@ beforeEach(() => {
       id: 1,
       performance: "Lead",
       suggestions: "Editorial metadata",
-      dubbing_projects: { id: 100, content_id: 10, content_type: "movie", language: "fr-FR" },
+      dubbing_projects: {
+        id: 100,
+        content_id: 10,
+        content_type: "movie",
+        language: "fr-FR",
+      },
       voice_actors: {
         id: 5,
         firstname: "Voice",
@@ -98,7 +103,12 @@ beforeEach(() => {
       id: 2,
       performance: "Guest",
       suggestions: "Other metadata",
-      dubbing_projects: { id: 101, content_id: 20, content_type: "tv", language: "es-ES" },
+      dubbing_projects: {
+        id: 101,
+        content_id: 20,
+        content_type: "tv",
+        language: "es-ES",
+      },
       voice_actors: null,
     },
   ];
@@ -148,7 +158,10 @@ describe("actor page API projection", () => {
         movie_credits: { crew: [{ id: 90 }] },
         credits: { cast: [{ overview: "Unused synopsis" }, {}, {}] },
         voice_roles: [
-          { suggestions: "Editorial metadata", voice_actors: [{ bio: "Unused bio" }] },
+          {
+            suggestions: "Editorial metadata",
+            voice_actors: [{ bio: "Unused bio" }],
+          },
           {},
         ],
       },
@@ -377,25 +390,41 @@ describe("actor page API projection", () => {
       {
         id: 1,
         performance: "Lead",
-        dubbing_projects: { content_id: 10, content_type: "movie", language: "fr-FR" },
+        dubbing_projects: {
+          content_id: 10,
+          content_type: "movie",
+          language: "fr-FR",
+        },
         voice_actors: null,
       },
       {
         id: 2,
         performance: "Guest",
-        dubbing_projects: { content_id: 20, content_type: "tv", language: "fr-FR" },
+        dubbing_projects: {
+          content_id: 20,
+          content_type: "tv",
+          language: "fr-FR",
+        },
         voice_actors: null,
       },
       {
         id: 3,
         performance: "Other voice",
-        dubbing_projects: { content_id: 20, content_type: "tv", language: "es-ES" },
+        dubbing_projects: {
+          content_id: 20,
+          content_type: "tv",
+          language: "es-ES",
+        },
         voice_actors: null,
       },
       {
         id: 4,
         performance: "Missing title",
-        dubbing_projects: { content_id: 30, content_type: "movie", language: "fr-FR" },
+        dubbing_projects: {
+          content_id: 30,
+          content_type: "movie",
+          language: "fr-FR",
+        },
         voice_actors: null,
       },
     ]);

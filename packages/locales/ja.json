@@ -71,8 +71,7 @@
     "editImage": "画像を編集",
     "unlink": "リンク解除",
     "confirmUnlinkTitle": "リンク解除の確認",
-    "unlinkVoiceActor": "声優のリンク解除"
-  ,
+    "unlinkVoiceActor": "声優のリンク解除",
     "pagination": "ページネーション"
   },
   "theme": {
@@ -498,8 +497,7 @@
       "saveStudioProfile": "スタジオプロフィールを保存",
       "studioSaved": "スタジオが正常に保存されました",
       "failedToSave": "スタジオの保存に失敗しました"
-    }
-  ,
+    },
     "spreadsheet": {
       "previous": "前へ",
       "next": "次へ",
@@ -539,16 +537,14 @@
     "details": "詳細",
     "detailsPlaceholder": "問題についての追加の詳細を提供してください...",
     "successMessage": "報告が正常に送信されました"
-  }
-,
+  },
   "footer": {
     "search": "検索",
     "contribute": "情報を追加",
     "resources": "リソース",
     "about": "概要",
     "apiTerms": "API利用規約"
-  }
-,
+  },
   "browse": {
     "title": "{type}を探す",
     "description": "DubbingBaseで{type}の吹き替え情報を探せます。",

@@ -171,7 +171,9 @@ export default defineEventHandler(async (event): Promise<ToyMetadataSaveResponse
     if (error.code === "55000" || error.code === "23505") {
       metadataError(409, "Toy metadata changed or the request was reused");
     }
-    console.error("Toy metadata save failed", { code: error.code ?? "unknown database error" });
+    console.error("Toy metadata save failed", {
+      code: error.code ?? "unknown database error",
+    });
     metadataError(500, "Failed to save toy metadata");
   }
 

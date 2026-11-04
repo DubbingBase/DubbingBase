@@ -81,7 +81,12 @@ describe("POST /api/admin/dubbing-project", () => {
       content_type: "tv",
       dubbing_language: "fr-FR",
       operations: [
-        { actor_id: 101, work_id: null, expected_voice_actor_id: null, voice_actor_id: 201 },
+        {
+          actor_id: 101,
+          work_id: null,
+          expected_voice_actor_id: null,
+          voice_actor_id: 201,
+        },
       ],
     });
 
@@ -99,9 +104,24 @@ describe("POST /api/admin/dubbing-project", () => {
       content_type: "tv",
       dubbing_language: "fr-FR",
       operations: [
-        { actor_id: 101, work_id: 305, expected_voice_actor_id: 199, voice_actor_id: 201 },
-        { actor_id: 102, work_id: null, expected_voice_actor_id: null, voice_actor_id: 202 },
-        { actor_id: 103, work_id: 306, expected_voice_actor_id: 200, voice_actor_id: null },
+        {
+          actor_id: 101,
+          work_id: 305,
+          expected_voice_actor_id: 199,
+          voice_actor_id: 201,
+        },
+        {
+          actor_id: 102,
+          work_id: null,
+          expected_voice_actor_id: null,
+          voice_actor_id: 202,
+        },
+        {
+          actor_id: 103,
+          work_id: 306,
+          expected_voice_actor_id: 200,
+          voice_actor_id: null,
+        },
       ],
     });
 
@@ -117,9 +137,24 @@ describe("POST /api/admin/dubbing-project", () => {
           p_actor_id: adminId,
           p_request_id: requestId,
           p_operations: [
-            { actor_id: 101, work_id: 305, expected_voice_actor_id: 199, voice_actor_id: 201 },
-            { actor_id: 102, work_id: null, expected_voice_actor_id: null, voice_actor_id: 202 },
-            { actor_id: 103, work_id: 306, expected_voice_actor_id: 200, voice_actor_id: null },
+            {
+              actor_id: 101,
+              work_id: 305,
+              expected_voice_actor_id: 199,
+              voice_actor_id: 201,
+            },
+            {
+              actor_id: 102,
+              work_id: null,
+              expected_voice_actor_id: null,
+              voice_actor_id: 202,
+            },
+            {
+              actor_id: 103,
+              work_id: 306,
+              expected_voice_actor_id: 200,
+              voice_actor_id: null,
+            },
           ],
         },
       },
@@ -173,8 +208,18 @@ describe("POST /api/admin/dubbing-project", () => {
       content_type: "tv",
       dubbing_language: "fr-FR",
       operations: [
-        { actor_id: 101, work_id: 305, expected_voice_actor_id: 200, voice_actor_id: 201 },
-        { actor_id: 101, work_id: 306, expected_voice_actor_id: 201, voice_actor_id: 202 },
+        {
+          actor_id: 101,
+          work_id: 305,
+          expected_voice_actor_id: 200,
+          voice_actor_id: 201,
+        },
+        {
+          actor_id: 101,
+          work_id: 306,
+          expected_voice_actor_id: 201,
+          voice_actor_id: 202,
+        },
       ],
     });
     const emptyOperationResponse = await post({
@@ -182,7 +227,12 @@ describe("POST /api/admin/dubbing-project", () => {
       content_type: "tv",
       dubbing_language: "fr-FR",
       operations: [
-        { actor_id: 101, work_id: null, expected_voice_actor_id: null, voice_actor_id: null },
+        {
+          actor_id: 101,
+          work_id: null,
+          expected_voice_actor_id: null,
+          voice_actor_id: null,
+        },
       ],
     });
 
@@ -200,7 +250,12 @@ describe("POST /api/admin/dubbing-project", () => {
       content_type: "tv",
       dubbing_language: "fr-FR",
       operations: [
-        { actor_id: 101, work_id: 305, expected_voice_actor_id: 199, voice_actor_id: 201 },
+        {
+          actor_id: 101,
+          work_id: 305,
+          expected_voice_actor_id: 199,
+          voice_actor_id: 201,
+        },
       ],
     };
     const unknownField = await post({ ...base, protected: true });
@@ -234,14 +289,24 @@ describe("POST /api/admin/dubbing-project", () => {
     const invalidExpectedValue = await post({
       ...base,
       operations: [
-        { actor_id: 101, work_id: 305, expected_voice_actor_id: -1, voice_actor_id: 201 },
+        {
+          actor_id: 101,
+          work_id: 305,
+          expected_voice_actor_id: -1,
+          voice_actor_id: 201,
+        },
       ],
     });
     const unsafeContentId = await post({
       ...base,
       content_id: Number.MAX_SAFE_INTEGER + 1,
       operations: [
-        { actor_id: 101, work_id: 305, expected_voice_actor_id: 199, voice_actor_id: 201 },
+        {
+          actor_id: 101,
+          work_id: 305,
+          expected_voice_actor_id: 199,
+          voice_actor_id: 201,
+        },
       ],
     });
 
@@ -265,7 +330,12 @@ describe("POST /api/admin/dubbing-project", () => {
       content_type: "tv",
       dubbing_language: "fr-FR",
       operations: [
-        { actor_id: 101, work_id: 305, expected_voice_actor_id: 199, voice_actor_id: 201 },
+        {
+          actor_id: 101,
+          work_id: 305,
+          expected_voice_actor_id: 199,
+          voice_actor_id: 201,
+        },
       ],
     });
 
@@ -287,7 +357,12 @@ describe("POST /api/admin/dubbing-project", () => {
       content_type: "tv",
       dubbing_language: "fr-FR",
       operations: [
-        { actor_id: 101, work_id: 305, expected_voice_actor_id: 199, voice_actor_id: 201 },
+        {
+          actor_id: 101,
+          work_id: 305,
+          expected_voice_actor_id: 199,
+          voice_actor_id: 201,
+        },
       ],
     });
 

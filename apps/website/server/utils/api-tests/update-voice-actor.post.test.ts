@@ -7,7 +7,9 @@ const routeMocks = vi.hoisted(() => ({
 }));
 
 vi.mock("../auth", () => ({ requireUser: routeMocks.requireUser }));
-vi.mock("../db/client", () => ({ useSupabaseAdmin: routeMocks.useSupabaseAdmin }));
+vi.mock("../db/client", () => ({
+  useSupabaseAdmin: routeMocks.useSupabaseAdmin,
+}));
 
 let handler: typeof import("../../api/update-voice-actor.post").default;
 
@@ -15,7 +17,9 @@ beforeAll(async () => {
   vi.stubGlobal("createError", createError);
   vi.stubGlobal("defineEventHandler", defineEventHandler);
   vi.stubGlobal("readBody", readBody);
-  vi.stubGlobal("useRuntimeConfig", () => ({ supabaseUrl: "http://supabase.local" }));
+  vi.stubGlobal("useRuntimeConfig", () => ({
+    supabaseUrl: "http://supabase.local",
+  }));
   handler = (await import("../../api/update-voice-actor.post")).default;
 });
 
@@ -31,7 +35,13 @@ function createSupabaseMock(result: RpcResult) {
   const list = vi.fn(async () => ({ data: [], error: null }));
   const fromStorage = vi.fn(() => ({ upload, remove, list }));
   const rpc = vi.fn(async () => result);
-  return { supabase: { rpc, storage: { from: fromStorage } }, rpc, upload, remove, list };
+  return {
+    supabase: { rpc, storage: { from: fromStorage } },
+    rpc,
+    upload,
+    remove,
+    list,
+  };
 }
 
 async function post(options: {
@@ -157,13 +167,25 @@ describe("POST /api/update-voice-actor", () => {
   it("rejects protected fields, profile pictures, malformed IDs, and empty patches", async () => {
     const user = { id: "linked-user" };
     for (const { body, statusCode } of [
-      { body: { voice_actor_id: 41, updates: { created_by: "other-user" } }, statusCode: 400 },
-      { body: { voice_actor_id: 41, updates: { firstname: "Forged" } }, statusCode: 403 },
       {
-        body: { voice_actor_id: 41, updates: { profile_picture: "41/new-picture.png" } },
+        body: { voice_actor_id: 41, updates: { created_by: "other-user" } },
+        statusCode: 400,
+      },
+      {
+        body: { voice_actor_id: 41, updates: { firstname: "Forged" } },
         statusCode: 403,
       },
-      { body: { voice_actor_id: 0, updates: { bio: "invalid id" } }, statusCode: 400 },
+      {
+        body: {
+          voice_actor_id: 41,
+          updates: { profile_picture: "41/new-picture.png" },
+        },
+        statusCode: 403,
+      },
+      {
+        body: { voice_actor_id: 0, updates: { bio: "invalid id" } },
+        statusCode: 400,
+      },
       { body: { voice_actor_id: 41, updates: {} }, statusCode: 400 },
     ]) {
       const { response, rpc } = await post({ body, user });
@@ -186,7 +208,11 @@ describe("POST /api/update-voice-actor", () => {
     const { response, rpc } = await post({
       body: {
         voice_actor_id: 41,
-        updates: { tmdb_id: 88, status: "active", profile_picture: "41/portrait.png" },
+        updates: {
+          tmdb_id: 88,
+          status: "active",
+          profile_picture: "41/portrait.png",
+        },
         expected_updated_at: "2026-10-15T12:00:00.000Z",
         request_id: "11111111-1111-4111-8111-111111111111",
       },
@@ -196,7 +222,11 @@ describe("POST /api/update-voice-actor", () => {
     expect(rpc).toHaveBeenCalledWith("controlled_update_voice_actor", {
       p_actor_id: "admin-user",
       p_voice_actor_id: 41,
-      p_payload: { tmdb_id: 88, status: "active", profile_picture: "41/portrait.png" },
+      p_payload: {
+        tmdb_id: 88,
+        status: "active",
+        profile_picture: "41/portrait.png",
+      },
       p_expected_updated_at: "2026-10-15T12:00:00.000Z",
       p_request_id: "11111111-1111-4111-8111-111111111111",
     });
@@ -230,7 +260,9 @@ describe("POST /api/update-voice-actor", () => {
     try {
       const body = {
         voice_actor_id: 41,
-        updates: { profile_picture: "https://images.example.test/portrait.jpg" },
+        updates: {
+          profile_picture: "https://images.example.test/portrait.jpg",
+        },
         expected_updated_at: "2026-10-15T12:00:00.000Z",
         request_id: "11111111-1111-4111-8111-111111111111",
       };
@@ -274,7 +306,9 @@ describe("POST /api/update-voice-actor", () => {
       const { response, remove, upload } = await post({
         body: {
           voice_actor_id: 41,
-          updates: { profile_picture: "https://images.example.test/failed.jpg" },
+          updates: {
+            profile_picture: "https://images.example.test/failed.jpg",
+          },
         },
         user: { id: "admin-user", app_metadata: { role: "admin" } },
         result: { data: null, error: { code: "50000" } },

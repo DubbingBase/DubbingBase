@@ -225,7 +225,10 @@ describe("POST /api/link-voice-actor", () => {
   it("rejects impersonation and protected fields before a mutation", async () => {
     const { rpc } = createSupabaseMock();
 
-    const response = await post({ ...validBody(), targetUserId: "someone-else" });
+    const response = await post({
+      ...validBody(),
+      targetUserId: "someone-else",
+    });
 
     expect(response.status).toBe(403);
     expect(rpc).not.toHaveBeenCalled();
@@ -243,8 +246,14 @@ describe("POST /api/link-voice-actor", () => {
   it("rejects invalid media types and dubbing languages before provider access", async () => {
     const { rpc } = createSupabaseMock();
 
-    const mediaTypeResponse = await post({ ...validBody(), media_type: "book" });
-    const languageResponse = await post({ ...validBody(), dubbing_language: "xx-XX" });
+    const mediaTypeResponse = await post({
+      ...validBody(),
+      media_type: "book",
+    });
+    const languageResponse = await post({
+      ...validBody(),
+      dubbing_language: "xx-XX",
+    });
 
     expect(mediaTypeResponse.status).toBe(400);
     expect(languageResponse.status).toBe(400);
@@ -286,11 +295,25 @@ describe("POST /api/link-voice-actor", () => {
     const rpc = vi
       .fn()
       .mockResolvedValueOnce({
-        data: [{ work_id: 73, project_id: 25, audit_log_id: "audit-work-1", replayed: false }],
+        data: [
+          {
+            work_id: 73,
+            project_id: 25,
+            audit_log_id: "audit-work-1",
+            replayed: false,
+          },
+        ],
         error: null,
       })
       .mockResolvedValueOnce({
-        data: [{ work_id: 73, project_id: 25, audit_log_id: "audit-work-1", replayed: true }],
+        data: [
+          {
+            work_id: 73,
+            project_id: 25,
+            audit_log_id: "audit-work-1",
+            replayed: true,
+          },
+        ],
         error: null,
       });
     const from = vi.fn((table: string) =>
@@ -305,7 +328,10 @@ describe("POST /api/link-voice-actor", () => {
 
     expect(first.status).toBe(200);
     expect(second.status).toBe(200);
-    expect(await second.json()).toMatchObject({ replayed: true, auditLogId: "audit-work-1" });
+    expect(await second.json()).toMatchObject({
+      replayed: true,
+      auditLogId: "audit-work-1",
+    });
     expect(rpc.mock.calls.map(([name, args]) => [name, args.p_request_id])).toEqual([
       ["create_voice_actor_work_link", requestId],
       ["create_voice_actor_work_link", requestId],

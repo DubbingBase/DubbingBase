@@ -16,10 +16,7 @@
         v-if="backdropUrl"
         class="absolute inset-0 bg-gradient-to-t from-[var(--app-color-background)] to-transparent"
       ></div>
-      <div
-        v-if="backdropUrl"
-        class="absolute inset-0 theme-backdrop-scrim"
-      ></div>
+      <div v-if="backdropUrl" class="absolute inset-0 theme-backdrop-scrim"></div>
     </div>
 
     <div
@@ -57,9 +54,7 @@
         </div>
       </div>
       <div class="min-w-0 flex-1 max-w-3xl md:pb-4">
-        <h1
-          class="text-2xl sm:text-3xl md:text-5xl leading-tight font-bold break-words"
-        >
+        <h1 class="text-2xl sm:text-3xl md:text-5xl leading-tight font-bold break-words">
           {{ title }}
         </h1>
         <div class="flex flex-wrap items-center gap-2 sm:gap-3 mt-3 sm:mt-4">

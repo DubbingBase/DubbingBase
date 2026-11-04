@@ -15,12 +15,7 @@ const routeCases: Array<[SearchResult["media_type"], string]> = [
 ];
 
 describe("getSearchResultRoute", () => {
-  it.each(routeCases)(
-    "builds a route for %s results",
-    (mediaType, expected) => {
-      expect(getSearchResultRoute({ id: 42, media_type: mediaType })).toBe(
-        expected,
-      );
-    },
-  );
+  it.each(routeCases)("builds a route for %s results", (mediaType, expected) => {
+    expect(getSearchResultRoute({ id: 42, media_type: mediaType })).toBe(expected);
+  });
 });

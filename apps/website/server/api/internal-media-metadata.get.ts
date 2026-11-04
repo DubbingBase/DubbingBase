@@ -20,19 +20,14 @@ export default defineEventHandler(async (event) => {
   }
 
   if (mediaType === "movie" || mediaType === "tv") {
-    const media = await useTmdbClient().getMediaWithCredits(
-      mediaType,
-      mediaId,
-      "fr-FR",
-    );
+    const media = await useTmdbClient().getMediaWithCredits(mediaType, mediaId, "fr-FR");
     return { media, mediaType };
   }
 
   if (mediaType === "video_game") {
     const igdbClient = useIgdbClient();
     const game = await igdbClient.getGame(mediaId);
-    if (!game)
-      return { media: { id: mediaId, name: "Unknown Game" }, mediaType };
+    if (!game) return { media: { id: mediaId, name: "Unknown Game" }, mediaType };
     return {
       media: {
         id: game.id,
@@ -55,8 +50,7 @@ export default defineEventHandler(async (event) => {
   if (mediaType === "audiobook") {
     const client = useOpenLibraryClient();
     const book = await client.getBook(mediaId);
-    if (!book)
-      return { media: { id: mediaId, title: "Unknown Audiobook" }, mediaType };
+    if (!book) return { media: { id: mediaId, title: "Unknown Audiobook" }, mediaType };
     return {
       media: {
         id: book.id,
@@ -72,8 +66,7 @@ export default defineEventHandler(async (event) => {
   if (mediaType === "podcast") {
     const client = usePodcastClient();
     const podcast = await client.getPodcast(mediaId);
-    if (!podcast)
-      return { media: { id: mediaId, title: "Unknown Podcast" }, mediaType };
+    if (!podcast) return { media: { id: mediaId, title: "Unknown Podcast" }, mediaType };
     return {
       media: {
         id: podcast.id,

@@ -1,10 +1,5 @@
 import { ref } from "vue";
-import type {
-  IgdbGame,
-  MovieTrendingResponse,
-  SerieTrendingResponse,
-  Tables,
-} from "../types";
+import type { IgdbGame, MovieTrendingResponse, SerieTrendingResponse, Tables } from "../types";
 
 export type HomeDataPayload = {
   trendingMovies: MovieTrendingResponse["results"];
@@ -29,9 +24,7 @@ export type HomeDataPayload = {
   errorHomeStats: string;
 };
 
-export async function fetchHomeData(
-  language = "en-US",
-): Promise<HomeDataPayload> {
+export async function fetchHomeData(language = "en-US"): Promise<HomeDataPayload> {
   const payload: HomeDataPayload = {
     trendingMovies: [],
     trendingSeries: [],
@@ -62,9 +55,7 @@ export async function fetchHomeData(
       })
       .catch((e) => {
         payload.errorMovies =
-          e.data?.message ||
-          e.message ||
-          "Erreur lors du chargement des films.";
+          e.data?.message || e.message || "Erreur lors du chargement des films.";
       }),
 
     $fetch<any>("/api/trending/shows", { params: { lang: language } })
@@ -73,9 +64,7 @@ export async function fetchHomeData(
       })
       .catch((e) => {
         payload.errorSeries =
-          e.data?.message ||
-          e.message ||
-          "Erreur lors du chargement des séries.";
+          e.data?.message || e.message || "Erreur lors du chargement des séries.";
       }),
 
     $fetch<any>("/api/trending/games", { params: { lang: language } })
@@ -83,8 +72,7 @@ export async function fetchHomeData(
         payload.trendingGames = res || [];
       })
       .catch((e) => {
-        payload.errorGames =
-          e.data?.message || e.message || "Erreur lors du chargement des jeux.";
+        payload.errorGames = e.data?.message || e.message || "Erreur lors du chargement des jeux.";
       }),
 
     $fetch<any>("/api/recent-voice-actors", { params: { limit: 10 } })
@@ -93,9 +81,7 @@ export async function fetchHomeData(
       })
       .catch((e) => {
         payload.errorVoiceActors =
-          e.data?.message ||
-          e.message ||
-          "Erreur lors du chargement des voix récentes.";
+          e.data?.message || e.message || "Erreur lors du chargement des voix récentes.";
       }),
 
     $fetch<any>("/api/top-voice-actors", { params: { limit: 10 } })
@@ -104,9 +90,7 @@ export async function fetchHomeData(
       })
       .catch((e) => {
         payload.errorTopVoiceActors =
-          e.data?.message ||
-          e.message ||
-          "Erreur lors du chargement des top doubleurs.";
+          e.data?.message || e.message || "Erreur lors du chargement des top doubleurs.";
       }),
 
     $fetch<any>("/api/trending/voice-actors")
@@ -115,9 +99,7 @@ export async function fetchHomeData(
       })
       .catch((e) => {
         payload.errorTrendingVoiceActors =
-          e.data?.message ||
-          e.message ||
-          "Erreur lors du chargement des doubleurs du moment.";
+          e.data?.message || e.message || "Erreur lors du chargement des doubleurs du moment.";
       }),
 
     $fetch<any>("/api/top-contributors", { params: { limit: 10 } })
@@ -126,9 +108,7 @@ export async function fetchHomeData(
       })
       .catch((e) => {
         payload.errorTopContributors =
-          e.data?.message ||
-          e.message ||
-          "Erreur lors du chargement des contributeurs.";
+          e.data?.message || e.message || "Erreur lors du chargement des contributeurs.";
       }),
 
     $fetch<any>("/api/home-stats")
@@ -141,9 +121,7 @@ export async function fetchHomeData(
       })
       .catch((e) => {
         payload.errorHomeStats =
-          e.data?.message ||
-          e.message ||
-          "Erreur lors du chargement des statistiques.";
+          e.data?.message || e.message || "Erreur lors du chargement des statistiques.";
       }),
   ]);
 
@@ -151,22 +129,12 @@ export async function fetchHomeData(
 }
 
 export function useHomeData(initialData?: HomeDataPayload | null) {
-  const trendingMovies = ref<MovieTrendingResponse["results"]>(
-    initialData?.trendingMovies || [],
-  );
-  const trendingSeries = ref<SerieTrendingResponse["results"]>(
-    initialData?.trendingSeries || [],
-  );
+  const trendingMovies = ref<MovieTrendingResponse["results"]>(initialData?.trendingMovies || []);
+  const trendingSeries = ref<SerieTrendingResponse["results"]>(initialData?.trendingSeries || []);
   const trendingGames = ref<IgdbGame[]>(initialData?.trendingGames || []);
-  const recentVoiceActors = ref<Tables<"voice_actors">[]>(
-    initialData?.recentVoiceActors || [],
-  );
-  const topVoiceActors = ref<Tables<"voice_actors">[]>(
-    initialData?.topVoiceActors || [],
-  );
-  const trendingVoiceActors = ref<any[]>(
-    initialData?.trendingVoiceActors || [],
-  );
+  const recentVoiceActors = ref<Tables<"voice_actors">[]>(initialData?.recentVoiceActors || []);
+  const topVoiceActors = ref<Tables<"voice_actors">[]>(initialData?.topVoiceActors || []);
+  const trendingVoiceActors = ref<any[]>(initialData?.trendingVoiceActors || []);
   const topContributors = ref<any[]>(initialData?.topContributors || []);
   const homeStats = ref<{
     voiceActorCount: number;
@@ -194,9 +162,7 @@ export function useHomeData(initialData?: HomeDataPayload | null) {
   const errorGames = ref(initialData?.errorGames || "");
   const errorVoiceActors = ref(initialData?.errorVoiceActors || "");
   const errorTopVoiceActors = ref(initialData?.errorTopVoiceActors || "");
-  const errorTrendingVoiceActors = ref(
-    initialData?.errorTrendingVoiceActors || "",
-  );
+  const errorTrendingVoiceActors = ref(initialData?.errorTrendingVoiceActors || "");
   const errorTopContributors = ref(initialData?.errorTopContributors || "");
   const errorHomeStats = ref(initialData?.errorHomeStats || "");
 

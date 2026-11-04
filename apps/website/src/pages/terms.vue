@@ -82,8 +82,7 @@
       {{ $t("legal.terms.section4_2") }}
     </h3>
     <p class="mb-4">
-      {{ $t("legal.terms.accuracyIntro")
-      }}<strong>{{ $t("legal.terms.noGuarantee") }}</strong
+      {{ $t("legal.terms.accuracyIntro") }}<strong>{{ $t("legal.terms.noGuarantee") }}</strong
       >{{ $t("legal.terms.accuracyTail") }}
     </p>
 
@@ -111,13 +110,11 @@
     </h3>
     <ul class="list-disc pl-6 mb-6 space-y-2">
       <li>
-        {{ $t("legal.terms.respectFor")
-        }}<strong>{{ $t("legal.terms.rateLimits") }}</strong
+        {{ $t("legal.terms.respectFor") }}<strong>{{ $t("legal.terms.rateLimits") }}</strong
         >{{ $t("legal.terms.rateLimitTail") }}
       </li>
       <li>
-        {{ $t("legal.terms.apiCreditAn")
-        }}<strong>{{ $t("legal.terms.creditObligation") }}</strong
+        {{ $t("legal.terms.apiCreditAn") }}<strong>{{ $t("legal.terms.creditObligation") }}</strong
         >{{ $t("legal.terms.creditTail") }}
       </li>
       <li>{{ $t("legal.terms.paidPlan") }}</li>
@@ -137,8 +134,7 @@
       {{ $t("legal.terms.section6_1") }}
     </h3>
     <p class="mb-4">
-      {{ $t("legal.terms.suiGenerisIntro")
-      }}<em>{{ $t("legal.terms.suiGeneris") }}</em
+      {{ $t("legal.terms.suiGenerisIntro") }}<em>{{ $t("legal.terms.suiGeneris") }}</em
       >{{ $t("legal.terms.suiGenerisTail") }}
     </p>
 

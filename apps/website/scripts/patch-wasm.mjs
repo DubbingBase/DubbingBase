@@ -1,4 +1,11 @@
-import { readFileSync, writeFileSync, copyFileSync, existsSync, readdirSync, statSync } from "node:fs";
+import {
+  readFileSync,
+  writeFileSync,
+  copyFileSync,
+  existsSync,
+  readdirSync,
+  statSync,
+} from "node:fs";
 import { resolve, dirname, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -61,7 +68,9 @@ function fixImports(dir) {
           if (newContent !== content) {
             content = newContent;
             modified = true;
-            console.log(`patch-wasm: patched ${mod.name} import in ${relative(outputDir, fullPath)} -> ${importSpecifier}`);
+            console.log(
+              `patch-wasm: patched ${mod.name} import in ${relative(outputDir, fullPath)} -> ${importSpecifier}`,
+            );
           }
         }
       }

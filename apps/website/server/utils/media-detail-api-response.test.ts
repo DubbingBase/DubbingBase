@@ -50,7 +50,11 @@ const fullMovieProject = {
   content_type: "movie",
   language: "fr-FR",
   extra: "legacy project metadata",
-  studio_data: { id: 3, name: "Studio", logo_url: "https://example.com/studio.png" },
+  studio_data: {
+    id: 3,
+    name: "Studio",
+    logo_url: "https://example.com/studio.png",
+  },
   works: [
     {
       id: 12,
@@ -88,7 +92,11 @@ const fullMovieProject = {
 const compactMovieProject = {
   id: 7,
   language: "fr-FR",
-  studio_data: { id: 3, name: "Studio", logo_url: "https://example.com/studio.png" },
+  studio_data: {
+    id: 3,
+    name: "Studio",
+    logo_url: "https://example.com/studio.png",
+  },
   works: [
     {
       id: 12,
@@ -158,7 +166,13 @@ beforeEach(() => {
         character: "Character",
         profile_path: "https://example.com/actor.png",
         popularity: 100,
-        roles: [{ character: "Character", episode_count: 4, credit_id: "provider-credit" }],
+        roles: [
+          {
+            character: "Character",
+            episode_count: 4,
+            credit_id: "provider-credit",
+          },
+        ],
       },
     ],
     crew: [{ id: 99, jobs: [{ job: "Director", episode_count: 40 }] }],
@@ -283,7 +297,11 @@ describe("movie and show detail API payload compatibility", () => {
         {
           id: 7,
           language: "fr-FR",
-          studio_data: { id: 3, name: "Studio", logo_url: "https://example.com/studio.png" },
+          studio_data: {
+            id: 3,
+            name: "Studio",
+            logo_url: "https://example.com/studio.png",
+          },
           works: [
             {
               id: 12,

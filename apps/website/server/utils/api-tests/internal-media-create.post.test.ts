@@ -174,7 +174,10 @@ describe("POST /api/internal-media-create", () => {
 
   it("rejects toy-only fields on advertisements and credential-bearing cover URLs", async () => {
     const { rpc } = createSupabaseMock({ data: null, error: null });
-    const toyOnlyField = await post({ ...validBody(), product_line: "Storyteller" });
+    const toyOnlyField = await post({
+      ...validBody(),
+      product_line: "Storyteller",
+    });
     const unsafeCover = await post({
       ...validBody(),
       media_type: "toy",

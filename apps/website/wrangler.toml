@@ -4,7 +4,10 @@ upload_source_maps = true # Keep production CPU profiles symbolized.
 # Avoid runtime name-restoration helpers during per-request SSR setup.
 keep_names = false
 compatibility_date = "2024-09-23"
-compatibility_flags = ["nodejs_compat", "disable_nodejs_process_v2"] # disable_nodejs_process_v2: recommended for resvg-wasm/WASM on Workers
+compatibility_flags = [
+  "nodejs_compat",
+  "disable_nodejs_process_v2",
+] # disable_nodejs_process_v2: recommended for resvg-wasm/WASM on Workers
 
 [cache]
 enabled = true
@@ -21,9 +24,9 @@ id = "340974572b504ed2aa20c160e18f5697"
 name = "PROFILE_PICTURE_UPLOAD_LIMITER"
 namespace_id = "5636541"
 
-  [ratelimits.simple]
-  limit = 10
-  period = 60
+[ratelimits.simple]
+limit = 10
+period = 60
 
 [triggers]
 crons = ["* * * * *", "0 6 * * *"]

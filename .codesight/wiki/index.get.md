@@ -18,10 +18,12 @@ The Index.get subsystem handles **4 routes** and touches: cache, db.
 ## Source Files
 
 Read these before implementing or modifying this subsystem:
+
 - `apps/website/server/api/episode/index.get.ts`
 - `apps/website/server/api/og-image/index.get.ts`
 - `apps/website/server/api/search/index.get.ts`
 - `apps/website/server/api/season/index.get.ts`
 
 ---
+
 _Back to [overview.md](./overview.md)_

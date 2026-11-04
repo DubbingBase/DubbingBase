@@ -150,7 +150,10 @@ describe("POST /api/delete-user-voice-actor-link", () => {
     });
 
     expect(missing.status).toBe(200);
-    expect(await missing.json()).toMatchObject({ success: true, removed: false });
+    expect(await missing.json()).toMatchObject({
+      success: true,
+      removed: false,
+    });
     expect(unauthorized.status).toBe(403);
   });
 
@@ -172,7 +175,10 @@ describe("POST /api/delete-user-voice-actor-link", () => {
     });
 
     expect(replay.status).toBe(200);
-    expect(await replay.json()).toMatchObject({ removed: true, replayed: true });
+    expect(await replay.json()).toMatchObject({
+      removed: true,
+      replayed: true,
+    });
     expect(stale.status).toBe(409);
   });
 });

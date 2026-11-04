@@ -82,16 +82,19 @@
           role="alert"
           class="py-8 text-center text-sm theme-text-muted md:py-12"
         >
-          <p>{{ t('search.error') }}</p>
+          <p>{{ t("search.error") }}</p>
           <button
             type="button"
             class="mt-3 rounded-lg px-4 py-2 theme-focus theme-selected"
             @click="retrySearch"
           >
-            {{ t('search.retry') }}
+            {{ t("search.retry") }}
           </button>
         </div>
-        <div v-else-if="!loading && queryReady" class="py-8 text-center text-sm theme-text-muted md:py-16">
+        <div
+          v-else-if="!loading && queryReady"
+          class="py-8 text-center text-sm theme-text-muted md:py-16"
+        >
           {{ t("search.noResults") }}
         </div>
         <div v-else-if="!loading" class="py-8 text-center text-sm theme-text-muted md:py-16">

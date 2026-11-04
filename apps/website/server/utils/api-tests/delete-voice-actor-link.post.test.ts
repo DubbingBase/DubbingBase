@@ -7,7 +7,9 @@ const routeMocks = vi.hoisted(() => ({
 }));
 
 vi.mock("../auth", () => ({ requireUser: routeMocks.requireUser }));
-vi.mock("../db/client", () => ({ useSupabaseAdmin: routeMocks.useSupabaseAdmin }));
+vi.mock("../db/client", () => ({
+  useSupabaseAdmin: routeMocks.useSupabaseAdmin,
+}));
 
 let handler: typeof import("../../api/delete-voice-actor-link.post").default;
 
@@ -32,7 +34,11 @@ const body = {
 };
 
 function createSupabaseMock(result: {
-  data: Array<{ work_id: number; audit_log_id: string; replayed: boolean }> | null;
+  data: Array<{
+    work_id: number;
+    audit_log_id: string;
+    replayed: boolean;
+  }> | null;
   error: { code: string } | null;
 }) {
   const rpc = vi.fn(async () => result);
@@ -94,7 +100,10 @@ describe("POST /api/delete-voice-actor-link", () => {
   });
 
   it("reports dependent records as a conflict instead of claiming success", async () => {
-    const { rpc } = createSupabaseMock({ data: null, error: { code: "23503" } });
+    const { rpc } = createSupabaseMock({
+      data: null,
+      error: { code: "23503" },
+    });
 
     const response = await post(body);
 

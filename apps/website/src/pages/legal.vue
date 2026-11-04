@@ -32,9 +32,7 @@
       </li>
       <li>
         <strong>{{ $t("legal.legal.email") }}</strong>
-        <a
-          href="mailto:contact@dubbingbase.com"
-          class="theme-primary-text hover:underline"
+        <a href="mailto:contact@dubbingbase.com" class="theme-primary-text hover:underline"
           >contact@dubbingbase.com</a
         >
       </li>
@@ -50,9 +48,7 @@
       </li>
       <li>
         <strong>{{ $t("legal.legal.contact") }}</strong>
-        <a
-          href="mailto:contact@dubbingbase.com"
-          class="theme-primary-text hover:underline"
+        <a href="mailto:contact@dubbingbase.com" class="theme-primary-text hover:underline"
           >contact@dubbingbase.com</a
         >
       </li>

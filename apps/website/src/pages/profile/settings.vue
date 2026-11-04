@@ -10,9 +10,7 @@
         <h3 class="text-lg font-medium theme-text mb-4">
           {{ $t("settings.preferences") }}
         </h3>
-        <div
-          class="theme-surface-raised p-4 rounded-xl border theme-border-subtle"
-        >
+        <div class="theme-surface-raised p-4 rounded-xl border theme-border-subtle">
           <div class="flex items-center justify-between">
             <div>
               <p class="text-sm font-medium theme-text">
@@ -42,9 +40,7 @@
           {{ $t("settings.dangerZone") }}
         </h3>
         <div class="theme-status-danger p-4 rounded-xl border">
-          <div
-            class="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-          >
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <p class="text-sm font-medium theme-status-danger-text">
                 {{ $t("settings.deleteAccount") }}

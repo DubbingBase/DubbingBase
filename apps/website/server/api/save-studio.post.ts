@@ -129,7 +129,10 @@ export default defineUserHandler(async (event, user) => {
 
   if (error) {
     if (error.code === "42501") {
-      throw createError({ statusCode: 403, message: "You cannot change this studio field" });
+      throw createError({
+        statusCode: 403,
+        message: "You cannot change this studio field",
+      });
     }
     if (error.code === "P0002") {
       throw createError({ statusCode: 404, message: "Studio not found" });

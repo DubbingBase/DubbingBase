@@ -100,10 +100,16 @@ export default defineAdminHandler(async (event, user) => {
 
   if (error) {
     if (error.code === "42501") {
-      throw createError({ statusCode: 403, message: "Only administrators can save metadata" });
+      throw createError({
+        statusCode: 403,
+        message: "Only administrators can save metadata",
+      });
     }
     if (error.code === "22023") {
-      throw createError({ statusCode: 400, message: "Metadata payload is invalid" });
+      throw createError({
+        statusCode: 400,
+        message: "Metadata payload is invalid",
+      });
     }
     if (error.code === "23505") {
       throw createError({
