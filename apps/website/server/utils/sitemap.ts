@@ -6,7 +6,7 @@ import { SitemapIndexStream, SitemapStream, streamToPromise } from "sitemap";
  * SITEMAP_CHUNK_SIZE × locales entries; this stays far below the 50,000-URL / 50 MB protocol
  * limits and keeps each request's serialization CPU bounded.
  */
-export const SITEMAP_CHUNK_SIZE = 2000;
+export const SITEMAP_CHUNK_SIZE = 1000;
 
 /** Public, indexable static routes. Authenticated, admin and edit routes are intentionally absent. */
 export const STATIC_SITEMAP_ROUTES = [
