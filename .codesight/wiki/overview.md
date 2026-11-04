@@ -8,7 +8,7 @@
 
 ## Scale
 
-88 API routes · 28 database models · 135 UI components · 106 library files · 14 middleware layers · 64 environment variables
+91 API routes · 28 database models · 135 UI components · 109 library files · 14 middleware layers · 64 environment variables
 
 ## Subsystems
 
@@ -70,6 +70,8 @@
 - **[Save-toy-metadata.post](./save-toy-metadata.post.md)** — 1 routes — touches: auth
 - **[Search-voice-actors.get](./search-voice-actors.get.md)** — 1 routes
 - **[Shows.get](./shows.get.md)** — 1 routes — touches: cache
+- **[Sitemap.xml](./sitemap.xml.md)** — 1 routes
+- **[Sitemaps](./sitemaps.md)** — 2 routes
 - **[Submit-task.post](./submit-task.post.md)** — 1 routes — touches: auth, db, upload
 - **[Submit-user-report.post](./submit-user-report.post.md)** — 1 routes — touches: db
 - **[Top-contributors.get](./top-contributors.get.md)** — 1 routes
@@ -86,13 +88,13 @@
 
 **UI:** 135 components (vue) — see [ui.md](./ui.md)
 
-**Libraries:** 106 files — see [libraries.md](./libraries.md)
+**Libraries:** 109 files — see [libraries.md](./libraries.md)
 
 ## High-Impact Files
 
 Changes to these files have the widest blast radius across the codebase:
 
-- `apps/website/server/utils/db/client.ts` — imported by **72** files
+- `apps/website/server/utils/db/client.ts` — imported by **73** files
 - `apps/website/server/utils/auth.ts` — imported by **42** files
 - `apps/website/server/utils/index.ts` — imported by **27** files
 - `apps/website/server/utils/cache/index.ts` — imported by **19** files

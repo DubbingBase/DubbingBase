@@ -166,6 +166,16 @@
   - function getValidatedExtractionSections: (options) => Promise<ValidatedExtractionSections>
   - interface ScanSectionMetadata
   - type ValidatedExtractionSections
+- `apps/website/server/utils/sitemap-data.ts` — function listSitemapChunks: (event) => Promise<, function loadSitemapChunk: (event, name, chunk) => Promise<SitemapRecord[]>
+- `apps/website/server/utils/sitemap-response.ts` — function getSitemapOrigin: (event) => string, function sendSitemapXml: (event, xml) => string
+- `apps/website/server/utils/sitemap.ts`
+  - function localizedPath: (localeCode, path) => string
+  - function renderUrlset: (origin, records) => Promise<string>
+  - function renderSitemapIndex: (origin, sitemaps) => Promise<string>
+  - function chunkCount: (totalRecords) => number
+  - interface SitemapEntity
+  - interface SitemapRecord
+  - _...3 more_
 - `apps/website/server/utils/urls/supabase.ts` — function buildSupabaseImageUrl: (imagePath, bucket, size) => string | null, function processVoiceActor
 - `apps/website/server/utils/urls/tmdb.ts`
   - function buildTmdbImageUrl: (imagePath, size) => string | null

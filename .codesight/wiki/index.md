@@ -68,6 +68,8 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 - [Save-toy-metadata.post](./save-toy-metadata.post.md)
 - [Search-voice-actors.get](./search-voice-actors.get.md)
 - [Shows.get](./shows.get.md)
+- [Sitemap.xml](./sitemap.xml.md)
+- [Sitemaps](./sitemaps.md)
 - [Submit-task.post](./submit-task.post.md)
 - [Submit-user-report.post](./submit-user-report.post.md)
 - [Top-contributors.get](./top-contributors.get.md)
@@ -84,7 +86,7 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 
 ## Quick Stats
 
-- Routes: **88**
+- Routes: **91**
 - Models: **28**
 - Components: **135**
 - Env vars: **41** required, **23** with defaults
@@ -114,4 +116,4 @@ These exist in your codebase but are **not** reflected in wiki articles:
 When in doubt, search the source. The wiki is a starting point, not a complete inventory.
 
 ---
-_Last compiled: 2026-11-04 · 74 articles · [codesight](https://github.com/Houseofmvps/codesight)_
+_Last compiled: 2026-11-04 · 76 articles · [codesight](https://github.com/Houseofmvps/codesight)_

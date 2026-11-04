@@ -88,3 +88,6 @@
 - `POST` `/api/update_voice_actor_link` [auth] ✓
 - `POST` `/api/upload-profile-picture` [db, upload] ✓
 - `GET` `/api/voice-actor/:id` params(id)
+- `ALL` `/routes/sitemap.xml`
+- `GET` `/routes/sitemaps/:file` params(file)
+- `ALL` `/routes/sitemaps/pages.xml`
