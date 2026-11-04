@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Component inventory and prop signatures extracted via AST. Read the source files before adding props or modifying component logic.
 
-**115 components** (vue)
+**120 components** (vue)
 
 ## Client Components
 
@@ -26,9 +26,14 @@
 - **UnderConstruction** — `apps/website/src/components/UnderConstruction.vue`
 - **AsyncAutocomplete** — props: modelValue, options, loading, placeholder, ariaLabel, disabled, allowCreate, displayFn, searchFn — `apps/website/src/components/admin/AsyncAutocomplete.vue`
 - **CastAvatar** — props: name — `apps/website/src/components/admin/CastAvatar.vue`
+- **CastRoleSummary** — props: row — `apps/website/src/components/admin/CastRoleSummary.vue`
 - **CreateStudioDialog** — props: open, initialName, create — `apps/website/src/components/admin/CreateStudioDialog.vue`
 - **CreateVoiceActorDialog** — props: open, initialQuery, status — `apps/website/src/components/admin/CreateVoiceActorDialog.vue`
+- **EditorHero** — props: title, eyebrow, backTo, backLabel, posterUrl, chips — `apps/website/src/components/admin/EditorHero.vue`
 - **EditorSaveBar** — props: status, isDirty, errorMessage, saveLabel, formId, disabled — `apps/website/src/components/admin/EditorSaveBar.vue`
+- **EditorTabs** — props: items — `apps/website/src/components/admin/EditorTabs.vue`
+- **FormCard** — props: title — `apps/website/src/components/admin/FormCard.vue`
+- **FormField** — props: label — `apps/website/src/components/admin/FormField.vue`
 - **LanguageSelect** — props: id — `apps/website/src/components/admin/LanguageSelect.vue`
 - **ProjectCastWorkspace** — props: rows, selectedKey — `apps/website/src/components/admin/ProjectCastWorkspace.vue`
 - **UnsavedChangesDialog** — props: open — `apps/website/src/components/admin/UnsavedChangesDialog.vue`

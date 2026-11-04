@@ -221,10 +221,12 @@
 - `apps/website/src/utils/actor-ssr-data.ts` — function prepareActorSsrData: (payload) => void
 - `apps/website/src/utils/cast-workspace.ts`
   - function filterCastRows
+  - function summarizeCast
   - function getInitials
   - interface CastWorkspaceRow
+  - type CastFilter
   - const ORIGINAL_CAST_SEED_LIMIT
-  - const pickOriginalCastSeed
+  - _...1 more_
 - `apps/website/src/utils/dubbing-project-save.ts`
   - function getEditableDubbingProjectStatus: (value) => DubbingProjectStatus
   - function serializeGameProjectCastRows: (rows) => DubbingProjectCastSaveRow[]

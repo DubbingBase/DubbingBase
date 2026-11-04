@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 88 routes | 28 models | 115 components | 104 lib files | 64 env vars | 14 middleware | 47% test coverage
-> **Token savings:** this file is ~16,400 tokens. Without it, AI exploration would cost ~142,200 tokens. **Saves ~125,700 tokens per conversation.**
-> **Last scanned:** 2026-11-03 20:58 — re-run after significant changes
+> 88 routes | 28 models | 120 components | 104 lib files | 64 env vars | 14 middleware | 47% test coverage
+> **Token savings:** this file is ~16,600 tokens. Without it, AI exploration would cost ~143,800 tokens. **Saves ~127,200 tokens per conversation.**
+> **Last scanned:** 2026-11-04 08:56 — re-run after significant changes
 
 ---
 
@@ -328,9 +328,14 @@
 - **UnderConstruction** [client] — `apps/website/src/components/UnderConstruction.vue`
 - **AsyncAutocomplete** [client] — props: modelValue, options, loading, placeholder, ariaLabel, disabled, allowCreate, displayFn, searchFn — `apps/website/src/components/admin/AsyncAutocomplete.vue`
 - **CastAvatar** [client] — props: name — `apps/website/src/components/admin/CastAvatar.vue`
+- **CastRoleSummary** [client] — props: row — `apps/website/src/components/admin/CastRoleSummary.vue`
 - **CreateStudioDialog** [client] — props: open, initialName, create — `apps/website/src/components/admin/CreateStudioDialog.vue`
 - **CreateVoiceActorDialog** [client] — props: open, initialQuery, status — `apps/website/src/components/admin/CreateVoiceActorDialog.vue`
+- **EditorHero** [client] — props: title, eyebrow, backTo, backLabel, posterUrl, chips — `apps/website/src/components/admin/EditorHero.vue`
 - **EditorSaveBar** [client] — props: status, isDirty, errorMessage, saveLabel, formId, disabled — `apps/website/src/components/admin/EditorSaveBar.vue`
+- **EditorTabs** [client] — props: items — `apps/website/src/components/admin/EditorTabs.vue`
+- **FormCard** [client] — props: title — `apps/website/src/components/admin/FormCard.vue`
+- **FormField** [client] — props: label — `apps/website/src/components/admin/FormField.vue`
 - **LanguageSelect** [client] — props: id — `apps/website/src/components/admin/LanguageSelect.vue`
 - **ProjectCastWorkspace** [client] — props: rows, selectedKey — `apps/website/src/components/admin/ProjectCastWorkspace.vue`
 - **UnsavedChangesDialog** [client] — props: open — `apps/website/src/components/admin/UnsavedChangesDialog.vue`
@@ -649,10 +654,12 @@
 - `apps/website/src/utils/actor-ssr-data.ts` — function prepareActorSsrData: (payload) => void
 - `apps/website/src/utils/cast-workspace.ts`
   - function filterCastRows
+  - function summarizeCast
   - function getInitials
   - interface CastWorkspaceRow
+  - type CastFilter
   - const ORIGINAL_CAST_SEED_LIMIT
-  - const pickOriginalCastSeed
+  - _...1 more_
 - `apps/website/src/utils/dubbing-project-save.ts`
   - function getEditableDubbingProjectStatus: (value) => DubbingProjectStatus
   - function serializeGameProjectCastRows: (rows) => DubbingProjectCastSaveRow[]
