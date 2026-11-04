@@ -1,3 +1,4 @@
+import { isVoiceActorRecord } from "../../utils/voice-actor-record";
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { buildSupabaseImageUrl } from "../../utils/urls/supabase";
 
