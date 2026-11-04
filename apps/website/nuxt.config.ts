@@ -72,7 +72,9 @@ export default defineNuxtConfig({
 
   nitro: {
     preset: process.env.NITRO_PRESET || "node-server",
-    ignore: ["**/*.test.ts"],
+    // The Playwright mock interceptor is only compiled for E2E runs so its
+    // fixtures never ship in (or add a per-request check to) the production bundle.
+    ignore: ["**/*.test.ts", ...(process.env.E2E_TEST ? [] : ["**/middleware/00-e2e-mock.ts"])],
     prerender: {
       routes: [...ABOUT_PRERENDER_ROUTES, "/robots.txt"],
     },
