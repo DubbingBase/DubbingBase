@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
   const isInternalTrigger = Boolean(internalSecret) && internalSecret === config.supabaseSecretKey;
 
   if (!isInternalTrigger) {
-    requireAdmin(event);
+    await requireAdmin(event);
   }
 
   try {

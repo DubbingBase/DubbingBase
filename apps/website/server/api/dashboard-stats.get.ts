@@ -1,6 +1,6 @@
 import { useSupabaseAdmin } from "../utils/db/client";
 import { buildSupabaseImageUrl } from "../utils/urls/supabase";
-import { requireAdmin } from "../utils/auth";
+import { defineAdminHandler } from "../utils/auth-handlers";
 interface DashboardStats {
   userCount: number;
   voiceActorCount: number;
@@ -101,9 +101,7 @@ async function getTopVoiceActors(limit = 10): Promise<Record<string, unknown>[]>
   });
 }
 
-export default defineEventHandler(async (event) => {
-  requireAdmin(event);
-
+export default defineAdminHandler(async (event) => {
   try {
     const [userCount, voiceActorCount, userGrowth, voiceActorGrowth, topVoiceActors] =
       await Promise.all([

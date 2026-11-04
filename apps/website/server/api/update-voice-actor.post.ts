@@ -1,5 +1,5 @@
 import type { Json } from "@app/supabase/types";
-import { requireUser } from "../utils/auth";
+import { defineUserHandler } from "../utils/auth-handlers";
 import { useSupabaseAdmin } from "../utils/db/client";
 
 const voiceActorFields = new Set([
@@ -120,8 +120,7 @@ async function removeStagedPicture(
   }
 }
 
-export default defineEventHandler(async (event) => {
-  const user = requireUser(event);
+export default defineUserHandler(async (event, user) => {
   const body: unknown = await readBody(event);
 
   if (!isRecord(body) || !isRecord(body.updates) || !isJson(body.updates)) {

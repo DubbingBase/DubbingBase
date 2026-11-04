@@ -1,4 +1,4 @@
-import { requireUser } from "../utils/auth";
+import { defineUserHandler } from "../utils/auth-handlers";
 import { useSupabaseAdmin } from "../utils/db/client";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -42,8 +42,7 @@ function mapRpcError(code: string): never {
   throw updateError(500, "Review status update failed; no changes were saved");
 }
 
-export default defineEventHandler(async (event) => {
-  const user = requireUser(event);
+export default defineUserHandler(async (event, user) => {
   const body: unknown = await readBody(event);
   if (!isRecord(body)) throw updateError(400, "Invalid review status update request");
   if ("targetUserId" in body || "user_id" in body || "actor_id" in body) {

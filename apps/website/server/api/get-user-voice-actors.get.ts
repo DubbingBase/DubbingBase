@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@app/shared-logic";
 import { useSupabaseAdmin } from "../utils/db/client";
-import { requireUser } from "../utils/auth";
+import { defineUserHandler } from "../utils/auth-handlers";
 async function fetchVoiceActors(supabaseAdmin: SupabaseClient<Database>, voiceActorIds: number[]) {
   if (voiceActorIds.length === 0) return [];
 
@@ -17,8 +17,7 @@ async function fetchVoiceActors(supabaseAdmin: SupabaseClient<Database>, voiceAc
   return data || [];
 }
 
-export default defineEventHandler(async (event) => {
-  const user = requireUser(event);
+export default defineUserHandler(async (event, user) => {
   const supabaseAdmin = useSupabaseAdmin();
 
   const query = getQuery(event);

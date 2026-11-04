@@ -1,4 +1,4 @@
-import { requireUser } from "../utils/auth";
+import { defineUserHandler } from "../utils/auth-handlers";
 import { useSupabaseAdmin } from "../utils/db/client";
 
 function deleteError(statusCode: number, message: string) {
@@ -37,8 +37,7 @@ function mapRpcError(code: string): never {
   throw deleteError(500, "Work deletion failed; no changes were saved");
 }
 
-export default defineEventHandler(async (event) => {
-  const user = requireUser(event);
+export default defineUserHandler(async (event, user) => {
   const body: unknown = await readBody(event);
   if (!isRecord(body)) {
     throw deleteError(400, "Invalid voice actor work deletion request");

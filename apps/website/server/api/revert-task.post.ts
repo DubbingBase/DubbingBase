@@ -1,19 +1,16 @@
+import { useSupabaseAdmin } from "../utils/db/client";
+import { resolveUser } from "../utils/auth";
 import type { Json } from "@app/supabase";
 
 function getAuditValue(value: Json | null): Json | null {
-  if (
-    value !== null &&
-    typeof value === "object" &&
-    !Array.isArray(value) &&
-    "value" in value
-  ) {
+  if (value !== null && typeof value === "object" && !Array.isArray(value) && "value" in value) {
     return value.value ?? null;
   }
   return null;
 }
 
 export default defineEventHandler(async (event) => {
-  const user = event.context.user;
+  const user = await resolveUser(event);
   if (!user) {
     throw createError({ statusCode: 401, message: "Unauthorized" });
   }
@@ -29,7 +26,7 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const supabaseAdmin = event.context.supabaseAdmin;
+    const supabaseAdmin = event.context.supabaseAdmin ?? useSupabaseAdmin(event);
 
     const { data: auditLog, error: fetchError } = await supabaseAdmin
       .from("audit_logs")
@@ -47,8 +44,7 @@ export default defineEventHandler(async (event) => {
     if (auditLog.entity_type !== "voice_actor") {
       throw createError({
         statusCode: 422,
-        message:
-          "This audit event does not have a supported rollback operation",
+        message: "This audit event does not have a supported rollback operation",
       });
     }
 
@@ -93,9 +89,7 @@ export default defineEventHandler(async (event) => {
     }
 
     const finalValue =
-      resolvedValue !== undefined
-        ? resolvedValue
-        : getAuditValue(auditLog.previous_value);
+      resolvedValue !== undefined ? resolvedValue : getAuditValue(auditLog.previous_value);
 
     if (auditLog.entity_type === "voice_actor") {
       await supabaseAdmin
@@ -119,8 +113,7 @@ export default defineEventHandler(async (event) => {
 
     return { success: true };
   } catch (error) {
-    if (error && typeof error === "object" && "statusCode" in error)
-      throw error;
+    if (error && typeof error === "object" && "statusCode" in error) throw error;
     console.error("Unexpected error:", error);
     throw createError({ statusCode: 500, message: "Internal server error" });
   }

@@ -61,7 +61,7 @@ const responseSchema = z.object({
 
 export default defineEventHandler(async (event) => {
   setNoCacheHeaders(event);
-  requireAdmin(event);
+  await requireAdmin(event);
   const parsedQuery = querySchema.safeParse(getQuery(event));
   if (!parsedQuery.success) {
     throw createError({

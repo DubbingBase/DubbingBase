@@ -1,3 +1,4 @@
+import { resolveUser } from "../utils/auth";
 import { getWorkVotes } from "../utils/db/queries";
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
@@ -24,7 +25,7 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const user = event.context.user;
+    const user = await resolveUser(event);
     let voteData;
     if (user) {
       voteData = await getWorkVotes(workIds, user.id);

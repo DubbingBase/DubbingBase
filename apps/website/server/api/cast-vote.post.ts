@@ -1,7 +1,8 @@
+import { resolveUser } from "../utils/auth";
 import { useSupabaseAdmin } from "../utils/db/client";
 
 export default defineEventHandler(async (event) => {
-  const user = event.context.user;
+  const user = await resolveUser(event);
   if (!user) {
     throw createError({ statusCode: 401, message: "Unauthorized" });
   }

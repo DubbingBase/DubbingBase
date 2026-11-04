@@ -1,9 +1,10 @@
+import { resolveUser } from "../utils/auth";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@app/shared-logic";
 import { useSupabaseAdmin } from "../utils/db/client";
 
 export default defineEventHandler(async (event) => {
-  const user = event.context.user;
+  const user = await resolveUser(event);
   if (!user) {
     throw createError({ statusCode: 401, message: "Unauthorized" });
   }

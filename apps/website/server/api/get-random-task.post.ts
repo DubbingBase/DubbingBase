@@ -1,4 +1,4 @@
-import { requireUser } from "../utils/auth";
+import { defineUserHandler } from "../utils/auth-handlers";
 import { isTaskClaimId } from "../utils/contribution/task-submission-validation";
 import { useSupabaseAdmin } from "../utils/db/client";
 
@@ -10,8 +10,7 @@ function isRequestCategory(value: string): value is RequestCategory {
   return value === "any" || categories.some((category) => category === value);
 }
 
-export default defineEventHandler(async (event) => {
-  const user = requireUser(event);
+export default defineUserHandler(async (event, user) => {
   const body: unknown = await readBody(event);
 
   if (

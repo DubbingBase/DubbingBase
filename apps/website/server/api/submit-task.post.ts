@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { requireUser } from "../utils/auth";
+import { defineUserHandler } from "../utils/auth-handlers";
 import {
   authorizeTaskContribution,
   isTaskClaimId,
@@ -165,8 +165,7 @@ async function recoverSubmittedContribution(
   return { success: true, pointsAwarded: replay.points_awarded };
 }
 
-export default defineEventHandler(async (event) => {
-  const user = requireUser(event);
+export default defineUserHandler(async (event, user) => {
   const supabaseAdmin = event.context.supabaseAdmin || useSupabaseAdmin(event);
   let stagedUpload: UploadLocation | null = null;
   let preserveStagedUpload = false;
