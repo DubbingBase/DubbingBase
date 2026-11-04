@@ -1,51 +1,96 @@
 <template>
   <section
-    class="grid grid-cols-1 lg:grid-cols-5 gap-4"
+    class="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_26rem] lg:items-start"
     :aria-label="$t('projectEditor.voiceCast')"
     data-testid="cast-workspace"
   >
-    <div class="lg:col-span-3 space-y-3 min-w-0">
+    <div class="min-w-0 space-y-4">
+      <!-- Progress: the cast workflow is "assign every role", so surface how far along it is. -->
+      <div class="rounded-2xl border theme-border theme-surface-overlay p-4 space-y-2.5">
+        <div class="flex items-baseline justify-between gap-3">
+          <p class="text-sm font-semibold theme-text" aria-live="polite">
+            {{ $t("projectEditor.castProgress", summary) }}
+          </p>
+          <span class="text-xs tabular-nums theme-text-muted">{{ summary.percent }}%</span>
+        </div>
+        <div
+          class="h-1.5 overflow-hidden rounded-full theme-surface-muted"
+          role="progressbar"
+          :aria-valuenow="summary.percent"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          :aria-label="$t('projectEditor.castProgress', summary)"
+        >
+          <div
+            class="h-full rounded-full bg-[var(--app-color-success-text)] transition-[width] duration-300"
+            :style="{ width: `${summary.percent}%` }"
+          />
+        </div>
+      </div>
+
+      <!-- Toolbar -->
       <div class="flex items-center gap-2">
-        <div class="relative flex-1 min-w-0">
+        <div class="relative min-w-0 flex-1">
+          <SearchIcon
+            class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 theme-text-muted"
+            aria-hidden="true"
+          />
           <input
             v-model="query"
             type="search"
+            enterkeyhint="search"
             :aria-label="$t('projectEditor.castSearch')"
             :placeholder="$t('projectEditor.castSearch')"
-            class="w-full px-4 py-2.5 min-h-11 theme-input border theme-border rounded-xl theme-text theme-placeholder focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-base sm:text-sm"
+            class="h-11 w-full rounded-xl border theme-border theme-input pl-10 pr-3 text-base sm:text-sm theme-text theme-placeholder focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)]"
             data-testid="cast-search"
           />
         </div>
         <button
           type="button"
-          class="shrink-0 px-4 py-2.5 min-h-11 theme-primary-bg hover:bg-[var(--app-color-primary-hover)] text-xs font-semibold rounded-xl transition-colors"
+          class="inline-flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl px-3.5 text-sm font-semibold theme-primary-bg hover:bg-[var(--app-color-primary-hover)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-focus)]"
+          :aria-label="$t('projectEditor.addVoiceActor')"
           data-testid="add-cast-row"
           @click="addRow"
         >
-          {{ $t("projectEditor.addVoiceActor") }}
+          <PlusIcon class="h-4 w-4" aria-hidden="true" />
+          <span class="hidden sm:inline">{{ $t("projectEditor.addVoiceActor") }}</span>
         </button>
       </div>
-      <p class="text-xs theme-text-muted" aria-live="polite">
-        {{ $t("projectEditor.castCount", { count: rows.length }) }}
-      </p>
 
-      <ul
-        v-if="visibleRows.length > 0"
-        class="space-y-2 lg:max-h-[32rem] lg:overflow-y-auto lg:pr-1"
-        data-testid="cast-list"
-      >
+      <!-- Assignment filter -->
+      <div class="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1" role="group">
+        <button
+          v-for="chip in filters"
+          :key="chip.id"
+          type="button"
+          class="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-focus)]"
+          :class="
+            filter === chip.id
+              ? 'theme-status-info theme-status-info-text border-[var(--app-color-focus)]'
+              : 'theme-border theme-surface-overlay theme-text-secondary theme-hover-surface-muted'
+          "
+          :aria-pressed="filter === chip.id"
+          :data-testid="`cast-filter-${chip.id}`"
+          @click="filter = chip.id"
+        >
+          {{ chip.label }}
+          <span class="tabular-nums opacity-70">{{ chip.count }}</span>
+        </button>
+      </div>
+
+      <ul v-if="visibleRows.length > 0" class="space-y-2" data-testid="cast-list">
         <li
           v-for="(row, index) in visibleRows"
           :key="row.key"
-          class="flex items-stretch gap-1 [content-visibility:auto] [contain-intrinsic-size:auto_5.5rem]"
+          class="[content-visibility:auto] [contain-intrinsic-size:auto_6rem]"
         >
           <button
             type="button"
-            class="flex-1 min-w-0 flex sm:grid sm:grid-cols-3 items-center gap-x-3 p-2.5 text-left rounded-xl border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-focus)]"
+            class="flex w-full items-start gap-3 rounded-2xl border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-focus)]"
             :class="
-              row.key === selectedKey
+              row.key === selectedKey && isDesktop
                 ? 'theme-status-info border-[var(--app-color-focus)]'
-                : 'theme-input theme-border theme-hover-surface-muted'
+                : 'theme-surface-overlay theme-border theme-hover-surface-muted'
             "
             :aria-pressed="row.key === selectedKey"
             :aria-label="
@@ -57,150 +102,220 @@
             data-testid="cast-row"
             @click="selectRow(row.key)"
           >
-            <span class="flex min-w-0 flex-1 sm:flex-none items-center gap-3">
-              <AdminCastAvatar
-                :name="row.characterName"
-                :src="row.characterImage"
-                :title="$t('projectEditor.castCharacter')"
-              />
-              <span class="min-w-0 flex-1">
-                <span class="block truncate text-sm font-semibold theme-text">
-                  {{ row.characterName || $t("projectEditor.castUnknownCharacter") }}
-                  <span v-if="row.highlight" aria-hidden="true">★</span>
+            <AdminCastAvatar
+              :name="row.characterName"
+              :src="row.characterImage"
+              :title="$t('projectEditor.castCharacter')"
+            />
+            <span
+              class="min-w-0 flex-1 space-y-1.5 sm:flex sm:items-center sm:justify-between sm:gap-4 sm:space-y-0"
+            >
+              <span class="block min-w-0">
+                <span class="flex items-center gap-1.5">
+                  <span class="truncate text-sm font-semibold theme-text">
+                    {{ row.characterName || $t("projectEditor.castUnknownCharacter") }}
+                  </span>
+                  <StarIcon
+                    v-if="row.highlight"
+                    class="h-3.5 w-3.5 shrink-0 fill-current text-[var(--app-color-rating)]"
+                    aria-hidden="true"
+                  />
                 </span>
-                <!-- Mobile: original actor → voice actor on one muted line -->
-                <span class="block truncate text-xs theme-text-muted sm:hidden">
+                <span class="block truncate text-xs theme-text-muted">
                   {{ row.originalActorName || $t("projectEditor.castOriginalActor") }}
-                  →
-                  <span class="theme-text-secondary">{{
-                    row.voiceActorName || $t("projectEditor.castUnassigned")
-                  }}</span>
                 </span>
               </span>
-            </span>
-            <span class="hidden sm:flex min-w-0 items-center gap-2">
-              <AdminCastAvatar :name="row.originalActorName" :src="row.originalActorImage" />
-              <span class="min-w-0 truncate text-xs theme-text-muted">
-                {{ row.originalActorName || $t("projectEditor.castOriginalActor") }}
+              <span
+                v-if="row.assigned"
+                class="flex min-w-0 max-w-full items-center gap-2 rounded-full border theme-border theme-surface-muted py-0.5 pl-0.5 pr-3 sm:max-w-[45%]"
+              >
+                <AdminCastAvatar
+                  :name="row.voiceActorName"
+                  :src="row.voiceActorImage"
+                  class="!h-6 !w-6 !text-[10px]"
+                />
+                <span class="truncate text-xs font-semibold theme-text-secondary">
+                  {{ row.voiceActorName }}
+                </span>
+              </span>
+              <span
+                v-else
+                class="inline-flex max-w-full items-center gap-1.5 rounded-full border border-dashed border-[var(--app-color-warning-border)] px-3 py-1 text-xs font-semibold text-[var(--app-color-warning-text)]"
+              >
+                <PlusIcon class="h-3 w-3 shrink-0" aria-hidden="true" />
+                <span class="truncate">{{ $t("projectEditor.castAssignPrompt") }}</span>
               </span>
             </span>
-            <span class="hidden sm:flex min-w-0 items-center gap-2">
-              <AdminCastAvatar :name="row.voiceActorName" :src="row.voiceActorImage" />
-              <span class="min-w-0 truncate text-xs theme-text-secondary">
-                {{ row.voiceActorName || $t("projectEditor.castUnassigned") }}
-              </span>
-            </span>
-          </button>
-          <button
-            type="button"
-            class="shrink-0 min-h-11 min-w-11 self-center inline-flex items-center justify-center rounded-xl border theme-status-danger transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-focus)]"
-            :aria-label="$t('projectEditor.removeCastRow', { index: index + 1 })"
-            :title="$t('projectEditor.removeCastRow', { index: index + 1 })"
-            data-testid="remove-cast-row"
-            @click="emit('remove', row.key)"
-          >
-            <XIcon class="w-4 h-4" aria-hidden="true" />
+            <ChevronRightIcon class="mt-3 h-4 w-4 shrink-0 theme-text-muted" aria-hidden="true" />
           </button>
         </li>
       </ul>
 
       <div
         v-else
-        class="text-center py-10 theme-input border border-dashed theme-border rounded-xl theme-text-muted text-sm space-y-3"
+        class="space-y-3 rounded-2xl border border-dashed theme-border theme-input py-10 text-center text-sm theme-text-muted"
         data-testid="cast-empty"
       >
-        <template v-if="rows.length === 0">
-          <p>{{ $t("projectEditor.noCastMembers") }}</p>
-        </template>
+        <p v-if="rows.length === 0">{{ $t("projectEditor.noCastMembers") }}</p>
         <template v-else>
-          <p>{{ $t("projectEditor.castNoMatch", { query }) }}</p>
+          <p>
+            {{
+              query.trim()
+                ? $t("projectEditor.castNoMatch", { query })
+                : $t("projectEditor.castEmptyFilter")
+            }}
+          </p>
           <button
             type="button"
-            class="text-xs font-semibold theme-status-info-text hover:underline"
-            @click="query = ''"
+            class="min-h-11 px-4 text-xs font-semibold theme-status-info-text hover:underline"
+            @click="resetFilters"
           >
             {{ $t("projectEditor.castClearSearch") }}
           </button>
         </template>
       </div>
+
+      <!-- Adding at the end of a long roster should not require scrolling back up. -->
+      <button
+        v-if="rows.length > 0"
+        type="button"
+        class="flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl border border-dashed theme-border text-sm font-semibold theme-text-secondary theme-hover-surface-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-focus)]"
+        data-testid="add-cast-row-end"
+        @click="addRow"
+      >
+        <PlusIcon class="h-4 w-4" aria-hidden="true" />
+        {{ $t("projectEditor.addVoiceActor").replace(/^\+\s*/, "") }}
+      </button>
+
+      <!-- Mobile shortcut that follows the scroll, parked above the sticky save bar. -->
+      <button
+        type="button"
+        class="fixed right-4 bottom-[calc(6rem+var(--keyboard-inset,0px))] z-[35] inline-flex h-14 w-14 items-center justify-center rounded-full theme-primary-bg shadow-xl lg:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-focus)]"
+        :aria-label="$t('projectEditor.addVoiceActor')"
+        data-testid="add-cast-row-fab"
+        @click="addRow"
+      >
+        <PlusIcon class="h-6 w-6" aria-hidden="true" />
+      </button>
     </div>
 
-    <aside
-      :class="
-        isMobile
-          ? sheetOpen
-            ? 'fixed inset-0 z-50 overflow-y-auto overscroll-contain theme-surface flex flex-col'
-            : 'hidden'
-          : 'lg:col-span-2 theme-surface-overlay border theme-border rounded-2xl p-4 space-y-4 h-fit lg:sticky lg:top-4'
-      "
-      :role="isMobile && sheetOpen ? 'dialog' : undefined"
-      :aria-modal="isMobile && sheetOpen ? 'true' : undefined"
-      :aria-label="$t('projectEditor.castDetails')"
-      ref="detailPanel"
-      data-testid="cast-detail"
-    >
-      <header
-        v-if="isMobile"
-        class="sticky top-0 z-10 flex items-center gap-2 px-3 py-2 border-b theme-border theme-surface"
+    <ClientOnly>
+      <!-- Desktop: persistent detail panel next to the list -->
+      <aside
+        v-if="isDesktop"
+        class="sticky top-[84px] max-h-[calc(100dvh-6.5rem)] overflow-y-auto rounded-2xl border theme-border theme-surface-overlay p-5"
+        :aria-label="$t('projectEditor.castDetails')"
+        data-testid="cast-detail"
       >
-        <button
-          type="button"
-          class="min-h-11 min-w-11 inline-flex items-center justify-center rounded-xl theme-hover-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-focus)]"
-          :aria-label="$t('projectEditor.castDone')"
-          data-testid="cast-detail-back"
-          @click="closeSheet"
-        >
-          <ArrowLeftIcon class="w-5 h-5" aria-hidden="true" />
-        </button>
-        <h4 class="min-w-0 truncate text-sm font-bold theme-text">
-          {{ selectedRow?.characterName || $t("projectEditor.castDetails") }}
-        </h4>
-      </header>
-      <h4 v-else class="text-sm font-bold theme-text uppercase tracking-wider">
-        {{ $t("projectEditor.castDetails") }}
-      </h4>
-      <div :class="isMobile ? 'flex-1 p-4 space-y-4' : 'space-y-4'">
-        <div
-          v-if="selectedRow"
-          class="flex items-start justify-between gap-2 text-center"
-          data-testid="cast-detail-portraits"
-        >
-          <figure v-for="item in portraits" :key="item.label" class="min-w-0 flex-1 space-y-1">
-            <AdminCastAvatar :name="item.name" :src="item.image" large class="mx-auto" />
-            <figcaption class="truncate text-xs font-semibold theme-text">
-              {{ item.name || $t("projectEditor.castUnassigned") }}
-            </figcaption>
-            <span class="block truncate text-[11px] theme-text-muted">{{ item.label }}</span>
-          </figure>
+        <div v-if="selectedRow" :key="selectedRow.key" class="space-y-5">
+          <AdminCastRoleSummary :row="selectedRow" />
+          <slot name="detail" :row-key="selectedRow.key" />
+          <button
+            type="button"
+            class="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-[var(--app-color-danger-text)] hover:bg-[var(--app-color-danger-bg)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-focus)]"
+            :aria-label="removeLabel"
+            data-testid="remove-cast-row"
+            @click="emit('remove', selectedRow.key)"
+          >
+            <Trash2Icon class="h-4 w-4" aria-hidden="true" />
+            {{ $t("projectEditor.castRemoveRole") }}
+          </button>
         </div>
-        <slot v-if="selectedKey" name="detail" :row-key="selectedKey" />
-        <p v-else class="text-sm theme-text-muted">
+        <p v-else class="py-10 text-center text-sm theme-text-muted">
           {{ $t("projectEditor.castSelectPrompt") }}
         </p>
-      </div>
-      <!-- Stays above the on-screen keyboard; bottom padding lets the last field scroll clear of it. -->
-      <div
-        v-if="isMobile"
-        class="sticky bottom-[var(--keyboard-inset,0px)] p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t theme-border theme-surface"
-      >
-        <button
-          type="button"
-          class="w-full min-h-12 rounded-xl theme-primary-bg text-sm font-bold"
-          data-testid="cast-detail-done"
-          @click="closeSheet"
-        >
-          {{ $t("projectEditor.castDone") }}
-        </button>
-      </div>
-    </aside>
+      </aside>
+
+      <!-- Mobile: bottom sheet that rides above the on-screen keyboard -->
+      <DialogRoot v-else :open="sheetOpen && selectedRow !== null" @update:open="onSheetOpen">
+        <DialogPortal>
+          <DialogOverlay class="cast-sheet-overlay fixed inset-0 z-[90] bg-black/55" />
+          <DialogContent
+            class="cast-sheet fixed inset-x-0 bottom-[var(--keyboard-inset,0px)] z-[91] flex max-h-[calc(100dvh-var(--keyboard-inset,0px)-1rem)] flex-col rounded-t-3xl border-x border-t theme-border theme-surface shadow-2xl outline-none"
+            data-testid="cast-detail"
+            @open-auto-focus.prevent
+          >
+            <div class="flex justify-center pt-2.5" aria-hidden="true">
+              <span class="h-1 w-10 rounded-full theme-surface-muted" />
+            </div>
+            <div class="flex items-start justify-between gap-3 px-4 pb-3 pt-2">
+              <DialogTitle class="sr-only">{{ $t("projectEditor.castDetails") }}</DialogTitle>
+              <DialogDescription class="sr-only">
+                {{ selectedRow?.characterName || $t("projectEditor.castUnknownCharacter") }}
+              </DialogDescription>
+              <div class="min-w-0 flex-1">
+                <AdminCastRoleSummary v-if="selectedRow" :row="selectedRow" />
+              </div>
+              <DialogClose
+                class="-mr-2 -mt-1 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full theme-text-muted theme-hover-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-focus)]"
+                :aria-label="$t('projectEditor.castDone')"
+              >
+                <XIcon class="h-5 w-5" aria-hidden="true" />
+              </DialogClose>
+            </div>
+
+            <div
+              v-if="selectedRow"
+              :key="selectedRow.key"
+              class="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain border-t theme-border px-4 py-5"
+            >
+              <slot name="detail" :row-key="selectedRow.key" />
+            </div>
+
+            <div
+              class="flex items-center gap-2 border-t theme-border px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+            >
+              <button
+                v-if="selectedRow"
+                type="button"
+                class="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border theme-border text-[var(--app-color-danger-text)] hover:bg-[var(--app-color-danger-bg)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-focus)]"
+                :aria-label="removeLabel"
+                :title="$t('projectEditor.castRemoveRole')"
+                data-testid="remove-cast-row"
+                @click="emit('remove', selectedRow.key)"
+              >
+                <Trash2Icon class="h-5 w-5" aria-hidden="true" />
+              </button>
+              <DialogClose
+                class="h-12 flex-1 rounded-xl text-sm font-bold theme-primary-bg hover:bg-[var(--app-color-primary-hover)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-focus)]"
+                data-testid="cast-detail-done"
+              >
+                {{ $t("projectEditor.castDone") }}
+              </DialogClose>
+            </div>
+          </DialogContent>
+        </DialogPortal>
+      </DialogRoot>
+    </ClientOnly>
   </section>
 </template>
 
 <script setup lang="ts">
-import { ArrowLeftIcon, XIcon } from "lucide-vue-next";
+import {
+  ChevronRightIcon,
+  PlusIcon,
+  SearchIcon,
+  StarIcon,
+  Trash2Icon,
+  XIcon,
+} from "lucide-vue-next";
+import {
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogOverlay,
+  DialogPortal,
+  DialogRoot,
+  DialogTitle,
+} from "reka-ui";
 import { refDebounced, useMediaQuery } from "@vueuse/core";
 import { computed, nextTick, ref, watch } from "vue";
-import { filterCastRows, type CastWorkspaceRow } from "~/utils/cast-workspace";
+import {
+  filterCastRows,
+  summarizeCast,
+  type CastFilter,
+  type CastWorkspaceRow,
+} from "~/utils/cast-workspace";
 
 const { t } = useI18n();
 const props = defineProps<{
@@ -214,54 +329,84 @@ const emit = defineEmits<{
   "update:selectedKey": [key: string | null];
 }>();
 
-const detailPanel = ref<HTMLElement | null>(null);
-// Below lg the detail panel is a full-screen sheet so the keyboard never hides the fields.
-const isMobile = useMediaQuery("(max-width: 1023px)");
+// lg and up shows the detail beside the list; below it the detail is a bottom sheet.
+const isDesktop = useMediaQuery("(min-width: 1024px)");
 const sheetOpen = ref(false);
-const closeSheet = () => {
-  sheetOpen.value = false;
+const onSheetOpen = (open: boolean) => {
+  sheetOpen.value = open;
 };
 const selectRow = (key: string) => {
   emit("update:selectedKey", key);
   sheetOpen.value = true;
 };
 const addRow = async () => {
+  resetFilters();
   emit("add");
   await nextTick();
   sheetOpen.value = true;
 };
 
-watch(
-  () => props.selectedKey,
-  (key) => {
-    if (key === null) sheetOpen.value = false;
-  },
-);
-
 const selectedRow = computed(() => props.rows.find((row) => row.key === props.selectedKey) ?? null);
-const portraits = computed(() =>
-  selectedRow.value
-    ? [
-        {
-          label: t("projectEditor.castCharacter"),
-          name: selectedRow.value.characterName,
-          image: selectedRow.value.characterImage,
-        },
-        {
-          label: t("projectEditor.castOriginalActor"),
-          name: selectedRow.value.originalActorName,
-          image: selectedRow.value.originalActorImage,
-        },
-        {
-          label: t("projectEditor.voiceActor"),
-          name: selectedRow.value.voiceActorName,
-          image: selectedRow.value.voiceActorImage,
-        },
-      ]
-    : [],
-);
+const removeLabel = computed(() => {
+  const index = props.rows.findIndex((row) => row.key === props.selectedKey);
+  return t("projectEditor.removeCastRow", { index: index + 1 });
+});
+watch(selectedRow, (row) => {
+  if (row === null) sheetOpen.value = false;
+});
+
+const summary = computed(() => summarizeCast(props.rows));
 
 const query = ref("");
 const debouncedQuery = refDebounced(query, 150);
-const visibleRows = computed(() => filterCastRows(props.rows, debouncedQuery.value));
+const filter = ref<CastFilter>("all");
+const filters = computed<{ id: CastFilter; label: string; count: number }[]>(() => [
+  { id: "all", label: t("projectEditor.castFilterAll"), count: summary.value.total },
+  {
+    id: "unassigned",
+    label: t("projectEditor.castFilterUnassigned"),
+    count: summary.value.unassigned,
+  },
+  {
+    id: "assigned",
+    label: t("projectEditor.castFilterAssigned"),
+    count: summary.value.assigned,
+  },
+]);
+const visibleRows = computed(() => filterCastRows(props.rows, debouncedQuery.value, filter.value));
+const resetFilters = () => {
+  query.value = "";
+  filter.value = "all";
+};
 </script>
+
+<style scoped>
+@keyframes cast-sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes cast-sheet-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.cast-sheet[data-state="open"] {
+  animation: cast-sheet-in 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.cast-sheet-overlay[data-state="open"] {
+  animation: cast-sheet-fade 180ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cast-sheet[data-state="open"],
+  .cast-sheet-overlay[data-state="open"] {
+    animation: none;
+  }
+}
+</style>

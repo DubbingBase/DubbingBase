@@ -3,6 +3,7 @@ import {
   filterCastRows,
   getInitials,
   pickOriginalCastSeed,
+  summarizeCast,
   type CastWorkspaceRow,
 } from "./cast-workspace";
 
@@ -14,6 +15,7 @@ const row = (key: string, overrides: Partial<CastWorkspaceRow> = {}): CastWorksp
   originalActorImage: null,
   voiceActorName: "",
   voiceActorImage: null,
+  assigned: false,
   performance: "dialogues",
   highlight: false,
   ...overrides,
@@ -60,5 +62,25 @@ describe("pickOriginalCastSeed", () => {
     ];
     expect(pickOriginalCastSeed(cast).map((m) => m.id)).toEqual([1, 4, 5]);
     expect(pickOriginalCastSeed(cast, 2).map((m) => m.id)).toEqual([1, 4]);
+  });
+});
+
+describe("assignment filter and summary", () => {
+  const rows = [
+    row("a", { characterName: "Woody", assigned: true }),
+    row("b", { characterName: "Buzz" }),
+    row("c", { characterName: "Rex" }),
+  ];
+
+  it("filters by assignment and still honours the text query", () => {
+    expect(filterCastRows(rows, "", "assigned").map((r) => r.key)).toEqual(["a"]);
+    expect(filterCastRows(rows, "", "unassigned").map((r) => r.key)).toEqual(["b", "c"]);
+    expect(filterCastRows(rows, "buzz", "unassigned").map((r) => r.key)).toEqual(["b"]);
+    expect(filterCastRows(rows, "buzz", "assigned")).toEqual([]);
+  });
+
+  it("summarizes progress and tolerates an empty cast", () => {
+    expect(summarizeCast(rows)).toEqual({ total: 3, assigned: 1, unassigned: 2, percent: 33 });
+    expect(summarizeCast([]).percent).toBe(0);
   });
 });

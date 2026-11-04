@@ -7,19 +7,42 @@ export interface CastWorkspaceRow {
   originalActorImage: string | null;
   voiceActorName: string;
   voiceActorImage: string | null;
+  /** True once a voice actor has been chosen for the role. */
+  assigned: boolean;
   performance: string;
   highlight: boolean;
 }
 
+export type CastFilter = "all" | "unassigned" | "assigned";
+
 /** Case-insensitive match against character, original actor and voice actor names. */
-export const filterCastRows = (rows: CastWorkspaceRow[], query: string): CastWorkspaceRow[] => {
+export const filterCastRows = (
+  rows: CastWorkspaceRow[],
+  query: string,
+  filter: CastFilter = "all",
+): CastWorkspaceRow[] => {
   const needle = query.trim().toLowerCase();
-  if (!needle) return rows;
-  return rows.filter((row) =>
-    [row.characterName, row.originalActorName, row.voiceActorName].some((value) =>
+  return rows.filter((row) => {
+    if (filter === "assigned" && !row.assigned) return false;
+    if (filter === "unassigned" && row.assigned) return false;
+    if (!needle) return true;
+    return [row.characterName, row.originalActorName, row.voiceActorName].some((value) =>
       value.toLowerCase().includes(needle),
-    ),
-  );
+    );
+  });
+};
+
+/** Progress summary used by the cast header. */
+export const summarizeCast = (
+  rows: CastWorkspaceRow[],
+): { total: number; assigned: number; unassigned: number; percent: number } => {
+  const assigned = rows.filter((row) => row.assigned).length;
+  return {
+    total: rows.length,
+    assigned,
+    unassigned: rows.length - assigned,
+    percent: rows.length === 0 ? 0 : Math.round((assigned / rows.length) * 100),
+  };
 };
 
 export const getInitials = (name: string): string =>

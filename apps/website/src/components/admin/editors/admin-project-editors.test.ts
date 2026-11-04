@@ -86,7 +86,7 @@ describe("admin project editors", () => {
     expect(source).not.toMatch(/:key="index"/);
     expect(source).toContain(':key="row.key"');
     expect(source).toContain("createEditorRowKey()");
-    expect(source).toMatch(/removeCastRow\(row\.key\)|emit\('remove', row\.key\)/);
+    expect(source).toMatch(/removeCastRow\(row\.key\)|emit\('remove', (?:selected)?[rR]ow\.key\)/);
     expect(source).not.toMatch(/removeCastRow\(index\)/);
   });
 
