@@ -15,6 +15,19 @@
         <DetailsMetaChip v-if="authorsText" variant="text" :title="authorsText">
           {{ authorsText }}
         </DetailsMetaChip>
+        <DetailsMetaChip v-if="audiobook.isbn" variant="tag" :label="$t('audiobook.isbn')">
+          {{ audiobook.isbn }}
+        </DetailsMetaChip>
+        <DetailsMetaChip
+          v-for="(subject, index) in (audiobook.subjects ?? []).slice(0, 4)"
+          :key="`s-${index}`"
+          variant="tag"
+        >
+          {{ subject }}
+        </DetailsMetaChip>
+        <DetailsMetaChip v-if="(audiobook.subjects?.length ?? 0) > 4" variant="tag">
+          +{{ (audiobook.subjects?.length ?? 0) - 4 }}
+        </DetailsMetaChip>
         <div class="flex gap-2 ml-2">
           <DetailsExternalLink
             v-if="audiobook.id"
@@ -59,27 +72,10 @@
       </template>
 
       <template #content>
-        <DetailsSynopsis :text="audiobook.description" :empty-label="$t('audiobook.noDescription')">
-          <DetailsFacts>
-            <DetailsFact :label="$t('audiobook.author')" :value="authorsText" />
-            <DetailsFact
-              :label="$t('audiobook.publishYear')"
-              :value="audiobook.first_publish_year || audiobook.first_publish_date"
-            />
-            <DetailsFact
-              v-if="audiobook.isbn"
-              :label="$t('audiobook.isbn')"
-              :value="audiobook.isbn"
-            />
-            <DetailsFact
-              v-if="audiobook.subjects && audiobook.subjects.length > 0"
-              :label="$t('audiobook.subjects')"
-              wide
-            >
-              <DetailsTagList :tags="audiobook.subjects.slice(0, 4)" />
-            </DetailsFact>
-          </DetailsFacts>
-        </DetailsSynopsis>
+        <DetailsSynopsis
+          :text="audiobook.description"
+          :empty-label="$t('audiobook.noDescription')"
+        />
 
         <!-- Voice Cast / Narrators -->
         <section>
@@ -196,9 +192,6 @@ import DetailsReportButton from "../../components/layout/details/DetailsReportBu
 import DetailsMetaChip from "../../components/layout/details/DetailsMetaChip.vue";
 import DetailsExternalLink from "../../components/layout/details/DetailsExternalLink.vue";
 import DetailsSynopsis from "../../components/layout/details/DetailsSynopsis.vue";
-import DetailsFacts from "../../components/layout/details/DetailsFacts.vue";
-import DetailsFact from "../../components/layout/details/DetailsFact.vue";
-import DetailsTagList from "../../components/layout/details/DetailsTagList.vue";
 import DetailsCastHeader from "../../components/layout/details/DetailsCastHeader.vue";
 import ReportModal from "../../components/ReportModal.vue";
 import { fetchAudiobookData } from "@app/shared-logic";

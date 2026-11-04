@@ -14,6 +14,32 @@
           <StarIcon class="w-4 h-4 theme-rating fill-current" />
           {{ (game.rating / 10).toFixed(1) }}
         </DetailsMetaChip>
+        <DetailsMetaChip v-if="getDevelopers(game)" variant="tag" :label="$t('game.developer')">
+          {{ getDevelopers(game) }}
+        </DetailsMetaChip>
+        <DetailsMetaChip v-if="getPublishers(game)" variant="tag" :label="$t('game.publisher')">
+          {{ getPublishers(game) }}
+        </DetailsMetaChip>
+        <DetailsMetaChip
+          v-for="genre in (game.genres ?? []).slice(0, 4)"
+          :key="`g-${genre.id}`"
+          variant="tag"
+        >
+          {{ genre.name }}
+        </DetailsMetaChip>
+        <DetailsMetaChip v-if="(game.genres?.length ?? 0) > 4" variant="tag">
+          +{{ (game.genres?.length ?? 0) - 4 }}
+        </DetailsMetaChip>
+        <DetailsMetaChip
+          v-for="platform in (game.platforms ?? []).slice(0, 4)"
+          :key="`p-${platform.id}`"
+          variant="tag"
+        >
+          {{ platform.name }}
+        </DetailsMetaChip>
+        <DetailsMetaChip v-if="(game.platforms?.length ?? 0) > 4" variant="tag">
+          +{{ (game.platforms?.length ?? 0) - 4 }}
+        </DetailsMetaChip>
         <div class="flex gap-2 ml-2">
           <DetailsExternalLink
             :href="`https://www.igdb.com/games/${game.slug}`"
@@ -68,18 +94,7 @@
       </template>
 
       <template #content>
-        <DetailsSynopsis :text="game.summary">
-          <DetailsFacts>
-            <DetailsFact :label="$t('game.developer')" :value="getDevelopers(game)" />
-            <DetailsFact :label="$t('game.publisher')" :value="getPublishers(game)" />
-            <DetailsFact :label="$t('game.genres')" wide>
-              <DetailsTagList :tags="game.genres?.map((genre) => genre.name) ?? []" />
-            </DetailsFact>
-            <DetailsFact :label="$t('game.platforms')" wide>
-              <DetailsTagList :tags="game.platforms?.map((platform) => platform.name) ?? []" />
-            </DetailsFact>
-          </DetailsFacts>
-        </DetailsSynopsis>
+        <DetailsSynopsis :text="game.summary" />
 
         <!-- Voice Cast -->
         <section>
@@ -323,9 +338,6 @@ import DetailsReportButton from "../../components/layout/details/DetailsReportBu
 import DetailsMetaChip from "../../components/layout/details/DetailsMetaChip.vue";
 import DetailsExternalLink from "../../components/layout/details/DetailsExternalLink.vue";
 import DetailsSynopsis from "../../components/layout/details/DetailsSynopsis.vue";
-import DetailsFacts from "../../components/layout/details/DetailsFacts.vue";
-import DetailsFact from "../../components/layout/details/DetailsFact.vue";
-import DetailsTagList from "../../components/layout/details/DetailsTagList.vue";
 import DetailsCastHeader from "../../components/layout/details/DetailsCastHeader.vue";
 import { useRoute, useRouter } from "vue-router";
 import {
