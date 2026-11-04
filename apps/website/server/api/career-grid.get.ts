@@ -1,12 +1,6 @@
 import { asString } from "../utils/narrow";
-import { useSupabaseAdmin } from "../utils/db/client";
-import { useTmdbClient, useCache } from "../utils";
+import { useTmdbClient } from "../utils";
 import { MediaService } from "../utils/services/media";
-async function initialize(cache: ReturnType<typeof useCache>) {
-  // Font data would be loaded here in a real implementation
-  // For Cloudflare Workers, fonts must be bundled or fetched
-}
-
 async function fetchImageAsDataUri(url: string): Promise<string | null> {
   if (!url) return null;
   let finalUrl = url;
