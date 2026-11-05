@@ -4,8 +4,12 @@ import { isVoiceActorOgImagesEnabled } from "../../../src/utils/voice-actor-og-i
 
 const STATIC_OG_IMAGE_PATH = "/android-chrome-512x512.png";
 
-let _satori: any = null;
-let _Resvg: any = null;
+type SatoriFn = typeof import("satori").default;
+interface ResvgLike {
+  async: (svg: string, options?: object) => Promise<{ render: () => { asPng: () => Uint8Array } }>;
+}
+let _satori: SatoriFn | null = null;
+let _Resvg: ResvgLike | null = null;
 
 async function getOgDependencies() {
   if (!_satori || !_Resvg) {
@@ -52,7 +56,8 @@ async function loadAsset(path: string): Promise<Uint8Array> {
     for (const v of variants) {
       try {
         const data = await useStorage(ns).getItemRaw(v);
-        if (data) return data as Uint8Array;
+        if (data instanceof Uint8Array) return data;
+        if (data instanceof ArrayBuffer) return new Uint8Array(data);
       } catch (e) {
         lastErr = e;
       }
@@ -72,7 +77,9 @@ async function loadAsset(path: string): Promise<Uint8Array> {
 }
 
 function toArrayBuffer(data: Uint8Array): ArrayBuffer {
-  return data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) as ArrayBuffer;
+  const copy = new ArrayBuffer(data.byteLength);
+  new Uint8Array(copy).set(data);
+  return copy;
 }
 
 async function initialize() {
@@ -94,7 +101,7 @@ function uint8ArrayToBase64(bytes: Uint8Array): string {
   const chunkSize = 8192;
   for (let i = 0; i < len; i += chunkSize) {
     const chunk = bytes.subarray(i, Math.min(i + chunkSize, len));
-    binary += String.fromCharCode.apply(null, chunk as unknown as number[]);
+    binary += String.fromCharCode(...Array.from(chunk));
   }
   return btoa(binary);
 }

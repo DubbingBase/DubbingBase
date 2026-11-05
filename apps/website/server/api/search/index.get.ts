@@ -221,11 +221,10 @@ export default defineEventHandler(async (event) => {
 
         for (const response of pageResponses) {
           if (response.results && Array.isArray(response.results)) {
-            const withImages = response.results
-              .filter(isSearchItem)
-              .map((item) => processMedia(item))
-              .filter(isSearchItem);
-            results.push(...withImages);
+            for (const item of response.results.filter(isSearchItem)) {
+              const processed = processMedia(item);
+              if (isSearchItem(processed)) results.push(processed);
+            }
           }
         }
         successfulTracks += 1;

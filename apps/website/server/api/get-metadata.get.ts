@@ -1,7 +1,8 @@
+import { asString } from "../utils/narrow";
 import { useSupabaseAdmin } from "../utils/db/client";
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
-  const type = query.type as string | undefined;
+  const type = asString(query.type);
   const supabaseAdmin = useSupabaseAdmin();
 
   try {
@@ -51,7 +52,7 @@ export default defineEventHandler(async (event) => {
       statusCode: 400,
       message: "Invalid type parameter",
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error && typeof error === "object" && "statusCode" in error) throw error;
     console.error("Error in get-metadata route:", error);
     throw createError({

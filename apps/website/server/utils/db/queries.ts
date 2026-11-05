@@ -1,5 +1,5 @@
 import { useSupabaseAdmin } from "./client";
-import { processVoiceActor } from "../urls/supabase";
+import { processVoiceActor, withVoiceActorImageUrl } from "../urls/supabase";
 import type { MediaDetailVoiceActor, ToyDubbingProject } from "@app/shared-logic";
 
 export async function getVoiceActorWithWork(id: number) {
@@ -185,7 +185,7 @@ export async function getMediaPageDubbingProjectData(contentId: number, contentT
     works: (project.works || []).map((work) => {
       const voiceActorId = work.voice_actor?.id ?? null;
       if (voiceActorId !== null && !voiceActorsById.has(voiceActorId) && work.voice_actor) {
-        const voiceActor = processVoiceActor(work.voice_actor);
+        const voiceActor = withVoiceActorImageUrl(work.voice_actor);
         voiceActorsById.set(voiceActorId, {
           id: voiceActorId,
           firstname: work.voice_actor.firstname,
@@ -430,8 +430,8 @@ export async function getEpisodePageDubbingProjectData(
     ...project,
     works: (project.works || []).map((work) => {
       const voiceActorId = work.voice_actor?.id ?? null;
-      if (voiceActorId !== null && !voiceActorsById.has(voiceActorId)) {
-        const voiceActor = processVoiceActor(work.voice_actor);
+      if (voiceActorId !== null && !voiceActorsById.has(voiceActorId) && work.voice_actor) {
+        const voiceActor = withVoiceActorImageUrl(work.voice_actor);
         voiceActorsById.set(voiceActor.id, {
           id: voiceActor.id,
           firstname: voiceActor.firstname,
@@ -514,7 +514,7 @@ export async function getEpisodePageProjectWorks(contentId: number, projectId: n
   const works = (data.works || []).map((work) => {
     const voiceActorId = work.voice_actor?.id ?? null;
     if (voiceActorId !== null && work.voice_actor && !voiceActorsById.has(voiceActorId)) {
-      const voiceActor = processVoiceActor(work.voice_actor);
+      const voiceActor = withVoiceActorImageUrl(work.voice_actor);
       voiceActorsById.set(voiceActorId, {
         id: voiceActor.id,
         firstname: voiceActor.firstname,

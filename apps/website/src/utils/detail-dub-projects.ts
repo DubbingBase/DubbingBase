@@ -1,4 +1,4 @@
-import type { DetailCollectionProject } from "@app/shared-logic";
+import type { DetailCollectionProject, DubbingProjectCrewMember } from "@app/shared-logic";
 
 /** Distinct voice actors credited in a dubbing project, preferring the server-provided count. */
 export function detailProjectVoiceActorCount(project: DetailCollectionProject): number {
@@ -11,22 +11,12 @@ export function detailProjectVoiceActorCount(project: DetailCollectionProject): 
   return ids.size;
 }
 
-interface DubbingCrewRow {
-  id: number;
-  jobs?: { name?: string | null } | null;
-  voice_actors?: {
-    id: number;
-    firstname?: string | null;
-    lastname?: string | null;
-  } | null;
-}
-
-/** Normalizes dubbing project crew rows for the shared crew card. */
-export function toCrewCardMembers(rows: DubbingCrewRow[] | null | undefined) {
+/** Normalizes dubbing project crew rows (the API `crew` projection) for the shared crew card. */
+export function toCrewCardMembers(rows: DubbingProjectCrewMember[] | null | undefined) {
   return (rows ?? []).map((member) => ({
     id: member.id,
-    role: member.jobs?.name,
-    personId: member.voice_actors?.id,
-    name: `${member.voice_actors?.firstname ?? ""} ${member.voice_actors?.lastname ?? ""}`.trim(),
+    role: member.job?.name,
+    personId: member.person?.id,
+    name: `${member.person?.firstname ?? ""} ${member.person?.lastname ?? ""}`.trim(),
   }));
 }

@@ -177,6 +177,7 @@ definePageMeta({
 });
 
 import { ref, onMounted, onUnmounted } from "vue";
+import { readErrorMessage } from "~/utils/error-message";
 
 interface VoiceActorCandidate {
   id: number;
@@ -254,7 +255,7 @@ const generateImage = async () => {
     imageUrl.value = URL.createObjectURL(blob);
   } catch (err: unknown) {
     console.error("Error generating image:", err);
-    errorMsg.value = err instanceof Error ? err.message : "Failed to generate image.";
+    errorMsg.value = readErrorMessage(err) || "Failed to generate image.";
   } finally {
     generating.value = false;
   }
@@ -272,8 +273,9 @@ const downloadImage = () => {
 };
 
 const handleOutsideClick = (e: MouseEvent) => {
+  if (!(e.target instanceof Element)) return;
   const target = e.target;
-  if (target instanceof HTMLElement && !target.closest(".relative")) {
+  if (!target.closest(".relative")) {
     activeSearch.value = false;
   }
 };

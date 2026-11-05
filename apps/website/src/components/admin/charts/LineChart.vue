@@ -12,8 +12,8 @@ import type { ChartData, ChartOptions } from "chart.js";
 import { computed } from "vue";
 
 interface Props {
-  data: ChartData<any>;
-  options: ChartOptions<any>;
+  data: ChartData<"line">;
+  options: ChartOptions<"line">;
 }
 
 const props = defineProps<Props>();

@@ -1,3 +1,6 @@
+import type { Tables } from "@app/supabase";
+import type { MediaDetailCredits } from "./media-detail";
+
 export type { Tables, Database, TablesInsert, TablesUpdate, Enums } from "@app/supabase";
 
 export type { PaginatedResponse, PaginationMeta } from "./pagination";
@@ -37,16 +40,19 @@ export interface TrendingResponse {
 
 export type MovieTrendingResponse = TrendingResponse;
 
+type VoiceActorRow = Tables<"voice_actors">;
+type WorkRow = Tables<"work">;
+
 export interface VoiceActorDetails {
   id: number;
-  bio: any;
-  awards: any;
+  bio: VoiceActorRow["bio"];
+  awards: VoiceActorRow["awards"];
   lastname: string;
   firstname: string;
-  nationality: any;
-  years_active: any;
-  date_of_birth: any;
-  social_media_links: any;
+  nationality: VoiceActorRow["nationality"];
+  years_active: VoiceActorRow["years_active"];
+  date_of_birth: VoiceActorRow["date_of_birth"];
+  social_media_links: VoiceActorRow["social_media_links"];
   profile_picture?: string;
 }
 
@@ -56,11 +62,65 @@ export interface WorkAndVoiceActor {
   actor_id: number;
   voice_actor_id: number;
   highlight: boolean;
-  suggestions: any;
+  suggestions: WorkRow["suggestions"];
   status: string;
-  source_id: any;
+  source_id: WorkRow["source_id"];
   voiceActorDetails: VoiceActorDetails;
   performance?: string;
+}
+
+/** Per-work vote tally, as returned by the server `getWorkVotes` query. */
+export interface WorkVoteSummary {
+  up_count: number;
+  down_count: number;
+  user_vote: string | null;
+}
+
+export type WorkVotes = Record<number, WorkVoteSummary>;
+
+/** Voice actor fields shared by every dubbing-project projection. */
+export type DubbingProjectVoiceActor = Pick<VoiceActorRow, "id"> &
+  Partial<Pick<VoiceActorRow, "firstname" | "lastname" | "profile_picture" | "voice_actor_name">>;
+
+export type DubbingProjectStudio = Pick<Tables<"studios">, "id" | "name"> &
+  Partial<Pick<Tables<"studios">, "logo_url">>;
+
+export type DubbingProjectWork = Pick<WorkRow, "id"> &
+  Partial<
+    Pick<
+      WorkRow,
+      | "actor_id"
+      | "voice_actor_id"
+      | "character_id"
+      | "game_character_id"
+      | "character_name"
+      | "performance"
+      | "note"
+    >
+  > & {
+    voice_actor?: DubbingProjectVoiceActor | null;
+  };
+
+export type DubbingProjectCrewMember = Pick<Tables<"dubbing_project_crew">, "id"> &
+  Partial<Pick<Tables<"dubbing_project_crew">, "person_id" | "job_id">> & {
+    job?: Pick<Tables<"jobs">, "name"> | null;
+    person?: DubbingProjectVoiceActor | null;
+  };
+
+/**
+ * Dubbing project as returned by the media API routes. Every server projection
+ * (full, media-page, media-summary, advertisement-page, podcast-page, toy page)
+ * is a structural subset of this shape, so all fields beyond `id` are optional.
+ */
+export interface MediaDubbingProject {
+  id: number;
+  language?: Tables<"dubbing_projects">["language"] | null;
+  studio_data?: DubbingProjectStudio | null;
+  has_voice_actor?: boolean;
+  voice_actor_count?: number;
+  work_count?: number;
+  works?: DubbingProjectWork[];
+  crew?: DubbingProjectCrewMember[];
 }
 
 export interface MovieResponse {
@@ -72,8 +132,8 @@ export interface MovieResponse {
     tvdbPeopleId: number;
     showId: number;
   }>;
-  dubbingProjects?: any[];
-  votes?: Record<number, any>;
+  dubbingProjects?: MediaDubbingProject[];
+  votes?: WorkVotes;
   collection?: {
     id: number;
     name: string;
@@ -125,12 +185,12 @@ export interface SerieTrendingResponse {
 
 export interface SerieResponse {
   serie: Serie & WithCast & WithExtrernalIds;
-  votes?: Record<number, any>;
+  votes?: WorkVotes;
 }
 
 export interface ShowResponse {
   serie: Serie & WithCast & WithExtrernalIds;
-  aggregateCredits?: any;
+  aggregateCredits?: MediaDetailCredits;
   characterProfilePictures?: Array<{
     id: number;
     name: string;
@@ -138,8 +198,8 @@ export interface ShowResponse {
     tvdbPeopleId: number;
     showId: number;
   }>;
-  dubbingProjects?: any[];
-  votes?: Record<number, any>;
+  dubbingProjects?: MediaDubbingProject[];
+  votes?: WorkVotes;
 }
 
 export interface ActorCredits {
@@ -266,8 +326,8 @@ export interface IgdbCharacter {
 export interface GameResponse {
   game: IgdbGame | null;
   characters: IgdbCharacter[];
-  dubbingProjects: any[];
-  votes: Record<number, { up_count: number; down_count: number; user_vote: string | null }>;
+  dubbingProjects: MediaDubbingProject[];
+  votes: WorkVotes;
 }
 
 export interface OpenLibraryAuthor {
@@ -298,8 +358,8 @@ export interface Audiobook {
 
 export interface AudiobookResponse {
   audiobook: Audiobook | null;
-  dubbingProjects: any[];
-  votes: Record<number, { up_count: number; down_count: number; user_vote: string | null }>;
+  dubbingProjects: MediaDubbingProject[];
+  votes: WorkVotes;
 }
 
 export interface Advertisement {
@@ -319,8 +379,8 @@ export interface Advertisement {
 
 export interface AdvertisementResponse {
   advertisement: Advertisement | null;
-  dubbingProjects: any[];
-  votes: Record<number, { up_count: number; down_count: number; user_vote: string | null }>;
+  dubbingProjects: MediaDubbingProject[];
+  votes: WorkVotes;
 }
 
 export interface PodcastEpisode {
@@ -349,8 +409,8 @@ export interface Podcast {
 
 export interface PodcastResponse {
   podcast: Podcast | null;
-  dubbingProjects: any[];
-  votes: Record<number, { up_count: number; down_count: number; user_vote: string | null }>;
+  dubbingProjects: MediaDubbingProject[];
+  votes: WorkVotes;
 }
 
 export interface Toy {
@@ -381,34 +441,12 @@ export interface ToyMetadataSaveResponse {
   replayed: boolean;
 }
 
-export interface ToyDubbingProject {
-  id: number;
-  language?: string | null;
-  studio_data?: { id: number; name: string } | null;
-  crew?: Array<{
-    id: number;
-    job?: { name: string } | null;
-    person?: { id: number; firstname?: string; lastname?: string } | null;
-  }>;
-  works?: Array<{
-    id: number;
-    voice_actor_id?: number | null;
-    voice_actor?: {
-      id: number;
-      firstname?: string;
-      lastname?: string;
-      profile_picture?: string | null;
-    } | null;
-    character_name?: string | null;
-    performance?: string | null;
-    note?: string | null;
-  }>;
-}
+export type ToyDubbingProject = MediaDubbingProject;
 
 export interface ToyResponse {
   toy: Toy | null;
   dubbingProjects: ToyDubbingProject[];
-  votes: Record<number, { up_count: number; down_count: number; user_vote: string | null }>;
+  votes: WorkVotes;
 }
 
 export interface Role {

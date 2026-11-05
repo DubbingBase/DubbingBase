@@ -1,5 +1,4 @@
 import { createClient } from "@supabase/supabase-js";
-import { format, subDays, differenceInMinutes } from "date-fns";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { DatabaseSync } from "node:sqlite";
@@ -26,13 +25,27 @@ if (!supabaseKey) {
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+interface ScrapeState {
+  last_fetched_at?: string;
+}
+
+interface WikiRevision {
+  "*"?: string;
+  slots?: { main?: { "*"?: string } };
+}
+
+interface WikiPage {
+  title: string;
+  revisions?: WikiRevision[];
+}
+
 // Helper to get or initialize state
-async function getState() {
+async function getState(): Promise<ScrapeState> {
   try {
     const data = await fs.readFile(STATE_FILE, "utf-8");
     return JSON.parse(data);
-  } catch (err: any) {
-    if (err.code === "ENOENT") {
+  } catch (err) {
+    if (err instanceof Error && "code" in err && err.code === "ENOENT") {
       const defaultState = {
         // Start scrape from the beginning of Wikipedia
         last_fetched_at: "2001-01-01T00:00:00Z",
@@ -45,7 +58,7 @@ async function getState() {
 }
 
 // Helper to save state
-async function saveState(state: any) {
+async function saveState(state: ScrapeState) {
   await fs.writeFile(STATE_FILE, JSON.stringify(state, null, 2), "utf-8");
 }
 
@@ -60,10 +73,19 @@ db.exec(`
   );
 `);
 
+function isLastCheckedRow(row: unknown): row is { last_checked: number } {
+  return (
+    typeof row === "object" &&
+    row !== null &&
+    "last_checked" in row &&
+    typeof row.last_checked === "number"
+  );
+}
+
 function getLastChecked(tmdbId: number): number | null {
   const stmt = db.prepare("SELECT last_checked FROM checked_media WHERE tmdb_id = ?");
-  const row = stmt.get(tmdbId) as { last_checked: number } | undefined;
-  return row ? row.last_checked : null;
+  const row: unknown = stmt.get(tmdbId);
+  return isLastCheckedRow(row) ? row.last_checked : null;
 }
 
 function markAsChecked(tmdbId: number) {
@@ -124,7 +146,7 @@ async function checkWikipediaBatchForDubbing(
       }
     }
 
-    const pagesByTitle: Record<string, any> = {};
+    const pagesByTitle: Record<string, WikiPage> = {};
     if (data.query?.pages) {
       for (const pageId in data.query.pages) {
         const page = data.query.pages[pageId];
@@ -185,7 +207,7 @@ async function enqueueMedia(tmdbId: number, type: string, language?: string) {
 }
 
 // Perform a single SPARQL discovery batch
-async function performDiscoveryBatch(state: any) {
+async function performDiscoveryBatch(state: ScrapeState) {
   const lastFetchedAt = state.last_fetched_at || "2001-01-01T00:00:00Z";
 
   console.log(`Fetching items modified since: ${lastFetchedAt}`);
@@ -311,7 +333,7 @@ async function performDiscoveryBatch(state: any) {
 }
 
 // Polyfill for URLSearchParams if needed
-const newSearchParams = (obj: any) => new URLSearchParams(obj);
+const newSearchParams = (obj: Record<string, string>) => new URLSearchParams(obj);
 
 // Main scrape loop
 async function runScraper() {

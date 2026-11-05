@@ -1,18 +1,13 @@
-import { useSupabaseAdmin } from "../utils/db/client";
-import { useTmdbClient, useCache } from "../utils";
+import { asString } from "../utils/narrow";
+import { useTmdbClient } from "../utils";
 import { MediaService } from "../utils/services/media";
-async function initialize(cache: ReturnType<typeof useCache>) {
-  // Font data would be loaded here in a real implementation
-  // For Cloudflare Workers, fonts must be bundled or fetched
-}
-
 async function fetchImageAsDataUri(url: string): Promise<string | null> {
   if (!url) return null;
   let finalUrl = url;
 
   if (finalUrl.includes("127.0.0.1") || finalUrl.includes("localhost")) {
     const config = useRuntimeConfig();
-    const supabaseUrl = config.supabaseUrl as string;
+    const supabaseUrl = asString(config.supabaseUrl);
     if (supabaseUrl) {
       try {
         const urlObj = new URL(finalUrl);
@@ -108,7 +103,29 @@ function buildHomeOgImage(lang: string) {
   };
 }
 
-function buildMediaOgImage(media: any, posterDataUri: string | null, lang: string) {
+interface OgMediaInput {
+  title?: string | null;
+  name?: string | null;
+  release_date?: string | null;
+  first_air_date?: string | null;
+  overview?: string | null;
+  poster_path?: string | null;
+}
+
+interface MappedWork {
+  title: string;
+  characterName: string;
+  popularity: number;
+  mediaPosterUrl: string | null;
+  characterImageUrl: string | null;
+}
+
+interface OgTemplate {
+  type: string;
+  props: object;
+}
+
+function buildMediaOgImage(media: OgMediaInput, posterDataUri: string | null, lang: string) {
   const isFr = lang.startsWith("fr");
   const title = media.title || media.name || "Unknown";
   const releaseDate = media.release_date || media.first_air_date || "";
@@ -547,12 +564,12 @@ function buildCareerGridImage(params: {
 export default defineEventHandler(async (event) => {
   try {
     const query = getQuery(event);
-    const typeParam = (query.type as string) || "actor";
-    const langParam = (query.lang as string) || "fr-FR";
+    const typeParam = asString(query.type) || "actor";
+    const langParam = asString(query.lang) || "fr-FR";
 
     let svgWidth = 1200;
     let svgHeight = 630;
-    let template: any = null;
+    let template: OgTemplate | null = null;
 
     const tmdbClient = useTmdbClient();
     const acceptLanguage = getHeader(event, "accept-language") || undefined;
@@ -564,7 +581,7 @@ export default defineEventHandler(async (event) => {
       svgHeight = result.svgHeight;
       template = result.template;
     } else if (typeParam === "movie" || typeParam === "series") {
-      const idParam = query.id as string | undefined;
+      const idParam = asString(query.id);
       if (!idParam) {
         throw createError({ statusCode: 400, message: "Missing id parameter" });
       }
@@ -592,7 +609,7 @@ export default defineEventHandler(async (event) => {
       svgHeight = result.svgHeight;
       template = result.template;
     } else {
-      const idParam = query.id as string | undefined;
+      const idParam = asString(query.id);
       if (!idParam) {
         throw createError({ statusCode: 400, message: "Missing id parameter" });
       }
@@ -612,10 +629,10 @@ export default defineEventHandler(async (event) => {
 
       const { voiceActor, enhancedWorks, medias, characterProfilePictures } = result;
 
-      let mappedWorks: any[] = [];
+      let mappedWorks: MappedWork[] = [];
 
       if (enhancedWorks && Array.isArray(enhancedWorks)) {
-        mappedWorks = enhancedWorks.map((item: any) => {
+        mappedWorks = enhancedWorks.map((item): MappedWork => {
           let characterName = item.data?.character || item.work?.performance || "";
           if (characterName.toLowerCase().includes("dialogue")) {
             characterName = "";
@@ -642,13 +659,13 @@ export default defineEventHandler(async (event) => {
           };
         });
       } else {
-        mappedWorks = (voiceActor.work || []).reduce((acc: any[], w: any) => {
+        mappedWorks = (voiceActor.work || []).reduce<MappedWork[]>((acc, w) => {
           const contentId = w.dubbing_projects?.content_id;
-          const media = (medias || []).find((m: any) => m.id === contentId);
+          const media = (medias || []).find((m) => m.id === contentId);
 
           if (!media || !media.credits?.cast) return acc;
 
-          const castMember = media.credits.cast.find((c: any) => c.id === w.actor_id);
+          const castMember = media.credits.cast.find((c) => c.id === w.actor_id);
           if (!castMember) return acc;
 
           let characterName = castMember.character || w.performance || "";
@@ -667,15 +684,16 @@ export default defineEventHandler(async (event) => {
             Array.isArray(characterProfilePictures)
           ) {
             const pic = characterProfilePictures.find(
-              (cp: any) =>
-                (cp.movieId === contentId || cp.showId === contentId) &&
+              (cp) =>
+                (cp.movieId === contentId || ("showId" in cp && cp.showId === contentId)) &&
                 cp.name &&
                 characterName &&
                 cp.name.toLowerCase() === characterName.toLowerCase(),
             );
             if (pic) {
-              const p = pic as { image?: string; profile_path?: string };
-              characterImage = p.image || p.profile_path || null;
+              const image = "image" in pic ? asString(pic.image) : undefined;
+              const profilePath = "profile_path" in pic ? asString(pic.profile_path) : undefined;
+              characterImage = image || profilePath || null;
             }
           }
 
@@ -705,14 +723,14 @@ export default defineEventHandler(async (event) => {
         }, []);
       }
 
-      mappedWorks.sort((a: any, b: any) => b.popularity - a.popularity);
+      mappedWorks.sort((a, b) => b.popularity - a.popularity);
 
       const totalWorks = mappedWorks.length;
       const DISPLAY_LIMIT = 50;
       const otherRolesCount = Math.max(0, totalWorks - DISPLAY_LIMIT);
       mappedWorks = mappedWorks.slice(0, DISPLAY_LIMIT);
 
-      const worksPromises = mappedWorks.map(async (work: any) => {
+      const worksPromises = mappedWorks.map(async (work) => {
         const [mediaDataUri, characterDataUri] = await Promise.all([
           work.mediaPosterUrl ? fetchImageAsDataUri(work.mediaPosterUrl) : Promise.resolve(null),
           work.characterImageUrl
@@ -731,7 +749,9 @@ export default defineEventHandler(async (event) => {
 
       const name =
         `${voiceActor.firstname} ${voiceActor.lastname}`.trim() ||
-        voiceActor.voice_actor_name ||
+        ("voice_actor_name" in voiceActor && typeof voiceActor.voice_actor_name === "string"
+          ? voiceActor.voice_actor_name
+          : "") ||
         "Unknown";
 
       let avatarDataUri: string | null = null;

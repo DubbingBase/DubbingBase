@@ -1,5 +1,8 @@
 import { watch } from "vue";
 
+// Injected at build time by nuxt.config.ts `vite.define`.
+declare const __VERSION__: string;
+
 export default defineNuxtPlugin({
   name: "posthog",
   enforce: "pre",
@@ -38,7 +41,6 @@ export default defineNuxtPlugin({
 
           posthog.register({
             application: "website",
-            // @ts-ignore
             app_version: __VERSION__,
             theme: themeCookie.value || "system",
             language: langCookie.value || "en",

@@ -1,6 +1,10 @@
 import { llmVisionObject } from "../utils/llm";
 import { z } from "zod";
 
+const knownActorsSchema = z.array(
+  z.object({ name: z.string(), id: z.union([z.number(), z.string()]), roles: z.array(z.string()) }),
+);
+
 export default defineEventHandler(async (event) => {
   try {
     const formData = await readMultipartFormData(event);
@@ -28,12 +32,12 @@ export default defineEventHandler(async (event) => {
     let knownActorsText = "";
     if (actorsField?.data) {
       try {
-        const actors = JSON.parse(actorsField.data.toString());
-        if (Array.isArray(actors) && actors.length > 0) {
+        const actors = knownActorsSchema.parse(JSON.parse(actorsField.data.toString()));
+        if (actors.length > 0) {
           knownActorsText =
             "\nHere is the list of known actors and their roles in this media:\n" +
             actors
-              .map((a: any) => `- ${a.name} (ID: ${a.id}) | Roles: ${a.roles.join(", ")}`)
+              .map((a) => `- ${a.name} (ID: ${a.id}) | Roles: ${a.roles.join(", ")}`)
               .join("\n");
         }
       } catch (e) {
@@ -87,12 +91,12 @@ export default defineEventHandler(async (event) => {
       llmModel: parsed.model,
       llmQuota: parsed.quota,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error && typeof error === "object" && "statusCode" in error) throw error;
     console.error("Error extracting credits:", error);
     throw createError({
       statusCode: 500,
-      message: error.message || "Internal server error",
+      message: (error instanceof Error && error.message) || "Internal server error",
     });
   }
 });

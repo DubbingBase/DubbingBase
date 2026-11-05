@@ -206,6 +206,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from "vue";
+import { readErrorMessage } from "~/utils/error-message";
 import imageCompression from "browser-image-compression";
 
 definePageMeta({
@@ -219,7 +220,8 @@ const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const localePath = useLocalePath();
-const id = route.params.id as string | undefined;
+const rawId = route.params.id;
+const id = typeof rawId === "string" ? rawId : undefined;
 const isEditMode = computed(() => !!id && id !== "new");
 
 const name = ref("");
@@ -244,26 +246,29 @@ const clearLogo = () => {
 };
 
 const onLogoChange = (event: Event) => {
-  const files = (event.target as HTMLInputElement).files;
+  const files = event.target instanceof HTMLInputElement ? event.target.files : null;
   if (files && files.length > 0 && files[0]) {
     const file = files[0];
     logoFile.value = file;
     const reader = new FileReader();
     reader.onload = (e) => {
-      logoPreview.value = e.target?.result as string;
+      const result = e.target?.result;
+      if (typeof result === "string") logoPreview.value = result;
     };
     reader.readAsDataURL(file);
   }
 };
 const isSaving = ref(false);
 
-const toast = ref({
+type ToastType = "success" | "error" | "info";
+
+const toast = ref<{ show: boolean; message: string; type: ToastType }>({
   show: false,
   message: "",
-  type: "info" as "success" | "error" | "info",
+  type: "info",
 });
 
-const showToast = (message: string, type: "success" | "error" | "info" = "info") => {
+const showToast = (message: string, type: ToastType = "info") => {
   toast.value = { show: true, message, type };
   setTimeout(() => {
     toast.value.show = false;
@@ -358,9 +363,9 @@ const saveStudio = async () => {
     setTimeout(() => {
       router.push(localePath("/admin"));
     }, 1200);
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error saving studio:", err);
-    showToast(err.message || t("admin.studios.failedToSave"), "error");
+    showToast(readErrorMessage(err) || t("admin.studios.failedToSave"), "error");
   } finally {
     isSaving.value = false;
   }

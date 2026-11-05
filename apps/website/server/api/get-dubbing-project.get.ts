@@ -1,4 +1,12 @@
+import type { Tables } from "@app/shared-logic";
 import { useSupabaseAdmin } from "../utils/db/client";
+type CrewRow = Tables<"dubbing_project_crew"> & {
+  voice_actors: Pick<Tables<"voice_actors">, "firstname" | "lastname"> | null;
+};
+type WorkRow = Tables<"work"> & {
+  voice_actors: Pick<Tables<"voice_actors">, "id" | "firstname" | "lastname"> | null;
+};
+
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   const numericId = query.numericId !== undefined ? Number(query.numericId) : undefined;
@@ -26,8 +34,8 @@ export default defineEventHandler(async (event) => {
       project = projects[0];
     }
 
-    let crewData: any[] = [];
-    let worksData: any[] = [];
+    let crewData: CrewRow[] = [];
+    let worksData: WorkRow[] = [];
 
     if (project) {
       const { data: crew, error: crewErr } = await supabaseAdmin

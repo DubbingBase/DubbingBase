@@ -160,6 +160,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useRouter, useRoute } from "vue-router";
+import { readErrorMessage } from "~/utils/error-message";
 
 // SEO configuration
 useSeoMeta({
@@ -187,14 +188,14 @@ const localePath = useLocalePath();
 // Redirect if already logged in
 onMounted(() => {
   if (user.value) {
-    const redirect = route.query.redirect as string;
+    const redirect = typeof route.query.redirect === "string" ? route.query.redirect : undefined;
     router.push(redirect ? redirect : localePath("/profile"));
   }
 });
 
 watch(user, (newUser) => {
   if (newUser) {
-    const redirect = route.query.redirect as string;
+    const redirect = typeof route.query.redirect === "string" ? route.query.redirect : undefined;
     router.push(redirect ? redirect : localePath("/profile"));
   }
 });
@@ -228,11 +229,11 @@ const handleRegister = async () => {
         "Registration successful! Please check your email to verify your account.";
     } else {
       isError.value = false;
-      const redirect = route.query.redirect as string;
+      const redirect = typeof route.query.redirect === "string" ? route.query.redirect : undefined;
       router.push(redirect ? redirect : localePath("/profile"));
     }
-  } catch (err: any) {
-    authMessage.value = err.message || "An error occurred during registration";
+  } catch (err: unknown) {
+    authMessage.value = readErrorMessage(err) || "An error occurred during registration";
   } finally {
     loading.value = false;
   }

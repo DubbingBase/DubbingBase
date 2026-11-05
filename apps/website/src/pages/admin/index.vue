@@ -134,9 +134,9 @@ const loading = ref(true);
 const error = ref<string | null>(null);
 const userCount = ref(0);
 const voiceActorCount = ref(0);
-const userRegistrations = ref<any[]>([]);
-const voiceActorGrowth = ref<any[]>([]);
-const topVoiceActors = ref<any[]>([]);
+const userRegistrations = ref<{ month: string; count: number }[]>([]);
+const voiceActorGrowth = ref<{ date: string; count: number }[]>([]);
+const topVoiceActors = ref<Record<string, unknown>[]>([]);
 const selectedUnit = ref("day");
 
 // Utility functions
@@ -154,29 +154,23 @@ function aggregateData(data: { date: string; count: number }[], unit: string) {
       .map((item) => ({ period: item.date, count: item.count }))
       .sort((a, b) => a.period.localeCompare(b.period));
   } else if (unit === "month") {
-    const grouped = data.reduce(
-      (acc, item) => {
-        const month = item.date.slice(0, 7); // YYYY-MM
-        acc[month] = (acc[month] || 0) + item.count;
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
+    const grouped = data.reduce<Record<string, number>>((acc, item) => {
+      const month = item.date.slice(0, 7); // YYYY-MM
+      acc[month] = (acc[month] || 0) + item.count;
+      return acc;
+    }, {});
     return Object.entries(grouped)
       .map(([period, count]) => ({ period, count }))
       .sort((a, b) => a.period.localeCompare(b.period));
   } else if (unit === "week") {
-    const grouped = data.reduce(
-      (acc, item) => {
-        const date = new Date(item.date);
-        const year = date.getFullYear();
-        const week = getISOWeek(date);
-        const key = `${year}-W${week.toString().padStart(2, "0")}`;
-        acc[key] = (acc[key] || 0) + item.count;
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
+    const grouped = data.reduce<Record<string, number>>((acc, item) => {
+      const date = new Date(item.date);
+      const year = date.getFullYear();
+      const week = getISOWeek(date);
+      const key = `${year}-W${week.toString().padStart(2, "0")}`;
+      acc[key] = (acc[key] || 0) + item.count;
+      return acc;
+    }, {});
     return Object.entries(grouped)
       .map(([period, count]) => ({ period, count }))
       .sort((a, b) => a.period.localeCompare(b.period));
@@ -189,7 +183,7 @@ const chartTextColor = "#6b7280";
 const chartGridColor = "rgba(156, 163, 175, 0.2)";
 
 // Chart data
-const userRegistrationsData = ref<ChartData>({
+const userRegistrationsData = ref<ChartData<"bar">>({
   labels: [],
   datasets: [
     {
@@ -203,13 +197,14 @@ const userRegistrationsData = ref<ChartData>({
   ],
 });
 
-const voiceActorGrowthData = computed<ChartData>(() => {
+const voiceActorGrowthData = computed<ChartData<"line">>(() => {
   const aggregated = aggregateData(voiceActorGrowth.value, selectedUnit.value);
-  const cumulative = aggregated.reduce((acc, item, index) => {
-    const prev = index > 0 && acc[index - 1] !== undefined ? (acc[index - 1] as number) : 0;
+  const cumulative = aggregated.reduce<number[]>((acc, item, index) => {
+    const previous = index > 0 ? acc[index - 1] : undefined;
+    const prev = previous !== undefined ? previous : 0;
     acc.push(prev + item.count);
     return acc;
-  }, [] as number[]);
+  }, []);
   return {
     labels: aggregated.map((item) => item.period),
     datasets: [
@@ -234,7 +229,7 @@ const voiceActorGrowthData = computed<ChartData>(() => {
   };
 });
 
-const topVoiceActorsData = ref<ChartData>({
+const topVoiceActorsData = ref<ChartData<"pie">>({
   labels: [],
   datasets: [
     {
@@ -259,7 +254,7 @@ const topVoiceActorsData = ref<ChartData>({
 });
 
 // Chart options
-const barChartOptions = computed<ChartOptions>(() => ({
+const barChartOptions = computed<ChartOptions<"bar">>(() => ({
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
@@ -296,7 +291,7 @@ const barChartOptions = computed<ChartOptions>(() => ({
   },
 }));
 
-const lineChartOptions = computed<ChartOptions>(() => ({
+const lineChartOptions = computed<ChartOptions<"line">>(() => ({
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
@@ -340,7 +335,7 @@ const lineChartOptions = computed<ChartOptions>(() => ({
   },
 }));
 
-const pieChartOptions = computed<ChartOptions>(() => ({
+const pieChartOptions = computed<ChartOptions<"pie">>(() => ({
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
@@ -365,13 +360,13 @@ const {
 } = await useAsyncData(
   "admin-dashboard",
   async () => {
-    return (await $fetch("/api/dashboard-stats")) as {
+    return await $fetch<{
       userCount: number;
       voiceActorCount: number;
       userGrowth: { date: string; count: number }[];
       voiceActorGrowth: { date: string; count: number }[];
-      topVoiceActors: any[];
-    };
+      topVoiceActors: Record<string, unknown>[];
+    }>("/api/dashboard-stats");
   },
   { getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp) },
 );
@@ -384,7 +379,7 @@ watch(
       voiceActorCount.value = stats.voiceActorCount;
 
       // Group user growth by month
-      const userGrouped = stats.userGrowth.reduce((acc: any, item) => {
+      const userGrouped = stats.userGrowth.reduce<Record<string, number>>((acc, item) => {
         const month = item.date.slice(0, 7); // YYYY-MM
         acc[month] = (acc[month] || 0) + item.count;
         return acc;
@@ -407,11 +402,13 @@ watch(
 
       // Update top voice actors chart data
       topVoiceActorsData.value.labels = topVoiceActors.value.map(
-        (item) => `${item.firstname} ${item.lastname}`,
+        (item) => `${String(item.firstname)} ${String(item.lastname)}`,
       );
       const vaDataset = topVoiceActorsData.value.datasets[0];
       if (vaDataset) {
-        vaDataset.data = topVoiceActors.value.map((item) => item.role_count);
+        vaDataset.data = topVoiceActors.value.map((item) =>
+          typeof item.role_count === "number" ? item.role_count : 0,
+        );
       }
     }
   },

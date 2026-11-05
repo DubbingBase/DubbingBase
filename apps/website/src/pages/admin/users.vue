@@ -202,6 +202,7 @@ definePageMeta({
 });
 
 import { ref, onMounted, computed } from "vue";
+import { readErrorMessage } from "~/utils/error-message";
 
 interface User {
   id: string;
@@ -296,7 +297,7 @@ const updateRole = async (userObj: User) => {
     await fetchUsers();
   } catch (err: unknown) {
     console.error("Error updating user role:", err);
-    showToast(err instanceof Error ? err.message : "Failed to update role", "error");
+    showToast(readErrorMessage(err) || "Failed to update role", "error");
   } finally {
     updatingRole.value[userObj.id] = false;
   }
@@ -323,7 +324,7 @@ const deleteUser = async () => {
     await fetchUsers();
   } catch (err: unknown) {
     console.error("Error deleting user:", err);
-    showToast(err instanceof Error ? err.message : "Failed to delete user", "error");
+    showToast(readErrorMessage(err) || "Failed to delete user", "error");
   } finally {
     deleting.value = false;
   }

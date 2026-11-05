@@ -77,7 +77,7 @@ export default defineEventHandler(async (event) => {
       return { ok: true, notified: 0 };
     }
 
-    const targetUserIds = subscriptions.map((sub: any) => sub.user_id);
+    const targetUserIds = subscriptions.map((sub: { user_id: string }) => sub.user_id);
 
     const voiceActorName = `${voiceActor.firstname} ${voiceActor.lastname}`.trim();
 

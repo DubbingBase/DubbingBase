@@ -1,15 +1,22 @@
+import type { MediaDetailCharacterProfilePicture } from "../types/media-detail";
+
+export type SeasonDataResponse = {
+  season: Record<string, unknown>;
+  characterProfilePictures?: MediaDetailCharacterProfilePicture[];
+} & Record<string, unknown>;
+
 export async function fetchSeasonData(
   showId: string | number,
   seasonNumber: string | number,
   locale?: string,
-): Promise<any | null> {
+): Promise<SeasonDataResponse | null> {
   const headers: Record<string, string> = {};
   if (locale) {
     headers["Accept-Language"] = locale;
   }
 
   try {
-    const data = await $fetch<any>(`/api/season`, {
+    const data = await $fetch<SeasonDataResponse>(`/api/season`, {
       headers,
       query: {
         id: showId,

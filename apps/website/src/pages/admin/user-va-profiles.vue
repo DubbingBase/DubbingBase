@@ -315,6 +315,8 @@ definePageMeta({
 });
 
 import { ref, computed, onMounted } from "vue";
+import type { Tables } from "@app/supabase/types";
+import { readErrorMessage } from "~/utils/error-message";
 const supabase = useSupabaseClient();
 
 const getProfilePictureUrl = (path: string | null) => {
@@ -546,7 +548,7 @@ const linkUserVoiceActor = async () => {
     fetchExistingLinks();
   } catch (err: unknown) {
     console.error("Error linking user to voice actor:", err);
-    showToast(err instanceof Error ? err.message : "Failed to link profile", "error");
+    showToast(readErrorMessage(err) || "Failed to link profile", "error");
   } finally {
     linking.value = false;
   }
@@ -555,8 +557,9 @@ const linkUserVoiceActor = async () => {
 // Global click handler to close dropdowns
 const setupClickListeners = () => {
   document.addEventListener("click", (e) => {
+    if (!(e.target instanceof Element)) return;
     const target = e.target;
-    if (target instanceof HTMLElement && !target.closest(".relative")) {
+    if (!target.closest(".relative")) {
       isUserDropdownOpen.value = false;
       isVoiceActorDropdownOpen.value = false;
     }

@@ -1,3 +1,5 @@
+import { getGlobalEnv } from "./global-env";
+import { asString } from "./narrow";
 import { generateText, generateObject } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAI } from "@ai-sdk/openai";
@@ -6,9 +8,9 @@ import { getErrorMessage } from "./error-message";
 
 function getLlmProvider(): "groq" | "gemini" {
   const config = useRuntimeConfig();
-  const globalEnv = (globalThis as any)?.__env__;
+  const globalEnv = getGlobalEnv();
   const provider = (
-    (config.llmProvider as string) ||
+    asString(config.llmProvider) ||
     globalEnv?.NUXT_LLM_PROVIDER ||
     globalEnv?.LLM_PROVIDER ||
     process.env.NUXT_LLM_PROVIDER ||
@@ -20,9 +22,9 @@ function getLlmProvider(): "groq" | "gemini" {
 
 function getGroqModel(): string {
   const config = useRuntimeConfig();
-  const globalEnv = (globalThis as any)?.__env__;
+  const globalEnv = getGlobalEnv();
   return (
-    (config.groqModel as string) ||
+    asString(config.groqModel) ||
     globalEnv?.NUXT_GROQ_MODEL ||
     globalEnv?.GROQ_MODEL ||
     process.env.NUXT_GROQ_MODEL ||
@@ -33,9 +35,9 @@ function getGroqModel(): string {
 
 function getGeminiModelChain(): string[] {
   const config = useRuntimeConfig();
-  const globalEnv = (globalThis as any)?.__env__;
+  const globalEnv = getGlobalEnv();
   const list =
-    (config.geminiModels as string) ||
+    asString(config.geminiModels) ||
     globalEnv?.NUXT_GEMINI_MODELS ||
     globalEnv?.GEMINI_MODELS ||
     process.env.NUXT_GEMINI_MODELS ||
@@ -51,9 +53,9 @@ function getGeminiModelChain(): string[] {
 
 function getGoogleClient() {
   const config = useRuntimeConfig();
-  const globalEnv = (globalThis as any)?.__env__;
+  const globalEnv = getGlobalEnv();
   const apiKey =
-    (config.googleAiKey as string) ||
+    asString(config.googleAiKey) ||
     globalEnv?.NUXT_GOOGLE_AI_KEY ||
     globalEnv?.GOOGLE_AI_KEY ||
     globalEnv?.GEMINI_API_KEY ||
@@ -67,9 +69,9 @@ function getGoogleClient() {
 
 function getGroqClient() {
   const config = useRuntimeConfig();
-  const globalEnv = (globalThis as any)?.__env__;
+  const globalEnv = getGlobalEnv();
   const apiKey =
-    (config.groqApiKey as string) ||
+    asString(config.groqApiKey) ||
     globalEnv?.NUXT_GROQ_API_KEY ||
     globalEnv?.GROQ_API_KEY ||
     process.env.NUXT_GROQ_API_KEY ||
@@ -102,7 +104,7 @@ const QUOTA_CACHE_TTL_MS = 60 * 60 * 1000; // 1h
 function parseRemainingFromHeaders(
   headers?: Record<string, string> | Headers | null,
 ): number | undefined {
-  const h = normalizeHeaders(headers as any);
+  const h = normalizeHeaders(headers);
   if (!h) return undefined;
   const rem =
     h["x-ratelimit-remaining-requests"] ??
@@ -199,7 +201,7 @@ function normalizeHeaders(
 function extractQuotaFromHeaders(
   headers?: Record<string, string> | Headers | null,
 ): string | undefined {
-  const h = normalizeHeaders(headers as any);
+  const h = normalizeHeaders(headers);
   if (!h) return undefined;
   const remReq =
     h["x-ratelimit-remaining-requests"] ?? h["x-ratelimit-remaining"] ?? h["ratelimit-remaining"];
@@ -252,14 +254,14 @@ async function runWithFallbacks<T>(executions: LlmExecution<T>[]): Promise<LlmRe
       if (isRateLimitError(error))
         updateQuotaCache(exec.name, {
           "x-ratelimit-remaining-requests": "0",
-        } as any);
+        });
       failures.push({ name: exec.name, msg });
     }
   }
   const isRateLimit =
-    failures.length > 0 && failures.every(({ msg }) => isRateLimitError({ message: msg } as Error));
+    failures.length > 0 && failures.every(({ msg }) => isRateLimitError({ message: msg }));
   // also treat as rate limit if any failure was rate limit and we exhausted all models
-  const anyRateLimit = failures.some(({ msg }) => isRateLimitError({ message: msg } as Error));
+  const anyRateLimit = failures.some(({ msg }) => isRateLimitError({ message: msg }));
   const finalIsRateLimit = isRateLimit || (anyRateLimit && failures.length === executions.length);
   const prefix = finalIsRateLimit ? "LLM API Rate Limited (429) - " : "All LLM fallbacks failed - ";
   const detail = failures.map(({ name, msg }) => `* ${name}: ${msg}`).join(" | ");
@@ -308,8 +310,8 @@ export async function llmGenerate(
         temperature,
       }).then((r) => ({
         data: r.text,
-        usage: (r as any).usage as LlmUsage | undefined,
-        headers: (r as any).response?.headers as Record<string, string> | undefined,
+        usage: r.usage,
+        headers: r.response?.headers,
       })),
   };
 
@@ -323,8 +325,8 @@ export async function llmGenerate(
         temperature,
       }).then((r) => ({
         data: r.text,
-        usage: (r as any).usage as LlmUsage | undefined,
-        headers: (r as any).response?.headers as Record<string, string> | undefined,
+        usage: r.usage,
+        headers: r.response?.headers,
       })),
   }));
 
@@ -377,8 +379,8 @@ export async function llmGenerateObject<T extends z.ZodType>(
         temperature,
       }).then((r) => ({
         data: r.object,
-        usage: (r as any).usage as LlmUsage | undefined,
-        headers: (r as any).response?.headers as Record<string, string> | undefined,
+        usage: r.usage,
+        headers: r.response?.headers,
       })),
   };
 
@@ -393,8 +395,8 @@ export async function llmGenerateObject<T extends z.ZodType>(
         temperature,
       }).then((r) => ({
         data: r.object,
-        usage: (r as any).usage as LlmUsage | undefined,
-        headers: (r as any).response?.headers as Record<string, string> | undefined,
+        usage: r.usage,
+        headers: r.response?.headers,
       })),
   }));
 
@@ -459,8 +461,8 @@ export async function llmVision(
         temperature,
       }).then((r) => ({
         data: r.text,
-        usage: (r as any).usage as LlmUsage | undefined,
-        headers: (r as any).response?.headers as Record<string, string> | undefined,
+        usage: r.usage,
+        headers: r.response?.headers,
       })),
   };
 
@@ -479,8 +481,8 @@ export async function llmVision(
         temperature,
       }).then((r) => ({
         data: r.text,
-        usage: (r as any).usage as LlmUsage | undefined,
-        headers: (r as any).response?.headers as Record<string, string> | undefined,
+        usage: r.usage,
+        headers: r.response?.headers,
       })),
   }));
 
@@ -546,8 +548,8 @@ export async function llmVisionObject<T extends z.ZodType>(
         temperature,
       }).then((r) => ({
         data: r.object,
-        usage: (r as any).usage as LlmUsage | undefined,
-        headers: (r as any).response?.headers as Record<string, string> | undefined,
+        usage: r.usage,
+        headers: r.response?.headers,
       })),
   };
 
@@ -567,8 +569,8 @@ export async function llmVisionObject<T extends z.ZodType>(
         temperature,
       }).then((r) => ({
         data: r.object,
-        usage: (r as any).usage as LlmUsage | undefined,
-        headers: (r as any).response?.headers as Record<string, string> | undefined,
+        usage: r.usage,
+        headers: r.response?.headers,
       })),
   }));
 
