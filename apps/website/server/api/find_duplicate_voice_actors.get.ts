@@ -59,7 +59,7 @@ function projectDuplicateVoiceActor(value: Json): DuplicateVoiceActor {
   };
 }
 
-export default defineAdminHandler(async (event) => {
+export default defineAdminHandler(async () => {
   const supabaseAdmin = useSupabaseAdmin();
   const { data, error } = await supabaseAdmin.rpc("find_duplicate_voice_actors_rpc");
 
