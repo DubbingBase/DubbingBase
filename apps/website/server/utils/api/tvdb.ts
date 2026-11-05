@@ -1,12 +1,9 @@
 import { createCacheNamespace, SimpleCache } from "../cache";
+import { isRecord } from "@app/shared-logic";
 
 export const TVDB_AUTH_TOKEN_NAMESPACE = createCacheNamespace<string>();
 
 const AUTH_TOKEN_TTL = 23 * 60 * 60;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
 
 function debugLog(message: string, data?: unknown) {
   console.log(`[TVDB] ${message}`, data ? JSON.stringify(data, null, 2) : "");

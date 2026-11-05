@@ -1,5 +1,6 @@
 import { defineUserHandler } from "../utils/auth-handlers";
 import { useSupabaseAdmin } from "../utils/db/client";
+import { isRecord } from "@app/shared-logic";
 
 function deleteError(statusCode: number, message: string) {
   return createError({ statusCode, statusMessage: message, message });
@@ -74,7 +75,3 @@ export default defineUserHandler(async (event, user) => {
     replayed: mutation.replayed,
   };
 });
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}

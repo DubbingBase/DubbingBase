@@ -27,6 +27,7 @@ import {
 } from "../utils/queue-payload";
 import { wikiCheckDisposition } from "../utils/wiki-check-disposition";
 import type { Database, Json } from "@app/supabase/types";
+import { readProperty } from "@app/shared-logic";
 
 // Keep provider fan-out small enough to finish inside one cron cycle.
 const FAST_QUEUE_BATCH_SIZE = 3;
@@ -82,11 +83,6 @@ function assertWikiCheckArchived(
       `Wiki check item ${msgId} was not confirmed archived; it may already be finalized.`,
     );
   }
-}
-
-function readProperty(value: unknown, key: string): unknown {
-  if (typeof value !== "object" || value === null) return undefined;
-  return Reflect.get(value, key);
 }
 
 function getStringProperty(value: unknown, key: string): string | undefined {

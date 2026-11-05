@@ -1,5 +1,6 @@
 import { defineUserHandler } from "../utils/auth-handlers";
 import { useSupabaseAdmin } from "../utils/db/client";
+import { isRecord } from "@app/shared-logic";
 
 const PERFORMANCES = [
   "dialogues",
@@ -24,10 +25,6 @@ function isUuid(value: unknown): value is string {
 
 function isPositiveId(value: unknown): value is number {
   return typeof value === "number" && Number.isSafeInteger(value) && value > 0;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function isTimestamp(value: unknown): value is string | null {

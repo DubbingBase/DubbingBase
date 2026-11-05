@@ -1,6 +1,4 @@
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
+import { isRecord } from "@app/shared-logic";
 
 function pickFields(value: Record<string, unknown>, fields: readonly string[]) {
   const result: Record<string, unknown> = {};

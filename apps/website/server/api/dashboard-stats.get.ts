@@ -1,16 +1,13 @@
 import { useSupabaseAdmin } from "../utils/db/client";
 import { buildSupabaseImageUrl } from "../utils/urls/supabase";
 import { defineAdminHandler } from "../utils/auth-handlers";
+import { isRecord } from "@app/shared-logic";
 interface DashboardStats {
   userCount: number;
   voiceActorCount: number;
   userGrowth: { date: string; count: number }[];
   voiceActorGrowth: { date: string; count: number }[];
   topVoiceActors: Record<string, unknown>[];
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function countByDay(dates: Iterable<string | null | undefined>) {

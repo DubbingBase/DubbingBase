@@ -1,6 +1,7 @@
 import type { Json } from "@app/supabase";
 import { defineUserHandler } from "../utils/auth-handlers";
 import { useSupabaseAdmin } from "../utils/db/client";
+import { isRecord } from "@app/shared-logic";
 
 const editableFields = new Set([
   "name",
@@ -12,10 +13,6 @@ const editableFields = new Set([
   "social_media_links",
 ]);
 const socialMediaFields = new Set(["twitter", "instagram", "tiktok", "facebook"]);
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
 
 function invalidRequest(): never {
   throw createError({ statusCode: 400, message: "Invalid studio update" });

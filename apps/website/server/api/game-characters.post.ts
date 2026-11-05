@@ -1,11 +1,7 @@
 import { defineAdminHandler } from "../utils/auth-handlers";
+import { isRecord } from "@app/shared-logic";
 import { useSupabaseAdmin } from "../utils/db/client";
-import {
-  gameCharacterError,
-  hasOnlyKeys,
-  isRecord,
-  isUuid,
-} from "../utils/game-character-validation";
+import { gameCharacterError, hasOnlyKeys, isUuid } from "../utils/game-character-validation";
 
 export default defineAdminHandler(async (event, admin) => {
   const body: unknown = await readBody(event);

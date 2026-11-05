@@ -8,6 +8,7 @@ import { useCache, useIgdbClient, useOpenLibraryClient } from "../index";
 import { buildIgdbImageUrl } from "../api/igdb";
 import { createCacheNamespace } from "../cache";
 import { buildCacheKey, hashCacheValue } from "../cache/constants";
+import { isRecord } from "@app/shared-logic";
 
 const WIKIPEDIA_USER_AGENT = "DubbingBase/1.0 (https://dubbingbase.com; contact@dubbingbase.com)";
 
@@ -69,10 +70,6 @@ type MediaContentType =
   | "toy";
 
 type MediaTarget = { contentType: MediaContentType; contentId: number };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
 
 function omitUnusedEpisodeFields(media: unknown): unknown {
   if (!isRecord(media)) return media;

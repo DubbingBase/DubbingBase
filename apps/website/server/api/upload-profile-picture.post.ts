@@ -3,6 +3,7 @@ import { getRequestHeader, getRequestIP, type H3Event } from "h3";
 import { randomUUID } from "node:crypto";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { buildSupabaseImageUrl } from "../utils/urls/supabase";
+import { readProperty } from "@app/shared-logic";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const RATE_LIMITER_BINDING = "PROFILE_PICTURE_UPLOAD_LIMITER";
@@ -36,11 +37,6 @@ const imageTypes = {
 
 function isImageContentType(value: string | undefined): value is ImageContentType {
   return value !== undefined && Object.hasOwn(imageTypes, value);
-}
-
-function readProperty(value: unknown, key: string): unknown {
-  if (typeof value !== "object" || value === null) return undefined;
-  return Reflect.get(value, key);
 }
 
 function isUploadRateLimiter(value: unknown): value is UploadRateLimiter {

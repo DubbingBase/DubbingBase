@@ -1,6 +1,7 @@
 import type { Json, Tables } from "@app/supabase/types";
 import type { VoiceActorCreationPayload } from "../composables/useMetadataCreation";
 import { createStableRequestIdFactory } from "./dubbing-project-save";
+import { readProperty } from "@app/shared-logic";
 
 // The database client omits the computed voice_actor_name field for select('*').
 export type VoiceActorProfile = Omit<Tables<"voice_actors">, "voice_actor_name">;
@@ -193,10 +194,6 @@ export function createVoiceActorProfileSaveClient(
     requestIds.clear();
     return response.profile;
   };
-}
-
-function readProperty(value: unknown, key: string): unknown {
-  return typeof value === "object" && value !== null ? Reflect.get(value, key) : undefined;
 }
 
 export function isVoiceActorProfileConflict(error: unknown): boolean {
