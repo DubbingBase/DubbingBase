@@ -206,6 +206,7 @@
   - const TMDB_CONFIG
   - const withTmdbImageUrls
   - const processMedia
+- `apps/website/server/utils/voice-actor-record.ts` — function isVoiceActorRecord: (value) => value is VoiceActorRecord, type VoiceActorRecord
 - `apps/website/server/utils/wiki-check-disposition.ts`
   - function wikiCheckDisposition: (evidence, candidateSectionIndexes, requestedLanguage?) => WikiCheckDisposition
   - type WikiCheckArchiveReason
@@ -220,7 +221,10 @@
   - function formatVoiceActorName
   - interface AdminLookupOption
   - type AdminLookups
-- `apps/website/src/composables/useAdminReports.ts` — function useAdminReports, const ADMIN_REPORTS_PAGE_SIZE
+- `apps/website/src/composables/useAdminReports.ts`
+  - function useAdminReports
+  - type UserReport
+  - const ADMIN_REPORTS_PAGE_SIZE
 - `apps/website/src/composables/useClientUser.ts` — function useClientUser: () => void
 - `apps/website/src/composables/useContribute.ts`
   - function fetchRandomTask
@@ -272,14 +276,14 @@
   - function createDubbingProjectSaveClient: (transport, randomUUID) => void
   - function isDubbingProjectSaveConflict: (error) => boolean
   - function getDubbingProjectSaveErrorMessage: (error) => string
-  - _...8 more_
+  - _...10 more_
 - `apps/website/src/utils/duplicate-work.ts`
   - function duplicateWorkDraftHasChanges: (initial, current) => boolean
   - function canPrefetchDuplicateWorkPage: (requestSucceeded, currentIndex, groupCount, nextCursor) => boolean
   - function rankDuplicateWorks: (works) => DuplicateWorkEntry[]
   - function prefillDuplicateWork: (canonical, works) => void
-  - interface DuplicateWorkEntry
   - interface DuplicateWorkGroup
+  - interface DuplicateWorkPage
   - _...4 more_
 - `apps/website/src/utils/error-message.ts` — function readErrorMessage: (err) => string | undefined
 - `apps/website/src/utils/locale-preference.ts` — function resolvePreferredLocale: (savedChoice, browserLanguages) => SupportedLocale | null, const LOCALE_PREFERENCE_COOKIE
@@ -298,9 +302,9 @@
   - function fetchSeasonPageData: (showId, seasonNumber, locale?) => Promise<SeasonPageDataResponse>
   - function fetchEpisodePageData: (showId, seasonNumber, episodeNumber, locale?, projectId?) => Promise<EpisodePageDataResponse>
   - function fetchEpisodeProjectWorks: (showId, projectId, locale?) => Promise<EpisodePageProjectWorksResponse>
-  - interface SeasonPageDubbingProject
   - interface EpisodePageDubbingProject
   - interface EpisodePageVoiceActor
+  - interface EpisodePageDataResponse
   - _...2 more_
 - `apps/website/src/utils/show-character-pictures.ts`
   - function indexCharacterPictures: (pictures) => CharacterPictureIndex

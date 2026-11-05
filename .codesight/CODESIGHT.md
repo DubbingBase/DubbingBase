@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 91 routes | 28 models | 132 components | 119 lib files | 64 env vars | 15 middleware | 47% test coverage
-> **Token savings:** this file is ~17,700 tokens. Without it, AI exploration would cost ~153,400 tokens. **Saves ~135,700 tokens per conversation.**
-> **Last scanned:** 2026-11-05 10:40 — re-run after significant changes
+> 91 routes | 28 models | 132 components | 120 lib files | 64 env vars | 15 middleware | 47% test coverage
+> **Token savings:** this file is ~17,800 tokens. Without it, AI exploration would cost ~153,700 tokens. **Saves ~135,900 tokens per conversation.**
+> **Last scanned:** 2026-11-05 10:51 — re-run after significant changes
 
 ---
 
@@ -654,6 +654,7 @@
   - const TMDB_CONFIG
   - const withTmdbImageUrls
   - const processMedia
+- `apps/website/server/utils/voice-actor-record.ts` — function isVoiceActorRecord: (value) => value is VoiceActorRecord, type VoiceActorRecord
 - `apps/website/server/utils/wiki-check-disposition.ts`
   - function wikiCheckDisposition: (evidence, candidateSectionIndexes, requestedLanguage?) => WikiCheckDisposition
   - type WikiCheckArchiveReason
@@ -668,7 +669,10 @@
   - function formatVoiceActorName
   - interface AdminLookupOption
   - type AdminLookups
-- `apps/website/src/composables/useAdminReports.ts` — function useAdminReports, const ADMIN_REPORTS_PAGE_SIZE
+- `apps/website/src/composables/useAdminReports.ts`
+  - function useAdminReports
+  - type UserReport
+  - const ADMIN_REPORTS_PAGE_SIZE
 - `apps/website/src/composables/useClientUser.ts` — function useClientUser: () => void
 - `apps/website/src/composables/useContribute.ts`
   - function fetchRandomTask
@@ -720,14 +724,14 @@
   - function createDubbingProjectSaveClient: (transport, randomUUID) => void
   - function isDubbingProjectSaveConflict: (error) => boolean
   - function getDubbingProjectSaveErrorMessage: (error) => string
-  - _...8 more_
+  - _...10 more_
 - `apps/website/src/utils/duplicate-work.ts`
   - function duplicateWorkDraftHasChanges: (initial, current) => boolean
   - function canPrefetchDuplicateWorkPage: (requestSucceeded, currentIndex, groupCount, nextCursor) => boolean
   - function rankDuplicateWorks: (works) => DuplicateWorkEntry[]
   - function prefillDuplicateWork: (canonical, works) => void
-  - interface DuplicateWorkEntry
   - interface DuplicateWorkGroup
+  - interface DuplicateWorkPage
   - _...4 more_
 - `apps/website/src/utils/error-message.ts` — function readErrorMessage: (err) => string | undefined
 - `apps/website/src/utils/locale-preference.ts` — function resolvePreferredLocale: (savedChoice, browserLanguages) => SupportedLocale | null, const LOCALE_PREFERENCE_COOKIE
@@ -746,9 +750,9 @@
   - function fetchSeasonPageData: (showId, seasonNumber, locale?) => Promise<SeasonPageDataResponse>
   - function fetchEpisodePageData: (showId, seasonNumber, episodeNumber, locale?, projectId?) => Promise<EpisodePageDataResponse>
   - function fetchEpisodeProjectWorks: (showId, projectId, locale?) => Promise<EpisodePageProjectWorksResponse>
-  - interface SeasonPageDubbingProject
   - interface EpisodePageDubbingProject
   - interface EpisodePageVoiceActor
+  - interface EpisodePageDataResponse
   - _...2 more_
 - `apps/website/src/utils/show-character-pictures.ts`
   - function indexCharacterPictures: (pictures) => CharacterPictureIndex
@@ -962,8 +966,8 @@
 - `apps/website/server/utils/auth.ts` — imported by **16** files
 - `apps/website/server/utils/notifications/discord.ts` — imported by **12** files
 - `apps/website/server/utils/api/igdb.ts` — imported by **12** files
+- `packages/shared-logic/src/types/index.ts` — imported by **12** files
 - `apps/website/server/utils/urls/supabase.ts` — imported by **11** files
-- `packages/shared-logic/src/types/index.ts` — imported by **11** files
 - `apps/website/server/utils/dubbing-language.ts` — imported by **10** files
 - `apps/website/server/utils/cache/http.ts` — imported by **10** files
 - `apps/website/server/utils/db/queries.ts` — imported by **9** files
@@ -985,8 +989,8 @@
 - `apps/website/server/utils/auth.ts` ← `apps/website/server/api/admin/work-duplicates.get.ts`, `apps/website/server/api/cast-vote.post.ts`, `apps/website/server/api/generate-social-content.post.ts`, `apps/website/server/api/get-work-votes.get.ts`, `apps/website/server/api/manage-subscription.post.ts` +11 more
 - `apps/website/server/utils/notifications/discord.ts` ← `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/game/[id].get.ts`, `apps/website/server/api/media-queue.post.ts`, `apps/website/server/api/movie/[id].get.ts` +7 more
 - `apps/website/server/utils/api/igdb.ts` ← `apps/website/server/api/game/[id].get.ts`, `apps/website/server/api/internal-media-credits.get.ts`, `apps/website/server/api/internal-media-metadata.get.ts`, `apps/website/server/api/media-catalog.get.ts`, `apps/website/server/api/search/index.get.ts` +7 more
+- `packages/shared-logic/src/types/index.ts` ← `packages/shared-logic/src/composables/useAdvertisementData.ts`, `packages/shared-logic/src/composables/useAudiobookData.ts`, `packages/shared-logic/src/composables/useDetailCollections.ts`, `packages/shared-logic/src/composables/useDetailCollections.ts`, `packages/shared-logic/src/composables/useGameData.ts` +7 more
 - `apps/website/server/utils/urls/supabase.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/dashboard-stats.get.ts`, `apps/website/server/api/find_duplicate_voice_actors.get.ts`, `apps/website/server/api/list-voice-actors.get.ts`, `apps/website/server/api/recent-voice-actors.get.ts` +6 more
-- `packages/shared-logic/src/types/index.ts` ← `packages/shared-logic/src/composables/useAdvertisementData.ts`, `packages/shared-logic/src/composables/useAudiobookData.ts`, `packages/shared-logic/src/composables/useDetailCollections.ts`, `packages/shared-logic/src/composables/useDetailCollections.ts`, `packages/shared-logic/src/composables/useGameData.ts` +6 more
 - `apps/website/server/utils/dubbing-language.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/internal-media-create.post.ts`, `apps/website/server/api/link-voice-actor.post.ts`, `apps/website/server/api/media-queue.post.ts` +5 more
 
 ---
