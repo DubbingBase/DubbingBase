@@ -44,7 +44,7 @@ export async function fetchSearchData(
   if (trimmedQuery.length < 2) return [];
 
   const data = await $fetch<SearchResult[]>("/api/search", {
-    params: { query: trimmedQuery, projection: "search-page", locale },
+    query: { query: trimmedQuery, projection: "search-page", locale },
     signal,
   });
   return data || [];

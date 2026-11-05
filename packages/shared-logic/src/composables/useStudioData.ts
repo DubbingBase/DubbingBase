@@ -1,4 +1,5 @@
 import { ref } from "vue";
+import type { Tables } from "../types";
 
 export type Studio = {
   id: number;
@@ -12,10 +13,26 @@ export type Studio = {
   website_url: string | null;
 };
 
+export type StudioDubbedProject = Pick<
+  Tables<"dubbing_projects">,
+  "id" | "content_type" | "content_id" | "language"
+> & {
+  media: {
+    title?: string | null;
+    name?: string | null;
+    poster_path?: string | null;
+  } | null;
+};
+
+export type StudioVoiceActor = Pick<
+  Tables<"voice_actors">,
+  "id" | "firstname" | "lastname" | "profile_picture"
+>;
+
 export type StudioDetailsResponse = {
   studio: Studio;
-  dubbedProjects: any[];
-  voiceActorsRoster: any[];
+  dubbedProjects: StudioDubbedProject[];
+  voiceActorsRoster: StudioVoiceActor[];
 };
 
 export async function fetchStudioDetails(
@@ -24,7 +41,7 @@ export async function fetchStudioDetails(
 ): Promise<StudioDetailsResponse | null> {
   try {
     const data = await $fetch<StudioDetailsResponse>("/api/get-studio-details", {
-      params: { studioId, ...(projection ? { projection } : {}) },
+      query: { studioId, ...(projection ? { projection } : {}) },
     });
     return data;
   } catch (e) {
@@ -49,8 +66,8 @@ export function useStudioData(
 ) {
   const studios = ref<Studio[]>(initialStudios || []);
   const studio = ref<Studio | null>(initialStudioDetails?.studio || null);
-  const dubbedProjects = ref<any[]>(initialStudioDetails?.dubbedProjects || []);
-  const voiceActorsRoster = ref<any[]>(initialStudioDetails?.voiceActorsRoster || []);
+  const dubbedProjects = ref<StudioDubbedProject[]>(initialStudioDetails?.dubbedProjects || []);
+  const voiceActorsRoster = ref<StudioVoiceActor[]>(initialStudioDetails?.voiceActorsRoster || []);
   const loading = ref(false);
   const error = ref<string | null>(null);
 
@@ -60,9 +77,9 @@ export function useStudioData(
     try {
       const data = await $fetch<Studio[]>("/api/get-studio-details");
       studios.value = data || [];
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error fetching studios:", err);
-      error.value = err.message || "Failed to load studios";
+      error.value = err instanceof Error ? err.message : "Failed to load studios";
     } finally {
       loading.value = false;
     }
@@ -78,9 +95,9 @@ export function useStudioData(
         dubbedProjects.value = payload.dubbedProjects;
         voiceActorsRoster.value = payload.voiceActorsRoster;
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error loading studio details:", err);
-      error.value = err.message || "Failed to load studio details";
+      error.value = err instanceof Error ? err.message : "Failed to load studio details";
     } finally {
       loading.value = false;
     }

@@ -665,7 +665,7 @@ async function loadRegionalAssignments() {
   isRegionalAssignmentsLoading.value = true;
   try {
     const result = await $fetch<RegionalProjectResponse>("/api/admin/dubbing-project", {
-      params: {
+      query: {
         content_id: mediaId.value,
         content_type: mediaTypeParam.value,
         dubbing_language: dubbingLanguage.value,
@@ -702,7 +702,7 @@ async function fetchMediaData() {
   error.value = null;
   try {
     const metadata: unknown = await $fetch<unknown>("/api/internal-media-metadata", {
-      params: { media_type: mediaTypeParam.value, media_id: mediaId.value },
+      query: { media_type: mediaTypeParam.value, media_id: mediaId.value },
     });
     const m = isRecord(metadata) && isRecord(metadata.media) ? metadata.media : {};
     const cover = isRecord(m.cover) ? stringProperty(m.cover, "url") : undefined;
@@ -727,7 +727,7 @@ async function fetchMediaData() {
 
     if (supportsPublicCast.value) {
       const credits: unknown = await $fetch<unknown>("/api/internal-media-credits", {
-        params: {
+        query: {
           media_type: mediaTypeParam.value,
           media_id: mediaId.value,
         },
@@ -786,7 +786,7 @@ const executeSearch = async (actorId: number) => {
   searchLoading.value[actorId] = true;
   try {
     const data = await $fetch<VoiceActor[]>("/api/search-voice-actors", {
-      params: { query, limit: "10", projection: "admin-search" },
+      query: { query, limit: "10", projection: "admin-search" },
     });
     searchResults.value[actorId] = data || [];
   } catch (err) {
@@ -806,7 +806,7 @@ const triggerVoiceActorSearch = (_source: string) => {
     }
     try {
       const data = await $fetch<VoiceActor[]>("/api/search-voice-actors", {
-        params: { query: q, limit: "10", projection: "admin-search" },
+        query: { query: q, limit: "10", projection: "admin-search" },
       });
       manualVAOptions.value = data || [];
     } catch (err) {

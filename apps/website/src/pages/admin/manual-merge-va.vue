@@ -629,7 +629,7 @@ const fetchWorksCount = async (ids: number[]) => {
     if (data) {
       worksCount.value = data;
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error fetching works count:", err);
   } finally {
     loadingWorks.value = false;
@@ -723,11 +723,11 @@ const executeSearch = async (type: "A" | "B") => {
   loadingRef.value = true;
   try {
     const data = await $fetch<VoiceActorCandidate[]>("/api/search-voice-actors", {
-      params: { query, limit: "10", projection: "admin-search" },
+      query: { query, limit: "10", projection: "admin-search" },
     });
 
     resultsRef.value = data || [];
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error(`Error searching voice actors (${type}):`, err);
   } finally {
     loadingRef.value = false;
@@ -777,9 +777,9 @@ const mergeActors = async () => {
 
     // Reset after success
     reset();
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error merging voice actors:", err);
-    showToast(err.message || "Failed to merge profiles", "error");
+    showToast(err instanceof Error ? err.message : "Failed to merge profiles", "error");
   } finally {
     merging.value = false;
   }
@@ -798,8 +798,8 @@ const formatDate = (dateStr: string) => {
 };
 
 const handleOutsideClick = (e: MouseEvent) => {
-  const target = e.target as HTMLElement;
-  if (!target.closest(".relative")) {
+  const target = e.target;
+  if (target instanceof HTMLElement && !target.closest(".relative")) {
     activeSearch.value = null;
   }
 };

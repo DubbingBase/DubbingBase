@@ -146,6 +146,7 @@ export default defineNuxtConfig({
 
   experimental: {
     inlineRouteRules: true,
+    routeTypedFetch: true,
     defaults: {
       nuxtLink: {
         prefetchOn: {

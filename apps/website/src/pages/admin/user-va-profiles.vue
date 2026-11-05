@@ -336,6 +336,14 @@ interface VoiceActor {
   profile_picture: string | null;
 }
 
+interface ExistingLinkDisplay {
+  id: string;
+  user_id: string;
+  userEmail: string;
+  voiceActorName: string;
+  voiceActorImage: string | null;
+}
+
 // Selections
 const selectedUser = ref<User | null>(null);
 const selectedVoiceActor = ref<VoiceActor | null>(null);
@@ -362,7 +370,7 @@ const pendingLinkRequest = ref<{
   voiceActorId: number;
 } | null>(null);
 
-const existingLinks = ref<any[]>([]);
+const existingLinks = ref<ExistingLinkDisplay[]>([]);
 const linksLoading = ref(false);
 
 // Debouncing helpers
@@ -414,10 +422,10 @@ watch(
       allUsers.value = data.users;
       usersFetched.value = true;
 
-      existingLinks.value = data.links.map((link: any) => ({
+      existingLinks.value = data.links.map((link) => ({
         id: link.id,
         user_id: link.user_id,
-        userEmail: data.users.find((u: any) => u.id === link.user_id)?.email || "Unknown User",
+        userEmail: data.users.find((user) => user.id === link.user_id)?.email || "Unknown User",
         voiceActorName: link.voice_actors
           ? `${link.voice_actors.firstname} ${link.voice_actors.lastname}`
           : "Unknown Actor",
@@ -478,11 +486,11 @@ const searchVoiceActors = async () => {
   voiceActorSearching.value = true;
   try {
     const data = await $fetch<VoiceActor[]>("/api/search-voice-actors", {
-      params: { query, limit: 10, projection: "admin-search" },
+      query: { query, limit: 10, projection: "admin-search" },
     });
 
     voiceActorResults.value = data || [];
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error searching voice actors:", err);
     showToast("Failed to search voice actors", "error");
   } finally {
@@ -536,9 +544,9 @@ const linkUserVoiceActor = async () => {
     clearUserSelection();
     clearVoiceActorSelection();
     fetchExistingLinks();
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error linking user to voice actor:", err);
-    showToast(err.message || "Failed to link profile", "error");
+    showToast(err instanceof Error ? err.message : "Failed to link profile", "error");
   } finally {
     linking.value = false;
   }
@@ -547,8 +555,8 @@ const linkUserVoiceActor = async () => {
 // Global click handler to close dropdowns
 const setupClickListeners = () => {
   document.addEventListener("click", (e) => {
-    const target = e.target as HTMLElement;
-    if (!target.closest(".relative")) {
+    const target = e.target;
+    if (target instanceof HTMLElement && !target.closest(".relative")) {
       isUserDropdownOpen.value = false;
       isVoiceActorDropdownOpen.value = false;
     }

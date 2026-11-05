@@ -62,7 +62,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { resolveLocaleLanguage } from "@app/shared-logic";
+import { resolveLocaleLanguage, type SerieTrendingResponse } from "@app/shared-logic";
 
 const { t, locale } = useI18n();
 const localePath = useLocalePath();
@@ -93,8 +93,8 @@ const {
 } = useAsyncData(
   () => `series-page:${trendingLanguage.value}`,
   async () => {
-    const data = await $fetch<{ results: any[] }>("/api/trending/shows", {
-      params: { lang: trendingLanguage.value },
+    const data = await $fetch<SerieTrendingResponse>("/api/trending/shows", {
+      query: { lang: trendingLanguage.value },
     });
     return data?.results || [];
   },

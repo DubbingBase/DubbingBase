@@ -100,7 +100,7 @@ const {
   () => `movies-page:${trendingLanguage.value}`,
   async () => {
     const data = await $fetch<{ results?: TrendingMovieCard[] }>("/api/trending/movies", {
-      params: { lang: trendingLanguage.value, projection: "card" },
+      query: { lang: trendingLanguage.value, projection: "card" },
     });
     return data?.results ?? [];
   },
