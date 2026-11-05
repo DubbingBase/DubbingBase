@@ -72,7 +72,8 @@ export async function fetchShowData(event: H3Event, showId: number) {
   const hasWiki =
     typeof externalIds === "object" &&
     externalIds !== null &&
-    !!Reflect.get(externalIds, "wikidata_id");
+    "wikidata_id" in externalIds &&
+    !!externalIds.wikidata_id;
   const isAdult = serieWithImageUrls?.adult === true;
 
   if (!isProcessed && hasWiki && !isAdult) {

@@ -58,7 +58,8 @@ export async function fetchMovieData(event: H3Event, movieId: number) {
   const hasWiki =
     typeof externalIds === "object" &&
     externalIds !== null &&
-    !!Reflect.get(externalIds, "wikidata_id");
+    "wikidata_id" in externalIds &&
+    !!externalIds.wikidata_id;
   const isAdult = movieWithImageUrls?.adult === true;
 
   if (!isProcessed && hasWiki && !isAdult) {
