@@ -1,3 +1,4 @@
+import { readProperty } from "@app/shared-logic";
 import { resolveUser } from "../utils/auth";
 export default defineEventHandler(async (event) => {
   const user = await resolveUser(event);
@@ -92,6 +93,6 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const resData = await res.json();
-  return { success: true, emailId: resData.id };
+  const resData: unknown = await res.json();
+  return { success: true, emailId: readProperty(resData, "id") };
 });

@@ -1,7 +1,6 @@
-import type { Json } from "@app/supabase/types";
 import { defineAdminHandler } from "../utils/auth-handlers";
 import { useSupabaseAdmin } from "../utils/db/client";
-import { isRecord } from "@app/shared-logic";
+import { isJson, isRecord } from "@app/shared-logic";
 
 const voiceActorFields = new Set([
   "firstname",
@@ -17,16 +16,6 @@ const voiceActorFields = new Set([
   "wikidata_id",
   "status",
 ]);
-
-function isJson(value: unknown): value is Json {
-  if (value === null || typeof value === "string" || typeof value === "boolean") {
-    return true;
-  }
-  if (typeof value === "number") return Number.isFinite(value);
-  if (Array.isArray(value)) return value.every(isJson);
-  if (isRecord(value)) return Object.values(value).every(isJson);
-  return false;
-}
 
 function badRequest(message: string): never {
   throw createError({ statusCode: 400, message });

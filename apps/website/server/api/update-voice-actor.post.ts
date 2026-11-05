@@ -1,7 +1,6 @@
-import type { Json } from "@app/supabase/types";
 import { defineUserHandler } from "../utils/auth-handlers";
 import { useSupabaseAdmin } from "../utils/db/client";
-import { isRecord } from "@app/shared-logic";
+import { isJson, isRecord } from "@app/shared-logic";
 
 const voiceActorFields = new Set([
   "firstname",
@@ -25,14 +24,6 @@ const administratorFields = new Set([
   "wikidata_id",
   "status",
 ]);
-
-function isJson(value: unknown): value is Json {
-  if (value === null || typeof value === "string" || typeof value === "boolean") return true;
-  if (typeof value === "number") return Number.isFinite(value);
-  if (Array.isArray(value)) return value.every(isJson);
-  if (isRecord(value)) return Object.values(value).every(isJson);
-  return false;
-}
 
 function stableJsonStringify(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(stableJsonStringify).join(",")}]`;

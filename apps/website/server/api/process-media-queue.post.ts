@@ -437,7 +437,7 @@ export default defineEventHandler(async (event) => {
 
               if (!response.ok) throw createMediaResponseError("TMDB", response);
 
-              const movie = await response.json();
+              const movie: unknown = await response.json();
               mediaTitle =
                 getStringProperty(movie, "title") ||
                 getStringProperty(movie, "name") ||

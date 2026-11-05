@@ -1,6 +1,8 @@
 import { buildTmdbImageUrl } from "../utils/urls/tmdb";
 import { sendOneSignalNotification } from "../utils/notifications/onesignal";
 import { useSupabaseAdmin } from "../utils/db/client";
+import { asString } from "../utils/narrow";
+import { readProperty } from "@app/shared-logic";
 
 export default defineEventHandler(async (event) => {
   try {
@@ -53,10 +55,14 @@ export default defineEventHandler(async (event) => {
         },
       });
       if (tmdbRes.ok) {
-        const tmdbData = await tmdbRes.json();
-        mediaTitle = tmdbData.title || tmdbData.name || mediaTitle;
-        if (tmdbData.poster_path) {
-          imageUrl = buildTmdbImageUrl(tmdbData.poster_path) || undefined;
+        const tmdbData: unknown = await tmdbRes.json();
+        mediaTitle =
+          asString(readProperty(tmdbData, "title")) ||
+          asString(readProperty(tmdbData, "name")) ||
+          mediaTitle;
+        const posterPath = asString(readProperty(tmdbData, "poster_path"));
+        if (posterPath) {
+          imageUrl = buildTmdbImageUrl(posterPath) || undefined;
         }
       }
     } catch (tmdbErr) {

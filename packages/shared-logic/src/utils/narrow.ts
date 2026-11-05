@@ -1,3 +1,5 @@
+import type { Json } from "@app/supabase";
+
 /**
  * Narrows an untyped value to a plain object. Arrays and `null` are excluded.
  */
@@ -26,4 +28,16 @@ export function readPath(value: unknown, ...keys: string[]): unknown {
     if (current === undefined) return undefined;
   }
   return current;
+}
+
+/**
+ * Narrows an unknown value (for example the result of `JSON.parse`) to the database `Json`
+ * type. Non-finite numbers are rejected, since they are not valid JSON.
+ */
+export function isJson(value: unknown): value is Json {
+  if (value === null || typeof value === "string" || typeof value === "boolean") return true;
+  if (typeof value === "number") return Number.isFinite(value);
+  if (Array.isArray(value)) return value.every(isJson);
+  if (isRecord(value)) return Object.values(value).every(isJson);
+  return false;
 }

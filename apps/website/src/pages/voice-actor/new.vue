@@ -261,6 +261,7 @@ import {
   type VoiceActorCreationPayload,
 } from "~/composables/useMetadataCreation";
 import { ref, onMounted, computed } from "vue";
+import { isJson } from "@app/shared-logic";
 import {
   changedVoiceActorProfileFields,
   createVoiceActorProfileSaveClient,
@@ -385,7 +386,11 @@ const saveVoiceActor = async () => {
   // Parse social media links JSON
   if (socialMediaLinks.value.trim()) {
     try {
-      upsertData.social_media_links = JSON.parse(socialMediaLinks.value);
+      const parsedSocialMediaLinks: unknown = JSON.parse(socialMediaLinks.value);
+      if (!isJson(parsedSocialMediaLinks)) {
+        throw new Error("Social media links must be a JSON value");
+      }
+      upsertData.social_media_links = parsedSocialMediaLinks;
     } catch (e) {
       showToast("Invalid JSON schema in Social Media Links", "error");
       isSaving.value = false;
