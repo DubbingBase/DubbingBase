@@ -5,7 +5,7 @@
 
 > 91 routes | 28 models | 132 components | 121 lib files | 64 env vars | 15 middleware | 47% test coverage
 > **Token savings:** this file is ~17,800 tokens. Without it, AI exploration would cost ~153,900 tokens. **Saves ~136,100 tokens per conversation.**
-> **Last scanned:** 2026-11-05 19:33 — re-run after significant changes
+> **Last scanned:** 2026-11-05 20:10 — re-run after significant changes
 
 ---
 
@@ -844,7 +844,11 @@
   - function createCharacterMatcher: (roleName) => (characterName: string) => boolean
   - function normalizeCharacterName
   - function findCharacter
-- `packages/shared-logic/src/utils/narrow.ts` — function isRecord: (value) => value is Record<string, unknown>, function readProperty: (value, key) => unknown
+- `packages/shared-logic/src/utils/narrow.ts`
+  - function isRecord: (value) => value is Record<string, unknown>
+  - function readProperty: (value, key) => unknown
+  - function readPath: (value, ...keys) => unknown
+  - function isJson: (value) => value is Json
 - `packages/shared-logic/src/utils/voice-actor-work-groups.ts`
   - function groupVoiceActorWorks: (works) => VoiceActorWorkGroup<T>[]
   - function paginateVoiceActorWorks: (works, view, page, pageSize) => void
@@ -973,10 +977,10 @@
 - `apps/website/server/utils/db/queries.ts` — imported by **9** files
 - `apps/website/server/utils/urls/tmdb.ts` — imported by **9** files
 - `apps/website/server/utils/media-request.ts` — imported by **9** files
+- `apps/website/server/utils/narrow.ts` — imported by **9** files
 - `apps/website/server/utils/cache/constants.ts` — imported by **8** files
 - `e2e/helpers/mock-api.ts` — imported by **8** files
 - `apps/website/server/utils/background.ts` — imported by **7** files
-- `apps/website/server/utils/narrow.ts` — imported by **7** files
 - `apps/website/server/utils/services/media.ts` — imported by **7** files
 - `apps/website/server/utils/cache/wikipedia.ts` — imported by **5** files
 

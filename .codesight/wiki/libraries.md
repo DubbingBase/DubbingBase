@@ -43,11 +43,11 @@
 - `packages/shared-logic/src/composables/useVoiceActorData.ts` — fetchVoiceActorData, useVoiceActorData, VoiceActorResponse, EnhancedWorkItem, VoiceActorDataPayload
 - `packages/shared-logic/src/utils/voice-actor-work-groups.ts` — groupVoiceActorWorks, paginateVoiceActorWorks, VoiceActorWorkLike, VoiceActorWorkGroup, VoiceActorWorksPageItem
 - `packages/shared-logic/src/composables/useActorData.ts` — fetchActorData, useActorData, ActorResponse, ActorDataPayload
+- `packages/shared-logic/src/utils/narrow.ts` — isRecord, readProperty, readPath, isJson
 - `packages/shared-logic/src/utils/character.ts` — createCharacterMatcher, normalizeCharacterName, findCharacter
 - `packages/shared-logic/src/composables/useEpisodeData.ts` — fetchEpisodeData, EpisodeDataResponse
 - `packages/shared-logic/src/composables/useSearchData.ts` — fetchSearchData, SearchResult
 - `packages/shared-logic/src/composables/useSeasonData.ts` — fetchSeasonData, SeasonDataResponse
-- `packages/shared-logic/src/utils/narrow.ts` — isRecord, readProperty
 - `packages/shared-logic/src/composables/useAdvertisementData.ts` — fetchAdvertisementData
 - `packages/shared-logic/src/composables/useAudiobookData.ts` — fetchAudiobookData
 - `packages/shared-logic/src/composables/useGameData.ts` — fetchGameData

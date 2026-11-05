@@ -396,7 +396,11 @@
   - function createCharacterMatcher: (roleName) => (characterName: string) => boolean
   - function normalizeCharacterName
   - function findCharacter
-- `packages/shared-logic/src/utils/narrow.ts` — function isRecord: (value) => value is Record<string, unknown>, function readProperty: (value, key) => unknown
+- `packages/shared-logic/src/utils/narrow.ts`
+  - function isRecord: (value) => value is Record<string, unknown>
+  - function readProperty: (value, key) => unknown
+  - function readPath: (value, ...keys) => unknown
+  - function isJson: (value) => value is Json
 - `packages/shared-logic/src/utils/voice-actor-work-groups.ts`
   - function groupVoiceActorWorks: (works) => VoiceActorWorkGroup<T>[]
   - function paginateVoiceActorWorks: (works, view, page, pageSize) => void
