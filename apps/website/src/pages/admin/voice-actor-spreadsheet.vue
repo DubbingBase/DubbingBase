@@ -340,7 +340,7 @@ const { data, pending, error, refresh } = await useAsyncData(
   `voice-actors-spreadsheet-${page.value}-${searchQuery.value}`,
   async () => {
     return await $fetch<{ voice_actors: VoiceActor[]; total: number }>("/api/list-voice-actors", {
-      params: {
+      query: {
         limit: limit.value,
         offset: (page.value - 1) * limit.value,
         query: searchQuery.value,

@@ -390,14 +390,16 @@ test.describe("Language Selector", () => {
   for (const cookie of ALL_LOCALES) {
     for (const url of ALL_LOCALES) {
       if (cookie === url) continue;
-      const expectedLocale = url === "en" ? cookie : url;
-      test(`cookie=${cookie} visits URL /${url === "en" ? "" : url} → ${url === "en" ? "root redirect honors cookie" : "explicit URL locale wins"}`, async ({
+      const expectedLocale = url;
+      test(`cookie=${cookie} visits URL /${url === "en" ? "" : url} → ${url === "en" ? "root stays on default locale" : "explicit URL locale wins"}`, async ({
         page,
         context,
       }) => {
         await setUserLangCookie(context, cookie);
         await page.goto(LOCALE_URLS[url], { waitUntil: "domcontentloaded" });
-        await page.waitForTimeout(1500);
+        await expect(page.getByText(FOOTER_TEXT[expectedLocale][0]).first()).toBeVisible({
+          timeout: 30000,
+        });
 
         await expect
           .poll(() => getActiveLocale(page), {

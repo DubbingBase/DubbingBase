@@ -468,7 +468,7 @@ const moviesData = useHomeSection(
     const response = await $fetch<{
       results?: TrendingMovieCard[];
     }>("/api/trending/movies", {
-      params: { lang: trendingLanguage.value, projection: "card" },
+      query: { lang: trendingLanguage.value, projection: "card" },
     });
     return response.results ?? [];
   },
@@ -479,7 +479,7 @@ const seriesData = useHomeSection(
   "series",
   async () => {
     const response = await $fetch<{ results?: TrendingShowCard[] }>("/api/trending/shows", {
-      params: { lang: trendingLanguage.value, projection: "card" },
+      query: { lang: trendingLanguage.value, projection: "card" },
     });
     return response.results ?? [];
   },
@@ -490,7 +490,7 @@ const gamesData = useHomeSection(
   "games",
   () =>
     $fetch<HomeDataPayload["trendingGames"]>("/api/trending/games", {
-      params: { lang: trendingLanguage.value, projection: "card" },
+      query: { lang: trendingLanguage.value, projection: "card" },
     }),
   () => [],
 );
@@ -499,7 +499,7 @@ const trendingVoiceActorsData = useHomeSection(
   "trending-voice-actors",
   () =>
     $fetch<HomeDataPayload["trendingVoiceActors"]>("/api/trending/voice-actors", {
-      params: { projection: "home" },
+      query: { projection: "home" },
     }),
   () => [],
 );
@@ -508,7 +508,7 @@ const topVoiceActorsData = useHomeSection(
   "top-voice-actors",
   () =>
     $fetch<HomeDataPayload["topVoiceActors"]>("/api/top-voice-actors", {
-      params: { limit: 10, projection: "home" },
+      query: { limit: 10, projection: "home" },
     }),
   () => [],
 );
@@ -517,7 +517,7 @@ const topContributorsData = useHomeSection(
   "top-contributors",
   () =>
     $fetch<HomeDataPayload["topContributors"]>("/api/top-contributors", {
-      params: { limit: 10, projection: "home" },
+      query: { limit: 10, projection: "home" },
     }),
   () => [],
   isAdmin,

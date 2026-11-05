@@ -12,7 +12,7 @@ describe("canonical GET API consumers", () => {
     const source = readWebsiteSource("src/pages/admin/voice-actor-spreadsheet.vue");
 
     expect(source).toMatch(
-      /['"]\/api\/list-voice-actors['"][\s\S]{0,300}params:\s*\{\s*limit:\s*limit\.value,\s*offset:/,
+      /['"]\/api\/list-voice-actors['"][\s\S]{0,300}query:\s*\{\s*limit:\s*limit\.value,\s*offset:/,
     );
     expect(source).not.toMatch(
       /['"]\/api\/list-voice-actors['"][\s\S]{0,300}method:\s*['"]POST['"]/,
@@ -23,7 +23,7 @@ describe("canonical GET API consumers", () => {
     const source = readWebsiteSource("src/pages/admin/user-va-profiles.vue");
 
     expect(source).toMatch(
-      /['"]\/api\/search-voice-actors['"][\s\S]{0,300}params:\s*\{\s*query,\s*limit:\s*10,\s*projection:\s*['"]admin-search['"]\s*\}/,
+      /['"]\/api\/search-voice-actors['"][\s\S]{0,300}query:\s*\{\s*query,\s*limit:\s*10,\s*projection:\s*['"]admin-search['"]\s*\}/,
     );
     expect(source).not.toMatch(
       /['"]\/api\/search-voice-actors['"][\s\S]{0,300}method:\s*['"]POST['"]/,

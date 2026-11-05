@@ -1365,7 +1365,7 @@ async function executeMediaSearch(requestId: number) {
   mediaSearchLoading.value = true;
   try {
     const results = await $fetch<MediaSearchItem[]>("/api/search", {
-      params: { query: q },
+      query: { query: q },
     });
     if (requestId !== mediaSearchRequestId) return;
     mediaSearchResults.value = results.filter(
@@ -1389,7 +1389,7 @@ async function selectMediaItem(item: MediaSearchItem) {
     linkWorkCastLoading.value = true;
     try {
       const credits = await $fetch<InternalMediaCredits>("/api/internal-media-credits", {
-        params: { media_type: mediaType, media_id: item.id },
+        query: { media_type: mediaType, media_id: item.id },
       });
       if (
         requestId !== creditsRequestId ||

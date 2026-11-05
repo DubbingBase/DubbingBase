@@ -7,14 +7,14 @@ export type HomeDataPayload = {
   trendingGames: IgdbGame[];
   recentVoiceActors: Tables<"voice_actors">[];
   topVoiceActors: Tables<"voice_actors">[];
-  trendingVoiceActors: any[];
+  trendingVoiceActors: TrendingVoiceActorSummary[];
   errorMovies: string;
   errorSeries: string;
   errorGames: string;
   errorVoiceActors: string;
   errorTopVoiceActors: string;
   errorTrendingVoiceActors: string;
-  topContributors: any[];
+  topContributors: TopContributorSummary[];
   errorTopContributors: string;
   homeStats: {
     voiceActorCount: number;
@@ -23,6 +23,25 @@ export type HomeDataPayload = {
   };
   errorHomeStats: string;
 };
+
+export type TrendingVoiceActorSummary = {
+  id: number;
+  firstname: string;
+  lastname: string;
+  work_count: number;
+  profile_picture: string | null;
+};
+
+export type TopContributorSummary = {
+  user_id: string;
+  score: number;
+  raw_user_meta_data: {
+    username?: string;
+    avatar_url?: string;
+  };
+};
+
+type HomeStats = HomeDataPayload["homeStats"];
 
 export async function fetchHomeData(language = "en-US"): Promise<HomeDataPayload> {
   const payload: HomeDataPayload = {
@@ -49,7 +68,7 @@ export async function fetchHomeData(language = "en-US"): Promise<HomeDataPayload
   };
 
   await Promise.allSettled([
-    $fetch<any>("/api/trending/movies", { params: { lang: language } })
+    $fetch<MovieTrendingResponse>("/api/trending/movies", { query: { lang: language } })
       .then((res) => {
         payload.trendingMovies = res.results || [];
       })
@@ -58,7 +77,7 @@ export async function fetchHomeData(language = "en-US"): Promise<HomeDataPayload
           e.data?.message || e.message || "Erreur lors du chargement des films.";
       }),
 
-    $fetch<any>("/api/trending/shows", { params: { lang: language } })
+    $fetch<SerieTrendingResponse>("/api/trending/shows", { query: { lang: language } })
       .then((res) => {
         payload.trendingSeries = res.results || [];
       })
@@ -67,7 +86,7 @@ export async function fetchHomeData(language = "en-US"): Promise<HomeDataPayload
           e.data?.message || e.message || "Erreur lors du chargement des séries.";
       }),
 
-    $fetch<any>("/api/trending/games", { params: { lang: language } })
+    $fetch<IgdbGame[]>("/api/trending/games", { query: { lang: language } })
       .then((res) => {
         payload.trendingGames = res || [];
       })
@@ -75,7 +94,7 @@ export async function fetchHomeData(language = "en-US"): Promise<HomeDataPayload
         payload.errorGames = e.data?.message || e.message || "Erreur lors du chargement des jeux.";
       }),
 
-    $fetch<any>("/api/recent-voice-actors", { params: { limit: 10 } })
+    $fetch<Tables<"voice_actors">[]>("/api/recent-voice-actors", { query: { limit: 10 } })
       .then((res) => {
         payload.recentVoiceActors = res || [];
       })
@@ -84,7 +103,7 @@ export async function fetchHomeData(language = "en-US"): Promise<HomeDataPayload
           e.data?.message || e.message || "Erreur lors du chargement des voix récentes.";
       }),
 
-    $fetch<any>("/api/top-voice-actors", { params: { limit: 10 } })
+    $fetch<Tables<"voice_actors">[]>("/api/top-voice-actors", { query: { limit: 10 } })
       .then((res) => {
         payload.topVoiceActors = res || [];
       })
@@ -93,7 +112,9 @@ export async function fetchHomeData(language = "en-US"): Promise<HomeDataPayload
           e.data?.message || e.message || "Erreur lors du chargement des top doubleurs.";
       }),
 
-    $fetch<any>("/api/trending/voice-actors")
+    $fetch<TrendingVoiceActorSummary[]>("/api/trending/voice-actors", {
+      query: { projection: "home" },
+    })
       .then((res) => {
         payload.trendingVoiceActors = res || [];
       })
@@ -102,7 +123,9 @@ export async function fetchHomeData(language = "en-US"): Promise<HomeDataPayload
           e.data?.message || e.message || "Erreur lors du chargement des doubleurs du moment.";
       }),
 
-    $fetch<any>("/api/top-contributors", { params: { limit: 10 } })
+    $fetch<TopContributorSummary[]>("/api/top-contributors", {
+      query: { limit: 10, projection: "home" },
+    })
       .then((res) => {
         payload.topContributors = res || [];
       })
@@ -111,7 +134,7 @@ export async function fetchHomeData(language = "en-US"): Promise<HomeDataPayload
           e.data?.message || e.message || "Erreur lors du chargement des contributeurs.";
       }),
 
-    $fetch<any>("/api/home-stats")
+    $fetch<HomeStats>("/api/home-stats")
       .then((res) => {
         payload.homeStats = res || {
           voiceActorCount: 0,
@@ -134,8 +157,10 @@ export function useHomeData(initialData?: HomeDataPayload | null) {
   const trendingGames = ref<IgdbGame[]>(initialData?.trendingGames || []);
   const recentVoiceActors = ref<Tables<"voice_actors">[]>(initialData?.recentVoiceActors || []);
   const topVoiceActors = ref<Tables<"voice_actors">[]>(initialData?.topVoiceActors || []);
-  const trendingVoiceActors = ref<any[]>(initialData?.trendingVoiceActors || []);
-  const topContributors = ref<any[]>(initialData?.topContributors || []);
+  const trendingVoiceActors = ref<TrendingVoiceActorSummary[]>(
+    initialData?.trendingVoiceActors || [],
+  );
+  const topContributors = ref<TopContributorSummary[]>(initialData?.topContributors || []);
   const homeStats = ref<{
     voiceActorCount: number;
     dubbingProjectCount: number;

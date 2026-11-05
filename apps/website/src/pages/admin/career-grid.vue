@@ -213,10 +213,10 @@ const executeSearch = async () => {
   searchLoading.value = true;
   try {
     const data = await $fetch<VoiceActorCandidate[]>("/api/search-voice-actors", {
-      params: { query, limit: "10", projection: "admin-search" },
+      query: { query, limit: "10", projection: "admin-search" },
     });
     searchResults.value = data || [];
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error searching voice actors:", err);
   } finally {
     searchLoading.value = false;
@@ -252,9 +252,9 @@ const generateImage = async () => {
 
     const blob = await response.blob();
     imageUrl.value = URL.createObjectURL(blob);
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error generating image:", err);
-    errorMsg.value = err.message || "Failed to generate image.";
+    errorMsg.value = err instanceof Error ? err.message : "Failed to generate image.";
   } finally {
     generating.value = false;
   }
@@ -272,8 +272,8 @@ const downloadImage = () => {
 };
 
 const handleOutsideClick = (e: MouseEvent) => {
-  const target = e.target as HTMLElement;
-  if (!target.closest(".relative")) {
+  const target = e.target;
+  if (target instanceof HTMLElement && !target.closest(".relative")) {
     activeSearch.value = false;
   }
 };
