@@ -332,7 +332,7 @@ const clearImage = () => {
 };
 
 const onProfilePictureChange = (event: Event) => {
-  const files = (event.target as HTMLInputElement).files;
+  const files = event.target instanceof HTMLInputElement ? event.target.files : null;
   if (files && files.length > 0 && files[0]) {
     const file = files[0];
     profilePictureFile.value = file;
@@ -340,7 +340,8 @@ const onProfilePictureChange = (event: Event) => {
     // Create file reader object for thumbnail preview
     const reader = new FileReader();
     reader.onload = (e) => {
-      previewImage.value = e.target?.result as string;
+      const result = e.target?.result;
+      if (typeof result === "string") previewImage.value = result;
     };
     reader.readAsDataURL(file);
   }

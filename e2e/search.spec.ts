@@ -18,7 +18,7 @@ const openHomepage = async (page: Page, searchPath = "/search") => {
 };
 
 test.describe("Global Search Page", () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async () => {
     test.setTimeout(120000);
   });
 

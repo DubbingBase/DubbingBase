@@ -7,14 +7,10 @@ import { PodcastClient } from "./api/podcast";
 import { AdvertisementClient } from "./api/advertisement";
 import { ToyClient } from "./api/toy";
 import { WikipediaCache } from "./cache/wikipedia";
+import { readProperty } from "@app/shared-logic";
 
 let _resolvedKv: CacheKv | null = null;
 let _cache: SimpleCache | null = null;
-
-function readProperty(value: unknown, key: string): unknown {
-  if (typeof value !== "object" || value === null) return undefined;
-  return Reflect.get(value, key);
-}
 
 function readPath(value: unknown, ...keys: string[]): unknown {
   let current = value;

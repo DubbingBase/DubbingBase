@@ -3,16 +3,13 @@ import { useSupabaseAdmin } from "../../utils/db/client";
 import { requireDubbingLanguage } from "../../utils/dubbing-language";
 import type { Json } from "@app/supabase";
 import { DUBBING_PROJECT_MEDIA_TYPES } from "../../../src/utils/dubbing-project-save";
+import { isRecord } from "@app/shared-logic";
 
 interface AssignmentOperation {
   actor_id: number;
   work_id: number | null;
   expected_voice_actor_id: number | null;
   voice_actor_id: number | null;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function isPositiveId(value: unknown): value is number {

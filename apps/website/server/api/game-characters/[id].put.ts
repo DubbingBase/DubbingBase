@@ -1,12 +1,8 @@
 import { defineAdminHandler } from "../../utils/auth-handlers";
+import { isRecord } from "@app/shared-logic";
 import { useIgdbClient } from "../../utils";
 import { useSupabaseAdmin } from "../../utils/db/client";
-import {
-  gameCharacterError,
-  hasOnlyKeys,
-  isRecord,
-  isUuid,
-} from "../../utils/game-character-validation";
+import { gameCharacterError, hasOnlyKeys, isUuid } from "../../utils/game-character-validation";
 
 function isExpectedTimestamp(value: unknown): value is string {
   return typeof value === "string" && Number.isFinite(Date.parse(value));

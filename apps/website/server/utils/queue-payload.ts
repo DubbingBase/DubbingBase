@@ -1,4 +1,9 @@
-import { isDubbingLanguage, isWikipediaLanguage, type DubbingLanguage } from "@app/shared-logic";
+import {
+  isDubbingLanguage,
+  isWikipediaLanguage,
+  readProperty,
+  type DubbingLanguage,
+} from "@app/shared-logic";
 
 /** pgmq JSON is untrusted. Old `language` fields identify Wikipedia editions only. */
 export type QueueMediaType = "movie" | "tv" | "season" | "episode" | "video_game";
@@ -29,10 +34,6 @@ export interface ValidExtractPayload extends ValidCheckPayload {
 }
 type Validated<T> = { ok: true; value: T } | { ok: false; reason: string };
 
-function property(raw: unknown, key: string): unknown {
-  return typeof raw === "object" && raw !== null ? Reflect.get(raw, key) : undefined;
-}
-
 export function queueRequester(value: unknown): string | null {
   if (
     typeof value !== "string" ||
@@ -59,7 +60,7 @@ function toInt(raw: unknown, minimum: number): number | null {
 }
 
 function validateBase(payload: unknown): Validated<ValidQueueBase> {
-  const mediaType = property(payload, "media_type");
+  const mediaType = readProperty(payload, "media_type");
   if (
     mediaType !== "movie" &&
     mediaType !== "tv" &&
@@ -72,12 +73,12 @@ function validateBase(payload: unknown): Validated<ValidQueueBase> {
       reason: `unknown media_type ${JSON.stringify(mediaType)}`,
     };
   }
-  const tmdbId = toInt(property(payload, "tmdb_id"), 1);
+  const tmdbId = toInt(readProperty(payload, "tmdb_id"), 1);
   if (tmdbId === null) return { ok: false, reason: "invalid tmdb_id" };
   const value: ValidQueueBase = {
     tmdbId,
     mediaType,
-    requestedBy: queueRequester(property(payload, "requested_by")),
+    requestedBy: queueRequester(readProperty(payload, "requested_by")),
   };
   for (const [key, field] of [
     ["title", "title"],
@@ -85,7 +86,7 @@ function validateBase(payload: unknown): Validated<ValidQueueBase> {
     ["page_title", "pageTitle"],
     ["poster_path", "posterPath"],
   ] as const) {
-    const raw = property(payload, key);
+    const raw = readProperty(payload, key);
     if (raw !== undefined && raw !== null) {
       if (typeof raw !== "string" || raw.length === 0 || raw.length > 512) {
         return { ok: false, reason: `invalid ${key}` };
@@ -97,21 +98,21 @@ function validateBase(payload: unknown): Validated<ValidQueueBase> {
     ["page_id", "pageId"],
     ["revision_id", "revisionId"],
   ] as const) {
-    const raw = property(payload, key);
+    const raw = readProperty(payload, key);
     if (raw !== undefined && raw !== null) {
       const number = toInt(raw, 1);
       if (number === null) return { ok: false, reason: `invalid ${key}` };
       value[field] = number;
     }
   }
-  const source = property(payload, "wikipedia_language") ?? property(payload, "language");
+  const source = readProperty(payload, "wikipedia_language") ?? readProperty(payload, "language");
   if (source !== undefined && source !== null && source !== "") {
     if (!isWikipediaLanguage(source)) {
       return { ok: false, reason: "invalid wikipedia_language" };
     }
     value.wikipediaLanguage = source;
   }
-  const target = property(payload, "dubbing_language");
+  const target = readProperty(payload, "dubbing_language");
   if (target !== undefined && target !== null) {
     if (!isDubbingLanguage(target))
       return { ok: false, reason: "invalid regional dubbing_language" };
@@ -122,7 +123,7 @@ function validateBase(payload: unknown): Validated<ValidQueueBase> {
     ["episode_number", "episodeNumber"],
   ]) {
     if (!key || !field) continue;
-    const raw = property(payload, key);
+    const raw = readProperty(payload, key);
     if (raw === undefined || raw === null) continue;
     const number = toInt(raw, 0);
     if (number === null) return { ok: false, reason: `invalid ${key}` };
@@ -153,15 +154,15 @@ export function validateExtractPayload(payload: unknown): Validated<ValidExtract
       reason: "Regional dubbing language is required for extraction",
     };
   }
-  const pageId = toInt(property(payload, "page_id"), 1);
+  const pageId = toInt(readProperty(payload, "page_id"), 1);
   if (pageId === null) return { ok: false, reason: "invalid page_id" };
-  const rawSections = property(payload, "section_indexes");
+  const rawSections = readProperty(payload, "section_indexes");
   if (!Array.isArray(rawSections)) return { ok: false, reason: "invalid section_indexes" };
   const sectionIndexes: number[] = rawSections
     .map((raw: unknown) => toInt(raw, 0))
     .filter((n): n is number => n !== null);
   if (sectionIndexes.length === 0) return { ok: false, reason: "no usable section_indexes" };
-  const rawHeadings = property(payload, "section_headings");
+  const rawHeadings = readProperty(payload, "section_headings");
   const sectionHeadings =
     Array.isArray(rawHeadings) && rawHeadings.every((item) => typeof item === "string")
       ? rawHeadings

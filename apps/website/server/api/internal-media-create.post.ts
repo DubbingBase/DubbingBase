@@ -1,13 +1,10 @@
 import { defineAdminHandler } from "../utils/auth-handlers";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { requireDubbingLanguage } from "../utils/dubbing-language";
+import { isRecord } from "@app/shared-logic";
 
 function internalMediaError(statusCode: number, message: string) {
   return createError({ statusCode, statusMessage: message, message });
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function optionalText(value: unknown): value is string | null | undefined {

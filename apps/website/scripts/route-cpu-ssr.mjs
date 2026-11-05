@@ -258,7 +258,7 @@ function offlineProfilingNuxtConfig(source) {
   let config = scheduledTasksPatch(source);
   const fontsModule = /^    "@nuxt\/fonts",\r?\n/m;
   const fontsConfig =
-    /^  \/\/ @ts-ignore\r?\n  fonts: \{\r?\n[\s\S]*?^  \},\r?\n\r?\n(?=  site: \{)/m;
+    /^(?:  \/\/ @ts-ignore\r?\n)?  fonts: \{\r?\n[\s\S]*?^  \},\r?\n\r?\n(?=  site: \{)/m;
   if (!fontsModule.test(config) || !fontsConfig.test(config)) {
     throw new Error(
       "Could not find the Nuxt fonts module and configuration to disable profiling egress.",

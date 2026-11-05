@@ -2,15 +2,12 @@ import type { Json } from "@app/supabase/types";
 import type { Tables, Toy, ToyMetadataInput, ToyMetadataSaveResponse } from "@app/shared-logic";
 import { requireAdmin } from "../utils/auth";
 import { useSupabaseAdmin } from "../utils/db/client";
+import { isRecord } from "@app/shared-logic";
 
 type ToyMetadataRow = Tables<"toy_metadata">;
 
 function metadataError(statusCode: number, message: string): never {
   throw createError({ statusCode, statusMessage: message, message });
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function hasOnlyKeys(value: Record<string, unknown>, allowed: readonly string[]) {

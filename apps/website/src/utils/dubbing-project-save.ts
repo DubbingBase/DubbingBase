@@ -1,4 +1,5 @@
 import type { Tables, TablesInsert } from "@app/supabase/types";
+import { readProperty } from "@app/shared-logic";
 
 export const DUBBING_PROJECT_MEDIA_TYPES = [
   "movie",
@@ -182,11 +183,6 @@ export function createDubbingProjectSaveClient(
     requestIds.clear();
     return response;
   };
-}
-
-function readProperty(value: unknown, key: string): unknown {
-  if (typeof value !== "object" || value === null) return undefined;
-  return Reflect.get(value, key);
 }
 
 export function isDubbingProjectSaveConflict(error: unknown): boolean {

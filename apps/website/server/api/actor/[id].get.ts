@@ -4,15 +4,12 @@ import { buildSupabaseImageUrl } from "../../utils/urls/supabase";
 import { buildTmdbImageUrl } from "../../utils/urls/tmdb";
 import { actorPageResponse, type ActorPageVoiceRole } from "../../utils/actor-page-response";
 import { withMediaServiceTimeout } from "../../utils/media-request";
+import { isRecord } from "@app/shared-logic";
 type TmdbCastMember = Record<string, unknown> & {
   profile_path?: string | null;
   poster_path?: string | null;
   backdrop_path?: string | null;
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
 
 function isOptionalString(value: unknown): value is string | null | undefined {
   return value === undefined || value === null || typeof value === "string";

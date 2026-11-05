@@ -628,6 +628,8 @@
 import { ref, computed, watch } from "vue";
 import type { Database } from "@app/supabase";
 import type { QueueItem } from "~/utils/queue-item";
+import { isRecord } from "@app/shared-logic";
+import { readErrorMessage } from "~/utils/error-message";
 
 interface ListUsersResponse {
   users?: Array<{ id: string; email: string }>;
@@ -701,17 +703,6 @@ const showToast = (message: string, type: "success" | "error" | "info" = "info")
     toast.value.show = false;
   }, 3000);
 };
-
-function getErrorMessage(err: unknown, fallback: string): string {
-  if (err instanceof Error) {
-    return err.message;
-  }
-  return fallback;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
 
 function formatArchiveMetadata(value: unknown): string {
   const serialized = JSON.stringify(value ?? [], null, 2);
@@ -963,7 +954,7 @@ const startProcessing = async () => {
     }
   } catch (err: unknown) {
     console.error("Error processing queue:", err);
-    showToast(getErrorMessage(err, t("admin.queue.failedToProcess")), "error");
+    showToast(readErrorMessage(err) || t("admin.queue.failedToProcess"), "error");
   } finally {
     isProcessing.value = false;
     await fetchQueueAndUsers();
@@ -986,7 +977,7 @@ const clearQueue = async () => {
     showToast(t("admin.queue.cleared"), "success");
   } catch (err: unknown) {
     console.error("Error clearing queue:", err);
-    showToast(getErrorMessage(err, t("admin.queue.failedToClear")), "error");
+    showToast(readErrorMessage(err) || t("admin.queue.failedToClear"), "error");
   } finally {
     isClearing.value = false;
     await fetchQueueAndUsers();
@@ -1006,7 +997,7 @@ const deleteItem = async (id: number, queueName?: string) => {
     await fetchQueueAndUsers();
   } catch (err: unknown) {
     console.error("Error deleting item:", err);
-    showToast(getErrorMessage(err, t("admin.queue.failedToDelete")), "error");
+    showToast(readErrorMessage(err) || t("admin.queue.failedToDelete"), "error");
   } finally {
     deletingId.value = null;
   }
@@ -1057,7 +1048,7 @@ const reEnqueueItem = async (item: QueueItem) => {
     await fetchQueueAndUsers();
   } catch (err: unknown) {
     console.error("Error re-enqueuing item:", err);
-    showToast(getErrorMessage(err, t("admin.queue.failedToReEnqueue")), "error");
+    showToast(readErrorMessage(err) || t("admin.queue.failedToReEnqueue"), "error");
   } finally {
     reEnqueuingId.value = null;
   }

@@ -11,6 +11,7 @@ import {
   type DubbingProjectSaveRequest,
   type WorkExpectedValues,
 } from "../../src/utils/dubbing-project-save";
+import { isRecord } from "@app/shared-logic";
 
 function projectSaveError(statusCode: number, message: string) {
   return createError({ statusCode, statusMessage: message, message });
@@ -20,10 +21,6 @@ type ProjectSaveBody = DubbingProjectSaveRequest & { request_id: string };
 type CastSaveRow = DubbingProjectCastSaveRow;
 type CrewSaveRow = DubbingProjectCrewSaveRow;
 type MediaType = DubbingProjectMediaType;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
 
 function hasOnlyKeys(value: Record<string, unknown>, allowed: readonly string[]) {
   return Object.keys(value).every((key) => allowed.includes(key));

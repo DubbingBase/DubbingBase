@@ -450,7 +450,7 @@
 </template>
 
 <script setup lang="ts">
-import { isDubbingLanguage } from "@app/shared-logic";
+import { isDubbingLanguage, isRecord } from "@app/shared-logic";
 import { createStableRequestIdFactory } from "~/utils/dubbing-project-save";
 import {
   assignmentsForActors,
@@ -473,6 +473,7 @@ definePageMeta({
 
 import { ref, computed, onMounted, watch } from "vue";
 import type { Tables } from "@app/supabase/types";
+import { readErrorMessage } from "~/utils/error-message";
 
 interface Actor {
   id: number;
@@ -516,21 +517,9 @@ function createRequestId(): string {
   ].join("-");
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
 function stringProperty(record: Record<string, unknown>, key: string): string | undefined {
   const value = record[key];
   return typeof value === "string" ? value : undefined;
-}
-
-function getErrorMessage(error: unknown, fallback: string): string {
-  if (error instanceof Error) return error.message;
-  if (isRecord(error) && typeof error.message === "string") {
-    return error.message;
-  }
-  return fallback;
 }
 
 interface MediaSummary {
@@ -754,7 +743,7 @@ async function fetchMediaData() {
     await loadRegionalAssignments();
   } catch (err: unknown) {
     console.error("Failed to load media:", err);
-    error.value = getErrorMessage(err, "Failed to load media");
+    error.value = readErrorMessage(err) || "Failed to load media";
   } finally {
     loading.value = false;
   }
@@ -865,7 +854,7 @@ const saveVoiceCast = async () => {
     }
   } catch (err: unknown) {
     console.error(err);
-    showToast(getErrorMessage(err, "Failed to save voice cast mappings"), "error");
+    showToast(readErrorMessage(err) || "Failed to save voice cast mappings", "error");
   } finally {
     isSaving.value = false;
   }
@@ -908,7 +897,7 @@ const quickCreateVoiceActorForManual = async () => {
       showToast(`Created profile for ${data.firstname} ${data.lastname}!`, "success");
     }
   } catch (err: unknown) {
-    showToast(getErrorMessage(err, "Failed to create voice actor"), "error");
+    showToast(readErrorMessage(err) || "Failed to create voice actor", "error");
   } finally {
     isCreatingPerson.value = false;
   }
@@ -945,7 +934,7 @@ const saveManualEntry = async () => {
     manualVoiceActorQuery.value = "";
     manualVAOptions.value = [];
   } catch (err: unknown) {
-    showToast(getErrorMessage(err, "Failed to save mapping"), "error");
+    showToast(readErrorMessage(err) || "Failed to save mapping", "error");
   } finally {
     isSaving.value = false;
   }

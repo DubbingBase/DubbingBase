@@ -7,6 +7,7 @@ import {
   DUBBING_PROJECT_MEDIA_TYPES,
   type DubbingProjectMediaType,
 } from "../../src/utils/dubbing-project-save";
+import { isRecord } from "@app/shared-logic";
 
 type MediaType = DubbingProjectMediaType;
 
@@ -34,10 +35,6 @@ interface LinkBody {
 
 function linkError(statusCode: number, message: string) {
   return createError({ statusCode, statusMessage: message, message });
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function hasOnlyKeys(value: Record<string, unknown>, allowed: readonly string[]): boolean {

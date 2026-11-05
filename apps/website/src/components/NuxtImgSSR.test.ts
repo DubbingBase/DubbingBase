@@ -12,8 +12,8 @@ describe("Vue deduplication & NuxtImg SSR stability", () => {
   it("handles repeated useTemplateRef calls with identical keys without throwing", () => {
     const ComponentWithDuplicateTemplateRef = defineComponent({
       setup() {
-        const ref1 = useTemplateRef("imgEl");
-        const ref2 = useTemplateRef("imgEl");
+        useTemplateRef("imgEl");
+        useTemplateRef("imgEl");
         return () => h("img", { ref: "imgEl" });
       },
     });

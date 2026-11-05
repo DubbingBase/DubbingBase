@@ -1,4 +1,9 @@
-import { isDubbingLanguage, isWikipediaLanguage, type DubbingLanguage } from "@app/shared-logic";
+import {
+  isDubbingLanguage,
+  isWikipediaLanguage,
+  readProperty,
+  type DubbingLanguage,
+} from "@app/shared-logic";
 
 type Validated<T> = { ok: true; value: T } | { ok: false; reason: string };
 
@@ -17,10 +22,6 @@ export interface PrepareMediaInput {
   dubbingLanguage: DubbingLanguage;
 }
 
-function property(value: unknown, key: string): unknown {
-  return typeof value === "object" && value !== null ? Reflect.get(value, key) : undefined;
-}
-
 function positiveInteger(value: unknown): number | null {
   const number = typeof value === "number" ? value : Number(value);
   return Number.isSafeInteger(number) && number > 0 ? number : null;
@@ -34,12 +35,13 @@ function optionalNonNegativeInteger(value: unknown): number | null | undefined {
 
 function sourceLanguageFrom(value: unknown): string | null {
   // `language` remains a backwards-compatible alias for the Wikipedia source.
-  const wikipediaLanguage = property(value, "wikipedia_language") ?? property(value, "language");
+  const wikipediaLanguage =
+    readProperty(value, "wikipedia_language") ?? readProperty(value, "language");
   return isWikipediaLanguage(wikipediaLanguage) ? wikipediaLanguage : null;
 }
 
 export function validatePrepareGamePayload(payload: unknown): Validated<PrepareGameInput> {
-  const igdbId = positiveInteger(property(payload, "igdbId"));
+  const igdbId = positiveInteger(readProperty(payload, "igdbId"));
   if (igdbId === null) return { ok: false, reason: "igdbId must be a number" };
   const wikipediaLanguage = sourceLanguageFrom(payload);
   if (!wikipediaLanguage) {
@@ -48,7 +50,7 @@ export function validatePrepareGamePayload(payload: unknown): Validated<PrepareG
       reason: "A valid Wikipedia source language is required",
     };
   }
-  const dubbingLanguage = property(payload, "dubbing_language");
+  const dubbingLanguage = readProperty(payload, "dubbing_language");
   if (!isDubbingLanguage(dubbingLanguage)) {
     return {
       ok: false,
@@ -71,9 +73,9 @@ export async function prepareGameFromPayload<T>(
 }
 
 export function validatePrepareMediaPayload(payload: unknown): Validated<PrepareMediaInput> {
-  const tmdbId = positiveInteger(property(payload, "tmdbId"));
+  const tmdbId = positiveInteger(readProperty(payload, "tmdbId"));
   if (tmdbId === null) return { ok: false, reason: "tmdbId must be a number" };
-  const type = property(payload, "type");
+  const type = readProperty(payload, "type");
   if (type !== "movie" && type !== "tv" && type !== "season" && type !== "episode") {
     return { ok: false, reason: "Invalid media type" };
   }
@@ -84,15 +86,15 @@ export function validatePrepareMediaPayload(payload: unknown): Validated<Prepare
       reason: "A valid Wikipedia source language is required",
     };
   }
-  const dubbingLanguage = property(payload, "dubbing_language");
+  const dubbingLanguage = readProperty(payload, "dubbing_language");
   if (!isDubbingLanguage(dubbingLanguage)) {
     return {
       ok: false,
       reason: "A regional dubbing language is required (for example fr-FR)",
     };
   }
-  const seasonNumber = optionalNonNegativeInteger(property(payload, "seasonNumber"));
-  const episodeNumber = optionalNonNegativeInteger(property(payload, "episodeNumber"));
+  const seasonNumber = optionalNonNegativeInteger(readProperty(payload, "seasonNumber"));
+  const episodeNumber = optionalNonNegativeInteger(readProperty(payload, "episodeNumber"));
   if (seasonNumber === null || episodeNumber === null) {
     return { ok: false, reason: "Invalid season or episode number" };
   }
