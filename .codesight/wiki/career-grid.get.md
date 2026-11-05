@@ -2,11 +2,11 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Career-grid.get subsystem handles **1 routes** and touches: cache.
+The Career-grid.get subsystem handles **1 routes**.
 
 ## Routes
 
-- `GET` `/api/career-grid` [cache]
+- `GET` `/api/career-grid`
   `apps/website/server/api/career-grid.get.ts`
 
 ## Source Files

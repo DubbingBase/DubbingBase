@@ -12,7 +12,7 @@
 - `GET` `/api/admin/work-duplicates` [auth, cache]
 - `GET` `/api/advertisement/:id` params(id) [queue]
 - `GET` `/api/audiobook/:id` params(id) [queue]
-- `GET` `/api/career-grid` [cache]
+- `GET` `/api/career-grid`
 - `POST` `/api/cast-vote` [auth]
 - `POST` `/api/count-voice-actor-works`
 - `POST` `/api/create-user-profile` [auth, db]

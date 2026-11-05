@@ -2,9 +2,9 @@
 
 > **Navigation aid.** Library inventory extracted via AST. Read the source files listed here before modifying exported functions.
 
-**116 library files** across 4 modules
+**119 library files** across 4 modules
 
-## Website (93 files)
+## Website (96 files)
 
 - `apps/website/server/utils/db/queries.ts` — getVoiceActorWithWork, getWorkByActor, getActorPageWorkByActor, getDubbingProjects, getDubbingProjectsForMediaEndpoint, getAdvertisementPageDubbingProjects, …
 - `apps/website/src/utils/voice-actor-profile-save.ts` — voiceActorProfilePayload, changedVoiceActorProfileFields, displayedSocialLinks, mergeDisplayedSocialLinks, profileUnchangedExceptPicture, refreshVoiceActorProfilePicture, …
@@ -31,7 +31,7 @@
 - `apps/website/server/utils/retryable-request.ts` — isRetryableMediaRequestError, isRetryableMediaRequestStatus, createMediaResponseError, fetchMediaRequest, RetryableMediaRequestError
 - `apps/website/server/utils/services/media.ts` — MediaService, VOICE_ACTOR_PAGE_TMDB_MEDIA_NAMESPACE, VOICE_ACTOR_PAGE_TMDB_BACKDROP_NAMESPACE, WIKIPEDIA_ACTOR_URL_NAMESPACE, MEDIA_TVDB_CHARACTERS_NAMESPACE
 - `apps/website/server/utils/services/wiki-extraction-batching.ts` — buildWikipediaExtractionBatches, deduplicateExtractedCredits, WikipediaExtractionSection, WikipediaExtractionBatch, MAX_WIKIPEDIA_EXTRACTION_PROMPT_CHARS
-- _…and 68 more files_
+- _…and 71 more files_
 
 ## Shared-logic (20 files)
 
@@ -44,14 +44,14 @@
 - `packages/shared-logic/src/utils/voice-actor-work-groups.ts` — groupVoiceActorWorks, paginateVoiceActorWorks, VoiceActorWorkLike, VoiceActorWorkGroup, VoiceActorWorksPageItem
 - `packages/shared-logic/src/composables/useActorData.ts` — fetchActorData, useActorData, ActorResponse, ActorDataPayload
 - `packages/shared-logic/src/utils/character.ts` — createCharacterMatcher, normalizeCharacterName, findCharacter
+- `packages/shared-logic/src/composables/useEpisodeData.ts` — fetchEpisodeData, EpisodeDataResponse
 - `packages/shared-logic/src/composables/useSearchData.ts` — fetchSearchData, SearchResult
+- `packages/shared-logic/src/composables/useSeasonData.ts` — fetchSeasonData, SeasonDataResponse
 - `packages/shared-logic/src/composables/useAdvertisementData.ts` — fetchAdvertisementData
 - `packages/shared-logic/src/composables/useAudiobookData.ts` — fetchAudiobookData
-- `packages/shared-logic/src/composables/useEpisodeData.ts` — fetchEpisodeData
 - `packages/shared-logic/src/composables/useGameData.ts` — fetchGameData
 - `packages/shared-logic/src/composables/useMovieData.ts` — fetchMovieData
 - `packages/shared-logic/src/composables/usePodcastData.ts` — fetchPodcastData
-- `packages/shared-logic/src/composables/useSeasonData.ts` — fetchSeasonData
 - `packages/shared-logic/src/composables/useShowData.ts` — fetchShowData
 - `packages/shared-logic/src/composables/useToyData.ts` — fetchToyData
 - `packages/shared-logic/src/wikipedia-language.ts` — isWikipediaLanguage

@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 91 routes | 28 models | 132 components | 116 lib files | 64 env vars | 15 middleware | 47% test coverage
-> **Token savings:** this file is ~17,600 tokens. Without it, AI exploration would cost ~152,600 tokens. **Saves ~135,000 tokens per conversation.**
-> **Last scanned:** 2026-11-05 09:55 — re-run after significant changes
+> 91 routes | 28 models | 132 components | 119 lib files | 64 env vars | 15 middleware | 47% test coverage
+> **Token savings:** this file is ~17,700 tokens. Without it, AI exploration would cost ~153,400 tokens. **Saves ~135,700 tokens per conversation.**
+> **Last scanned:** 2026-11-05 10:40 — re-run after significant changes
 
 ---
 
@@ -23,7 +23,7 @@
 - `GET` `/api/admin/work-duplicates` [auth, cache]
 - `GET` `/api/advertisement/:id` params(id) [queue]
 - `GET` `/api/audiobook/:id` params(id) [queue]
-- `GET` `/api/career-grid` [cache]
+- `GET` `/api/career-grid`
 - `POST` `/api/cast-vote` [auth]
 - `POST` `/api/count-voice-actor-works`
 - `POST` `/api/create-user-profile` [auth, db]
@@ -540,6 +540,10 @@
   - function mergeGameCharacters: (igdbCharacters, localCharacters) => ResolvedGameCharacter[]
   - function loadGameCharacterCatalog: (event, gameId, loadIgdbCharacters) => void
   - interface ResolvedGameCharacter
+- `apps/website/server/utils/global-env.ts`
+  - function toStringRecord: (value) => Record<string, string | undefined>
+  - function getGlobalEnv: () => Record<string, string | undefined>
+  - function getCloudflareEnv: (event) => Record<string, string | undefined>
 - `apps/website/server/utils/index.ts`
   - function getCloudflareKv: (event?) => CacheKv | null
   - function useCache: (event?) => SimpleCache
@@ -565,6 +569,7 @@
   - function parseEpisodeQuery: (query, unknown>) => void
   - function toMediaServiceError: (error, dependency) => void
   - function withMediaServiceTimeout: (request) => void
+- `apps/website/server/utils/narrow.ts` — function asString: (value) => string | undefined
 - `apps/website/server/utils/normalize.ts` — function normalizeString: (input) => string, function isExploitableVoiceActorName: (input) => boolean
 - `apps/website/server/utils/notifications/discord.ts`
   - function normalizeDiscordUrl: (url) => string
@@ -639,12 +644,16 @@
   - interface SitemapRecord
   - _...3 more_
 - `apps/website/server/utils/testing/supabase-server-stub.ts` — function serverSupabaseClient: () => Promise<never>
-- `apps/website/server/utils/urls/supabase.ts` — function buildSupabaseImageUrl: (imagePath, bucket, size) => string | null, function processVoiceActor
+- `apps/website/server/utils/urls/supabase.ts`
+  - function buildSupabaseImageUrl: (imagePath, bucket, _size) => string | null
+  - const withVoiceActorImageUrl
+  - const processVoiceActor
 - `apps/website/server/utils/urls/tmdb.ts`
   - function buildTmdbImageUrl: (imagePath, size) => string | null
   - function cleanCharacterName
-  - function processMedia
   - const TMDB_CONFIG
+  - const withTmdbImageUrls
+  - const processMedia
 - `apps/website/server/utils/wiki-check-disposition.ts`
   - function wikiCheckDisposition: (evidence, candidateSectionIndexes, requestedLanguage?) => WikiCheckDisposition
   - type WikiCheckArchiveReason
@@ -720,6 +729,7 @@
   - interface DuplicateWorkEntry
   - interface DuplicateWorkGroup
   - _...4 more_
+- `apps/website/src/utils/error-message.ts` — function readErrorMessage: (err) => string | undefined
 - `apps/website/src/utils/locale-preference.ts` — function resolvePreferredLocale: (savedChoice, browserLanguages) => SupportedLocale | null, const LOCALE_PREFERENCE_COOKIE
 - `apps/website/src/utils/media-cast.ts`
   - function hasOriginalVersion: (language, cast) => language is string
@@ -784,7 +794,7 @@
   - function matchesDetailCollectionSearch: (item, query) => boolean
   - function filterDetailCollectionItems: (items, query) => T[]
   - _...7 more_
-- `packages/shared-logic/src/composables/useEpisodeData.ts` — function fetchEpisodeData: (showId, seasonNumber, episodeNumber, locale?) => Promise<any | null>
+- `packages/shared-logic/src/composables/useEpisodeData.ts` — function fetchEpisodeData: (showId, seasonNumber, episodeNumber, locale?) => Promise<EpisodeDataResponse | null>, type EpisodeDataResponse
 - `packages/shared-logic/src/composables/useGameData.ts` — function fetchGameData: (id, locale?, projection?) => Promise<GamePageData | null>
 - `packages/shared-logic/src/composables/useHomeData.ts`
   - function fetchHomeData: (language) => Promise<HomeDataPayload>
@@ -795,7 +805,7 @@
 - `packages/shared-logic/src/composables/useMovieData.ts` — function fetchMovieData: (id, locale?, options) => Promise<MovieDetailResponse | null>
 - `packages/shared-logic/src/composables/usePodcastData.ts` — function fetchPodcastData: (id, locale?, options) => Promise<PodcastResponse | null>
 - `packages/shared-logic/src/composables/useSearchData.ts` — function fetchSearchData: (query, signal?, locale?) => Promise<SearchResult[]>, type SearchResult
-- `packages/shared-logic/src/composables/useSeasonData.ts` — function fetchSeasonData: (showId, seasonNumber, locale?) => Promise<any | null>
+- `packages/shared-logic/src/composables/useSeasonData.ts` — function fetchSeasonData: (showId, seasonNumber, locale?) => Promise<SeasonDataResponse | null>, type SeasonDataResponse
 - `packages/shared-logic/src/composables/useShowData.ts` — function fetchShowData: (id, locale?, options) => Promise<ShowDetailResponse | null>
 - `packages/shared-logic/src/composables/useStudioData.ts`
   - function fetchStudioDetails: (studioId, projection?) => Promise<StudioDetailsResponse | null>
@@ -945,7 +955,7 @@
 
 ## Most Imported Files (change these carefully)
 
-- `apps/website/server/utils/db/client.ts` — imported by **73** files
+- `apps/website/server/utils/db/client.ts` — imported by **72** files
 - `apps/website/server/utils/auth-handlers.ts` — imported by **37** files
 - `apps/website/server/utils/index.ts` — imported by **27** files
 - `apps/website/server/utils/cache/index.ts` — imported by **19** files
@@ -963,12 +973,12 @@
 - `e2e/helpers/mock-api.ts` — imported by **8** files
 - `apps/website/server/utils/background.ts` — imported by **7** files
 - `apps/website/server/utils/services/media.ts` — imported by **7** files
+- `apps/website/server/utils/narrow.ts` — imported by **6** files
 - `apps/website/server/utils/cache/wikipedia.ts` — imported by **5** files
-- `apps/website/server/utils/dubbing-region-detection.ts` — imported by **5** files
 
 ## Import Map (who imports what)
 
-- `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/reprocess-legacy-wiki-check-reviews.post.ts` +68 more
+- `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/reprocess-legacy-wiki-check-reviews.post.ts` +67 more
 - `apps/website/server/utils/auth-handlers.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/reprocess-legacy-wiki-check-reviews.post.ts` +32 more
 - `apps/website/server/utils/index.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/episode/index.get.ts` +22 more
 - `apps/website/server/utils/cache/index.ts` ← `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/season/index.get.ts`, `apps/website/server/utils/api/igdb.test.ts`, `apps/website/server/utils/api/igdb.ts`, `apps/website/server/utils/api/openlibrary.test.ts` +14 more

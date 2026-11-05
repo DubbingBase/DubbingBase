@@ -92,6 +92,10 @@
   - function mergeGameCharacters: (igdbCharacters, localCharacters) => ResolvedGameCharacter[]
   - function loadGameCharacterCatalog: (event, gameId, loadIgdbCharacters) => void
   - interface ResolvedGameCharacter
+- `apps/website/server/utils/global-env.ts`
+  - function toStringRecord: (value) => Record<string, string | undefined>
+  - function getGlobalEnv: () => Record<string, string | undefined>
+  - function getCloudflareEnv: (event) => Record<string, string | undefined>
 - `apps/website/server/utils/index.ts`
   - function getCloudflareKv: (event?) => CacheKv | null
   - function useCache: (event?) => SimpleCache
@@ -117,6 +121,7 @@
   - function parseEpisodeQuery: (query, unknown>) => void
   - function toMediaServiceError: (error, dependency) => void
   - function withMediaServiceTimeout: (request) => void
+- `apps/website/server/utils/narrow.ts` — function asString: (value) => string | undefined
 - `apps/website/server/utils/normalize.ts` — function normalizeString: (input) => string, function isExploitableVoiceActorName: (input) => boolean
 - `apps/website/server/utils/notifications/discord.ts`
   - function normalizeDiscordUrl: (url) => string
@@ -191,12 +196,16 @@
   - interface SitemapRecord
   - _...3 more_
 - `apps/website/server/utils/testing/supabase-server-stub.ts` — function serverSupabaseClient: () => Promise<never>
-- `apps/website/server/utils/urls/supabase.ts` — function buildSupabaseImageUrl: (imagePath, bucket, size) => string | null, function processVoiceActor
+- `apps/website/server/utils/urls/supabase.ts`
+  - function buildSupabaseImageUrl: (imagePath, bucket, _size) => string | null
+  - const withVoiceActorImageUrl
+  - const processVoiceActor
 - `apps/website/server/utils/urls/tmdb.ts`
   - function buildTmdbImageUrl: (imagePath, size) => string | null
   - function cleanCharacterName
-  - function processMedia
   - const TMDB_CONFIG
+  - const withTmdbImageUrls
+  - const processMedia
 - `apps/website/server/utils/wiki-check-disposition.ts`
   - function wikiCheckDisposition: (evidence, candidateSectionIndexes, requestedLanguage?) => WikiCheckDisposition
   - type WikiCheckArchiveReason
@@ -272,6 +281,7 @@
   - interface DuplicateWorkEntry
   - interface DuplicateWorkGroup
   - _...4 more_
+- `apps/website/src/utils/error-message.ts` — function readErrorMessage: (err) => string | undefined
 - `apps/website/src/utils/locale-preference.ts` — function resolvePreferredLocale: (savedChoice, browserLanguages) => SupportedLocale | null, const LOCALE_PREFERENCE_COOKIE
 - `apps/website/src/utils/media-cast.ts`
   - function hasOriginalVersion: (language, cast) => language is string
@@ -336,7 +346,7 @@
   - function matchesDetailCollectionSearch: (item, query) => boolean
   - function filterDetailCollectionItems: (items, query) => T[]
   - _...7 more_
-- `packages/shared-logic/src/composables/useEpisodeData.ts` — function fetchEpisodeData: (showId, seasonNumber, episodeNumber, locale?) => Promise<any | null>
+- `packages/shared-logic/src/composables/useEpisodeData.ts` — function fetchEpisodeData: (showId, seasonNumber, episodeNumber, locale?) => Promise<EpisodeDataResponse | null>, type EpisodeDataResponse
 - `packages/shared-logic/src/composables/useGameData.ts` — function fetchGameData: (id, locale?, projection?) => Promise<GamePageData | null>
 - `packages/shared-logic/src/composables/useHomeData.ts`
   - function fetchHomeData: (language) => Promise<HomeDataPayload>
@@ -347,7 +357,7 @@
 - `packages/shared-logic/src/composables/useMovieData.ts` — function fetchMovieData: (id, locale?, options) => Promise<MovieDetailResponse | null>
 - `packages/shared-logic/src/composables/usePodcastData.ts` — function fetchPodcastData: (id, locale?, options) => Promise<PodcastResponse | null>
 - `packages/shared-logic/src/composables/useSearchData.ts` — function fetchSearchData: (query, signal?, locale?) => Promise<SearchResult[]>, type SearchResult
-- `packages/shared-logic/src/composables/useSeasonData.ts` — function fetchSeasonData: (showId, seasonNumber, locale?) => Promise<any | null>
+- `packages/shared-logic/src/composables/useSeasonData.ts` — function fetchSeasonData: (showId, seasonNumber, locale?) => Promise<SeasonDataResponse | null>, type SeasonDataResponse
 - `packages/shared-logic/src/composables/useShowData.ts` — function fetchShowData: (id, locale?, options) => Promise<ShowDetailResponse | null>
 - `packages/shared-logic/src/composables/useStudioData.ts`
   - function fetchStudioDetails: (studioId, projection?) => Promise<StudioDetailsResponse | null>
