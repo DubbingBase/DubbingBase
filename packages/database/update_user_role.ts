@@ -36,7 +36,7 @@ async function updateUserRole(userId: string, role: string) {
   console.log("userId", userId);
   console.log("role", role);
   // Patch user's app_metadata
-  const { data, error } = await supabase.auth.admin.updateUserById(userId, {
+  const { error } = await supabase.auth.admin.updateUserById(userId, {
     app_metadata: { role },
   });
   if (error) {

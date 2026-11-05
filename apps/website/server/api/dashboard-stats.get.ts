@@ -101,7 +101,7 @@ async function getTopVoiceActors(limit = 10): Promise<Record<string, unknown>[]>
   });
 }
 
-export default defineAdminHandler(async (event) => {
+export default defineAdminHandler(async () => {
   try {
     const [userCount, voiceActorCount, userGrowth, voiceActorGrowth, topVoiceActors] =
       await Promise.all([

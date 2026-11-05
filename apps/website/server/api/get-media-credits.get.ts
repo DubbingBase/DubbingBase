@@ -1,9 +1,10 @@
 import { useTmdbClient } from "../utils";
 import { setPublicCacheHeaders } from "../utils/cache/http";
+import { asString } from "../utils/narrow";
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
-  const mediaType = query.media_type as string | undefined;
+  const mediaType = asString(query.media_type);
   const mediaId = query.media_id ? Number(query.media_id) : undefined;
 
   if (!mediaType || !Number.isSafeInteger(mediaId) || typeof mediaId !== "number" || mediaId <= 0) {

@@ -1,5 +1,5 @@
 import { useSupabaseAdmin } from "../utils/db/client";
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async () => {
   try {
     const supabase = useSupabaseAdmin();
 
