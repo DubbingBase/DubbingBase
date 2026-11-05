@@ -182,7 +182,18 @@ jobs:
         run: pnpm exec playwright install chromium --with-deps
 
       - name: Run Playwright tests
-        run: pnpm exec playwright test --project=website
+        run: pnpm exec playwright test --project=website 2>&1 | tee "$RUNNER_TEMP/playwright.log"
+
+      # Nitro's html-validate (@nuxtjs/html-validator) logs problems from the E2E
+      # dev server instead of failing requests, so the server log is the gate.
+      - name: Fail on Nitro html-validate errors
+        run: |
+          sed 's/\x1b\[[0-9;]*m//g' "$RUNNER_TEMP/playwright.log" > "$RUNNER_TEMP/playwright-plain.log"
+          if grep -qE 'ERROR +HTML validation errors found' "$RUNNER_TEMP/playwright-plain.log"; then
+            echo "Nitro html-validate reported errors in server-rendered HTML:"
+            grep -A8 -E 'ERROR +HTML validation errors found' "$RUNNER_TEMP/playwright-plain.log"
+            exit 1
+          fi
 
   # Job 3.5: Frontend Unit Tests
   frontend-tests:

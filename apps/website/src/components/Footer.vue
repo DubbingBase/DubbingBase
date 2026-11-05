@@ -55,9 +55,9 @@
 
         <!-- Explore -->
         <div class="sm:col-span-2 lg:col-span-2 xl:col-span-2">
-          <h3 class="theme-text font-semibold mb-4">
+          <h2 class="theme-text font-semibold mb-4">
             {{ t("footer.explore") }}
-          </h3>
+          </h2>
           <ul class="grid grid-flow-col grid-cols-2 grid-rows-5 gap-x-6 gap-y-3 text-sm">
             <li>
               <NuxtLink :to="localePath('/movies')" class="theme-hover-text transition">{{
@@ -114,9 +114,9 @@
 
         <!-- Community -->
         <div>
-          <h3 class="theme-text font-semibold mb-4">
+          <h2 class="theme-text font-semibold mb-4">
             {{ t("footer.community") }}
-          </h3>
+          </h2>
           <ul class="space-y-3 text-sm">
             <li>
               <NuxtLink :to="localePath('/guidelines')" class="theme-hover-text transition">{{
@@ -143,9 +143,9 @@
 
         <!-- Resources -->
         <div>
-          <h3 class="theme-text font-semibold mb-4">
+          <h2 class="theme-text font-semibold mb-4">
             {{ t("footer.resources") }}
-          </h3>
+          </h2>
           <ul class="space-y-3 text-sm">
             <li>
               <NuxtLink :to="localePath('/about')" class="theme-hover-text transition">{{
@@ -162,9 +162,9 @@
 
         <!-- Legal -->
         <div>
-          <h3 class="theme-text font-semibold mb-4">
+          <h2 class="theme-text font-semibold mb-4">
             {{ t("footer.legal") }}
-          </h3>
+          </h2>
           <ul class="space-y-3 text-sm">
             <li>
               <NuxtLink :to="localePath('/legal')" class="theme-hover-text transition">{{

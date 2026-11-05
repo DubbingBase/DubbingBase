@@ -23,7 +23,7 @@
 
     <!-- Error State -->
     <div v-else-if="error" class="theme-status-danger p-6 rounded-xl border">
-      <h3 class="text-lg font-semibold mb-2">{{ $t("common.error") }}</h3>
+      <h2 class="text-lg font-semibold mb-2">{{ $t("common.error") }}</h2>
       <p>{{ error }}</p>
     </div>
 
@@ -50,11 +50,11 @@
             class="object-cover w-full h-full transition duration-500"
           />
         </div>
-        <h3
+        <h2
           class="font-semibold text-sm md:text-base theme-text line-clamp-2 theme-hover-primary-text transition-colors"
         >
           {{ serie.name }}
-        </h3>
+        </h2>
       </NuxtLink>
     </div>
   </div>

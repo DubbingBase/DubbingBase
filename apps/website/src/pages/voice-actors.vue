@@ -13,6 +13,7 @@
         <div class="relative">
           <input
             v-model="searchInput"
+            :aria-label="t('voiceActor.directorySearchPlaceholder')"
             type="text"
             :placeholder="t('voiceActor.directorySearchPlaceholder')"
             class="w-full theme-surface-raised theme-surface-muted theme-text border-0 rounded-full px-6 py-3 theme-focus transition-shadow outline-none"
@@ -50,7 +51,7 @@
 
     <!-- Error State -->
     <div v-else-if="error" class="theme-status-danger p-6 rounded-xl border">
-      <h3 class="text-lg font-semibold mb-2">{{ $t("common.error") }}</h3>
+      <h2 class="text-lg font-semibold mb-2">{{ $t("common.error") }}</h2>
       <p>{{ error }}</p>
     </div>
 
@@ -94,11 +95,11 @@
                 {{ actor.firstname?.charAt(0) || "" }}{{ actor.lastname?.charAt(0) || "" }}
               </div>
             </div>
-            <h3
+            <h2
               class="font-semibold text-sm md:text-base theme-text text-center theme-hover-primary-text transition-colors"
             >
               {{ actor.firstname }} {{ actor.lastname }}
-            </h3>
+            </h2>
           </NuxtLink>
         </template>
       </PaginatedResponsiveGrid>

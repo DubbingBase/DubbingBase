@@ -28,3 +28,6 @@ packageExtensions:
   vue-sonner:
     peerDependencies:
       nuxt: "-"
+
+patchedDependencies:
+  lucide-vue-next: patches/lucide-vue-next.patch

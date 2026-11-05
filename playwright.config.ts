@@ -24,7 +24,11 @@ export default defineConfig({
   webServer: [
     {
       command: "E2E_TEST=true PORT=3050 pnpm --filter=@app/website dev --port 3050",
-      port: 3050,
+      // A URL (not a port) so tests wait until Nuxt finishes compiling; the dev
+      // server answers 503 while it builds.
+      url: "http://localhost:3050/",
+      // Piped so CI can fail on Nitro html-validate errors in the server log.
+      stdout: "pipe",
       env: {
         E2E_TEST: "true",
         PORT: "3050",
