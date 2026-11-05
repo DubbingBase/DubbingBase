@@ -5,7 +5,7 @@
 
 > 91 routes | 28 models | 132 components | 121 lib files | 64 env vars | 15 middleware | 47% test coverage
 > **Token savings:** this file is ~17,800 tokens. Without it, AI exploration would cost ~153,900 tokens. **Saves ~136,100 tokens per conversation.**
-> **Last scanned:** 2026-11-05 20:10 — re-run after significant changes
+> **Last scanned:** 2026-11-05 21:20 — re-run after significant changes
 
 ---
 
@@ -1104,7 +1104,7 @@
   - `actions/checkout@v4`
   - `pnpm/action-setup@v4`
   - `actions/setup-node@v4`
-- **lint-website** on `ubuntu-latest` — 5 steps (needs: detect)
+- **lint-website** on `ubuntu-latest` — 6 steps (needs: detect)
   - `actions/checkout@v4`
   - `pnpm/action-setup@v4`
   - `actions/setup-node@v4`

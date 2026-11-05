@@ -34,7 +34,7 @@
   - `actions/checkout@v4`
   - `pnpm/action-setup@v4`
   - `actions/setup-node@v4`
-- **lint-website** on `ubuntu-latest` — 5 steps (needs: detect)
+- **lint-website** on `ubuntu-latest` — 6 steps (needs: detect)
   - `actions/checkout@v4`
   - `pnpm/action-setup@v4`
   - `actions/setup-node@v4`
