@@ -5,7 +5,7 @@
 
 > 91 routes | 28 models | 132 components | 116 lib files | 64 env vars | 15 middleware | 47% test coverage
 > **Token savings:** this file is ~17,700 tokens. Without it, AI exploration would cost ~152,600 tokens. **Saves ~134,900 tokens per conversation.**
-> **Last scanned:** 2026-11-04 19:16 — re-run after significant changes
+> **Last scanned:** 2026-11-05 08:47 — re-run after significant changes
 
 ---
 
@@ -790,6 +790,8 @@
   - function fetchHomeData: (language) => Promise<HomeDataPayload>
   - function useHomeData: (initialData?) => void
   - type HomeDataPayload
+  - type TrendingVoiceActorSummary
+  - type TopContributorSummary
 - `packages/shared-logic/src/composables/useMovieData.ts` — function fetchMovieData: (id, locale?, options) => Promise<MovieDetailResponse | null>
 - `packages/shared-logic/src/composables/usePodcastData.ts` — function fetchPodcastData: (id, locale?, options) => Promise<PodcastResponse | null>
 - `packages/shared-logic/src/composables/useSearchData.ts` — function fetchSearchData: (query, signal?, locale?) => Promise<SearchResult[]>, type SearchResult
@@ -800,7 +802,9 @@
   - function fetchStudiosData: () => Promise<Studio[]>
   - function useStudioData: (initialStudios?, initialStudioDetails?) => void
   - type Studio
-  - type StudioDetailsResponse
+  - type StudioDubbedProject
+  - type StudioVoiceActor
+  - _...1 more_
 - `packages/shared-logic/src/composables/useToyData.ts` — function fetchToyData: (id, locale?, projection?) => Promise<ToyResponse | null>
 - `packages/shared-logic/src/composables/useVoiceActorData.ts`
   - function fetchVoiceActorData: (id, lang?) => Promise<VoiceActorDataPayload | null>
@@ -949,9 +953,9 @@
 - `apps/website/server/utils/notifications/discord.ts` — imported by **12** files
 - `apps/website/server/utils/api/igdb.ts` — imported by **12** files
 - `apps/website/server/utils/urls/supabase.ts` — imported by **11** files
+- `packages/shared-logic/src/types/index.ts` — imported by **11** files
 - `apps/website/server/utils/dubbing-language.ts` — imported by **10** files
 - `apps/website/server/utils/cache/http.ts` — imported by **10** files
-- `packages/shared-logic/src/types/index.ts` — imported by **10** files
 - `apps/website/server/utils/db/queries.ts` — imported by **9** files
 - `apps/website/server/utils/urls/tmdb.ts` — imported by **9** files
 - `apps/website/server/utils/media-request.ts` — imported by **9** files
@@ -972,8 +976,8 @@
 - `apps/website/server/utils/notifications/discord.ts` ← `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/game/[id].get.ts`, `apps/website/server/api/media-queue.post.ts`, `apps/website/server/api/movie/[id].get.ts` +7 more
 - `apps/website/server/utils/api/igdb.ts` ← `apps/website/server/api/game/[id].get.ts`, `apps/website/server/api/internal-media-credits.get.ts`, `apps/website/server/api/internal-media-metadata.get.ts`, `apps/website/server/api/media-catalog.get.ts`, `apps/website/server/api/search/index.get.ts` +7 more
 - `apps/website/server/utils/urls/supabase.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/dashboard-stats.get.ts`, `apps/website/server/api/find_duplicate_voice_actors.get.ts`, `apps/website/server/api/list-voice-actors.get.ts`, `apps/website/server/api/recent-voice-actors.get.ts` +6 more
+- `packages/shared-logic/src/types/index.ts` ← `packages/shared-logic/src/composables/useAdvertisementData.ts`, `packages/shared-logic/src/composables/useAudiobookData.ts`, `packages/shared-logic/src/composables/useDetailCollections.ts`, `packages/shared-logic/src/composables/useDetailCollections.ts`, `packages/shared-logic/src/composables/useGameData.ts` +6 more
 - `apps/website/server/utils/dubbing-language.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/internal-media-create.post.ts`, `apps/website/server/api/link-voice-actor.post.ts`, `apps/website/server/api/media-queue.post.ts` +5 more
-- `apps/website/server/utils/cache/http.ts` ← `apps/website/server/api/admin/work-duplicates.get.ts`, `apps/website/server/api/get-media-credits.get.ts`, `apps/website/server/api/og-image/index.get.ts`, `apps/website/server/api/trending/games.get.ts`, `apps/website/server/api/trending/movies.get.ts` +5 more
 
 ---
 

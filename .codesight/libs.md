@@ -342,6 +342,8 @@
   - function fetchHomeData: (language) => Promise<HomeDataPayload>
   - function useHomeData: (initialData?) => void
   - type HomeDataPayload
+  - type TrendingVoiceActorSummary
+  - type TopContributorSummary
 - `packages/shared-logic/src/composables/useMovieData.ts` — function fetchMovieData: (id, locale?, options) => Promise<MovieDetailResponse | null>
 - `packages/shared-logic/src/composables/usePodcastData.ts` — function fetchPodcastData: (id, locale?, options) => Promise<PodcastResponse | null>
 - `packages/shared-logic/src/composables/useSearchData.ts` — function fetchSearchData: (query, signal?, locale?) => Promise<SearchResult[]>, type SearchResult
@@ -352,7 +354,9 @@
   - function fetchStudiosData: () => Promise<Studio[]>
   - function useStudioData: (initialStudios?, initialStudioDetails?) => void
   - type Studio
-  - type StudioDetailsResponse
+  - type StudioDubbedProject
+  - type StudioVoiceActor
+  - _...1 more_
 - `packages/shared-logic/src/composables/useToyData.ts` — function fetchToyData: (id, locale?, projection?) => Promise<ToyResponse | null>
 - `packages/shared-logic/src/composables/useVoiceActorData.ts`
   - function fetchVoiceActorData: (id, lang?) => Promise<VoiceActorDataPayload | null>
