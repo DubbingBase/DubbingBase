@@ -28,6 +28,7 @@
     "lint-staged": "^17.3.0",
     "oxfmt": "^0.70.0",
     "oxlint": "^1.76.0",
+    "oxlint-tsgolint": "^7.0.2005",
     "turbo": "^2.10.7",
     "vue-i18n-extract": "^2.0.7",
     "wrangler": "^4.115.0"

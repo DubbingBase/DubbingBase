@@ -2,6 +2,7 @@ import { requireDubbingLanguage } from "../dubbing-language";
 import { useSupabaseAdmin } from "../db/client";
 import type { DubbingLanguage } from "@app/shared-logic";
 import type { Json } from "@app/supabase/types";
+import { readProperty } from "@app/shared-logic";
 
 export interface ExtractedCredit {
   firstname: string;
@@ -21,7 +22,7 @@ export interface AppliedExtractedCredits {
 
 function readCount(value: unknown, key: string): number {
   if (typeof value !== "object" || value === null) return 0;
-  const count = Reflect.get(value, key);
+  const count = readProperty(value, key);
   return typeof count === "number" && Number.isInteger(count) && count >= 0 ? count : 0;
 }
 

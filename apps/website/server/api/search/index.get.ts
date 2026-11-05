@@ -11,6 +11,7 @@ import { normalizeString } from "../../utils/normalize";
 import { processMedia } from "../../utils/urls/tmdb";
 import { buildSupabaseImageUrl } from "../../utils/urls/supabase";
 import { useSupabaseAdmin } from "../../utils/db/client";
+import { readProperty } from "@app/shared-logic";
 
 type SearchItem = {
   [key: string]: unknown;
@@ -37,11 +38,11 @@ type SearchItem = {
 function isSearchItem(value: unknown): value is SearchItem {
   if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
   const isOptionalString = (key: string) => {
-    const property = Reflect.get(value, key);
+    const property = readProperty(value, key);
     return property === undefined || typeof property === "string";
   };
   const isOptionalId = () => {
-    const property = Reflect.get(value, "id");
+    const property = readProperty(value, "id");
     return (
       property === undefined ||
       property === null ||
@@ -50,11 +51,11 @@ function isSearchItem(value: unknown): value is SearchItem {
     );
   };
   const isOptionalNullableString = (key: string) => {
-    const property = Reflect.get(value, key);
+    const property = readProperty(value, key);
     return property === undefined || property === null || typeof property === "string";
   };
   const isOptionalNullableNumber = (key: string) => {
-    const property = Reflect.get(value, key);
+    const property = readProperty(value, key);
     return property === undefined || property === null || typeof property === "number";
   };
 
@@ -155,7 +156,7 @@ function projectSearchResult(item: SearchItem): SearchItem {
   const cover = item.cover;
   const coverUrl =
     typeof cover === "object" && cover !== null && !Array.isArray(cover)
-      ? Reflect.get(cover, "url")
+      ? readProperty(cover, "url")
       : undefined;
 
   return {

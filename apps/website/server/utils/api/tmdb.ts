@@ -1,8 +1,9 @@
+import { readProperty } from "@app/shared-logic";
 type TmdbResponse = Record<string, unknown> & { cast?: unknown[] };
 
 function isTmdbResponse(value: unknown): value is TmdbResponse {
   if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
-  const cast = Reflect.get(value, "cast");
+  const cast = readProperty(value, "cast");
   return cast === undefined || Array.isArray(cast);
 }
 

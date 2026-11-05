@@ -2,7 +2,7 @@ import { useIgdbClient } from "../../utils";
 import type { H3Event } from "h3";
 import { buildIgdbImageUrl } from "../../utils/api/igdb";
 import type { IgdbGame } from "@app/shared-logic";
-import { resolveLocaleLanguage } from "@app/shared-logic";
+import { readProperty, resolveLocaleLanguage } from "@app/shared-logic";
 import { setPublicCacheHeaders } from "../../utils/cache/http";
 import type { IgdbTrendingGamesResult } from "../../utils/api/igdb";
 
@@ -39,16 +39,16 @@ function isIgdbGame(value: unknown): value is IgdbGame {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     return false;
   }
-  const id = Reflect.get(value, "id");
-  const name = Reflect.get(value, "name");
-  const cover = Reflect.get(value, "cover");
+  const id = readProperty(value, "id");
+  const name = readProperty(value, "name");
+  const cover = readProperty(value, "cover");
   return (
     typeof id === "number" &&
     Number.isFinite(id) &&
     typeof name === "string" &&
     (cover === undefined ||
       cover === null ||
-      (typeof cover === "object" && typeof Reflect.get(cover, "image_id") === "string"))
+      (typeof cover === "object" && typeof readProperty(cover, "image_id") === "string"))
   );
 }
 

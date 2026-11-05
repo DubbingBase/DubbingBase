@@ -261,6 +261,11 @@ jobs:
       - name: Install website dependencies
         run: pnpm install --filter=@app/website... --filter=dubbing-base-monorepo --config.minimum-release-age=0 --config.minimum-release-age-strict=false
 
+      # Type-aware lint (oxlint --type-aware, enabled in .oxlintrc.json) reads the website's
+      # tsconfigs, which extend the ones Nuxt generates under apps/website/.nuxt.
+      - name: Generate Nuxt types for type-aware lint
+        run: pnpm --filter=@app/website exec nuxt prepare
+
       - name: Compare full website lint with the base revision
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
@@ -277,6 +282,11 @@ jobs:
           head_results="$(mktemp)"
           trap 'rm -rf "$baseline_dir"; rm -f "$baseline_results" "$head_results"' EXIT
           git archive "$BASE_SHA" .gitignore apps/website | tar -x -C "$baseline_dir"
+          # Give the baseline the same generated Nuxt types and dependencies so its type-aware
+          # results are comparable with the head's.
+          cp -r apps/website/.nuxt "$baseline_dir/apps/website/.nuxt"
+          ln -s "$GITHUB_WORKSPACE/apps/website/node_modules" "$baseline_dir/apps/website/node_modules"
+          ln -s "$GITHUB_WORKSPACE/node_modules" "$baseline_dir/node_modules"
 
           node --check scripts/compare-oxlint-results.mjs
 

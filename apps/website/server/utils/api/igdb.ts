@@ -1,5 +1,10 @@
 import { SimpleCache, createCacheNamespace } from "../cache";
-import { DEFAULT_LANGUAGE, type IgdbGame, type IgdbCharacter } from "@app/shared-logic";
+import {
+  DEFAULT_LANGUAGE,
+  readProperty,
+  type IgdbCharacter,
+  type IgdbGame,
+} from "@app/shared-logic";
 import {
   createMediaResponseError,
   fetchMediaRequest,
@@ -99,11 +104,11 @@ export class IgdbClient {
       const tokenData: unknown = await response.json();
       const accessToken =
         typeof tokenData === "object" && tokenData !== null
-          ? Reflect.get(tokenData, "access_token")
+          ? readProperty(tokenData, "access_token")
           : undefined;
       const expiresIn =
         typeof tokenData === "object" && tokenData !== null
-          ? Reflect.get(tokenData, "expires_in")
+          ? readProperty(tokenData, "expires_in")
           : undefined;
 
       if (
