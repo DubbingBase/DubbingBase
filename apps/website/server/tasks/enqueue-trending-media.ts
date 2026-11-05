@@ -34,7 +34,7 @@ export default defineTask({
       throw new Error(`Trending media enqueue returned status ${response.status}: ${errorBody}`);
     }
 
-    const result = await response.json();
+    const result: unknown = await response.json();
     console.log("[Trending Media] Daily enqueue completed:", result);
     return result;
   },

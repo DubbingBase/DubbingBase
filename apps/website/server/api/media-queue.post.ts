@@ -1,5 +1,5 @@
 import { requireDubbingLanguage } from "../utils/dubbing-language";
-import { isWikipediaLanguage } from "@app/shared-logic";
+import { isWikipediaLanguage, readProperty } from "@app/shared-logic";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { requireUser } from "../utils/auth";
 import { sendDiscordAdminNotification } from "../utils/notifications/discord";
@@ -99,8 +99,8 @@ export default defineEventHandler(async (event) => {
           },
         }).catch(() => null);
         if (res?.ok) {
-          const item = await res.json().catch(() => null);
-          if (item?.adult === true) {
+          const item: unknown = await res.json().catch(() => null);
+          if (readProperty(item, "adult") === true) {
             throw createError({
               statusCode: 400,
               message: "18+ adult content cannot be enqueued.",

@@ -282,6 +282,7 @@
 <script setup lang="ts">
 import { ref, shallowRef, computed, watch, onUnmounted } from "vue";
 import type { Json, Tables } from "@app/supabase/types";
+import { isJson } from "@app/shared-logic";
 
 const supabase = useSupabaseClient();
 const localePath = useLocalePath();
@@ -438,14 +439,6 @@ function handleTmdbIdEdit(actor: VoiceActor, event: Event) {
   }
   actor.tmdb_id = value;
   queueCellEdit(actor, "tmdb_id", actor.tmdb_id);
-}
-
-function isJson(value: unknown): value is Json {
-  if (value === null || typeof value === "string" || typeof value === "boolean") return true;
-  if (typeof value === "number") return Number.isFinite(value);
-  if (Array.isArray(value)) return value.every(isJson);
-  if (typeof value === "object") return Object.values(value).every(isJson);
-  return false;
 }
 
 function queueCellEdit(actor: VoiceActor, prop: EditableVoiceActorField, newValue: unknown) {

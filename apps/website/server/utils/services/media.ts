@@ -8,7 +8,7 @@ import { useCache, useIgdbClient, useOpenLibraryClient } from "../index";
 import { buildIgdbImageUrl } from "../api/igdb";
 import { createCacheNamespace } from "../cache";
 import { buildCacheKey, hashCacheValue } from "../cache/constants";
-import { isRecord } from "@app/shared-logic";
+import { isRecord, readPath, readProperty } from "@app/shared-logic";
 
 const WIKIPEDIA_USER_AGENT = "DubbingBase/1.0 (https://dubbingbase.com; contact@dubbingbase.com)";
 
@@ -342,21 +342,24 @@ async function fetchPotentialWikipediaUrl(
         });
         if (!searchRes.ok) return null;
 
-        const searchData = await searchRes.json();
-        if (!searchData.search || searchData.search.length === 0) return null;
+        const searchData: unknown = await searchRes.json();
+        const searchResults = readProperty(searchData, "search");
+        if (!Array.isArray(searchResults) || searchResults.length === 0) return null;
 
-        const bestMatch = searchData.search[0];
+        const bestMatch: unknown = searchResults[0];
+        if (!isRecord(bestMatch)) return null;
+        const bestMatchId = String(bestMatch.id);
 
         // Get sitelinks for French Wikipedia
-        const entityUrl = `https://www.wikidata.org/w/api.php?action=wbgetentities&props=sitelinks&format=json&ids=${bestMatch.id}&sitefilter=frwiki`;
+        const entityUrl = `https://www.wikidata.org/w/api.php?action=wbgetentities&props=sitelinks&format=json&ids=${bestMatchId}&sitefilter=frwiki`;
         const entityRes = await fetch(entityUrl, {
           headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
         });
         if (!entityRes.ok) return null;
 
-        const entityData = await entityRes.json();
-        const title = entityData.entities?.[bestMatch.id]?.sitelinks?.frwiki?.title;
-        if (!title) return null;
+        const entityData: unknown = await entityRes.json();
+        const title = readPath(entityData, "entities", bestMatchId, "sitelinks", "frwiki", "title");
+        if (typeof title !== "string" || !title) return null;
 
         return `https://fr.wikipedia.org/wiki/${encodeURI(title.replace(/ /g, "_"))}`;
       },
@@ -1086,14 +1089,16 @@ export class MediaService {
                 { meta: "translations", short: false },
                 this.acceptLanguage,
               );
-              characters = Array.isArray(res.data.characters) ? res.data.characters : [];
+              const rawCharacters = readPath(res, "data", "characters");
+              characters = Array.isArray(rawCharacters) ? rawCharacters : [];
             } else {
               const res = await tvdbClient.getSeriesById(
                 tvdbId,
                 { meta: "episodes", short: false },
                 this.acceptLanguage,
               );
-              characters = Array.isArray(res.data.characters) ? res.data.characters : [];
+              const rawCharacters = readPath(res, "data", "characters");
+              characters = Array.isArray(rawCharacters) ? rawCharacters : [];
             }
 
             const characterProfilePictures = characters

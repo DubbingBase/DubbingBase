@@ -455,6 +455,7 @@ export class WikipediaCache {
     if (!response.ok) {
       throw createMediaResponseError("Wikipedia", response);
     }
-    return response.json();
+    const data: unknown = await response.json();
+    return data;
   }
 }

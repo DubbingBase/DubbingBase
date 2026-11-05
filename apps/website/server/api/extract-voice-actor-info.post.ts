@@ -1,4 +1,6 @@
+import { isRecord, readPath, readProperty } from "@app/shared-logic";
 import { defineAdminHandler } from "../utils/auth-handlers";
+import { asString } from "../utils/narrow";
 
 const WIKIPEDIA_USER_AGENT = "DubbingBase/1.0 (https://dubbingbase.com; contact@dubbingbase.com)";
 
@@ -51,16 +53,16 @@ export default defineAdminHandler(async (event) => {
     const res = await fetch(wikiPageUrl, {
       headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
     });
-    const data = await res.json();
+    const data: unknown = await res.json();
 
-    if (!data?.query?.pages) {
+    const pages = readPath(data, "query", "pages");
+    if (!isRecord(pages)) {
       throw createError({
         statusCode: 404,
         message: "Wikipedia page not found",
       });
     }
 
-    const pages = data.query.pages;
     const pageId = Object.keys(pages)[0] || "";
     if (pageId === "-1" || !pageId) {
       throw createError({
@@ -69,16 +71,17 @@ export default defineAdminHandler(async (event) => {
       });
     }
 
-    const pageprops = pages[pageId]?.pageprops || {};
+    const pageprops: unknown = readPath(pages, pageId, "pageprops") || {};
 
     const extractUrl = `https://${lang}.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=1&explaintext=1&format=json&titles=${encodeURIComponent(title)}`;
     const extractRes = await fetch(extractUrl, {
       headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
     });
-    const extractData = await extractRes.json();
-    const extractText = extractData?.query?.pages?.[pageId]?.extract || "";
+    const extractData: unknown = await extractRes.json();
+    const extractText = asString(readPath(extractData, "query", "pages", pageId, "extract")) || "";
 
-    const wikidataId = pageprops.wikibase_item;
+    const wikidataId = asString(readProperty(pageprops, "wikibase_item"));
+    const pageImageFree = asString(readProperty(pageprops, "page_image_free"));
 
     let firstname = "";
     let lastname = "";
@@ -96,58 +99,62 @@ export default defineAdminHandler(async (event) => {
       const entityRes = await fetch(entityUrl, {
         headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
       });
-      const entityData = await entityRes.json();
-      const entity = entityData.entities?.[wikidataId];
+      const entityData: unknown = await entityRes.json();
+      const entity = readPath(entityData, "entities", wikidataId);
 
       if (entity) {
-        const fullName = entity.labels?.[lang]?.value || entity.labels?.en?.value;
+        const fullName =
+          asString(readPath(entity, "labels", lang, "value")) ||
+          asString(readPath(entity, "labels", "en", "value"));
         if (fullName) {
           const parts = fullName.split(" ");
           firstname = parts[0] || "";
           lastname = parts.slice(1).join(" ");
         }
 
-        const imageClaim = entity.claims?.P18?.[0];
+        const imageClaim = readPath(entity, "claims", "P18", "0");
         if (imageClaim) {
-          const filename = imageClaim.mainsnak?.datavalue?.value;
+          const filename = asString(readPath(imageClaim, "mainsnak", "datavalue", "value"));
           if (filename) {
             const imageUrlRes = await fetch(getImageFromFilename(filename, lang), {
               headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
             });
-            const imageUrlData = await imageUrlRes.json();
-            const imagePages = imageUrlData?.query?.pages;
-            if (imagePages) {
+            const imageUrlData: unknown = await imageUrlRes.json();
+            const imagePages = readPath(imageUrlData, "query", "pages");
+            if (isRecord(imagePages)) {
               const imagePageId = Object.keys(imagePages)[0] || "";
-              profile_picture = imagePages[imagePageId]?.imageinfo?.[0]?.url || null;
+              profile_picture =
+                asString(readPath(imagePages, imagePageId, "imageinfo", "0", "url")) || null;
             }
           }
         }
 
-        const dobClaim = entity.claims?.P569?.[0];
+        const dobClaim = readPath(entity, "claims", "P569", "0");
         if (dobClaim) {
-          const timeStr = dobClaim.mainsnak?.datavalue?.value?.time;
+          const timeStr = asString(readPath(dobClaim, "mainsnak", "datavalue", "value", "time"));
           if (timeStr) {
             date_of_birth = timeStr.replace(/^[+-]/, "").split("T")[0] || null;
           }
         }
 
-        const tmdbClaim = entity.claims?.P4985?.[0];
+        const tmdbClaim = readPath(entity, "claims", "P4985", "0");
         if (tmdbClaim) {
-          const tmdbStr = tmdbClaim.mainsnak?.datavalue?.value;
+          const tmdbStr = asString(readPath(tmdbClaim, "mainsnak", "datavalue", "value"));
           if (tmdbStr) {
             tmdb_id = parseInt(tmdbStr, 10);
           }
         }
       }
-    } else if (pageprops.page_image_free) {
-      const imageUrlRes = await fetch(getImageFromFilename(pageprops.page_image_free, lang), {
+    } else if (pageImageFree) {
+      const imageUrlRes = await fetch(getImageFromFilename(pageImageFree, lang), {
         headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
       });
-      const imageUrlData = await imageUrlRes.json();
-      const imagePages = imageUrlData?.query?.pages;
-      if (imagePages) {
+      const imageUrlData: unknown = await imageUrlRes.json();
+      const imagePages = readPath(imageUrlData, "query", "pages");
+      if (isRecord(imagePages)) {
         const imagePageId = Object.keys(imagePages)[0] || "";
-        profile_picture = imagePages[imagePageId]?.imageinfo?.[0]?.url || null;
+        profile_picture =
+          asString(readPath(imagePages, imagePageId, "imageinfo", "0", "url")) || null;
       }
     }
 

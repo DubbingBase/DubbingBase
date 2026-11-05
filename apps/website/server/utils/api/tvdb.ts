@@ -114,7 +114,11 @@ export class TVDBClient {
     await writePromise;
   }
 
-  async get(endpoint: string, params?: Record<string, string>, language?: string) {
+  async get(
+    endpoint: string,
+    params?: Record<string, string>,
+    language?: string,
+  ): Promise<unknown> {
     const token = await this.authenticate();
     const url = new URL(`${this.baseUrl}${endpoint}`);
 
@@ -154,7 +158,8 @@ export class TVDBClient {
         throw new Error(`TVDB API error: ${response.status}`);
       }
 
-      return await response.json();
+      const body: unknown = await response.json();
+      return body;
     } catch (e) {
       if (e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError")) {
         throw new Error(`TVDB API timeout: ${endpoint}`);

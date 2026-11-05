@@ -84,7 +84,7 @@ export default defineEventHandler(async (event) => {
       throw new Error(`TV Shows API request failed: ${showsResponse.status}`);
     }
 
-    const [moviesData, showsData] = await Promise.all([
+    const [moviesData, showsData]: [unknown, unknown] = await Promise.all([
       moviesResponse.json(),
       showsResponse.json(),
     ]);
