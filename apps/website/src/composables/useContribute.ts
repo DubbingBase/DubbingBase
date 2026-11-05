@@ -1,10 +1,10 @@
 import { ref } from "vue";
-import type { Database } from "@app/supabase";
+import type { Tables } from "@app/supabase/types";
 
 export type ContributionCategory = "any" | "enrich_voice_actor" | "enrich_studio";
 
-type VoiceActor = Database["public"]["Tables"]["voice_actors"]["Row"];
-type Studio = Database["public"]["Tables"]["studios"]["Row"];
+type VoiceActor = Tables<"voice_actors">;
+type Studio = Tables<"studios">;
 export type ClaimedCategory = Exclude<ContributionCategory, "any">;
 
 // The contribution form uses one display shape for actors and studios.

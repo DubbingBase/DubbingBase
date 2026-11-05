@@ -1,10 +1,6 @@
-export interface MediaDetailVoiceActor extends Record<string, unknown> {
-  id: number;
-  firstname?: string | null;
-  lastname?: string | null;
-  profile_picture?: string | null;
-  voice_actor_name?: string | null;
-}
+import type { DubbingProjectStudio, DubbingProjectVoiceActor } from "./index";
+
+export type MediaDetailVoiceActor = DubbingProjectVoiceActor & Record<string, unknown>;
 
 export interface MediaDetailWork extends Record<string, unknown> {
   id: number;
@@ -16,11 +12,7 @@ export interface MediaDetailWork extends Record<string, unknown> {
   voice_actor?: MediaDetailVoiceActor | null;
 }
 
-export interface MediaDetailStudio extends Record<string, unknown> {
-  id: number;
-  name: string;
-  logo_url?: string | null;
-}
+export type MediaDetailStudio = DubbingProjectStudio & Record<string, unknown>;
 
 export interface MediaDetailDubbingProject extends Record<string, unknown> {
   id: number;

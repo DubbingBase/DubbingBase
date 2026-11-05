@@ -1,15 +1,12 @@
-import type { MediaDetailMedia } from "@app/shared-logic";
+import type { MediaDetailMedia, MediaDubbingProject } from "@app/shared-logic";
 import type { CastActorReference, CastWorkReference } from "./media-cast";
 import type { CharacterProfilePicture } from "./show-character-pictures";
 
-export interface SeasonPageDubbingProject {
-  id: number;
-  language?: string | null;
-  studio_data?: { id: number; name: string; logo_url?: string | null } | null;
-  has_voice_actor: boolean;
-  voice_actor_count: number;
-  work_count: number;
-}
+export type SeasonPageDubbingProject = Pick<
+  MediaDubbingProject,
+  "id" | "language" | "studio_data"
+> &
+  Required<Pick<MediaDubbingProject, "has_voice_actor" | "voice_actor_count" | "work_count">>;
 
 interface SeasonPageSeason {
   id: number;

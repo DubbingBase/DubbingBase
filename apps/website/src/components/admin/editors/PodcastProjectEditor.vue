@@ -402,10 +402,10 @@ import { Radio as RadioIcon, Loader2 as Loader2Icon, Trash2 as Trash2Icon } from
 import {
   createDubbingProjectSaveClient,
   getEditableDubbingProjectStatus,
+  type DubbingProjectStatus,
   getDubbingProjectSaveErrorMessage,
   type DubbingProjectCastSaveRow,
   type DubbingProjectSaveResponse,
-  type WorkExpectedValues,
 } from "~/utils/dubbing-project-save";
 import {
   formatVoiceActorName,
@@ -413,7 +413,7 @@ import {
   type AdminLookupOption,
 } from "~/composables/useAdminLookups";
 import { createEditorRowKey, useEditorFormState } from "~/composables/useEditorFormState";
-import type { EditorProjectTab } from "~/utils/admin-project-editor-types";
+import type { EditorCastRowBase, EditorProjectTab } from "~/utils/admin-project-editor-types";
 import { firstRouteParam } from "~/utils/route-param";
 
 const route = useRoute();
@@ -441,24 +441,14 @@ const contentId = ref<number | null>(parsedPodcastId.value);
 const mediaTitle = ref("");
 const posterUrl = ref<string | null>(null);
 const dubbingLanguage = ref("");
-const status = ref<"validated" | "pending" | "draft">("validated");
+const status = ref<DubbingProjectStatus>("validated");
 const selectedStudioId = ref<number | null>(null);
 const projectUpdatedAt = ref<string | null>(null);
 const artisticDirectorId = ref<number | null>(null);
 const recordingId = ref<number | null>(null);
 const mixingId = ref<number | null>(null);
 
-interface CastRow {
-  /** Client-only stable identity for keyed rendering and row actions. */
-  key: string;
-  id?: number;
-  voice_actor_id: number | null;
-  character_name: string;
-  performance: string;
-  note: string;
-  expectedUpdatedAt?: string | null;
-  expected?: WorkExpectedValues;
-}
+type CastRow = EditorCastRowBase;
 
 const castList = ref<CastRow[]>([]);
 const podcastDubbingProjects = ref<EditorProjectTab[]>([]);

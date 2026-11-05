@@ -43,37 +43,11 @@ export type MovieTrendingResponse = TrendingResponse;
 type VoiceActorRow = Tables<"voice_actors">;
 type WorkRow = Tables<"work">;
 
-export interface VoiceActorDetails {
-  id: number;
-  bio: VoiceActorRow["bio"];
-  awards: VoiceActorRow["awards"];
-  lastname: string;
-  firstname: string;
-  nationality: VoiceActorRow["nationality"];
-  years_active: VoiceActorRow["years_active"];
-  date_of_birth: VoiceActorRow["date_of_birth"];
-  social_media_links: VoiceActorRow["social_media_links"];
-  profile_picture?: string;
-}
-
-export interface WorkAndVoiceActor {
-  id: number;
-  content_id: number;
-  actor_id: number;
-  voice_actor_id: number;
-  highlight: boolean;
-  suggestions: WorkRow["suggestions"];
-  status: string;
-  source_id: WorkRow["source_id"];
-  voiceActorDetails: VoiceActorDetails;
-  performance?: string;
-}
-
 /** Per-work vote tally, as returned by the server `getWorkVotes` query. */
 export interface WorkVoteSummary {
   up_count: number;
   down_count: number;
-  user_vote: string | null;
+  user_vote: Tables<"votes">["vote_type"] | null;
 }
 
 export type WorkVotes = Record<number, WorkVoteSummary>;

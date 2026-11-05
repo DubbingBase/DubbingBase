@@ -114,6 +114,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
 import { refDebounced } from "@vueuse/core";
+import type { Tables } from "@app/supabase/types";
 
 const localePath = useLocalePath();
 const { t } = useI18n();
@@ -121,13 +122,7 @@ const { t } = useI18n();
 const searchInput = ref("");
 const debouncedSearch = refDebounced(searchInput, 150);
 
-interface Studio {
-  id: number;
-  name: string;
-  city: string | null;
-  country: string | null;
-  logo_url: string | null;
-}
+type Studio = Pick<Tables<"studios">, "id" | "name" | "city" | "country" | "logo_url">;
 
 interface StudiosPage {
   studios: Studio[];

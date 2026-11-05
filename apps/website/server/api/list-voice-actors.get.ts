@@ -1,9 +1,9 @@
 import { useSupabaseAdmin } from "../utils/db/client";
 import { buildSupabaseImageUrl } from "../utils/urls/supabase";
-import type { Database } from "@app/supabase/types";
+import type { Tables } from "@app/shared-logic";
 
 type VoiceActorDirectoryRow = Pick<
-  Database["public"]["Tables"]["voice_actors"]["Row"],
+  Tables<"voice_actors">,
   "id" | "firstname" | "lastname" | "profile_picture"
 >;
 

@@ -2,8 +2,7 @@ import { defineAdminHandler } from "../../utils/auth-handlers";
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { requireDubbingLanguage } from "../../utils/dubbing-language";
 import type { Json } from "@app/supabase";
-
-const MEDIA_TYPES = ["movie", "tv", "video_game", "audiobook", "podcast", "advertisement", "toy"];
+import { DUBBING_PROJECT_MEDIA_TYPES } from "../../../src/utils/dubbing-project-save";
 
 interface AssignmentOperation {
   actor_id: number;
@@ -47,7 +46,7 @@ export default defineAdminHandler(async (event, admin) => {
   if (
     !isPositiveId(contentId) ||
     typeof contentType !== "string" ||
-    !MEDIA_TYPES.includes(contentType) ||
+    !DUBBING_PROJECT_MEDIA_TYPES.some((mediaType) => mediaType === contentType) ||
     typeof requestId !== "string" ||
     !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestId) ||
     !Array.isArray(operationsInput) ||

@@ -1,9 +1,8 @@
-import type { Toy } from "@app/shared-logic";
-import type { Database } from "@app/supabase/types";
+import type { Tables, Toy } from "@app/shared-logic";
 import { useSupabaseAdmin } from "../db/client";
 
 type ToyMetadataRow = Pick<
-  Database["public"]["Tables"]["toy_metadata"]["Row"],
+  Tables<"toy_metadata">,
   | "content_id"
   | "name"
   | "manufacturer"

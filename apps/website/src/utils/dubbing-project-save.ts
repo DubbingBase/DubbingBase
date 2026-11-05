@@ -1,11 +1,16 @@
-export type DubbingProjectMediaType =
-  | "movie"
-  | "tv"
-  | "video_game"
-  | "audiobook"
-  | "podcast"
-  | "advertisement"
-  | "toy";
+import type { Tables, TablesInsert } from "@app/supabase/types";
+
+export const DUBBING_PROJECT_MEDIA_TYPES = [
+  "movie",
+  "tv",
+  "video_game",
+  "audiobook",
+  "podcast",
+  "advertisement",
+  "toy",
+] as const;
+
+export type DubbingProjectMediaType = (typeof DUBBING_PROJECT_MEDIA_TYPES)[number];
 
 export type DubbingProjectStatus = "validated" | "pending" | "draft";
 
@@ -14,31 +19,40 @@ export function getEditableDubbingProjectStatus(value: string | null): DubbingPr
   return "validated";
 }
 
-export interface WorkExpectedValues {
-  actor_id: number | null;
-  character_id: number | null;
-  game_character_id?: string | null;
-  character_name: string | null;
-  voice_actor_id: number | null;
-  performance: string | null;
-  note: string | null;
-  highlight: boolean | null;
-  status: string | null;
-}
+export type WorkExpectedValues = Pick<
+  Tables<"work">,
+  | "actor_id"
+  | "character_id"
+  | "character_name"
+  | "voice_actor_id"
+  | "performance"
+  | "note"
+  | "highlight"
+  | "status"
+> & { game_character_id?: Tables<"work">["game_character_id"] };
 
-export interface DubbingProjectCastSaveRow {
+export type DubbingProjectCrewSaveRow = Pick<
+  Tables<"dubbing_project_crew">,
+  "job_id" | "person_id"
+>;
+
+export type DubbingProjectCastSaveRow = Partial<
+  Pick<
+    TablesInsert<"work">,
+    | "actor_id"
+    | "character_id"
+    | "game_character_id"
+    | "character_name"
+    | "voice_actor_id"
+    | "performance"
+    | "note"
+    | "highlight"
+  >
+> & {
   id?: number;
   expected_updated_at?: string | null;
   expected?: WorkExpectedValues;
-  actor_id?: number | null;
-  character_id?: number | null;
-  game_character_id?: string | null;
-  character_name?: string | null;
-  voice_actor_id?: number | null;
-  performance?: string | null;
-  note?: string | null;
-  highlight?: boolean | null;
-}
+};
 
 export interface GameProjectCastEditorRow {
   /** Client-only stable identity for keyed rendering; never sent to the save API. */
@@ -105,9 +119,9 @@ export interface DubbingProjectSaveRequest {
     content_type: DubbingProjectMediaType;
     language: string;
     studio_id: number | null;
-    status: string;
+    status: DubbingProjectStatus;
   };
-  crew: Array<{ job_id: number; person_id: number }>;
+  crew: DubbingProjectCrewSaveRow[];
   cast: DubbingProjectCastSaveRow[];
 }
 
