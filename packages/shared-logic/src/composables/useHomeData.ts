@@ -1,5 +1,6 @@
 import { ref } from "vue";
 import type { IgdbGame, MovieTrendingResponse, SerieTrendingResponse, Tables } from "../types";
+import { readPath, readProperty } from "../utils/narrow";
 
 export type HomeDataPayload = {
   trendingMovies: MovieTrendingResponse["results"];
@@ -43,6 +44,15 @@ export type TopContributorSummary = {
 
 type HomeStats = HomeDataPayload["homeStats"];
 
+/** Message of a failed `$fetch`: the API error body's `message`, else the error's own message. */
+function fetchErrorMessage(error: unknown, fallback: string): string {
+  const apiMessage = readPath(error, "data", "message");
+  if (typeof apiMessage === "string" && apiMessage) return apiMessage;
+  const message = readProperty(error, "message");
+  if (typeof message === "string" && message) return message;
+  return fallback;
+}
+
 export async function fetchHomeData(language = "en-US"): Promise<HomeDataPayload> {
   const payload: HomeDataPayload = {
     trendingMovies: [],
@@ -72,44 +82,46 @@ export async function fetchHomeData(language = "en-US"): Promise<HomeDataPayload
       .then((res) => {
         payload.trendingMovies = res.results || [];
       })
-      .catch((e) => {
-        payload.errorMovies =
-          e.data?.message || e.message || "Erreur lors du chargement des films.";
+      .catch((e: unknown) => {
+        payload.errorMovies = fetchErrorMessage(e, "Erreur lors du chargement des films.");
       }),
 
     $fetch<SerieTrendingResponse>("/api/trending/shows", { query: { lang: language } })
       .then((res) => {
         payload.trendingSeries = res.results || [];
       })
-      .catch((e) => {
-        payload.errorSeries =
-          e.data?.message || e.message || "Erreur lors du chargement des séries.";
+      .catch((e: unknown) => {
+        payload.errorSeries = fetchErrorMessage(e, "Erreur lors du chargement des séries.");
       }),
 
     $fetch<IgdbGame[]>("/api/trending/games", { query: { lang: language } })
       .then((res) => {
         payload.trendingGames = res || [];
       })
-      .catch((e) => {
-        payload.errorGames = e.data?.message || e.message || "Erreur lors du chargement des jeux.";
+      .catch((e: unknown) => {
+        payload.errorGames = fetchErrorMessage(e, "Erreur lors du chargement des jeux.");
       }),
 
     $fetch<Tables<"voice_actors">[]>("/api/recent-voice-actors", { query: { limit: 10 } })
       .then((res) => {
         payload.recentVoiceActors = res || [];
       })
-      .catch((e) => {
-        payload.errorVoiceActors =
-          e.data?.message || e.message || "Erreur lors du chargement des voix récentes.";
+      .catch((e: unknown) => {
+        payload.errorVoiceActors = fetchErrorMessage(
+          e,
+          "Erreur lors du chargement des voix récentes.",
+        );
       }),
 
     $fetch<Tables<"voice_actors">[]>("/api/top-voice-actors", { query: { limit: 10 } })
       .then((res) => {
         payload.topVoiceActors = res || [];
       })
-      .catch((e) => {
-        payload.errorTopVoiceActors =
-          e.data?.message || e.message || "Erreur lors du chargement des top doubleurs.";
+      .catch((e: unknown) => {
+        payload.errorTopVoiceActors = fetchErrorMessage(
+          e,
+          "Erreur lors du chargement des top doubleurs.",
+        );
       }),
 
     $fetch<TrendingVoiceActorSummary[]>("/api/trending/voice-actors", {
@@ -118,9 +130,11 @@ export async function fetchHomeData(language = "en-US"): Promise<HomeDataPayload
       .then((res) => {
         payload.trendingVoiceActors = res || [];
       })
-      .catch((e) => {
-        payload.errorTrendingVoiceActors =
-          e.data?.message || e.message || "Erreur lors du chargement des doubleurs du moment.";
+      .catch((e: unknown) => {
+        payload.errorTrendingVoiceActors = fetchErrorMessage(
+          e,
+          "Erreur lors du chargement des doubleurs du moment.",
+        );
       }),
 
     $fetch<TopContributorSummary[]>("/api/top-contributors", {
@@ -129,9 +143,11 @@ export async function fetchHomeData(language = "en-US"): Promise<HomeDataPayload
       .then((res) => {
         payload.topContributors = res || [];
       })
-      .catch((e) => {
-        payload.errorTopContributors =
-          e.data?.message || e.message || "Erreur lors du chargement des contributeurs.";
+      .catch((e: unknown) => {
+        payload.errorTopContributors = fetchErrorMessage(
+          e,
+          "Erreur lors du chargement des contributeurs.",
+        );
       }),
 
     $fetch<HomeStats>("/api/home-stats")
@@ -142,9 +158,11 @@ export async function fetchHomeData(language = "en-US"): Promise<HomeDataPayload
           workCount: 0,
         };
       })
-      .catch((e) => {
-        payload.errorHomeStats =
-          e.data?.message || e.message || "Erreur lors du chargement des statistiques.";
+      .catch((e: unknown) => {
+        payload.errorHomeStats = fetchErrorMessage(
+          e,
+          "Erreur lors du chargement des statistiques.",
+        );
       }),
   ]);
 

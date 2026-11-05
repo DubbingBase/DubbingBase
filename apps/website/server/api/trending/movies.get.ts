@@ -1,7 +1,7 @@
 import { useTmdbClient } from "../../utils";
 import { buildTmdbImageUrl } from "../../utils/urls/tmdb";
 import { setPublicCacheHeaders } from "../../utils/cache/http";
-import { resolveLocaleLanguage } from "@app/shared-logic";
+import { readProperty, resolveLocaleLanguage } from "@app/shared-logic";
 
 function isTrendingMovie(value: unknown): value is {
   id: number;
@@ -13,11 +13,11 @@ function isTrendingMovie(value: unknown): value is {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     return false;
   }
-  const id = Reflect.get(value, "id");
-  const adult = Reflect.get(value, "adult");
-  const title = Reflect.get(value, "title");
-  const backdropPath = Reflect.get(value, "backdrop_path");
-  const posterPath = Reflect.get(value, "poster_path");
+  const id = readProperty(value, "id");
+  const adult = readProperty(value, "adult");
+  const title = readProperty(value, "title");
+  const backdropPath = readProperty(value, "backdrop_path");
+  const posterPath = readProperty(value, "poster_path");
   return (
     typeof id === "number" &&
     Number.isFinite(id) &&

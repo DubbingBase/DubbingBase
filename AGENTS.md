@@ -83,6 +83,10 @@ The website task starts Doppler and checks the local Supabase environment; it do
 ### 1. Global / Front-end (Common Rules)
 
 - **Strict TypeScript**: Always type variables, function signatures, and props. Types should strictly follow database types. Never cast using `as` and never use `any`.
+- **Type-aware linting**: `oxlint` runs type-aware (`options.typeAware` in `.oxlintrc.json`, powered by `oxlint-tsgolint`), so it also catches `any` that is never written: `Response.json()`, `JSON.parse()`, `readBody(event)` and `Reflect.get()` all return `any`. The `typescript/no-unsafe-*` rules, `no-floating-promises`, `no-misused-promises` and `await-thenable` are errors. A finding means a value is `any`: type it `unknown` and narrow it with `isRecord` / `readProperty` / `readPath` / `asString` / `isJson` (from `@app/shared-logic`) instead of casting.
+  - It reads the website's generated tsconfigs, so run `pnpm --filter @app/website exec nuxt prepare` once after cloning or installing (CI does this in `lint-website`). Server files use `apps/website/server/tsconfig.json`; keys stored on `event.context` are typed in `apps/website/server/utils/event-context.ts` (add new keys there).
+  - It does not cover `.vue` files (the type-aware engine cannot parse them), test files, scripts or plain JS; `vue-tsc` still typechecks `.vue` files.
+  - `.oxlintrc.json` turns the rules off for a list of legacy files, mostly routes that read `readBody(event)` without validating it. Never add to that list. When you fix a file, remove it from the list.
 - **Data Fetching Rules**:
   - **Simple single-table DB queries** (e.g. a single `supabase.from('table').select(...)`) MAY be performed directly without an API route, but **must always be encapsulated inside a dedicated API utility composable** (e.g. `useVoiceActorSubscription`). Never inline `supabase.from(...)` calls directly in Vue component `<script setup>` blocks.
   - **Complex requests** (multi-table joins, mutations with side effects, calls to external APIs, or any logic requiring elevated privileges) **MUST go through a Nuxt Nitro Server Route (`/api/...`)**.
