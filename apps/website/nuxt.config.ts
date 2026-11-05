@@ -46,7 +46,7 @@ function stripAboutClientRuntime(html: string): string {
 
 export default defineNuxtConfig({
   rootDir: resolve(import.meta.dirname),
-  compatibilityDate: "2024-09-23",
+  compatibilityDate: "2026-09-08",
 
   app: {
     head: {

@@ -1,5 +1,7 @@
 [tools]
+"conda:graphviz" = "14.1.2"
 deno = "2.1.9"
+go = "1.27.3"
 node = "24"
 
 [env]
