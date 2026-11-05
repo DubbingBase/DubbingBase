@@ -189,9 +189,12 @@ jobs:
       - name: Fail on Nitro html-validate errors
         run: |
           sed 's/\x1b\[[0-9;]*m//g' "$RUNNER_TEMP/playwright.log" > "$RUNNER_TEMP/playwright-plain.log"
-          if grep -qE 'ERROR +HTML validation errors found' "$RUNNER_TEMP/playwright-plain.log"; then
+          # The dev server prefixes the line differently across log setups, so match
+          # on the message and exclude the success line ("No HTML validation errors found").
+          pattern='(^|[^o] )HTML validation errors found'
+          if grep -qE "$pattern" "$RUNNER_TEMP/playwright-plain.log"; then
             echo "Nitro html-validate reported errors in server-rendered HTML:"
-            grep -A8 -E 'ERROR +HTML validation errors found' "$RUNNER_TEMP/playwright-plain.log"
+            grep -A8 -E "$pattern" "$RUNNER_TEMP/playwright-plain.log"
             exit 1
           fi
 

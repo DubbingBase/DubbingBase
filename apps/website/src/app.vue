@@ -22,6 +22,7 @@ const { effectiveTheme } = useTheme();
 // Applies the saved theme (cookie, falling back to the OS preference) before
 // first paint, because server-rendered HTML always uses the dark default.
 const THEME_INIT_SCRIPT = `(function(){try{var m=document.cookie.match(/(?:^|; )dubbingbase-theme=([^;]*)/);var t=m?decodeURIComponent(m[1]).replace(/"/g,""):"system";if(t!=="light"&&t!=="dark"){t=window.matchMedia("(prefers-color-scheme: light)").matches?"light":"dark"}document.documentElement.setAttribute("data-theme",t)}catch(e){}})()`;
+const MAX_TITLE_LENGTH = 70;
 const route = useRoute();
 const isAdminRoute = computed(() => {
   const middleware = route.meta.middleware;
@@ -54,7 +55,9 @@ useHead(() => ({
     dir: i18nHead.value.htmlAttrs?.dir || "ltr",
   },
   titleTemplate: (titleChunk) => {
-    return titleChunk ? `${titleChunk} | DubbingBase` : "DubbingBase";
+    const title = titleChunk ? `${titleChunk} | DubbingBase` : "DubbingBase";
+    // Search engines truncate long titles; keep them within html-validate's limit.
+    return title.length > MAX_TITLE_LENGTH ? `${title.slice(0, MAX_TITLE_LENGTH - 1)}…` : title;
   },
   link: [
     { rel: "manifest", href: "/manifest.webmanifest" },
