@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Library inventory extracted via AST. Read the source files listed here before modifying exported functions.
 
-**120 library files** across 4 modules
+**121 library files** across 4 modules
 
 ## Website (97 files)
 
@@ -33,7 +33,7 @@
 - `apps/website/server/utils/services/wiki-extraction-batching.ts` — buildWikipediaExtractionBatches, deduplicateExtractedCredits, WikipediaExtractionSection, WikipediaExtractionBatch, MAX_WIKIPEDIA_EXTRACTION_PROMPT_CHARS
 - _…and 72 more files_
 
-## Shared-logic (20 files)
+## Shared-logic (21 files)
 
 - `packages/shared-logic/src/constants.ts` — resolveLocaleLanguage, LocaleConfig, SupportedLocale, NonDefaultLocale, MediaType, MediaRoutePrefix, …
 - `packages/shared-logic/src/composables/useDetailCollections.ts` — selectDetailCollectionProject, resolveDetailCollectionProject, formatMediaWorkCastCards, formatGameDetailCastCards, matchesDetailCollectionSearch, filterDetailCollectionItems, …
@@ -47,6 +47,7 @@
 - `packages/shared-logic/src/composables/useEpisodeData.ts` — fetchEpisodeData, EpisodeDataResponse
 - `packages/shared-logic/src/composables/useSearchData.ts` — fetchSearchData, SearchResult
 - `packages/shared-logic/src/composables/useSeasonData.ts` — fetchSeasonData, SeasonDataResponse
+- `packages/shared-logic/src/utils/narrow.ts` — isRecord, readProperty
 - `packages/shared-logic/src/composables/useAdvertisementData.ts` — fetchAdvertisementData
 - `packages/shared-logic/src/composables/useAudiobookData.ts` — fetchAudiobookData
 - `packages/shared-logic/src/composables/useGameData.ts` — fetchGameData

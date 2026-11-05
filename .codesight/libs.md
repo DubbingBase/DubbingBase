@@ -85,7 +85,6 @@
 - `apps/website/server/utils/featureFlags.ts` — function isEnqueueOnNavigateEnabled: () => Promise<boolean>
 - `apps/website/server/utils/game-character-validation.ts`
   - function gameCharacterError: (statusCode, message) => void
-  - function isRecord: (value) => value is Record<string, unknown>
   - function hasOnlyKeys: (value, unknown>, allowed) => void
   - function isUuid: (value) => value is string
 - `apps/website/server/utils/game-characters.ts`
@@ -397,6 +396,7 @@
   - function createCharacterMatcher: (roleName) => (characterName: string) => boolean
   - function normalizeCharacterName
   - function findCharacter
+- `packages/shared-logic/src/utils/narrow.ts` — function isRecord: (value) => value is Record<string, unknown>, function readProperty: (value, key) => unknown
 - `packages/shared-logic/src/utils/voice-actor-work-groups.ts`
   - function groupVoiceActorWorks: (works) => VoiceActorWorkGroup<T>[]
   - function paginateVoiceActorWorks: (works, view, page, pageSize) => void
