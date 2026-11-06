@@ -36,6 +36,7 @@
     "apiTerms": "API利用規約"
   },
   "nav": {
+    "main": "メインナビゲーション",
     "home": "ホーム",
     "profile": "プロフィール",
     "login": "ログイン",

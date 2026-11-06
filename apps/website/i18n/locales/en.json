@@ -36,6 +36,7 @@
     "apiTerms": "API Terms"
   },
   "nav": {
+    "main": "Main navigation",
     "home": "Home",
     "profile": "Profile",
     "login": "Login",

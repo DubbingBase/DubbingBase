@@ -36,6 +36,7 @@
     "apiTerms": "Condiciones de la API"
   },
   "nav": {
+    "main": "Navegación principal",
     "home": "Inicio",
     "profile": "Perfil",
     "login": "Iniciar sesión",

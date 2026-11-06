@@ -32,7 +32,7 @@ function setPage(page: number) {
   >
     <button
       type="button"
-      class="rounded-lg border theme-border-subtle px-3 py-2 text-sm theme-text-secondary transition theme-hover-primary-border disabled:cursor-not-allowed disabled:opacity-40 theme-border theme-text-secondary"
+      class="rounded-lg border theme-border-subtle px-3 py-2 text-sm theme-text-secondary transition theme-hover-primary-border disabled:cursor-not-allowed disabled:opacity-40 theme-border"
       :disabled="currentPage === 1"
       @click="setPage(currentPage - 1)"
     >
@@ -48,7 +48,7 @@ function setPage(page: number) {
     </span>
     <button
       type="button"
-      class="rounded-lg border theme-border-subtle px-3 py-2 text-sm theme-text-secondary transition theme-hover-primary-border disabled:cursor-not-allowed disabled:opacity-40 theme-border theme-text-secondary"
+      class="rounded-lg border theme-border-subtle px-3 py-2 text-sm theme-text-secondary transition theme-hover-primary-border disabled:cursor-not-allowed disabled:opacity-40 theme-border"
       :disabled="currentPage === totalPages"
       @click="setPage(currentPage + 1)"
     >
