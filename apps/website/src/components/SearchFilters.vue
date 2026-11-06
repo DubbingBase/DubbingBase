@@ -1,7 +1,7 @@
 <template>
   <div class="relative pr-5 sm:pr-0">
     <div
-      class="flex gap-1.5 overflow-x-auto no-scrollbar rounded-xl py-1 outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-focus)] sm:gap-2"
+      class="flex gap-1.5 overflow-x-auto no-scrollbar rounded-xl py-1 outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-focus)] sm:gap-2 sm:pr-5"
       role="group"
       tabindex="0"
       :aria-label="t('common.filter')"
