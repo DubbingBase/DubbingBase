@@ -234,7 +234,20 @@
                         <UserIcon class="w-3 h-3 flex-shrink-0" />
                         <span class="truncate block w-full">{{ $t("details.character") }}</span>
                       </div>
+                      <NuxtLink
+                        v-if="actor.characterDetailPath"
+                        :to="actor.characterDetailPath"
+                        class="font-bold text-sm theme-text truncate block w-full hover:underline"
+                        :title="actor.roleLabels.join(', ') || actor.workCharacterName || ''"
+                      >
+                        {{
+                          actor.roleLabels.join(", ") ||
+                          actor.workCharacterName ||
+                          $t("details.unknownCharacter")
+                        }}
+                      </NuxtLink>
                       <div
+                        v-else
                         class="font-bold text-sm theme-text truncate block w-full"
                         :title="actor.roleLabels.join(', ') || actor.workCharacterName || ''"
                       >
@@ -549,6 +562,7 @@ const getDisplayLanguage = useDubbingLanguageLabel();
 // Format cast and attach voice actors
 type ShowDisplayCastActor = DisplayCastActor & {
   actorLinkPath?: string;
+  characterDetailPath?: string;
   roleLabels: string[];
   voiceActorLinkPath: string;
 };
@@ -656,13 +670,36 @@ const castItems = computed<ShowDisplayCastActor[]>(() => {
     const roleNames = roles.map((role) => role.character);
     const roleLabel = roleNames.join(", ");
     let characterImage: string | null = null;
-    if (actor.actorId !== undefined && (roleLabel || actor.workCharacterName)) {
+    let characterDetailPath: string | undefined;
+    if (roleLabel || actor.workCharacterName) {
       // Try to match any of the roles, then fallback to workCharacterName
       const namesToTry = [
         ...roleNames.filter(Boolean),
         ...(actor.workCharacterName ? [actor.workCharacterName] : []),
       ];
       characterImage = findCharacterImage(characterPictureIndex.value, namesToTry);
+      const matches = characterProfilePictures.value.filter((picture) =>
+        namesToTry.some((name) => name && picture.name?.toLowerCase() === name.toLowerCase()),
+      );
+      const uniqueCharacters = new Map(
+        matches
+          .filter((picture) => typeof picture.id === "number" || typeof picture.id === "string")
+          .map((picture) => [String(picture.id), picture]),
+      );
+      if (uniqueCharacters.size === 1) {
+        const [characterId] = uniqueCharacters.keys();
+        if (
+          characterId &&
+          /^\d+$/.test(characterId) &&
+          Number.isSafeInteger(Number(characterId)) &&
+          Number(characterId) > 0
+        ) {
+          characterDetailPath = localePath({
+            path: `/character/tvdb/${characterId}`,
+            query: { mediaType: "tv", mediaId: route.params.id },
+          });
+        }
+      }
     }
 
     return {
@@ -673,6 +710,7 @@ const castItems = computed<ShowDisplayCastActor[]>(() => {
         role.episode_count ? `${role.character} (${role.episode_count} eps)` : role.character,
       ),
       characterImage,
+      characterDetailPath,
     };
   });
 });

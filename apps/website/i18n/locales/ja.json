@@ -1477,6 +1477,19 @@
     "notFound": "シリーズが見つかりません",
     "heroDescription": "今最も人気のテレビシリーズを発見しましょう。"
   },
+  "character": {
+    "about": "キャラクターについて",
+    "profileLabel": "キャラクタープロフィール",
+    "notFound": "キャラクターが見つかりません",
+    "loadError": "キャラクター情報を読み込めませんでした。もう一度お試しください。",
+    "credits": "出演作品と吹き替えクレジット",
+    "noCredits": "このキャラクターの出演作品や吹き替えクレジットはまだありません。",
+    "gameAppearance": "ゲームを見る",
+    "showAppearance": "テレビシリーズの出演",
+    "movieAppearance": "映画の出演",
+    "originalPerformer": "オリジナルの演者",
+    "showMore": "さらに表示"
+  },
   "browse": {
     "title": "{type}を探す",
     "description": "DubbingBaseで{type}の吹き替え情報を探せます。",

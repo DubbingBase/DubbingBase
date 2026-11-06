@@ -1477,6 +1477,19 @@
     "notFound": "Série introuvable",
     "heroDescription": "Découvrez les séries télévisées les plus populaires du moment."
   },
+  "character": {
+    "about": "À propos du personnage",
+    "profileLabel": "Profil du personnage",
+    "notFound": "Personnage introuvable",
+    "loadError": "Impossible de charger les détails du personnage. Réessayez.",
+    "credits": "Apparitions et doublages",
+    "noCredits": "Aucune apparition ni aucun crédit de doublage n’est encore disponible pour ce personnage.",
+    "gameAppearance": "Voir le jeu",
+    "showAppearance": "Apparition dans une série",
+    "movieAppearance": "Apparition dans un film",
+    "originalPerformer": "Interprète original",
+    "showMore": "Afficher plus d’apparitions"
+  },
   "browse": {
     "title": "Explorer : {type}",
     "description": "Découvrez les {type} avec leurs crédits de doublage sur DubbingBase.",
