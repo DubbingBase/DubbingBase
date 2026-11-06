@@ -393,8 +393,11 @@
   "search": {
     "actor": "Actor",
     "placeholder": "Buscar...",
+    "clear": "Borrar búsqueda",
     "noResults": "No se encontraron resultados",
+    "noResultsHint": "Prueba con otro título, nombre o categoría.",
     "emptyState": "Empiece a escribir para buscar...",
+    "emptyStateHint": "Busca películas, series, actores de doblaje y más.",
     "all": "Todos",
     "movie": "Películas",
     "tv": "Series",

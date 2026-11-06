@@ -1,14 +1,14 @@
 <template>
   <button
     type="button"
-    class="group flex w-full cursor-pointer items-center gap-3 rounded-xl p-3 text-left transition theme-hover-surface-muted"
-    :class="selected ? 'theme-surface-raised theme-surface-muted' : ''"
+    class="group flex w-full cursor-pointer items-center gap-3 rounded-2xl border p-3 text-left transition theme-surface theme-border-subtle theme-focus theme-hover-surface-muted theme-hover-border-strong sm:gap-4 sm:p-4"
+    :class="selected ? 'theme-selected theme-border-strong' : ''"
     :aria-label="accessibleLabel"
     :disabled="disabled"
     @click="$emit('select')"
   >
     <div
-      class="relative flex h-16 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg theme-surface-muted shadow-sm"
+      class="relative flex h-[68px] w-[50px] shrink-0 items-center justify-center overflow-hidden rounded-xl theme-surface-muted sm:h-[76px] sm:w-[56px]"
     >
       <NuxtImg
         v-if="imagePath"
@@ -30,18 +30,18 @@
     <div class="min-w-0 flex-1">
       <div class="flex items-center gap-2">
         <span
-          class="truncate font-bold theme-text transition group-hover:text-[var(--app-color-primary)]"
+          class="min-w-0 flex-1 truncate text-sm font-semibold tracking-[0.01em] theme-text transition group-hover:text-[var(--app-color-primary)] sm:text-base"
         >
           {{ displayName }}
         </span>
         <span
-          class="shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium theme-border-subtle theme-border-strong theme-surface-muted theme-text-muted"
+          class="shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-semibold leading-none theme-border-subtle theme-border-strong theme-surface-muted theme-text-secondary sm:text-xs"
         >
           {{ mediaTypeLabel }}
         </span>
       </div>
 
-      <div class="mt-1 flex items-center gap-2 truncate text-xs theme-text-muted">
+      <div class="mt-1.5 flex min-w-0 items-center gap-2 truncate text-xs theme-text-muted">
         <span v-if="releaseYear">
           {{ releaseYear }}
         </span>

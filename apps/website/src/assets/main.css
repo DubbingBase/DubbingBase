@@ -294,6 +294,11 @@ body {
   outline-offset: 2px;
 }
 
+#search-page-input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
 html[data-input-modality="touch"] #search-page-input:focus {
   outline: 1px solid var(--app-color-border);
   outline-offset: 1px;
@@ -349,6 +354,14 @@ input,
 textarea,
 select {
   accent-color: var(--app-color-primary);
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 ::placeholder {
