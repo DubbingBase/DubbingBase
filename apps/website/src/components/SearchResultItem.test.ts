@@ -37,6 +37,8 @@ describe("SearchResultItem", () => {
     });
 
     expect(wrapper.text()).toContain("2015");
+    expect(wrapper.text()).not.toContain("Video Game");
+    expect(wrapper.find('[title="Video Game"] svg').exists()).toBe(true);
     expect(wrapper.attributes("aria-label")).toBe("The Witcher 3: Wild Hunt, Video Game, 2015");
   });
 });

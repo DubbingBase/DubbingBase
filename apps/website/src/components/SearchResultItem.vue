@@ -35,9 +35,11 @@
           {{ displayName }}
         </span>
         <span
-          class="shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-semibold leading-none theme-border-subtle theme-border-strong theme-surface-muted theme-text-secondary sm:text-xs"
+          :title="mediaTypeLabel"
+          aria-hidden="true"
+          class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border theme-border-subtle theme-border-strong theme-surface-muted theme-text-secondary"
         >
-          {{ mediaTypeLabel }}
+          <component :is="mediaTypeIcon" class="h-4 w-4" />
         </span>
       </div>
 
@@ -58,7 +60,19 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { Gamepad2Icon, ImageIcon } from "lucide-vue-next";
+import type { Component } from "vue";
+import {
+  BookOpenIcon,
+  FilmIcon,
+  Gamepad2Icon,
+  ImageIcon,
+  MegaphoneIcon,
+  MicIcon,
+  RadioIcon,
+  SmileIcon,
+  TvIcon,
+  UserIcon,
+} from "lucide-vue-next";
 import type { SearchResult } from "@app/shared-logic";
 
 const props = defineProps<{
@@ -67,6 +81,18 @@ const props = defineProps<{
   selected: boolean;
   disabled?: boolean;
 }>();
+
+const mediaTypeIcons: Record<SearchResult["media_type"], Component> = {
+  movie: FilmIcon,
+  tv: TvIcon,
+  person: UserIcon,
+  voice_actor: MicIcon,
+  video_game: Gamepad2Icon,
+  audiobook: BookOpenIcon,
+  podcast: RadioIcon,
+  advertisement: MegaphoneIcon,
+  toy: SmileIcon,
+};
 
 defineEmits<{
   select: [];
@@ -83,6 +109,7 @@ const displayName = computed(
     props.result.product_line ||
     String(props.result.id),
 );
+const mediaTypeIcon = computed(() => mediaTypeIcons[props.result.media_type]);
 
 const imagePath = computed(
   () => props.result.poster_path || props.result.profile_path || props.result.cover?.url,
