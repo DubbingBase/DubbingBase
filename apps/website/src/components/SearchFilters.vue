@@ -65,6 +65,7 @@ defineEmits<{
 
 const { t } = useI18n();
 
+/** Keep the text input focused when a touch user selects a filter. */
 const keepTouchFocus = (event: PointerEvent): void => {
   if (event.pointerType === "touch") event.preventDefault();
 };

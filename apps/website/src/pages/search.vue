@@ -262,10 +262,12 @@ const scheduleSearch = (value: string): void => {
 };
 
 const retrySearch = (): void => scheduleSearch(query.value);
+/** Clear the current query and return focus to the search field. */
 const clearSearch = (): void => {
   query.value = "";
   void nextTick(() => searchInput.value?.focus());
 };
+/** Keep the search field focused when a touch user applies a category filter. */
 const keepInputFocus = (event: PointerEvent): void => {
   if (event.pointerType === "touch") event.preventDefault();
 };
@@ -274,6 +276,7 @@ const handleSelect = (item: SearchResult): void => {
   void router.push(localePath(getSearchResultRoute(item)));
 };
 
+/** Open the selected result, or the first result when none is selected. */
 const selectCurrent = (): void => {
   if (loading.value) return;
 
