@@ -392,8 +392,11 @@
   "search": {
     "actor": "俳優",
     "placeholder": "検索...",
+    "clear": "検索をクリア",
     "noResults": "結果が見つかりません",
+    "noResultsHint": "別のタイトル、名前、カテゴリをお試しください。",
     "emptyState": "検索を開始してください...",
+    "emptyStateHint": "映画、シリーズ、声優などを検索できます。",
     "all": "すべて",
     "movie": "映画",
     "tv": "シリーズ",
