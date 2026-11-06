@@ -1,5 +1,5 @@
 <template>
-  <div class="relative pr-5">
+  <div class="relative pr-5 sm:pr-0">
     <div
       class="flex gap-1.5 overflow-x-auto no-scrollbar rounded-xl py-1 outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-focus)] sm:gap-2"
       role="group"
@@ -26,7 +26,13 @@
     </div>
     <span
       aria-hidden="true"
-      class="pointer-events-none absolute inset-y-0 right-0 w-5 bg-gradient-to-l from-[var(--app-color-background)] to-transparent"
+      class="pointer-events-none absolute inset-y-0 right-0 flex w-5 items-center justify-center bg-[var(--app-color-background)] sm:hidden"
+    >
+      <ChevronRightIcon class="h-3.5 w-3.5 theme-text-muted" />
+    </span>
+    <span
+      aria-hidden="true"
+      class="pointer-events-none absolute inset-y-0 right-0 z-10 hidden w-5 bg-gradient-to-l from-[var(--app-color-background)] to-transparent sm:block"
     />
   </div>
 </template>
@@ -36,6 +42,7 @@ import { computed, type Component } from "vue";
 import { useI18n } from "vue-i18n";
 import {
   BookOpen as BookOpenIcon,
+  ChevronRight as ChevronRightIcon,
   Film as FilmIcon,
   Gamepad2 as Gamepad2Icon,
   Layers as LayersIcon,
