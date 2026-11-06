@@ -55,7 +55,7 @@ async function loadAsset(path: string): Promise<Uint8Array> {
   for (const ns of namespaces) {
     for (const v of variants) {
       try {
-        const data = await useStorage(ns).getItemRaw(v);
+        const data: unknown = await useStorage(ns).getItemRaw(v);
         if (data instanceof Uint8Array) return data;
         if (data instanceof ArrayBuffer) return new Uint8Array(data);
       } catch (e) {

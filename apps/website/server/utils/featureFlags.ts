@@ -1,3 +1,5 @@
+import { readPath } from "@app/shared-logic";
+
 // Server-side PostHog flag 'enqueue-on-navigate' - plain fetch, no dep
 export async function isEnqueueOnNavigateEnabled(): Promise<boolean> {
   try {
@@ -12,11 +14,7 @@ export async function isEnqueueOnNavigateEnabled(): Promise<boolean> {
     });
     if (!res.ok) throw new Error(`${res.status}`);
     const data: unknown = await res.json();
-    const flags =
-      typeof data === "object" && data !== null ? Reflect.get(data, "featureFlags") : undefined;
-    return typeof flags === "object" && flags !== null
-      ? !!Reflect.get(flags, "enqueue-on-navigate")
-      : false;
+    return !!readPath(data, "featureFlags", "enqueue-on-navigate");
   } catch {
     return false;
   }

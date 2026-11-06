@@ -1,10 +1,22 @@
+import { isRecord } from "@app/shared-logic";
 import { defineUserHandler } from "../utils/auth-handlers";
 import { useSupabaseAdmin } from "../utils/db/client";
+import {
+  maxBioLength,
+  maxNationalityLength,
+  parseOptionalDate,
+  parseOptionalText,
+} from "../utils/profile-validation";
 
 export default defineUserHandler(async (event, user) => {
   try {
-    const body = await readBody(event);
-    const { bio, date_of_birth, nationality } = body;
+    const body: unknown = await readBody(event);
+    if (!isRecord(body)) {
+      throw createError({ statusCode: 400, message: "Invalid user profile" });
+    }
+    const bio = parseOptionalText(body.bio, "bio", maxBioLength);
+    const dateOfBirth = parseOptionalDate(body.date_of_birth);
+    const nationality = parseOptionalText(body.nationality, "nationality", maxNationalityLength);
 
     const supabaseAdmin = useSupabaseAdmin();
 
@@ -13,7 +25,7 @@ export default defineUserHandler(async (event, user) => {
       .insert({
         user_id: user.id,
         bio: bio || null,
-        date_of_birth: date_of_birth || null,
+        date_of_birth: dateOfBirth || null,
         nationality: nationality || null,
       })
       .select()

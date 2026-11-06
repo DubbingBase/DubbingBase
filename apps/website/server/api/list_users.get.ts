@@ -1,5 +1,6 @@
 import { defineAdminHandler } from "../utils/auth-handlers";
 import { useSupabaseAdmin } from "../utils/db/client";
+import { readProperty } from "@app/shared-logic";
 export default defineAdminHandler(async (event) => {
   const supabaseAdmin = useSupabaseAdmin();
 
@@ -16,7 +17,7 @@ export default defineAdminHandler(async (event) => {
         id: user.id,
         email: user.email ?? "",
         created_at: user.created_at,
-        app_metadata: { role: user.app_metadata?.role },
+        app_metadata: { role: readProperty(user.app_metadata, "role") },
       })),
     };
   }

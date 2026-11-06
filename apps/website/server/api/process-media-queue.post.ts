@@ -193,9 +193,10 @@ export default defineEventHandler(async (event) => {
         targetQueueParam = query.queue.trim().toLowerCase();
       }
 
-      const body = await readBody(event);
-      if (body && body.queue && typeof body.queue === "string") {
-        targetQueueParam = body.queue.trim().toLowerCase();
+      const body: unknown = await readBody(event);
+      const bodyQueue = getStringProperty(body, "queue");
+      if (bodyQueue) {
+        targetQueueParam = bodyQueue.trim().toLowerCase();
       }
     } catch {
       // Ignore body/query parse errors
