@@ -1,24 +1,35 @@
+import { isRecord } from "@app/shared-logic";
 import { useSupabaseAdmin } from "../utils/db/client";
 
-export default defineEventHandler(async (event) => {
-  const body = await readBody(event);
-  const ids = body?.ids;
+const MAX_IDS = 500;
 
-  if (!ids || !Array.isArray(ids)) {
+function isPositiveId(value: unknown): value is number {
+  return typeof value === "number" && Number.isSafeInteger(value) && value > 0;
+}
+
+function isPositiveIdList(value: unknown): value is number[] {
+  return (
+    Array.isArray(value) && value.length > 0 && value.length <= MAX_IDS && value.every(isPositiveId)
+  );
+}
+
+function parseIds(value: unknown): number[] {
+  if (!isPositiveIdList(value)) {
     throw createError({
       statusCode: 400,
       message: "Missing or invalid ids parameter",
     });
   }
+  return value;
+}
 
-  const numIds = ids.map(Number).filter((id) => !isNaN(id));
+export default defineEventHandler(async (event) => {
+  const body: unknown = await readBody(event);
+  const numIds = parseIds(isRecord(body) ? body.ids : undefined);
+
   const results: Record<number, number> = {};
   for (const id of numIds) {
     results[id] = 0;
-  }
-
-  if (numIds.length === 0) {
-    return results;
   }
 
   const supabase = useSupabaseAdmin();

@@ -12,28 +12,12 @@ import { processMedia } from "../../utils/urls/tmdb";
 import { buildSupabaseImageUrl } from "../../utils/urls/supabase";
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { readProperty } from "@app/shared-logic";
-
-type SearchItem = {
-  [key: string]: unknown;
-  id?: string | number | null;
-  title?: string | null;
-  name?: string | null;
-  voice_actor_name?: string | null;
-  firstname?: string | null;
-  lastname?: string | null;
-  popularity?: number | null;
-  vote_average?: number | null;
-  vote_count?: number | null;
-  release_date?: string | null;
-  first_air_date?: string | null;
-  first_release_date?: number | null;
-  studio_names?: string[];
-  tmdb_id?: number | null;
-  profile_picture?: string | null;
-  profile_path?: string | null;
-  media_type?: string;
-  score?: number;
-};
+import {
+  getTmdbLocale,
+  projectSearchResult,
+  rankSearchResults,
+  type SearchItem,
+} from "../../utils/search-ranking";
 
 function isSearchItem(value: unknown): value is SearchItem {
   if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
@@ -91,99 +75,6 @@ function buildTextSearchQuery(query: string): string {
     .map((w) => `'${w}'`);
   if (words.length === 0) return "";
   return words.join(" | ");
-}
-
-function getTmdbLocale(locale: unknown): string {
-  if (locale === "fr") return "fr-FR";
-  if (locale === "es") return "es-ES";
-  if (locale === "ja") return "ja-JP";
-  return "en-US";
-}
-
-function calculateScore(item: SearchItem, queryLower: string, now: number): number {
-  let score = 0;
-  let relevanceTier = 0;
-
-  const displayNames = [
-    (typeof item.title === "string" && item.title) ||
-      (typeof item.name === "string" && item.name) ||
-      (typeof item.voice_actor_name === "string" && item.voice_actor_name) ||
-      "",
-    item.original_title,
-    item.original_name,
-    typeof item.product_line === "string" ? item.product_line : "",
-    typeof item.manufacturer === "string" ? item.manufacturer : "",
-    typeof item.brand === "string" ? item.brand : "",
-    typeof item.firstname === "string" && typeof item.lastname === "string"
-      ? `${item.firstname} ${item.lastname}`
-      : "",
-  ].filter((name): name is string => typeof name === "string" && name.length > 0);
-  const itemNames = displayNames.map(normalizeString);
-
-  if (itemNames.some((name) => name === queryLower)) {
-    relevanceTier = 3;
-  } else if (itemNames.some((name) => name.startsWith(queryLower))) {
-    relevanceTier = 2;
-  } else if (itemNames.some((name) => name.includes(queryLower))) {
-    relevanceTier = 1;
-  }
-
-  const pop = item.popularity || 0;
-  score += Math.min(Math.sqrt(pop) * 3, 50);
-
-  score += Math.min((item.vote_average || 0) * 0.1, 1);
-
-  const vc = item.vote_count || 0;
-  score += Math.min(Math.log10(vc + 1) * 3, 15);
-
-  let releaseMs: number | null = null;
-  const isoDate = item.release_date || item.first_air_date;
-  if (isoDate) {
-    releaseMs = new Date(isoDate).getTime();
-  } else if (item.first_release_date && typeof item.first_release_date === "number") {
-    releaseMs = item.first_release_date * 1000;
-  }
-
-  if (releaseMs && !isNaN(releaseMs)) {
-    const ageYears = Math.max(0, (now - releaseMs) / (365.25 * 24 * 3600 * 1000));
-    score += Math.max(0, 15 - ageYears * 1.5);
-  }
-
-  return relevanceTier * 1000 + score;
-}
-
-function projectSearchResult(item: SearchItem): SearchItem {
-  const cover = item.cover;
-  const coverUrl =
-    typeof cover === "object" && cover !== null && !Array.isArray(cover)
-      ? readProperty(cover, "url")
-      : undefined;
-
-  return {
-    id: item.id,
-    media_type: item.media_type,
-    title: item.title,
-    name: item.name,
-    voice_actor_name: item.voice_actor_name,
-    firstname: item.firstname,
-    lastname: item.lastname,
-    profile_path: item.profile_path,
-    poster_path: item.poster_path,
-    popularity: item.popularity,
-    score: item.score,
-    release_date: item.release_date,
-    first_air_date: item.first_air_date,
-    first_release_date: item.first_release_date,
-    original_title: item.original_title,
-    original_name: item.original_name,
-    studio_names: item.studio_names,
-    ...(typeof coverUrl === "string" ? { cover: { url: coverUrl } } : {}),
-    author_name: item.author_name,
-    brand: item.brand,
-    manufacturer: item.manufacturer,
-    product_line: item.product_line,
-    overview: item.overview,
-  };
 }
 
 export default defineEventHandler(async (event) => {
@@ -571,20 +462,7 @@ export default defineEventHandler(async (event) => {
 
     // Score each result once; sort and return using the same score value.
     const now = Date.now();
-    const results = resp
-      .filter((item) => item != null)
-      .map((item) => ({
-        ...item,
-        score: calculateScore(item, trimmedQuery, now),
-      }))
-      .sort(
-        (a, b) =>
-          (b.score ?? 0) - (a.score ?? 0) ||
-          String(a.media_type ?? "").localeCompare(String(b.media_type ?? "")) ||
-          String(a.id ?? "").localeCompare(String(b.id ?? ""), undefined, {
-            numeric: true,
-          }),
-      );
+    const results = rankSearchResults(resp, providerQuery, now);
     return getQuery(event).projection === "search-page"
       ? results.map(projectSearchResult)
       : results;

@@ -1,7 +1,11 @@
 import { resolveUser } from "../utils/auth";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@app/shared-logic";
+import { isRecord, type Database } from "@app/shared-logic";
 import { useSupabaseAdmin } from "../utils/db/client";
+
+function isPositiveId(value: unknown): value is number {
+  return typeof value === "number" && Number.isSafeInteger(value) && value > 0;
+}
 
 export default defineEventHandler(async (event) => {
   const user = await resolveUser(event);
@@ -11,8 +15,8 @@ export default defineEventHandler(async (event) => {
 
   const userId = user.id;
 
-  const body = await readBody(event);
-  const action = body.action;
+  const body: unknown = await readBody(event);
+  const action = isRecord(body) ? body.action : undefined;
 
   if (!action) {
     throw createError({
@@ -46,12 +50,19 @@ export default defineEventHandler(async (event) => {
 
     return { subscriptions };
   } else if (action === "subscribe" || action === "unsubscribe") {
-    const voiceActorId = body.voice_actor_id;
+    const voiceActorId = isRecord(body) ? body.voice_actor_id : undefined;
 
     if (!voiceActorId) {
       throw createError({
         statusCode: 400,
         message: "Missing 'voice_actor_id' for subscribe/unsubscribe",
+      });
+    }
+
+    if (!isPositiveId(voiceActorId)) {
+      throw createError({
+        statusCode: 400,
+        message: "Invalid 'voice_actor_id' for subscribe/unsubscribe",
       });
     }
 

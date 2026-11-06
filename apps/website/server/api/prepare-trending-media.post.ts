@@ -10,6 +10,11 @@ interface TrendingItem {
   type: "movie" | "tv";
 }
 
+async function readJsonPayload(response: Response): Promise<unknown> {
+  const payload: unknown = await response.json();
+  return payload;
+}
+
 function parseTrendingResults(payload: unknown, type: TrendingItem["type"]): TrendingItem[] {
   if (typeof payload !== "object" || payload === null) return [];
   const results: unknown = Reflect.get(payload, "results");
@@ -85,8 +90,8 @@ export default defineEventHandler(async (event) => {
     }
 
     const [moviesData, showsData]: [unknown, unknown] = await Promise.all([
-      moviesResponse.json(),
-      showsResponse.json(),
+      readJsonPayload(moviesResponse),
+      readJsonPayload(showsResponse),
     ]);
 
     const topMovies = parseTrendingResults(moviesData, "movie")

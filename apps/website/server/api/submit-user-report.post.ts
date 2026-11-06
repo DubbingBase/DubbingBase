@@ -1,6 +1,46 @@
+import { isRecord } from "@app/shared-logic";
 import { resolveUser } from "../utils/auth";
 import { sendDiscordAdminNotification } from "../utils/notifications/discord";
 import { useSupabaseAdmin } from "../utils/db/client";
+
+const MAX_TARGET_URL_LENGTH = 2048;
+const MAX_REASON_LENGTH = 100;
+const MAX_DETAILS_LENGTH = 2000;
+
+function isHttpUrl(value: string): boolean {
+  let parsed: URL;
+  try {
+    parsed = new URL(value);
+  } catch {
+    return false;
+  }
+  return parsed.protocol === "http:" || parsed.protocol === "https:";
+}
+
+function parseTargetUrl(value: unknown): string {
+  if (typeof value !== "string") {
+    throw createError({ statusCode: 400, message: "Invalid target_url" });
+  }
+  if (value.length > MAX_TARGET_URL_LENGTH || !isHttpUrl(value)) {
+    throw createError({ statusCode: 400, message: "Invalid target_url" });
+  }
+  return value;
+}
+
+function parseReason(value: unknown): string {
+  if (typeof value !== "string" || value.length > MAX_REASON_LENGTH) {
+    throw createError({ statusCode: 400, message: "Invalid reason" });
+  }
+  return value;
+}
+
+function parseDetails(value: unknown): string | null | undefined {
+  if (value === undefined || value === null) return value;
+  if (typeof value !== "string" || value.length > MAX_DETAILS_LENGTH) {
+    throw createError({ statusCode: 400, message: "Invalid details" });
+  }
+  return value;
+}
 
 export default defineEventHandler(async (event) => {
   const user = await resolveUser(event);
@@ -9,15 +49,21 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const body = await readBody(event);
-    const { target_url, reason, details } = body;
+    const body: unknown = await readBody(event);
+    const target_url = isRecord(body) ? body.target_url : undefined;
+    const reason = isRecord(body) ? body.reason : undefined;
+    const details = isRecord(body) ? body.details : undefined;
 
-    if (!target_url || !reason) {
+    if (!target_url || !reason || (typeof reason === "string" && reason.trim() === "")) {
       throw createError({
         statusCode: 400,
         message: "Missing required fields (target_url, reason)",
       });
     }
+
+    const validTargetUrl = parseTargetUrl(target_url);
+    const validReason = parseReason(reason);
+    const validDetails = parseDetails(details);
 
     const supabase = event.context.supabaseAdmin || useSupabaseAdmin();
 
@@ -25,9 +71,9 @@ export default defineEventHandler(async (event) => {
       .from("user_reports")
       .insert({
         reporter_id: user.id,
-        target_url,
-        reason,
-        details,
+        target_url: validTargetUrl,
+        reason: validReason,
+        details: validDetails,
         status: "pending",
       })
       .select()
@@ -43,7 +89,7 @@ export default defineEventHandler(async (event) => {
 
     await sendDiscordAdminNotification(
       "New User Report",
-      `Reason: ${reason}\nTarget: ${target_url}`,
+      `Reason: ${validReason}\nTarget: ${validTargetUrl}`,
       { url: "/admin/reports" },
     );
 

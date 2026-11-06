@@ -13,8 +13,8 @@
 - `GET` `/api/advertisement/:id` params(id) [queue]
 - `GET` `/api/audiobook/:id` params(id) [queue]
 - `GET` `/api/career-grid`
-- `POST` `/api/cast-vote` [auth]
-- `POST` `/api/count-voice-actor-works`
+- `POST` `/api/cast-vote` [auth] ✓
+- `POST` `/api/count-voice-actor-works` ✓
 - `POST` `/api/create-user-profile` [auth, db]
 - `GET` `/api/dashboard-stats` [auth]
 - `POST` `/api/delete-user-voice-actor-link` [auth] ✓
@@ -47,7 +47,7 @@
 - `POST` `/api/link-voice-actor` [auth] ✓
 - `GET` `/api/list-voice-actors`
 - `GET` `/api/list_users` [auth]
-- `POST` `/api/manage-subscription` [auth, db]
+- `POST` `/api/manage-subscription` [auth, db] ✓
 - `GET` `/api/media-catalog`
 - `POST` `/api/media-queue` [auth, queue] ✓
 - `POST` `/api/merge_voice_actor_duplicates` [auth]
@@ -72,7 +72,7 @@
 - `GET` `/api/season/index` [cache]
 - `GET` `/api/show/:id` params(id) [queue]
 - `POST` `/api/submit-task` [auth, db, upload] ✓
-- `POST` `/api/submit-user-report` [auth, db]
+- `POST` `/api/submit-user-report` [auth, db] ✓
 - `GET` `/api/top-contributors` ✓
 - `GET` `/api/top-voice-actors` ✓
 - `GET` `/api/toy/:id` params(id) [queue]

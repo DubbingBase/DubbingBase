@@ -141,6 +141,11 @@
   - function validatePrepareMediaPayload: (payload) => Validated<PrepareMediaInput>
   - interface PrepareGameInput
   - interface PrepareMediaInput
+- `apps/website/server/utils/profile-validation.ts`
+  - function parseOptionalText: (value, field, maxLength) => string | null | undefined
+  - function parseOptionalDate: (value) => string | null | undefined
+  - const maxBioLength
+  - const maxNationalityLength
 - `apps/website/server/utils/queue-payload.ts`
   - function queueRequester: (value) => string | null
   - function queueRequesterRpcArgs: (value) => void
@@ -155,6 +160,11 @@
   - function createMediaResponseError: (provider, response) => Error
   - function fetchMediaRequest: (input, init?) => Promise<Response>
   - class RetryableMediaRequestError
+- `apps/website/server/utils/search-ranking.ts`
+  - function rankSearchResults: (items, query, now) => void
+  - function getTmdbLocale: (locale) => string
+  - function projectSearchResult: (item) => SearchItem
+  - type SearchItem
 - `apps/website/server/utils/services/media-preparation.ts`
   - function checkMediaDubbingSections: (options) => Promise<CheckSectionsResult>
   - function checkGameDubbingSections: (options) => Promise<CheckSectionsResult>

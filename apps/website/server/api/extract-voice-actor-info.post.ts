@@ -18,14 +18,17 @@ function getImageFromFilename(filename: string, lang: string) {
 }
 
 export default defineAdminHandler(async (event) => {
-  const body = await readBody(event);
-  const { wikipediaUrl } = body;
+  const body: unknown = await readBody(event);
+  const wikipediaUrl = readProperty(body, "wikipediaUrl");
 
   if (!wikipediaUrl) {
     throw createError({
       statusCode: 400,
       message: "wikipediaUrl is required",
     });
+  }
+  if (typeof wikipediaUrl !== "string") {
+    throw createError({ statusCode: 400, message: "Invalid Wikipedia URL" });
   }
 
   let title = "";

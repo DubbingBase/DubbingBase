@@ -4,11 +4,6 @@ upload_source_maps = true # Keep production CPU profiles symbolized.
 # Avoid runtime name-restoration helpers during per-request SSR setup.
 keep_names = false
 compatibility_date = "2026-09-08"
-compatibility_flags = [
-  "nodejs_compat",
-  "no_nodejs_compat_v2",
-  "disable_nodejs_process_v2",
-] # disable_nodejs_process_v2: recommended for resvg-wasm/WASM on Workers
 
 [cache]
 enabled = true

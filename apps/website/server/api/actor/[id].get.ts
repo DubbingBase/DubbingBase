@@ -68,7 +68,7 @@ function getActorPageCredits(movieCreditsValue: unknown, tvCreditsValue: unknown
 }
 
 function readPage(value: unknown): number | undefined {
-  const pageValue = Array.isArray(value) ? value[0] : value;
+  const pageValue: unknown = Array.isArray(value) ? value[0] : value;
   const page = Number.parseInt(String(pageValue ?? ""), 10);
   return Number.isInteger(page) && page > 0 ? page : undefined;
 }

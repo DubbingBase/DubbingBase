@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 91 routes | 28 models | 132 components | 121 lib files | 64 env vars | 15 middleware | 47% test coverage
-> **Token savings:** this file is ~17,800 tokens. Without it, AI exploration would cost ~153,900 tokens. **Saves ~136,100 tokens per conversation.**
-> **Last scanned:** 2026-11-05 21:20 — re-run after significant changes
+> 91 routes | 28 models | 132 components | 123 lib files | 64 env vars | 15 middleware | 52% test coverage
+> **Token savings:** this file is ~18,000 tokens. Without it, AI exploration would cost ~154,400 tokens. **Saves ~136,400 tokens per conversation.**
+> **Last scanned:** 2026-11-06 13:29 — re-run after significant changes
 
 ---
 
@@ -24,8 +24,8 @@
 - `GET` `/api/advertisement/:id` params(id) [queue]
 - `GET` `/api/audiobook/:id` params(id) [queue]
 - `GET` `/api/career-grid`
-- `POST` `/api/cast-vote` [auth]
-- `POST` `/api/count-voice-actor-works`
+- `POST` `/api/cast-vote` [auth] ✓
+- `POST` `/api/count-voice-actor-works` ✓
 - `POST` `/api/create-user-profile` [auth, db]
 - `GET` `/api/dashboard-stats` [auth]
 - `POST` `/api/delete-user-voice-actor-link` [auth] ✓
@@ -58,7 +58,7 @@
 - `POST` `/api/link-voice-actor` [auth] ✓
 - `GET` `/api/list-voice-actors`
 - `GET` `/api/list_users` [auth]
-- `POST` `/api/manage-subscription` [auth, db]
+- `POST` `/api/manage-subscription` [auth, db] ✓
 - `GET` `/api/media-catalog`
 - `POST` `/api/media-queue` [auth, queue] ✓
 - `POST` `/api/merge_voice_actor_duplicates` [auth]
@@ -83,7 +83,7 @@
 - `GET` `/api/season/index` [cache]
 - `GET` `/api/show/:id` params(id) [queue]
 - `POST` `/api/submit-task` [auth, db, upload] ✓
-- `POST` `/api/submit-user-report` [auth, db]
+- `POST` `/api/submit-user-report` [auth, db] ✓
 - `GET` `/api/top-contributors` ✓
 - `GET` `/api/top-voice-actors` ✓
 - `GET` `/api/toy/:id` params(id) [queue]
@@ -589,6 +589,11 @@
   - function validatePrepareMediaPayload: (payload) => Validated<PrepareMediaInput>
   - interface PrepareGameInput
   - interface PrepareMediaInput
+- `apps/website/server/utils/profile-validation.ts`
+  - function parseOptionalText: (value, field, maxLength) => string | null | undefined
+  - function parseOptionalDate: (value) => string | null | undefined
+  - const maxBioLength
+  - const maxNationalityLength
 - `apps/website/server/utils/queue-payload.ts`
   - function queueRequester: (value) => string | null
   - function queueRequesterRpcArgs: (value) => void
@@ -603,6 +608,11 @@
   - function createMediaResponseError: (provider, response) => Error
   - function fetchMediaRequest: (input, init?) => Promise<Response>
   - class RetryableMediaRequestError
+- `apps/website/server/utils/search-ranking.ts`
+  - function rankSearchResults: (items, query, now) => void
+  - function getTmdbLocale: (locale) => string
+  - function projectSearchResult: (item) => SearchItem
+  - type SearchItem
 - `apps/website/server/utils/services/media-preparation.ts`
   - function checkMediaDubbingSections: (options) => Promise<CheckSectionsResult>
   - function checkGameDubbingSections: (options) => Promise<CheckSectionsResult>
@@ -1001,8 +1011,8 @@
 
 # Test Coverage
 
-> **47%** of routes and models are covered by tests
-> 147 test files found
+> **52%** of routes and models are covered by tests
+> 154 test files found
 
 ## Covered Routes
 
@@ -1010,6 +1020,8 @@
 - GET:/api/admin/dubbing-project
 - POST:/api/admin/dubbing-project
 - POST:/api/admin/queue/reprocess-legacy-wiki-check-reviews
+- POST:/api/cast-vote
+- POST:/api/count-voice-actor-works
 - POST:/api/delete-user-voice-actor-link
 - POST:/api/delete-voice-actor-link
 - GET:/api/detail-collections
@@ -1023,6 +1035,7 @@
 - GET:/api/internal-media-credits
 - POST:/api/link-user-voice-actor
 - POST:/api/link-voice-actor
+- POST:/api/manage-subscription
 - POST:/api/media-queue
 - POST:/api/prepare_game
 - POST:/api/process-media-queue
@@ -1031,6 +1044,7 @@
 - POST:/api/save-studio
 - POST:/api/save-toy-metadata
 - POST:/api/submit-task
+- POST:/api/submit-user-report
 - GET:/api/top-contributors
 - GET:/api/top-voice-actors
 - GET:/api/trending/movies
@@ -1051,6 +1065,8 @@
 - dubbing_project_crew
 - jobs
 - project_attachments
+- voice_actor_subscriptions
+- user_reports
 - audit_logs
 - gamification_task_locks
 - dubbing_languages

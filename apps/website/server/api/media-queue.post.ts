@@ -3,25 +3,36 @@ import { isWikipediaLanguage, readProperty } from "@app/shared-logic";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { requireUser } from "../utils/auth";
 import { sendDiscordAdminNotification } from "../utils/notifications/discord";
+
+// Reads an optional season/episode number. Non-numeric values are treated as absent.
+function parseOptionalInteger(value: unknown): number | undefined {
+  if (value === undefined || value === null || isNaN(Number(value))) return undefined;
+  return parseInt(String(value), 10);
+}
+
 export default defineEventHandler(async (event) => {
   // ponytail: queue responses must never be edge-cached
-  const body = await readBody(event);
-  const {
-    action,
-    mediaType,
-    mediaId,
-    tmdbId,
-    seasonNumber,
-    episodeNumber,
-    language: legacyWikipediaLanguage,
-    wikipedia_language,
-    dubbing_language,
-  } = body;
+  const body: unknown = await readBody(event);
+  const action = readProperty(body, "action");
+  const mediaType = readProperty(body, "mediaType");
+  const mediaId = readProperty(body, "mediaId");
+  const tmdbId = readProperty(body, "tmdbId");
+  const seasonNumber = readProperty(body, "seasonNumber");
+  const episodeNumber = readProperty(body, "episodeNumber");
+  const legacyWikipediaLanguage = readProperty(body, "language");
+  const wikipedia_language = readProperty(body, "wikipedia_language");
+  const dubbing_language = readProperty(body, "dubbing_language");
 
   if (!action || !mediaType) {
     throw createError({
       statusCode: 400,
       message: "Missing required parameters",
+    });
+  }
+  if (typeof mediaType !== "string") {
+    throw createError({
+      statusCode: 400,
+      message: "Invalid mediaType",
     });
   }
 
@@ -34,19 +45,13 @@ export default defineEventHandler(async (event) => {
   if (isNaN(targetId)) {
     throw createError({
       statusCode: 400,
-      message: `Invalid mediaId: ${rawTargetId}`,
+      message: `Invalid mediaId: ${String(rawTargetId)}`,
     });
   }
 
-  const numSeason =
-    seasonNumber !== undefined && seasonNumber !== null && !isNaN(Number(seasonNumber))
-      ? parseInt(String(seasonNumber), 10)
-      : undefined;
+  const numSeason = parseOptionalInteger(seasonNumber);
 
-  const numEpisode =
-    episodeNumber !== undefined && episodeNumber !== null && !isNaN(Number(episodeNumber))
-      ? parseInt(String(episodeNumber), 10)
-      : undefined;
+  const numEpisode = parseOptionalInteger(episodeNumber);
 
   // Deprecated `language` remains an alias for Wikipedia source edition only.
   const rawWikipediaLanguage = wikipedia_language ?? legacyWikipediaLanguage;
