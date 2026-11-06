@@ -49,12 +49,26 @@ test.describe("Global Search Page", () => {
     await expect(page.getByRole("option", { name: /Richard Darbois/ })).toBeVisible({
       timeout: 5000,
     });
-    const firstResult = page.getByRole("option").first();
-    await expect(firstResult).toHaveAttribute("aria-selected", "false");
-    await searchInput.press("Enter");
-    await expect(page).toHaveURL(/\/voice-actor\/1/);
 
     api.expectNoErrors();
+  });
+
+  test("opens the first result on Enter without preselecting it", async ({ page }) => {
+    await setupMockApi(page);
+    await page.goto("/");
+    await waitForVueHydration(page);
+    await page.getByTestId("header-search-trigger").click();
+    await waitForVueHydration(page);
+
+    const input = page.getByTestId("search-input");
+    await input.fill("Richard");
+    const firstResult = page.getByRole("option").first();
+    await expect(firstResult).toBeVisible({ timeout: 10000 });
+    await expect(firstResult).toHaveAttribute("aria-selected", "false");
+    expect(await input.getAttribute("aria-activedescendant")).toBeNull();
+
+    await input.press("Enter");
+    await expect(page).toHaveURL(/\/voice-actor\/1/);
   });
 
   test("submits the homepage search on Enter and shows results", async ({ page }) => {

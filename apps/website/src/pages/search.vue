@@ -185,7 +185,7 @@ const mediaTypeLabelKeys: Record<SearchResult["media_type"], string> = {
 const getMediaTypeLabel = (type: SearchResult["media_type"]): string => t(mediaTypeLabelKeys[type]);
 const resultId = (item: SearchResult): string => `search-result-${item.media_type}-${item.id}`;
 const activeResultId = computed(() => {
-  const item = filteredResults.value[selectedIndex.value] ?? filteredResults.value[0];
+  const item = filteredResults.value[selectedIndex.value];
   return item ? resultId(item) : undefined;
 });
 
@@ -276,7 +276,7 @@ const handleSelect = (item: SearchResult): void => {
 const selectCurrent = (): void => {
   if (loading.value) return;
 
-  const item = filteredResults.value[selectedIndex.value];
+  const item = filteredResults.value[selectedIndex.value] ?? filteredResults.value[0];
   if (item) handleSelect(item);
 };
 
