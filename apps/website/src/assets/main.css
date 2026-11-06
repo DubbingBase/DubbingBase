@@ -38,6 +38,15 @@
   --app-color-info-bg: #102a43;
   --app-color-info-text: #93c5fd;
   --app-color-info-border: #1d4ed8;
+  --app-color-search-movie: #7dd3fc;
+  --app-color-search-tv: #c4b5fd;
+  --app-color-search-person: #fcd34d;
+  --app-color-search-voice-actor: #6ee7b7;
+  --app-color-search-video-game: #fdba74;
+  --app-color-search-audiobook: #fda4af;
+  --app-color-search-podcast: #67e8f9;
+  --app-color-search-advertisement: #d9f99d;
+  --app-color-search-toy: #e879f9;
 
   --app-bg: var(--app-color-background);
   --app-bg-secondary: var(--app-color-surface-raised);
@@ -82,6 +91,15 @@
   --app-color-info-bg: #eff8ff;
   --app-color-info-text: #175cd3;
   --app-color-info-border: #b2ddff;
+  --app-color-search-movie: #0369a1;
+  --app-color-search-tv: #7c3aed;
+  --app-color-search-person: #a16207;
+  --app-color-search-voice-actor: #047857;
+  --app-color-search-video-game: #c2410c;
+  --app-color-search-audiobook: #be123c;
+  --app-color-search-podcast: #0e7490;
+  --app-color-search-advertisement: #4d7c0f;
+  --app-color-search-toy: #a21caf;
 
   --app-bg: var(--app-color-background);
   --app-bg-secondary: var(--app-color-surface-raised);

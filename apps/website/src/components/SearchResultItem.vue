@@ -39,7 +39,7 @@
           aria-hidden="true"
           class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border theme-border-subtle theme-border-strong theme-surface-muted theme-text-secondary"
         >
-          <component :is="mediaTypeIcon" class="h-4 w-4" />
+          <component :is="mediaTypeIcon" class="h-4 w-4" :class="mediaTypeIconColor" />
         </span>
       </div>
 
@@ -94,6 +94,18 @@ const mediaTypeIcons: Record<SearchResult["media_type"], Component> = {
   toy: SmileIcon,
 };
 
+const mediaTypeIconColors: Record<SearchResult["media_type"], string> = {
+  movie: "text-[var(--app-color-search-movie)]",
+  tv: "text-[var(--app-color-search-tv)]",
+  person: "text-[var(--app-color-search-person)]",
+  voice_actor: "text-[var(--app-color-search-voice-actor)]",
+  video_game: "text-[var(--app-color-search-video-game)]",
+  audiobook: "text-[var(--app-color-search-audiobook)]",
+  podcast: "text-[var(--app-color-search-podcast)]",
+  advertisement: "text-[var(--app-color-search-advertisement)]",
+  toy: "text-[var(--app-color-search-toy)]",
+};
+
 defineEmits<{
   select: [];
 }>();
@@ -110,6 +122,7 @@ const displayName = computed(
     String(props.result.id),
 );
 const mediaTypeIcon = computed(() => mediaTypeIcons[props.result.media_type]);
+const mediaTypeIconColor = computed(() => mediaTypeIconColors[props.result.media_type]);
 
 const imagePath = computed(
   () => props.result.poster_path || props.result.profile_path || props.result.cover?.url,
