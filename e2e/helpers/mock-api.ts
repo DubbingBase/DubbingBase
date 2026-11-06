@@ -26,6 +26,7 @@ export interface MockApiOptions {
   actor?: typeof MOCK_ACTOR;
   studio?: typeof MOCK_STUDIO;
   searchResults?: typeof MOCK_SEARCH_RESULTS;
+  searchStatus?: (query: string, attempt: number) => number | undefined;
 }
 
 export async function waitForVueHydration(page: Page): Promise<void> {
@@ -110,6 +111,7 @@ export function mockEpisodePageResponse(episode: typeof MOCK_EPISODE) {
 
 export async function setupMockApi(page: Page, options: MockApiOptions = {}) {
   const errors: string[] = [];
+  let searchRequestCount = 0;
 
   // Track uncaught page errors
   page.on("pageerror", (err) => {
@@ -397,6 +399,13 @@ export async function setupMockApi(page: Page, options: MockApiOptions = {}) {
 
     // 9. Search API
     if (path.startsWith("/api/search")) {
+      const status = options.searchStatus?.(
+        url.searchParams.get("query") || "",
+        searchRequestCount++,
+      );
+      if (status && status !== 200) {
+        return route.fulfill({ status, contentType: "application/json", body: "{}" });
+      }
       const results = options.searchResults || MOCK_SEARCH_RESULTS;
       return route.fulfill({
         status: 200,

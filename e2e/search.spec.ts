@@ -49,6 +49,10 @@ test.describe("Global Search Page", () => {
     await expect(page.getByRole("option", { name: /Richard Darbois/ })).toBeVisible({
       timeout: 5000,
     });
+    const firstResult = page.getByRole("option").first();
+    await expect(firstResult).toHaveAttribute("aria-selected", "false");
+    await searchInput.press("Enter");
+    await expect(page).toHaveURL(/\/voice-actor\/1/);
 
     api.expectNoErrors();
   });
@@ -232,6 +236,35 @@ test.describe("Global Search Page", () => {
     await expect(page.getByRole("option", { name: /Alpine/ })).toBeVisible({
       timeout: 10000,
     });
+  });
+
+  test("shows a retryable error and keeps search controls usable on narrow screens", async ({
+    page,
+  }) => {
+    await setupMockApi(page, {
+      searchResults: [{ id: 42, media_type: "movie", title: "Example Result" }],
+      searchStatus: (_query, attempt) => (attempt < 2 ? 503 : undefined),
+    });
+
+    await page.setViewportSize({ width: 375, height: 720 });
+    await page.goto("/search");
+    await waitForVueHydration(page);
+    await page.getByTestId("search-input").fill("Example");
+
+    await expect(page.getByRole("alert")).toContainText("Search failed", { timeout: 10000 });
+    await page.getByRole("button", { name: "Retry" }).click();
+    await expect(page.getByRole("option", { name: /Example Result/ })).toBeVisible({
+      timeout: 10000,
+    });
+
+    const filters = page.getByRole("group", { name: "Filter" });
+    await expect(filters).toBeVisible();
+    expect(await filters.evaluate((node) => node.scrollWidth > node.clientWidth)).toBe(true);
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    ).toBe(true);
+    await filters.getByRole("button", { name: /Toys/ }).scrollIntoViewIfNeeded();
+    await expect(filters.getByRole("button", { name: /Toys/ })).toBeVisible();
   });
 
   test("navigates to a voice actor page when selecting a result", async ({ page }) => {
