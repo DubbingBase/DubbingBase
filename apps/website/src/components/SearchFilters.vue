@@ -20,7 +20,12 @@
         @pointerdown="keepTouchFocus"
         @click="$emit('update:modelValue', filter.value)"
       >
-        <component :is="filter.icon" class="h-4 w-4" aria-hidden="true" />
+        <component
+          :is="filter.icon"
+          class="h-4 w-4"
+          :class="filterIconColors[filter.value]"
+          aria-hidden="true"
+        />
         {{ filter.label }}
       </button>
     </div>
@@ -68,6 +73,19 @@ const { t } = useI18n();
 /** Keep the text input focused when a touch user selects a filter. */
 const keepTouchFocus = (event: PointerEvent): void => {
   if (event.pointerType === "touch") event.preventDefault();
+};
+
+const filterIconColors: Record<SearchFilter, string> = {
+  all: "text-[var(--app-color-primary)]",
+  movie: "text-[var(--app-color-search-movie)]",
+  tv: "text-[var(--app-color-search-tv)]",
+  person: "text-[var(--app-color-search-person)]",
+  voice_actor: "text-[var(--app-color-search-voice-actor)]",
+  video_game: "text-[var(--app-color-search-video-game)]",
+  audiobook: "text-[var(--app-color-search-audiobook)]",
+  podcast: "text-[var(--app-color-search-podcast)]",
+  advertisement: "text-[var(--app-color-search-advertisement)]",
+  toy: "text-[var(--app-color-search-toy)]",
 };
 
 const filters = computed<Array<{ label: string; value: SearchFilter; icon: Component }>>(() => [
