@@ -1,7 +1,7 @@
 <template>
-  <div class="relative">
+  <div class="relative pr-5">
     <div
-      class="flex gap-2 overflow-x-auto no-scrollbar rounded-xl py-1 outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-focus)]"
+      class="flex gap-1.5 overflow-x-auto no-scrollbar rounded-xl py-1 outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-focus)] sm:gap-2"
       role="group"
       tabindex="0"
       :aria-label="t('common.filter')"
@@ -10,7 +10,7 @@
         v-for="filter in filters"
         :key="filter.value"
         type="button"
-        class="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-full border border-transparent px-4 text-sm font-semibold leading-none transition theme-focus cursor-pointer"
+        class="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full border border-transparent px-3 text-xs font-semibold leading-none transition theme-focus cursor-pointer sm:gap-2 sm:px-4 sm:text-sm"
         :class="
           modelValue === filter.value
             ? 'theme-selected'
