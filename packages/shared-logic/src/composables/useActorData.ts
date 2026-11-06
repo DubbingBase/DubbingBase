@@ -62,11 +62,12 @@ export type ActorDataPayload = {
 
 export async function fetchActorData(
   id: string | number,
-  options: { projection?: "actor-page"; filmographyPage?: number } = {},
+  options: { projection?: "actor-page"; filmographyPage?: number; lang?: string } = {},
 ): Promise<ActorDataPayload | null> {
   const query: Record<string, string | number> = {};
   if (options.projection) query.projection = options.projection;
   if (options.filmographyPage !== undefined) query.filmographyPage = options.filmographyPage;
+  if (options.lang) query.lang = options.lang;
 
   const response = await $fetch<ActorResponse>(`/api/actor/${id}`, {
     ...(Object.keys(query).length > 0 ? { query } : {}),
@@ -89,6 +90,7 @@ export function useActorData(
   initialData?: MaybeRef<ActorDataPayload | null | undefined>,
   options: {
     filmographyPagination?: MaybeRef<{ page: number; pageSize: number }>;
+    language?: MaybeRef<string | undefined>;
   } = {},
 ) {
   const initial = unref(initialData);
@@ -131,7 +133,10 @@ export function useActorData(
       if (!actor.value) loading.value = true;
 
       try {
-        const payload = await fetchActorData(id, { projection: "actor-page" });
+        const payload = await fetchActorData(id, {
+          projection: "actor-page",
+          lang: unref(options.language),
+        });
         if (!payload) return false;
         applyPayload(payload);
         return true;

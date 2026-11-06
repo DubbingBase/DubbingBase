@@ -8,6 +8,12 @@ import {
   toWebHandler,
 } from "h3";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { applyCachePolicy, applyDefaultCachePolicy } from "./cache/response-policy";
+import {
+  getCloudflareCacheControl,
+  getPublicCacheControl,
+  NO_STORE_CACHE_CONTROL,
+} from "./cache/http";
 
 const mocks = vi.hoisted(() => ({
   getPersonWithCredits: vi.fn(),
@@ -30,6 +36,9 @@ beforeAll(async () => {
   vi.stubGlobal("getHeader", getHeader);
   vi.stubGlobal("getQuery", getQuery);
   vi.stubGlobal("createError", createError);
+  vi.stubGlobal("useRuntimeConfig", () => ({
+    public: { supabase: { cookiePrefix: "sb-test-auth-token" } },
+  }));
   handler = (await import("../api/actor/[id].get")).default;
 });
 
@@ -124,10 +133,23 @@ beforeEach(() => {
   }));
 });
 
-async function request(projection?: string, filmographyPage?: number) {
-  const app = createApp();
+async function request(
+  projection?: string,
+  filmographyPage?: number,
+  options: { lang?: string; cachePolicy?: boolean; headers?: Record<string, string> } = {},
+) {
+  const app = createApp(
+    options.cachePolicy
+      ? {
+          onRequest: applyDefaultCachePolicy,
+          onBeforeResponse: (event) =>
+            applyCachePolicy(event, { isDev: false, supabaseCookiePrefix: "sb-test-auth-token" }),
+        }
+      : {},
+  );
   const query = new URLSearchParams();
   if (projection) query.set("projection", projection);
+  if (options.lang) query.set("lang", options.lang);
   if (filmographyPage !== undefined) query.set("filmographyPage", String(filmographyPage));
   app.use(
     defineEventHandler((event) => {
@@ -136,17 +158,120 @@ async function request(projection?: string, filmographyPage?: number) {
     }),
   );
   return await toWebHandler(app)(
-    new Request(`http://localhost/api/actor/31${query.size ? `?${query}` : ""}`),
+    new Request(`http://localhost/api/actor/31${query.size ? `?${query}` : ""}`, {
+      headers: options.headers,
+    }),
   );
 }
 
 describe("actor page API projection", () => {
+  it("caches successful public page projections by explicit language and pagination query", async () => {
+    const response = await request("actor-page", 2, {
+      lang: "fr-FR",
+      cachePolicy: true,
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("cache-control")).toBe(getPublicCacheControl("detail-json"));
+    expect(response.headers.get("cloudflare-cdn-cache-control")).toBe(
+      getCloudflareCacheControl("detail-json"),
+    );
+    expect(mocks.getPersonWithCredits).toHaveBeenCalledWith(31, "fr-FR");
+  });
+
+  it("keeps each explicit locale in the response query", async () => {
+    await request("actor-page", 1, { lang: "fr-FR", cachePolicy: true });
+    await request("actor-page", 1, { lang: "en-US", cachePolicy: true });
+
+    expect(mocks.getPersonWithCredits).toHaveBeenNthCalledWith(1, 31, "fr-FR");
+    expect(mocks.getPersonWithCredits).toHaveBeenNthCalledWith(2, 31, "en-US");
+  });
+
+  it("does not cache authorized page projections", async () => {
+    const response = await request("actor-page", undefined, {
+      lang: "fr-FR",
+      cachePolicy: true,
+      headers: { authorization: "Bearer user-token" },
+    });
+
+    expect(response.headers.get("cache-control")).toBe(NO_STORE_CACHE_CONTROL);
+    expect(response.headers.has("cloudflare-cdn-cache-control")).toBe(false);
+  });
+
+  it.each([[undefined], ["unsupported"]])(
+    "does not cache page projections without a canonical query language (%s)",
+    async (lang) => {
+      const response = await request("actor-page", undefined, { lang, cachePolicy: true });
+
+      expect(response.headers.get("cache-control")).toBe(NO_STORE_CACHE_CONTROL);
+      expect(response.headers.has("cloudflare-cdn-cache-control")).toBe(false);
+    },
+  );
+
+  it("does not cache an invalid pagination query", async () => {
+    const app = createApp({
+      onRequest: applyDefaultCachePolicy,
+      onBeforeResponse: (event) =>
+        applyCachePolicy(event, { isDev: false, supabaseCookiePrefix: "sb-test-auth-token" }),
+    });
+    app.use(
+      defineEventHandler((event) => {
+        event.context.params = { id: "31" };
+        return handler(event);
+      }),
+    );
+    const response = await toWebHandler(app)(
+      new Request(
+        "http://localhost/api/actor/31?projection=actor-page&lang=fr-FR&filmographyPage=nope",
+      ),
+    );
+
+    expect(response.headers.get("cache-control")).toBe(NO_STORE_CACHE_CONTROL);
+    expect(response.headers.has("cloudflare-cdn-cache-control")).toBe(false);
+  });
+
+  it("does not cache a structurally incomplete provider response", async () => {
+    mocks.getPersonWithCredits.mockResolvedValueOnce({ id: 31, name: "Actor" });
+
+    const response = await request("actor-page", undefined, {
+      lang: "fr-FR",
+      cachePolicy: true,
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("cache-control")).toBe(NO_STORE_CACHE_CONTROL);
+    expect(response.headers.has("cloudflare-cdn-cache-control")).toBe(false);
+  });
+
+  it("does not cache when the voice-role query falls back after a database error", async () => {
+    mocks.getActorPageWorkByActor.mockRejectedValueOnce(new Error("Database unavailable"));
+
+    const response = await request("actor-page", undefined, {
+      lang: "fr-FR",
+      cachePolicy: true,
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("cache-control")).toBe(NO_STORE_CACHE_CONTROL);
+    expect(response.headers.has("cloudflare-cdn-cache-control")).toBe(false);
+  });
+
   it("distinguishes a missing actor from a failed TMDB request", async () => {
     mocks.getPersonWithCredits.mockRejectedValueOnce(new Error("TMDB API error: 404"));
-    expect((await request("actor-page")).status).toBe(404);
+    const missing = await request("actor-page", undefined, {
+      lang: "fr-FR",
+      cachePolicy: true,
+    });
+    expect(missing.status).toBe(404);
+    expect(missing.headers.get("cache-control")).toBe(NO_STORE_CACHE_CONTROL);
 
     mocks.getPersonWithCredits.mockRejectedValueOnce(new Error("TMDB API error: 503"));
-    expect((await request("actor-page")).status).toBe(502);
+    const failed = await request("actor-page", undefined, {
+      lang: "fr-FR",
+      cachePolicy: true,
+    });
+    expect(failed.status).toBe(502);
+    expect(failed.headers.get("cache-control")).toBe(NO_STORE_CACHE_CONTROL);
   });
 
   it("preserves the full default API including provider credits and editorial metadata", async () => {

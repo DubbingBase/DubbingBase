@@ -394,7 +394,7 @@ import PersonDetailsLayout from "../../components/layout/PersonDetailsLayout.vue
 import { ref, watch, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { refDebounced } from "@vueuse/core";
-import { useActorData, fetchActorData } from "@app/shared-logic";
+import { APP_LOCALES, useActorData, fetchActorData } from "@app/shared-logic";
 import ReportModal from "../../components/ReportModal.vue";
 import { prepareActorSsrData } from "../../utils/actor-ssr-data";
 
@@ -424,6 +424,9 @@ function getActorImageSrc(src: string | null | undefined): string {
 }
 
 const id = String(route.params.id);
+const actorLanguage = computed(
+  () => APP_LOCALES.find((item) => item.code === locale.value)?.language || "en-US",
+);
 const siteUrl = useSiteConfig().url;
 const pageUrl = computed(() => new URL(actorLocalePath(`/actor/${id}`), siteUrl).href);
 const currentUrl = computed(() => new URL(route.fullPath, siteUrl).href);
@@ -437,6 +440,7 @@ const { data: initialData, error } = await useAsyncData(
     fetchActorData(id, {
       projection: "actor-page",
       filmographyPage: filmographyPage.value,
+      lang: actorLanguage.value,
     }),
   {
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
@@ -463,6 +467,7 @@ const {
     page: filmographyPage.value,
     pageSize: 12,
   })),
+  language: actorLanguage,
 });
 
 const searchInput = ref("");
