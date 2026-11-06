@@ -160,6 +160,11 @@
   - function createMediaResponseError: (provider, response) => Error
   - function fetchMediaRequest: (input, init?) => Promise<Response>
   - class RetryableMediaRequestError
+- `apps/website/server/utils/search-ranking.ts`
+  - function rankSearchResults: (items, query, now) => void
+  - function getTmdbLocale: (locale) => string
+  - function projectSearchResult: (item) => SearchItem
+  - type SearchItem
 - `apps/website/server/utils/services/media-preparation.ts`
   - function checkMediaDubbingSections: (options) => Promise<CheckSectionsResult>
   - function checkGameDubbingSections: (options) => Promise<CheckSectionsResult>

@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 91 routes | 28 models | 132 components | 122 lib files | 64 env vars | 15 middleware | 52% test coverage
-> **Token savings:** this file is ~18,000 tokens. Without it, AI exploration would cost ~154,200 tokens. **Saves ~136,200 tokens per conversation.**
-> **Last scanned:** 2026-11-06 08:46 — re-run after significant changes
+> 91 routes | 28 models | 132 components | 123 lib files | 64 env vars | 15 middleware | 52% test coverage
+> **Token savings:** this file is ~18,000 tokens. Without it, AI exploration would cost ~154,400 tokens. **Saves ~136,400 tokens per conversation.**
+> **Last scanned:** 2026-11-06 09:36 — re-run after significant changes
 
 ---
 
@@ -608,6 +608,11 @@
   - function createMediaResponseError: (provider, response) => Error
   - function fetchMediaRequest: (input, init?) => Promise<Response>
   - class RetryableMediaRequestError
+- `apps/website/server/utils/search-ranking.ts`
+  - function rankSearchResults: (items, query, now) => void
+  - function getTmdbLocale: (locale) => string
+  - function projectSearchResult: (item) => SearchItem
+  - type SearchItem
 - `apps/website/server/utils/services/media-preparation.ts`
   - function checkMediaDubbingSections: (options) => Promise<CheckSectionsResult>
   - function checkGameDubbingSections: (options) => Promise<CheckSectionsResult>
@@ -1007,7 +1012,7 @@
 # Test Coverage
 
 > **52%** of routes and models are covered by tests
-> 152 test files found
+> 154 test files found
 
 ## Covered Routes
 
