@@ -63,6 +63,18 @@ afterEach(() => {
 });
 
 describe("TVDB authentication", () => {
+  it("fetches a character by its TVDB record id", async () => {
+    const harness = makeHarness({
+      values: new Map([[TOKEN_KEY, "valid-token"]]),
+      fetch: () => response({ data: { id: 42, name: "Example role" } }),
+    });
+
+    await harness.client.getCharacterById(42, "fr-FR");
+
+    const [url] = harness.fetchMock.mock.calls[0]!;
+    expect(String(url)).toBe("https://api4.thetvdb.com/v4/characters/42?lang=fr-FR");
+  });
+
   it("uses a valid cached token without logging in", async () => {
     const harness = makeHarness({
       values: new Map([[TOKEN_KEY, "valid-token"]]),
