@@ -71,7 +71,7 @@
           id="search-results-listbox"
           role="listbox"
           :aria-label="t('search.results')"
-          :class="['flex flex-col gap-1', loading ? 'pointer-events-none opacity-60' : '']"
+          :class="['flex flex-col gap-3', loading ? 'pointer-events-none opacity-60' : '']"
         >
           <SearchResultItem
             v-for="(item, index) in filteredResults"
@@ -90,7 +90,7 @@
         <div
           v-else-if="!loading && error"
           role="alert"
-          class="mx-auto flex max-w-lg flex-col items-center rounded-2xl border px-6 py-8 text-center theme-border-subtle theme-surface-raised sm:py-10"
+          class="flex w-full flex-col items-center rounded-2xl border px-6 py-8 text-center theme-border-subtle theme-surface-raised sm:py-10"
         >
           <span
             class="mb-3 flex h-12 w-12 items-center justify-center rounded-full theme-surface-muted theme-text-secondary"
@@ -108,7 +108,7 @@
         </div>
         <div
           v-else-if="!loading && queryReady"
-          class="mx-auto flex max-w-lg flex-col items-center rounded-2xl border px-6 py-8 text-center theme-border-subtle theme-surface-raised sm:py-10"
+          class="flex w-full flex-col items-center rounded-2xl border px-6 py-8 text-center theme-border-subtle theme-surface-raised sm:py-10"
         >
           <span
             class="mb-3 flex h-12 w-12 items-center justify-center rounded-full theme-surface-muted theme-text-secondary"
@@ -120,7 +120,7 @@
         </div>
         <div
           v-else-if="!loading"
-          class="mx-auto flex max-w-lg flex-col items-center rounded-2xl border px-6 py-8 text-center theme-border-subtle theme-surface-raised sm:py-10"
+          class="flex w-full flex-col items-center rounded-2xl border px-6 py-8 text-center theme-border-subtle theme-surface-raised sm:py-10"
         >
           <span
             class="mb-3 flex h-12 w-12 items-center justify-center rounded-full theme-surface-muted theme-text-secondary"
