@@ -1,37 +1,12 @@
 import { isRecord } from "@app/shared-logic";
 import { defineUserHandler } from "../utils/auth-handlers";
 import { useSupabaseAdmin } from "../utils/db/client";
-
-const maxBioLength = 5000;
-const maxNationalityLength = 100;
-const isoDatePattern = /^\d{4}-\d{2}-\d{2}$/;
-
-function invalidField(field: string): never {
-  throw createError({ statusCode: 400, message: `Invalid ${field}` });
-}
-
-function parseOptionalText(
-  value: unknown,
-  field: string,
-  maxLength: number,
-): string | null | undefined {
-  if (value === undefined || value === null) return value;
-  if (typeof value !== "string" || value.length > maxLength) return invalidField(field);
-  return value;
-}
-
-function parseOptionalDate(value: unknown): string | null | undefined {
-  if (value === undefined) return undefined;
-  if (value === null || value === "") return null;
-  if (typeof value !== "string" || !isoDatePattern.test(value)) {
-    return invalidField("date_of_birth");
-  }
-  const parsed = new Date(`${value}T00:00:00Z`);
-  if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== value) {
-    return invalidField("date_of_birth");
-  }
-  return value;
-}
+import {
+  maxBioLength,
+  maxNationalityLength,
+  parseOptionalDate,
+  parseOptionalText,
+} from "../utils/profile-validation";
 
 export default defineUserHandler(async (event, user) => {
   try {
