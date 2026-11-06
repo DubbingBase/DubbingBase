@@ -1,5 +1,13 @@
+import { isRecord } from "@app/shared-logic";
 import { resolveUser } from "../utils/auth";
 import { useSupabaseAdmin } from "../utils/db/client";
+
+const voteTypes = ["up", "down"] as const;
+type VoteType = (typeof voteTypes)[number];
+
+function isVoteType(value: unknown): value is VoteType {
+  return typeof value === "string" && voteTypes.some((voteType) => voteType === value);
+}
 
 export default defineEventHandler(async (event) => {
   const user = await resolveUser(event);
@@ -7,8 +15,14 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, message: "Unauthorized" });
   }
 
-  const body = await readBody(event);
-  const { work_id, vote_type } = body || {};
+  const body: unknown = await readBody(event);
+  if (!isRecord(body)) {
+    throw createError({
+      statusCode: 400,
+      message: "Missing work_id or vote_type",
+    });
+  }
+  const { work_id, vote_type } = body;
 
   if (!work_id || !vote_type) {
     throw createError({
@@ -17,15 +31,20 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  if (!["up", "down"].includes(vote_type)) {
+  if (!isVoteType(vote_type)) {
     throw createError({
       statusCode: 400,
       message: 'Invalid vote_type. Must be "up" or "down"',
     });
   }
 
-  const workId = parseInt(String(work_id), 10);
-  if (isNaN(workId)) {
+  const workId =
+    typeof work_id === "number"
+      ? work_id
+      : typeof work_id === "string" && /^[1-9]\d*$/.test(work_id)
+        ? Number(work_id)
+        : NaN;
+  if (!Number.isSafeInteger(workId) || workId <= 0) {
     throw createError({ statusCode: 400, message: "Invalid work_id" });
   }
 

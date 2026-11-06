@@ -1,10 +1,47 @@
+import { isRecord } from "@app/shared-logic";
 import { defineUserHandler } from "../utils/auth-handlers";
 import { useSupabaseAdmin } from "../utils/db/client";
 
+const maxBioLength = 5000;
+const maxNationalityLength = 100;
+const isoDatePattern = /^\d{4}-\d{2}-\d{2}$/;
+
+function invalidField(field: string): never {
+  throw createError({ statusCode: 400, message: `Invalid ${field}` });
+}
+
+function parseOptionalText(
+  value: unknown,
+  field: string,
+  maxLength: number,
+): string | null | undefined {
+  if (value === undefined || value === null) return value;
+  if (typeof value !== "string" || value.length > maxLength) return invalidField(field);
+  return value;
+}
+
+function parseOptionalDate(value: unknown): string | null | undefined {
+  if (value === undefined) return undefined;
+  if (value === null || value === "") return null;
+  if (typeof value !== "string" || !isoDatePattern.test(value)) {
+    return invalidField("date_of_birth");
+  }
+  const parsed = new Date(`${value}T00:00:00Z`);
+  if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== value) {
+    return invalidField("date_of_birth");
+  }
+  return value;
+}
+
 export default defineUserHandler(async (event, user) => {
   try {
-    const body = await readBody(event);
-    const { bio, date_of_birth, nationality } = body;
+    const body: unknown = await readBody(event);
+    if (!isRecord(body)) {
+      throw createError({ statusCode: 400, message: "Invalid user profile" });
+    }
+    const bio = parseOptionalText(body.bio, "bio", maxBioLength);
+    const dateOfBirth = parseOptionalDate(body.date_of_birth);
+    const nationality = parseOptionalText(body.nationality, "nationality", maxNationalityLength);
 
     const supabaseAdmin = useSupabaseAdmin();
 
@@ -13,7 +50,7 @@ export default defineUserHandler(async (event, user) => {
       .insert({
         user_id: user.id,
         bio: bio || null,
-        date_of_birth: date_of_birth || null,
+        date_of_birth: dateOfBirth || null,
         nationality: nationality || null,
       })
       .select()

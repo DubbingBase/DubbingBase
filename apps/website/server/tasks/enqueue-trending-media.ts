@@ -1,7 +1,5 @@
+import { readPath } from "@app/shared-logic";
 import { asString } from "../utils/narrow";
-interface CloudflareContext {
-  env?: Record<string, string | undefined>;
-}
 
 export default defineTask({
   meta: {
@@ -9,13 +7,13 @@ export default defineTask({
     description: "Enqueues the daily trending movies and TV shows",
   },
   async run(event) {
-    const cf: CloudflareContext | undefined = event?.context?.cloudflare;
+    const cf: unknown = readPath(event, "context", "cloudflare");
     const config = useRuntimeConfig();
     const nitroApp = useNitroApp();
     const secretKey =
       asString(config.supabaseSecretKey) ||
-      cf?.env?.SUPABASE_SECRET_KEY ||
-      cf?.env?.NUXT_SUPABASE_SECRET_KEY ||
+      asString(readPath(cf, "env", "SUPABASE_SECRET_KEY")) ||
+      asString(readPath(cf, "env", "NUXT_SUPABASE_SECRET_KEY")) ||
       process.env.SUPABASE_SECRET_KEY ||
       process.env.NUXT_SUPABASE_SECRET_KEY ||
       "";

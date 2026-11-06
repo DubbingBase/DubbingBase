@@ -12,7 +12,7 @@ export default defineNitroPlugin((nitroApp) => {
   });
 
   // Safety net for responses that bypass `beforeResponse` (e.g. rendered errors).
-  nitroApp.hooks.hook("response", (response) => {
+  nitroApp.hooks.hook("response", (response: Response) => {
     if (!import.meta.dev && response.status < 400) return;
 
     response.headers.set("cache-control", NO_STORE_CACHE_CONTROL);

@@ -1,6 +1,37 @@
 import { resolveUser } from "../utils/auth";
-import type { TablesInsert } from "@app/shared-logic";
+import { isRecord, type TablesInsert } from "@app/shared-logic";
 import { useSupabaseAdmin } from "../utils/db/client";
+
+const maxBioLength = 5000;
+const maxNationalityLength = 100;
+const isoDatePattern = /^\d{4}-\d{2}-\d{2}$/;
+
+function invalidField(field: string): never {
+  throw createError({ statusCode: 400, message: `Invalid ${field}` });
+}
+
+function parseOptionalText(
+  value: unknown,
+  field: string,
+  maxLength: number,
+): string | null | undefined {
+  if (value === undefined || value === null) return value;
+  if (typeof value !== "string" || value.length > maxLength) return invalidField(field);
+  return value;
+}
+
+function parseOptionalDate(value: unknown): string | null | undefined {
+  if (value === undefined) return undefined;
+  if (value === null || value === "") return null;
+  if (typeof value !== "string" || !isoDatePattern.test(value)) {
+    return invalidField("date_of_birth");
+  }
+  const parsed = new Date(`${value}T00:00:00Z`);
+  if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== value) {
+    return invalidField("date_of_birth");
+  }
+  return value;
+}
 
 export default defineEventHandler(async (event) => {
   const user = await resolveUser(event);
@@ -9,8 +40,13 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const body = await readBody(event);
-    const { bio, date_of_birth, nationality } = body;
+    const body: unknown = await readBody(event);
+    if (!isRecord(body)) {
+      throw createError({ statusCode: 400, message: "Invalid user profile" });
+    }
+    const bio = parseOptionalText(body.bio, "bio", maxBioLength);
+    const dateOfBirth = parseOptionalDate(body.date_of_birth);
+    const nationality = parseOptionalText(body.nationality, "nationality", maxNationalityLength);
 
     const supabase = event.context.supabaseAdmin || useSupabaseAdmin();
 
@@ -19,7 +55,7 @@ export default defineEventHandler(async (event) => {
       updated_at: new Date().toISOString(),
     };
     if (bio !== undefined) updateData.bio = bio;
-    if (date_of_birth !== undefined) updateData.date_of_birth = date_of_birth;
+    if (dateOfBirth !== undefined) updateData.date_of_birth = dateOfBirth;
     if (nationality !== undefined) updateData.nationality = nationality;
 
     const { data: profileData, error: profileError } = await supabase
