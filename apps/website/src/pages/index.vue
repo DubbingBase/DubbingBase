@@ -85,7 +85,7 @@
 
     <!-- Main Content -->
     <div class="max-w-7xl mx-auto p-4 md:p-6 mt-4">
-      <main class="space-y-8 md:space-y-12">
+      <div class="space-y-8 md:space-y-12">
         <!-- Trending Movies -->
         <section v-if="!errorMovies">
           <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6 theme-text tracking-wide">
@@ -266,7 +266,7 @@
             </div>
           </div>
         </section>
-      </main>
+      </div>
     </div>
   </div>
 </template>

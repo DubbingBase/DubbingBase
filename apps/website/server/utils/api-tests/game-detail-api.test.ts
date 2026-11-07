@@ -32,11 +32,6 @@ vi.mock("../db/queries", () => ({
   getDubbingProjects: mocks.getDubbingProjects,
   getGamePageDubbingProjects: mocks.getGamePageDubbingProjects,
 }));
-vi.mock("../db/client", () => ({ useSupabaseAdmin: vi.fn() }));
-vi.mock("../notifications/discord", () => ({
-  sendDiscordAdminNotification: vi.fn(),
-}));
-vi.mock("../background", () => ({ scheduleBackgroundTask: vi.fn() }));
 
 let handler: typeof import("../../api/game/[id].get").default;
 
@@ -64,7 +59,9 @@ async function request(path = "/api/game/1942"): Promise<Response> {
   const app = createApp();
   app.use(
     defineEventHandler((event) => {
-      event.context.params = { id: path.split("/").at(-1) || "" };
+      event.context.params = {
+        id: new URL(path, "http://localhost").pathname.split("/").at(-1) || "",
+      };
       return handler(event);
     }),
   );
@@ -106,7 +103,32 @@ describe("GET /api/game/:id", () => {
     const data = await response.json();
     expect(response.status).toBe(200);
     expect(data.game.name).toContain("Information indisponible");
+    expect(data.game_data_status).toBe("degraded");
     expect(data.characters[0]?.game_character_id).toBe("11111111-1111-4111-8111-111111111111");
     expect(data.character_catalog_status).toBe("unavailable");
+  });
+
+  it("returns games without enqueueing discovery work", async () => {
+    const response = await request("/api/game/1942?projection=media-page");
+
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data.game_data_status).toBe("available");
+    expect(mocks.getGamePageDubbingProjects).toHaveBeenCalledWith(1942);
+    expect(mocks.getDubbingProjects).not.toHaveBeenCalled();
+  });
+
+  it("marks unavailable character data as degraded", async () => {
+    mocks.loadGameCharacterCatalog.mockResolvedValueOnce({
+      characters: [],
+      providerStatus: "unavailable",
+      localStatus: "available",
+    });
+
+    const response = await request("/api/game/1942?projection=media-page");
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(data.game_data_status).toBe("degraded");
   });
 });

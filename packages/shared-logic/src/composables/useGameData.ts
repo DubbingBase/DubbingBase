@@ -36,6 +36,7 @@ interface GamePageDubbingProject {
 
 interface GamePageData {
   game: IgdbGame | null;
+  game_data_status: "available" | "degraded";
   characters: GamePageCharacter[];
   dubbingProjects: GamePageDubbingProject[];
 }

@@ -84,6 +84,7 @@
 - **new** [client] — `apps/website/src/pages/audiobook/[audiobookId]/projects/new.vue`
 - **[id]** [client] — `apps/website/src/pages/audiobook/[id].vue`
 - **audiobooks** [client] — `apps/website/src/pages/audiobooks.vue`
+- **[id]** [client] — `apps/website/src/pages/character/[source]/[id].vue`
 - **index** [client] — `apps/website/src/pages/contribute/index.vue`
 - **play** [client] — `apps/website/src/pages/contribute/task/play.vue`
 - **discussions** [client] — `apps/website/src/pages/discussions.vue`

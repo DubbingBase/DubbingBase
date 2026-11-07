@@ -8,9 +8,9 @@
         class="relative theme-surface border theme-border-subtle rounded-3xl shadow-2xl p-8 sm:p-10 space-y-8"
       >
         <div class="text-center space-y-2">
-          <h3 class="text-2xl font-bold tracking-tight theme-text">
+          <h1 class="text-2xl font-bold tracking-tight theme-text">
             {{ $t("auth.register.title") }}
-          </h3>
+          </h1>
           <p class="text-sm theme-text-muted">
             {{ $t("auth.register.subtitle") }}
           </p>

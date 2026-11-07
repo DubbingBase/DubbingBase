@@ -8,11 +8,11 @@
 
 ## Scale
 
-91 API routes · 28 database models · 132 UI components · 123 library files · 15 middleware layers · 64 environment variables
+92 API routes · 28 database models · 133 UI components · 123 library files · 15 middleware layers · 64 environment variables
 
 ## Subsystems
 
-- **[[id].get](./[id].get.md)** — 10 routes — touches: queue
+- **[[id].get](./[id].get.md)** — 11 routes — touches: queue
 - **[[id].put](./[id].put.md)** — 1 routes — touches: auth
 - **[About-preference.get](./about-preference.get.md)** — 1 routes
 - **[Admin](./admin.md)** — 8 routes — touches: auth, queue, cache
@@ -86,7 +86,7 @@
 
 **Database:** unknown, 28 models — see [database.md](./database.md)
 
-**UI:** 132 components (vue) — see [ui.md](./ui.md)
+**UI:** 133 components (vue) — see [ui.md](./ui.md)
 
 **Libraries:** 123 files — see [libraries.md](./libraries.md)
 
@@ -96,10 +96,10 @@ Changes to these files have the widest blast radius across the codebase:
 
 - `apps/website/server/utils/db/client.ts` — imported by **72** files
 - `apps/website/server/utils/auth-handlers.ts` — imported by **37** files
-- `apps/website/server/utils/index.ts` — imported by **27** files
+- `apps/website/server/utils/index.ts` — imported by **28** files
 - `apps/website/server/utils/cache/index.ts` — imported by **19** files
 - `apps/website/server/utils/auth.ts` — imported by **16** files
-- `apps/website/server/utils/notifications/discord.ts` — imported by **12** files
+- `apps/website/server/utils/api/igdb.ts` — imported by **13** files
 
 ## Required Environment Variables
 
@@ -118,4 +118,4 @@ Changes to these files have the widest blast radius across the codebase:
 - _...29 more_
 
 ---
-_Back to [index.md](./index.md) · Generated 2026-11-06_
+_Back to [index.md](./index.md) · Generated 2026-11-07_

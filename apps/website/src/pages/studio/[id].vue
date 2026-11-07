@@ -94,6 +94,7 @@
               v-model="searchInput"
               type="search"
               :placeholder="$t('studio.projectSearchPlaceholder')"
+              :aria-label="$t('studio.projectSearchPlaceholder')"
               class="w-full theme-input border theme-border-subtle theme-border rounded-xl pl-10 pr-4 py-2 text-sm theme-focus transition-all theme-text"
             />
           </div>

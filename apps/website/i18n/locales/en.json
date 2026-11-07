@@ -36,6 +36,7 @@
     "apiTerms": "API Terms"
   },
   "nav": {
+    "main": "Main navigation",
     "home": "Home",
     "profile": "Profile",
     "login": "Login",
@@ -392,8 +393,11 @@
   "search": {
     "actor": "Actor",
     "placeholder": "Search...",
+    "clear": "Clear search",
     "noResults": "No results found",
+    "noResultsHint": "Try a different title, name, or category.",
     "emptyState": "Start typing to search...",
+    "emptyStateHint": "Search movies, series, voice actors, and more.",
     "all": "All",
     "movie": "Movies",
     "tv": "Series",
@@ -1473,6 +1477,19 @@
   "series": {
     "notFound": "Series not found",
     "heroDescription": "Discover the most popular TV series right now."
+  },
+  "character": {
+    "about": "About this character",
+    "profileLabel": "Character profile",
+    "notFound": "Character not found",
+    "loadError": "Character details could not be loaded. Please try again.",
+    "credits": "Appearances and dubbing credits",
+    "noCredits": "No appearances or dubbing credits are available for this character yet.",
+    "gameAppearance": "View game",
+    "showAppearance": "TV appearance",
+    "movieAppearance": "Movie appearance",
+    "originalPerformer": "Original performer",
+    "showMore": "Show more appearances"
   },
   "browse": {
     "title": "Browse {type}",

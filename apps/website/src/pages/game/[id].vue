@@ -156,7 +156,16 @@
                         <UserIcon class="w-3 h-3 flex-shrink-0" />
                         <span class="truncate block w-full">{{ $t("details.character") }}</span>
                       </div>
+                      <NuxtLink
+                        v-if="char.characterDetailPath"
+                        :to="char.characterDetailPath"
+                        class="font-bold text-sm theme-text truncate block w-full hover:underline"
+                        :title="char.name"
+                      >
+                        {{ char.name }}
+                      </NuxtLink>
                       <div
+                        v-else
                         class="font-bold text-sm theme-text truncate block w-full"
                         :title="char.name"
                       >
@@ -347,7 +356,6 @@ import {
   paginateDetailCollection,
   resolveDetailCollectionProject,
 } from "@app/shared-logic";
-import type { GameDetailCastCard } from "@app/shared-logic";
 import type { IgdbGame } from "@app/shared-logic";
 import { buildPrepareGameRequest } from "./prepare-game-request";
 
@@ -387,10 +395,7 @@ const gameId = (Array.isArray(route.params.id) ? route.params.id[0] : route.para
 const siteUrl = useSiteConfig().url;
 const currentUrl = computed(() => new URL(route.fullPath, siteUrl).href);
 
-const user = useSupabaseUser();
-const isAdmin = computed(() => {
-  return user.value?.app_metadata?.role === "admin";
-});
+const { isAdmin } = useClientUser();
 
 const isPreparing = ref(false);
 const showPrepareDialog = ref(false);
@@ -417,6 +422,10 @@ const { data, pending, refresh, error } = await useAsyncData(
   },
 );
 if (import.meta.server && error.value) throw error.value;
+if (import.meta.server && data.value?.game_data_status === "degraded") {
+  const requestEvent = useRequestEvent();
+  if (requestEvent) requestEvent.context.disablePublicPageCache = true;
+}
 
 const game = computed(() => data.value?.game);
 const dubbingProjects = computed(() => {
@@ -494,8 +503,20 @@ watch([searchQuery, activeDubId], ([search, dub], [previousSearch, previousDub])
   }
 });
 
-const completeCastItems = computed<GameDetailCastCard[]>(() =>
-  formatGameDetailCastCards(data.value?.characters || [], activeDubProject.value),
+const completeCastItems = computed(() =>
+  formatGameDetailCastCards(data.value?.characters || [], activeDubProject.value).map((card) => {
+    const localCharacter = data.value?.characters.find((character) => {
+      if (!character.game_character_id) return false;
+      const key = String(character.id ?? character.stable_id ?? character.game_character_id);
+      return String(card.id) === key || String(card.id).startsWith(`${key}-`);
+    });
+    return {
+      ...card,
+      characterDetailPath: localCharacter?.game_character_id
+        ? localePath(`/character/game/${localCharacter.game_character_id}`)
+        : undefined,
+    };
+  }),
 );
 const filteredCastItems = computed(() =>
   filterDetailCollectionItems(completeCastItems.value, searchQuery.value),

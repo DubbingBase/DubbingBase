@@ -1,31 +1,63 @@
 <template>
-  <div
-    class="flex gap-2 overflow-x-auto no-scrollbar"
-    role="group"
-    :aria-label="t('common.filter')"
-  >
-    <button
-      v-for="filter in filters"
-      :key="filter.value"
-      type="button"
-      class="inline-flex h-9 shrink-0 items-center justify-center rounded-full px-4 text-sm font-medium leading-none transition theme-focus cursor-pointer"
-      :class="
-        modelValue === filter.value
-          ? 'theme-selected'
-          : 'theme-surface-raised theme-surface-muted theme-text-secondary theme-hover-surface-muted'
-      "
-      :aria-pressed="modelValue === filter.value"
-      @pointerdown="keepTouchFocus"
-      @click="$emit('update:modelValue', filter.value)"
+  <div class="relative pr-5 sm:pr-0">
+    <div
+      class="flex gap-1.5 overflow-x-auto no-scrollbar rounded-xl py-1 outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-focus)] sm:gap-2 sm:pr-5"
+      role="group"
+      tabindex="0"
+      :aria-label="t('common.filter')"
     >
-      {{ filter.label }}
-    </button>
+      <button
+        v-for="filter in filters"
+        :key="filter.value"
+        type="button"
+        class="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full border border-transparent px-3 text-xs font-semibold leading-none transition theme-focus cursor-pointer sm:gap-2 sm:px-4 sm:text-sm"
+        :class="
+          modelValue === filter.value
+            ? 'theme-selected'
+            : 'theme-surface-raised theme-text-secondary theme-hover-surface-muted theme-hover-border-strong'
+        "
+        :aria-pressed="modelValue === filter.value"
+        @pointerdown="keepTouchFocus"
+        @click="$emit('update:modelValue', filter.value)"
+      >
+        <component
+          :is="filter.icon"
+          class="h-4 w-4"
+          :class="filterIconColors[filter.value]"
+          aria-hidden="true"
+        />
+        {{ filter.label }}
+      </button>
+    </div>
+    <span
+      aria-hidden="true"
+      class="pointer-events-none absolute inset-y-0 right-0 flex w-5 items-center justify-center bg-[var(--app-color-background)] sm:hidden"
+    >
+      <ChevronRightIcon class="h-3.5 w-3.5 theme-text-muted" />
+    </span>
+    <span
+      aria-hidden="true"
+      class="pointer-events-none absolute inset-y-0 right-0 z-10 hidden w-5 bg-gradient-to-l from-[var(--app-color-background)] to-transparent sm:block"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, type Component } from "vue";
 import { useI18n } from "vue-i18n";
+import {
+  BookOpen as BookOpenIcon,
+  ChevronRight as ChevronRightIcon,
+  Film as FilmIcon,
+  Gamepad2 as Gamepad2Icon,
+  Layers as LayersIcon,
+  Megaphone as MegaphoneIcon,
+  Mic as MicIcon,
+  Radio as RadioIcon,
+  Smile as SmileIcon,
+  Tv as TvIcon,
+  User as UserIcon,
+} from "lucide-vue-next";
 import type { SearchFilter } from "../utils/search-routes";
 
 defineProps<{
@@ -38,20 +70,34 @@ defineEmits<{
 
 const { t } = useI18n();
 
+/** Keep the text input focused when a touch user selects a filter. */
 const keepTouchFocus = (event: PointerEvent): void => {
   if (event.pointerType === "touch") event.preventDefault();
 };
 
-const filters = computed<Array<{ label: string; value: SearchFilter }>>(() => [
-  { label: t("search.all"), value: "all" },
-  { label: t("search.movie"), value: "movie" },
-  { label: t("search.tv"), value: "tv" },
-  { label: t("search.actor"), value: "person" },
-  { label: t("search.voiceActor"), value: "voice_actor" },
-  { label: t("search.videoGame"), value: "video_game" },
-  { label: t("search.audiobook"), value: "audiobook" },
-  { label: t("search.podcast"), value: "podcast" },
-  { label: t("search.advertisement"), value: "advertisement" },
-  { label: t("search.toy"), value: "toy" },
+const filterIconColors: Record<SearchFilter, string> = {
+  all: "text-[var(--app-color-primary)]",
+  movie: "text-[var(--app-color-search-movie)]",
+  tv: "text-[var(--app-color-search-tv)]",
+  person: "text-[var(--app-color-search-person)]",
+  voice_actor: "text-[var(--app-color-search-voice-actor)]",
+  video_game: "text-[var(--app-color-search-video-game)]",
+  audiobook: "text-[var(--app-color-search-audiobook)]",
+  podcast: "text-[var(--app-color-search-podcast)]",
+  advertisement: "text-[var(--app-color-search-advertisement)]",
+  toy: "text-[var(--app-color-search-toy)]",
+};
+
+const filters = computed<Array<{ label: string; value: SearchFilter; icon: Component }>>(() => [
+  { label: t("search.all"), value: "all", icon: LayersIcon },
+  { label: t("search.movie"), value: "movie", icon: FilmIcon },
+  { label: t("search.tv"), value: "tv", icon: TvIcon },
+  { label: t("search.actor"), value: "person", icon: UserIcon },
+  { label: t("search.voiceActor"), value: "voice_actor", icon: MicIcon },
+  { label: t("search.videoGame"), value: "video_game", icon: Gamepad2Icon },
+  { label: t("search.audiobook"), value: "audiobook", icon: BookOpenIcon },
+  { label: t("search.podcast"), value: "podcast", icon: RadioIcon },
+  { label: t("search.advertisement"), value: "advertisement", icon: MegaphoneIcon },
+  { label: t("search.toy"), value: "toy", icon: SmileIcon },
 ]);
 </script>

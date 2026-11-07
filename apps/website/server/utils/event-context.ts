@@ -17,6 +17,8 @@ declare module "h3" {
     supabaseAdmin?: SupabaseClient<Database>;
     /** Authenticated user, cached by `resolveUser`. */
     user?: User;
+    /** Prevents a public SSR route with degraded provider data from entering shared cache. */
+    disablePublicPageCache?: boolean;
     /** User-scoped client, cached by `resolveUser`. */
     supabase?: SupabaseClient<Database>;
     /** Provided by the Cloudflare Workers runtime. */

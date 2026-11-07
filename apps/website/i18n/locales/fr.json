@@ -36,6 +36,7 @@
     "apiTerms": "Conditions de l’API"
   },
   "nav": {
+    "main": "Navigation principale",
     "home": "Accueil",
     "profile": "Profil",
     "login": "Connexion",
@@ -391,8 +392,11 @@
   "search": {
     "actor": "Acteur",
     "placeholder": "Rechercher...",
+    "clear": "Effacer la recherche",
     "noResults": "Aucun résultat trouvé",
+    "noResultsHint": "Essayez un autre titre, nom ou catégorie.",
     "emptyState": "Commencez à taper pour rechercher...",
+    "emptyStateHint": "Recherchez des films, séries, comédiens et plus.",
     "all": "Tous",
     "movie": "Films",
     "tv": "Séries",
@@ -1473,6 +1477,19 @@
   "series": {
     "notFound": "Série introuvable",
     "heroDescription": "Découvrez les séries télévisées les plus populaires du moment."
+  },
+  "character": {
+    "about": "À propos du personnage",
+    "profileLabel": "Profil du personnage",
+    "notFound": "Personnage introuvable",
+    "loadError": "Impossible de charger les détails du personnage. Réessayez.",
+    "credits": "Apparitions et doublages",
+    "noCredits": "Aucune apparition ni aucun crédit de doublage n’est encore disponible pour ce personnage.",
+    "gameAppearance": "Voir le jeu",
+    "showAppearance": "Apparition dans une série",
+    "movieAppearance": "Apparition dans un film",
+    "originalPerformer": "Interprète original",
+    "showMore": "Afficher plus d’apparitions"
   },
   "browse": {
     "title": "Explorer : {type}",

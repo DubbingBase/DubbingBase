@@ -27,6 +27,9 @@ const base: CacheDecisionInput = {
 describe("resolveCacheDecision", () => {
   it("shares anonymous allow-listed pages", () => {
     expect(resolveCacheDecision(base)).toBe("page");
+    expect(
+      resolveCacheDecision({ ...base, pathname: "/game/1942", disablePublicPageCache: true }),
+    ).toBe("no-store");
   });
 
   it("never caches in development or on errors, even for allow-listed pages", () => {
@@ -112,6 +115,16 @@ describe("applyCachePolicy", () => {
       getCloudflareCacheControl("page"),
     );
     expect(response.headers.has("set-cookie")).toBe(false);
+  });
+
+  it("keeps a degraded public page out of the shared cache", async () => {
+    const response = await request("/game/1942", (event) => {
+      event.context.disablePublicPageCache = true;
+      return "<html>degraded</html>";
+    });
+
+    expect(response.headers.get("cache-control")).toBe(NO_STORE_CACHE_CONTROL);
+    expect(response.headers.has("cloudflare-cdn-cache-control")).toBe(false);
   });
 
   it("does not cache the same page for a signed-in request", async () => {

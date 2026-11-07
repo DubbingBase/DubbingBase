@@ -21,7 +21,7 @@
   - `pnpm/action-setup@v4`
   - `actions/setup-node@v4`
   - `jdx/mise-action@v2`
-- **e2e-tests** on `ubuntu-latest` — 7 steps (needs: detect)
+- **e2e-tests** on `ubuntu-latest` — 8 steps (needs: detect)
   - `actions/checkout@v4`
   - `pnpm/action-setup@v4`
   - `actions/setup-node@v4`

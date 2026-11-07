@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The [id].get subsystem handles **10 routes** and touches: queue.
+The [id].get subsystem handles **11 routes** and touches: queue.
 
 ## Routes
 
@@ -12,7 +12,9 @@ The [id].get subsystem handles **10 routes** and touches: queue.
   `apps/website/server/api/advertisement/[id].get.ts`
 - `GET` `/api/audiobook/:id` params(id) [queue]
   `apps/website/server/api/audiobook/[id].get.ts`
-- `GET` `/api/game/:id` params(id) [queue]
+- `GET` `/api/character/:source/:id` params(source, id)
+  `apps/website/server/api/character/[source]/[id].get.ts`
+- `GET` `/api/game/:id` params(id)
   `apps/website/server/api/game/[id].get.ts`
 - `GET` `/api/movie/:id` params(id) [queue]
   `apps/website/server/api/movie/[id].get.ts`
@@ -33,6 +35,7 @@ Read these before implementing or modifying this subsystem:
 - `apps/website/server/api/actor/[id].get.ts`
 - `apps/website/server/api/advertisement/[id].get.ts`
 - `apps/website/server/api/audiobook/[id].get.ts`
+- `apps/website/server/api/character/[source]/[id].get.ts`
 - `apps/website/server/api/game/[id].get.ts`
 - `apps/website/server/api/movie/[id].get.ts`
 - `apps/website/server/api/podcast/[id].get.ts`

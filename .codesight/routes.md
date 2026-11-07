@@ -14,6 +14,7 @@
 - `GET` `/api/audiobook/:id` params(id) [queue]
 - `GET` `/api/career-grid`
 - `POST` `/api/cast-vote` [auth] ✓
+- `GET` `/api/character/:source/:id` params(source, id)
 - `POST` `/api/count-voice-actor-works` ✓
 - `POST` `/api/create-user-profile` [auth, db]
 - `GET` `/api/dashboard-stats` [auth]
@@ -25,7 +26,7 @@
 - `POST` `/api/extract-credits-from-image` [upload]
 - `POST` `/api/extract-voice-actor-info` [auth] ✓
 - `GET` `/api/find_duplicate_voice_actors` [auth] ✓
-- `GET` `/api/game/:id` params(id) [queue]
+- `GET` `/api/game/:id` params(id)
 - `PUT` `/api/game-characters/:id` params(id) [auth]
 - `POST` `/api/game-characters` [auth] ✓
 - `POST` `/api/generate-social-content` [auth, email]

@@ -20,6 +20,7 @@ export interface CacheDecisionInput {
   supabaseCookiePrefix: string | undefined;
   /** `Cache-Control` already set by the handler, if any. */
   existingCacheControl: string | undefined;
+  disablePublicPageCache?: boolean;
   isDev: boolean;
 }
 
@@ -32,7 +33,7 @@ export interface CacheDecisionInput {
  * 4. everything else is `no-store`.
  */
 export function resolveCacheDecision(input: CacheDecisionInput): CacheDecision {
-  if (input.isDev || input.status >= 400) return "no-store";
+  if (input.isDev || input.status >= 400 || input.disablePublicPageCache) return "no-store";
   if (input.existingCacheControl?.trimStart().startsWith("public")) return "keep";
   if (shouldCachePublicPage(input)) return "page";
   return "no-store";
@@ -63,6 +64,7 @@ export function applyCachePolicy(
     authorizationHeader: getRequestHeader(event, "authorization"),
     supabaseCookiePrefix: options.supabaseCookiePrefix,
     existingCacheControl: typeof existing === "string" ? existing : undefined,
+    disablePublicPageCache: event.context.disablePublicPageCache === true,
     isDev: options.isDev ?? import.meta.dev,
   });
 

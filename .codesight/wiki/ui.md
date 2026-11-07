@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Component inventory and prop signatures extracted via AST. Read the source files before adding props or modifying component logic.
 
-**132 components** (vue)
+**133 components** (vue)
 
 ## Client Components
 
@@ -90,6 +90,7 @@
 - **new** — `apps/website/src/pages/audiobook/[audiobookId]/projects/new.vue`
 - **[id]** — `apps/website/src/pages/audiobook/[id].vue`
 - **audiobooks** — `apps/website/src/pages/audiobooks.vue`
+- **[id]** — `apps/website/src/pages/character/[source]/[id].vue`
 - **index** — `apps/website/src/pages/contribute/index.vue`
 - **play** — `apps/website/src/pages/contribute/task/play.vue`
 - **discussions** — `apps/website/src/pages/discussions.vue`

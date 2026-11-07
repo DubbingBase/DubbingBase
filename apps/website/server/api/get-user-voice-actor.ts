@@ -98,9 +98,10 @@ export default defineUserHandler(async (event, user) => {
   let providedVoiceActorId: number | undefined;
 
   if (event.method === "POST") {
-    const body = await readBody(event).catch(() => ({}));
-    targetUserId = body?.targetUserId;
-    providedVoiceActorId = body?.voiceActorId ? Number(body.voiceActorId) : undefined;
+    const rawBody: unknown = await readBody(event).catch(() => undefined);
+    const body = isRecord(rawBody) ? rawBody : {};
+    targetUserId = typeof body.targetUserId === "string" ? body.targetUserId : undefined;
+    providedVoiceActorId = body.voiceActorId ? Number(body.voiceActorId) : undefined;
   } else {
     const query = getQuery(event);
     targetUserId = query.targetUserId ? String(query.targetUserId) : undefined;
