@@ -1,0 +1,68 @@
+diff --git a/dist/cjs/lucide-vue-next.js b/dist/cjs/lucide-vue-next.js
+index 638198aa40e017a0b2fa8609f0bcb377b8dd1ffa..bbcb529f1f7768b9c0643a1d6c80287763d1fd99 100644
+--- a/dist/cjs/lucide-vue-next.js
++++ b/dist/cjs/lucide-vue-next.js
+@@ -79,7 +79,12 @@ const Icon = ({
+   );
+ };
+ 
+-const createLucideIcon = (iconName, iconNode) => (props, { slots, attrs }) => vue.h(
++Icon.inheritAttrs = false;
++const withoutAttrsInheritance = (component) => {
++  component.inheritAttrs = false;
++  return component;
++};
++const createLucideIcon = (iconName, iconNode) => withoutAttrsInheritance((props, { slots, attrs }) => vue.h(
+   Icon,
+   {
+     ...attrs,
+@@ -88,7 +93,7 @@ const createLucideIcon = (iconName, iconNode) => (props, { slots, attrs }) => vu
+     name: iconName
+   },
+   slots
+-);
++));
+ 
+ const AArrowDown = createLucideIcon("a-arrow-down", [
+   ["path", { d: "m14 12 4 4 4-4", key: "buelq4" }],
+diff --git a/dist/esm/Icon.js b/dist/esm/Icon.js
+index 47234cb2fc913ebe417be4e5a09a4d358244728a..a45cd06750349276d30b4f5ed54c6a23bf79861d 100644
+--- a/dist/esm/Icon.js
++++ b/dist/esm/Icon.js
+@@ -44,5 +44,7 @@ const Icon = ({
+   );
+ };
+ 
++Icon.inheritAttrs = false;
++
+ export { Icon as default };
+ //# sourceMappingURL=Icon.js.map
+diff --git a/dist/esm/createLucideIcon.js b/dist/esm/createLucideIcon.js
+index 74cb3ce5ab39b7b7dd3d23830d051275fc1ce654..14a86e6c727a1bcd3f728e2f101c052be3a30004 100644
+--- a/dist/esm/createLucideIcon.js
++++ b/dist/esm/createLucideIcon.js
+@@ -8,7 +8,14 @@
+ import { h } from 'vue';
+ import Icon from './Icon.js';
+ 
+-const createLucideIcon = (iconName, iconNode) => (props, { slots, attrs }) => h(
++// Icon and its wrapper are functional components without declared props, so Vue
++// would also fall `class` through onto the root <svg> and duplicate it.
++const withoutAttrsInheritance = (component) => {
++  component.inheritAttrs = false;
++  return component;
++};
++
++const createLucideIcon = (iconName, iconNode) => withoutAttrsInheritance((props, { slots, attrs }) => h(
+   Icon,
+   {
+     ...attrs,
+@@ -17,7 +24,7 @@ const createLucideIcon = (iconName, iconNode) => (props, { slots, attrs }) => h(
+     name: iconName
+   },
+   slots
+-);
++));
+ 
+ export { createLucideIcon as default };
+ //# sourceMappingURL=createLucideIcon.js.map

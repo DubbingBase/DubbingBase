@@ -15,7 +15,7 @@
         </span>
       </NuxtLink>
 
-      <nav class="flex items-center gap-1 ml-2">
+      <nav class="flex items-center gap-1 ml-2" :aria-label="t('nav.main')">
         <NuxtLink
           v-if="!isHomePage"
           :to="localePath('/')"

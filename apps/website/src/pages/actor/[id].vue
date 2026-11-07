@@ -68,6 +68,7 @@
             v-model="searchInput"
             type="text"
             :placeholder="$t('actor.searchPlaceholder')"
+            :aria-label="$t('actor.searchPlaceholder')"
             class="w-full px-4 py-3 pl-12 theme-input backdrop-blur border theme-border-subtle theme-border rounded-xl theme-text focus:outline-none theme-focus transition shadow-sm"
           />
           <svg

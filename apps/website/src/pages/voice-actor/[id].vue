@@ -88,6 +88,8 @@
         </NuxtLink>
 
         <button
+          type="button"
+          :aria-label="$t('report.title')"
           @click="isReportModalOpen = true"
           class="text-sm theme-text-muted theme-hover-danger-text transition-colors flex items-center gap-1.5"
           :title="$t('report.title')"
@@ -165,6 +167,7 @@
                     v-model="searchInput"
                     type="search"
                     :placeholder="$t('voiceActor.searchPlaceholder')"
+                    :aria-label="$t('voiceActor.searchPlaceholder')"
                     class="w-full theme-input border theme-border-subtle theme-border rounded-xl pl-10 pr-4 py-2 text-sm theme-focus transition-all theme-text"
                   />
                 </div>
@@ -174,6 +177,7 @@
                   class="flex theme-surface-raised theme-input rounded-lg p-1 border theme-border-subtle theme-border"
                 >
                   <button
+                    type="button"
                     @click="displayMode = 'grouped'"
                     :class="[
                       'px-4 py-1.5 rounded-md text-sm font-medium transition cursor-pointer',
@@ -185,6 +189,7 @@
                     {{ $t("voiceActor.grouped") }}
                   </button>
                   <button
+                    type="button"
                     @click="displayMode = 'list'"
                     :class="[
                       'px-4 py-1.5 rounded-md text-sm font-medium transition cursor-pointer',

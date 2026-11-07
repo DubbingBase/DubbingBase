@@ -177,6 +177,9 @@ overrides:
 
 packageExtensionsChecksum: sha256-XBnSqBIEfYz3U39I97cg5GStL02NHl5Xzq0qoYr9Ylo=
 
+patchedDependencies:
+  lucide-vue-next: 740c2f6f4317a59067d878566ab529a8f22f357cf9381122d0d9ef012ce99e2c
+
 importers:
 
   .:
@@ -273,7 +276,7 @@ importers:
         version: 4.5.1
       lucide-vue-next:
         specifier: ^1.0.0
-        version: 1.0.0(vue@3.5.42(typescript@5.9.3))
+        version: 1.0.0(patch_hash=740c2f6f4317a59067d878566ab529a8f22f357cf9381122d0d9ef012ce99e2c)(vue@3.5.42(typescript@5.9.3))
       posthog-js:
         specifier: ^1.407.8
         version: 1.429.2(react@19.2.8)
@@ -14168,7 +14171,7 @@ snapshots:
     dependencies:
       yallist: 3.1.1
 
-  lucide-vue-next@1.0.0(vue@3.5.42(typescript@5.9.3)):
+  lucide-vue-next@1.0.0(patch_hash=740c2f6f4317a59067d878566ab529a8f22f357cf9381122d0d9ef012ce99e2c)(vue@3.5.42(typescript@5.9.3)):
     dependencies:
       vue: 3.5.42(typescript@5.9.3)
 
