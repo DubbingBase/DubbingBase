@@ -1,4 +1,4 @@
-import { readProperty } from "@app/shared-logic";
+import { isRecord, readProperty } from "@app/shared-logic";
 import { resolveUser } from "../utils/auth";
 export default defineEventHandler(async (event) => {
   const user = await resolveUser(event);
@@ -6,8 +6,15 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, message: "Unauthorized" });
   }
 
-  const body = await readBody(event).catch(() => ({}));
-  const { firstname, lastname, details, voice_actor_id } = body;
+  const rawBody: unknown = await readBody(event).catch(() => undefined);
+  const body = isRecord(rawBody) ? rawBody : {};
+  const firstname = typeof body.firstname === "string" ? body.firstname : "";
+  const lastname = typeof body.lastname === "string" ? body.lastname : "";
+  const details = typeof body.details === "string" ? body.details : "";
+  const voice_actor_id =
+    typeof body.voice_actor_id === "string" || typeof body.voice_actor_id === "number"
+      ? body.voice_actor_id
+      : undefined;
 
   if (!firstname || !lastname) {
     throw createError({
