@@ -414,6 +414,10 @@ const { data, pending, refresh, error } = await useAsyncData(
   },
 );
 if (import.meta.server && error.value) throw error.value;
+if (import.meta.server && data.value?.game_data_status === "degraded") {
+  const requestEvent = useRequestEvent();
+  if (requestEvent) requestEvent.context.disablePublicPageCache = true;
+}
 
 const game = computed(() => data.value?.game);
 const dubbingProjects = computed(() => {

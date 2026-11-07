@@ -103,6 +103,7 @@ describe("GET /api/game/:id", () => {
     const data = await response.json();
     expect(response.status).toBe(200);
     expect(data.game.name).toContain("Information indisponible");
+    expect(data.game_data_status).toBe("degraded");
     expect(data.characters[0]?.game_character_id).toBe("11111111-1111-4111-8111-111111111111");
     expect(data.character_catalog_status).toBe("unavailable");
   });
@@ -111,7 +112,23 @@ describe("GET /api/game/:id", () => {
     const response = await request("/api/game/1942?projection=media-page");
 
     expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data.game_data_status).toBe("available");
     expect(mocks.getGamePageDubbingProjects).toHaveBeenCalledWith(1942);
     expect(mocks.getDubbingProjects).not.toHaveBeenCalled();
+  });
+
+  it("marks unavailable character data as degraded", async () => {
+    mocks.loadGameCharacterCatalog.mockResolvedValueOnce({
+      characters: [],
+      providerStatus: "unavailable",
+      localStatus: "available",
+    });
+
+    const response = await request("/api/game/1942?projection=media-page");
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(data.game_data_status).toBe("degraded");
   });
 });

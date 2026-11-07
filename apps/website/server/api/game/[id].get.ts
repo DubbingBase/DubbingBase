@@ -144,6 +144,8 @@ export default defineEventHandler(async (event) => {
 
   const metadata = {
     game: resolvedGame,
+    game_data_status:
+      game && characterCatalog.providerStatus === "available" ? "available" : "degraded",
     characters: characterCatalog.characters.map((character) =>
       processIgdbCharacter(character, pageProjection),
     ),
