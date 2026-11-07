@@ -4,15 +4,27 @@ import { useSupabaseAdmin } from "../utils/db/client";
 import { asString } from "../utils/narrow";
 import { readProperty } from "@app/shared-logic";
 
+/** A positive integer id, given as a JSON number or a digit-only string. */
+function parseId(value: unknown): number | null {
+  if (typeof value === "number") {
+    return Number.isSafeInteger(value) && value > 0 ? value : null;
+  }
+  if (typeof value === "string" && /^[1-9]\d*$/.test(value)) {
+    const parsed = Number(value);
+    return Number.isSafeInteger(parsed) ? parsed : null;
+  }
+  return null;
+}
+
 export default defineEventHandler(async (event) => {
   try {
-    const body = await readBody(event);
+    const body: unknown = await readBody(event);
 
-    const record = body.record;
-    const voiceActorId = record?.voice_actor_id;
-    const dubbingProjectId = record?.dubbing_project_id;
+    const record = readProperty(body, "record");
+    const voiceActorId = parseId(readProperty(record, "voice_actor_id"));
+    const dubbingProjectId = parseId(readProperty(record, "dubbing_project_id"));
 
-    if (!voiceActorId || !dubbingProjectId) {
+    if (voiceActorId === null || dubbingProjectId === null) {
       console.error("[Notify] Invalid payload", body);
       throw createError({
         statusCode: 400,
@@ -105,6 +117,8 @@ export default defineEventHandler(async (event) => {
 
     return { ok: true, notified: targetUserIds.length };
   } catch (err) {
+    // Keep deliberate HTTP errors (such as the 400 above) instead of turning them into a 500.
+    if (err && typeof err === "object" && "statusCode" in err) throw err;
     console.error("[Notify] Error processing notification webhook:", err);
     const errorMessage = err instanceof Error ? err.message : String(err);
     throw createError({ statusCode: 500, message: errorMessage });

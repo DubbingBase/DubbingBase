@@ -1,6 +1,7 @@
 import { useSupabaseAdmin } from "../utils/db/client";
 import { resolveUser } from "../utils/auth";
 import type { Json } from "@app/supabase";
+import { isJson, isRecord } from "@app/shared-logic";
 
 function getAuditValue(value: Json | null): Json | null {
   if (value !== null && typeof value === "object" && !Array.isArray(value) && "value" in value) {
@@ -16,13 +17,23 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const body = await readBody(event);
-    const { auditLogId, resolvedValue, force } = body;
+    const body: unknown = await readBody(event);
+    const input = isRecord(body) ? body : {};
+    const auditLogId = input.auditLogId;
+    const resolvedValue = input.resolvedValue;
+    const force = input.force === true;
 
-    if (!auditLogId) {
+    if (typeof auditLogId !== "string" || !auditLogId) {
       throw createError({
         statusCode: 400,
         message: "Missing auditLogId",
+      });
+    }
+
+    if (resolvedValue !== undefined && !isJson(resolvedValue)) {
+      throw createError({
+        statusCode: 400,
+        message: "Invalid resolvedValue",
       });
     }
 
