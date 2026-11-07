@@ -8,7 +8,7 @@ const LOCALE_PREFIXES = new Set(APP_LOCALES.map((locale) => `/${locale.code}`));
 // "/" is cacheable because the server never redirects it by Accept-Language
 // or cookie; LanguageBanner only suggests a language on the client.
 const STATIC_PUBLIC_PAGES = new Set(["/", "/movies", "/series", "/voice-actors"]);
-const PUBLIC_DETAIL_PAGE = /^\/(?:movie|show|voice-actor|actor)\/\d+$/;
+const PUBLIC_DETAIL_PAGE = /^\/(?:movie|show|voice-actor|actor|game)\/\d+$/;
 
 function stripLocalePrefix(pathname: string): string {
   const [, first = ""] = pathname.split("/");

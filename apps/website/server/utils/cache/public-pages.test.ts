@@ -22,6 +22,8 @@ describe("isPublicCacheablePage", () => {
     "/es/voice-actor/12",
     "/actor/287",
     "/fr/actor/287",
+    "/game/12345",
+    "/fr/game/12345",
   ])("allows %s", (path) => expect(isPublicCacheablePage(path)).toBe(true));
 
   it.each([
@@ -32,7 +34,8 @@ describe("isPublicCacheablePage", () => {
     "/voice-actor/new",
     "/movie/550/edit",
     "/actor/287/edit",
-    "/game/12345",
+    "/game/new",
+    "/game/12345/edit",
     "/api/trending/movies",
   ])("rejects %s", (path) => expect(isPublicCacheablePage(path)).toBe(false));
 });

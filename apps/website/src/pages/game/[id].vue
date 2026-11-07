@@ -387,10 +387,7 @@ const gameId = (Array.isArray(route.params.id) ? route.params.id[0] : route.para
 const siteUrl = useSiteConfig().url;
 const currentUrl = computed(() => new URL(route.fullPath, siteUrl).href);
 
-const user = useSupabaseUser();
-const isAdmin = computed(() => {
-  return user.value?.app_metadata?.role === "admin";
-});
+const { isAdmin } = useClientUser();
 
 const isPreparing = ref(false);
 const showPrepareDialog = ref(false);
