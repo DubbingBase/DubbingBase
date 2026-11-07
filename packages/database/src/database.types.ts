@@ -1470,7 +1470,11 @@ export type Database = {
             Returns: number;
           };
       skip_gamification_task_retry_safe: {
-        Args: { p_category: string; p_skip_claim_id: string; p_user_id: string };
+        Args: {
+          p_category: string;
+          p_skip_claim_id: string;
+          p_user_id: string;
+        };
         Returns: {
           category: string;
           claim_id: string;
