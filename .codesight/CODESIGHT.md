@@ -5,7 +5,7 @@
 
 > 91 routes | 28 models | 132 components | 123 lib files | 64 env vars | 15 middleware | 52% test coverage
 > **Token savings:** this file is ~18,000 tokens. Without it, AI exploration would cost ~154,400 tokens. **Saves ~136,400 tokens per conversation.**
-> **Last scanned:** 2026-11-07 09:01 — re-run after significant changes
+> **Last scanned:** 2026-11-07 18:04 — re-run after significant changes
 
 ---
 
@@ -984,10 +984,10 @@
 - `apps/website/server/utils/urls/supabase.ts` — imported by **11** files
 - `apps/website/server/utils/dubbing-language.ts` — imported by **10** files
 - `apps/website/server/utils/cache/http.ts` — imported by **10** files
+- `apps/website/server/utils/narrow.ts` — imported by **10** files
 - `apps/website/server/utils/db/queries.ts` — imported by **9** files
 - `apps/website/server/utils/urls/tmdb.ts` — imported by **9** files
 - `apps/website/server/utils/media-request.ts` — imported by **9** files
-- `apps/website/server/utils/narrow.ts` — imported by **9** files
 - `apps/website/server/utils/cache/constants.ts` — imported by **8** files
 - `e2e/helpers/mock-api.ts` — imported by **8** files
 - `apps/website/server/utils/background.ts` — imported by **7** files
@@ -1012,7 +1012,7 @@
 # Test Coverage
 
 > **52%** of routes and models are covered by tests
-> 155 test files found
+> 156 test files found
 
 ## Covered Routes
 
