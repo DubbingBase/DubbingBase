@@ -176,7 +176,20 @@
                         <UserIcon class="w-3 h-3 flex-shrink-0" />
                         <span class="truncate block w-full">{{ $t("details.character") }}</span>
                       </div>
+                      <NuxtLink
+                        v-if="actor.characterDetailPath"
+                        :to="actor.characterDetailPath"
+                        class="font-bold text-sm theme-text truncate block w-full hover:underline"
+                        :title="actor.character || actor.workCharacterName || ''"
+                      >
+                        {{
+                          actor.character ||
+                          actor.workCharacterName ||
+                          $t("details.unknownCharacter")
+                        }}
+                      </NuxtLink>
                       <div
+                        v-else
                         class="font-bold text-sm theme-text truncate block w-full"
                         :title="actor.character || actor.workCharacterName || ''"
                       >
@@ -571,14 +584,28 @@ const castItems = computed(() => {
   return filteredCast.value.slice(start, start + 12).map((actor) => {
     const characterName = actor.character || actor.workCharacterName;
     let characterImage = null;
-    if (actor.actorId !== undefined && characterName) {
+    let characterDetailPath: string | undefined;
+    if (characterName) {
       const matchesCharacter = createCharacterMatcher(characterName);
-      const match = characterProfilePictures.value.find(
+      const matches = characterProfilePictures.value.filter(
         (picture: MediaDetailCharacterProfilePicture) =>
           picture.name && matchesCharacter(picture.name),
       );
-      if (match && match.image) {
-        characterImage = match.image;
+      const match = matches.length === 1 ? matches[0] : undefined;
+      if (match) {
+        if (match.image) characterImage = match.image;
+        const characterId = match.id;
+        if (
+          (typeof characterId === "number" &&
+            Number.isSafeInteger(characterId) &&
+            characterId > 0) ||
+          (typeof characterId === "string" && /^\d+$/.test(characterId))
+        ) {
+          characterDetailPath = localePath({
+            path: `/character/tvdb/${characterId}`,
+            query: { mediaType: "movie", mediaId: route.params.id },
+          });
+        }
       }
     }
 
@@ -589,6 +616,7 @@ const castItems = computed(() => {
         ? localePath(`/voice-actor/${actor.voiceActor.id}`)
         : undefined,
       characterImage,
+      characterDetailPath,
     };
   });
 });

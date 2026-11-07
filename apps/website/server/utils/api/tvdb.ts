@@ -179,6 +179,10 @@ export class TVDBClient {
     return this.get(`/series/${seriesId}`, params, language);
   }
 
+  async getCharacterById(characterId: number, language?: string) {
+    return this.get(`/characters/${characterId}`, undefined, language);
+  }
+
   async getMovieById(
     movieId: number,
     extended?: { meta?: string; short?: boolean },

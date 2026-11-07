@@ -1478,6 +1478,19 @@
     "notFound": "Serie no encontrada",
     "heroDescription": "Descubre las series de televisión más populares del momento."
   },
+  "character": {
+    "about": "Acerca de este personaje",
+    "profileLabel": "Perfil del personaje",
+    "notFound": "Personaje no encontrado",
+    "loadError": "No se pudieron cargar los detalles del personaje. Inténtalo de nuevo.",
+    "credits": "Apariciones y doblajes",
+    "noCredits": "Todavía no hay apariciones ni créditos de doblaje disponibles para este personaje.",
+    "gameAppearance": "Ver juego",
+    "showAppearance": "Aparición en serie",
+    "movieAppearance": "Aparición en película",
+    "originalPerformer": "Intérprete original",
+    "showMore": "Mostrar más apariciones"
+  },
   "browse": {
     "title": "Explorar {type}",
     "description": "Descubre {type} con créditos de doblaje en DubbingBase.",
