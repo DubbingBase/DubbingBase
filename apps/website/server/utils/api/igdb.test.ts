@@ -408,5 +408,7 @@ describe("IgdbClient row validation", () => {
     expect(isIgdbGame({ id: "1", name: "Game" })).toBe(false);
     expect(isIgdbGame({ id: 1 })).toBe(false);
     expect(isIgdbGame(null)).toBe(false);
+    expect(isIgdbGame({ id: 1, name: "Game", cover: {} })).toBe(false);
+    expect(isIgdbGame({ id: 1, name: "Game", cover: { image_id: "abc" } })).toBe(true);
   });
 });

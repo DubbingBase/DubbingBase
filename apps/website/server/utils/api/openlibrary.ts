@@ -156,7 +156,10 @@ export class OpenLibraryClient {
 
       const raw: unknown = await res.json();
       const rawDocs = readProperty(raw, "docs");
-      const docs = Array.isArray(rawDocs) ? rawDocs.map(parseDoc) : [];
+      if (rawDocs !== undefined && !Array.isArray(rawDocs)) {
+        throw new Error("Invalid OpenLibrary search response: docs is not an array");
+      }
+      const docs = (rawDocs ?? []).map(parseDoc);
 
       const books: Audiobook[] = [];
       for (const doc of docs) {

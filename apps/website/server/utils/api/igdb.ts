@@ -57,9 +57,17 @@ interface IgdbGameLocalization {
   region?: { identifier?: string };
 }
 
-/** An IGDB row guard: IGDB always returns a numeric `id` and the queries always request `name`. */
+/**
+ * An IGDB row guard: IGDB always returns a numeric `id` and the queries always request `name`.
+ * A present `cover` must carry an `image_id`, since it is used to build the image URL.
+ */
 export function isIgdbGame(value: unknown): value is IgdbGame {
-  return isRecord(value) && typeof value.id === "number" && typeof value.name === "string";
+  if (!isRecord(value) || typeof value.id !== "number" || typeof value.name !== "string") {
+    return false;
+  }
+  return (
+    value.cover === undefined || (isRecord(value.cover) && typeof value.cover.image_id === "string")
+  );
 }
 
 export function isIgdbCharacter(value: unknown): value is IgdbCharacter {
