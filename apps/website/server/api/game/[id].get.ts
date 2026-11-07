@@ -1,9 +1,6 @@
 import { useIgdbClient } from "../../utils";
 import { buildIgdbImageUrl } from "../../utils/api/igdb";
 import { getDubbingProjects, getGamePageDubbingProjects } from "../../utils/db/queries";
-import { useSupabaseAdmin } from "../../utils/db/client";
-import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
-import { scheduleBackgroundTask } from "../../utils/background";
 import type { IgdbGame } from "@app/shared-logic";
 import { loadGameCharacterCatalog, type ResolvedGameCharacter } from "../../utils/game-characters";
 import { withMediaServiceTimeout } from "../../utils/media-request";
@@ -147,50 +144,19 @@ export default defineEventHandler(async (event) => {
 
   const metadata = {
     game: resolvedGame,
+    game_data_status:
+      game && characterCatalog.providerStatus === "available" ? "available" : "degraded",
     characters: characterCatalog.characters.map((character) =>
       processIgdbCharacter(character, pageProjection),
     ),
     character_catalog_status: characterCatalog.providerStatus,
   };
 
-  // Lazy enqueue if not yet processed - Gated by PostHog 'enqueue-on-navigate' (server-side)
+  // Dubbing works are mutable admin data and are read from Supabase on every request.
   const dubbingProjects =
     getQuery(event).projection === "media-page"
       ? await getGamePageDubbingProjects(gameId)
       : await getDubbingProjects(gameId, "video_game");
-  const isProcessed = dubbingProjects.length > 0;
-  if (!isProcessed) {
-    scheduleBackgroundTask(
-      event,
-      async () => {
-        if (!(await isEnqueueOnNavigateEnabled())) return;
-        const supabaseAdmin = useSupabaseAdmin(event);
-        const { error } = await supabaseAdmin.rpc("enqueue_media_fetch", {
-          p_media_type: "video_game",
-          p_tmdb_id: gameId,
-          p_season_number: undefined,
-          p_episode_number: undefined,
-        });
-        if (error && !error.message?.includes("already in the")) {
-          console.error("Failed to lazily enqueue video_game:", error);
-        } else if (!error) {
-          await sendDiscordAdminNotification(
-            "Media Enqueued (Auto)",
-            `Automatically enqueued video game **${game?.name || gameId}** (IGDB: ${gameId}) for dubbing discovery.`,
-            {
-              queue: "wiki_discovery",
-              ...(game?.cover?.url ? { imageUrl: game.cover.url } : {}),
-              url: `/game/${gameId}`,
-              color: 0x5865f2,
-              event,
-            },
-          );
-        }
-      },
-      "game discovery",
-    );
-  }
 
-  // Dubbing works are mutable admin data and are read from Supabase on every request.
   return { ...metadata, dubbingProjects };
 });

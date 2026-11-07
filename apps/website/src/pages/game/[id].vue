@@ -395,10 +395,7 @@ const gameId = (Array.isArray(route.params.id) ? route.params.id[0] : route.para
 const siteUrl = useSiteConfig().url;
 const currentUrl = computed(() => new URL(route.fullPath, siteUrl).href);
 
-const user = useSupabaseUser();
-const isAdmin = computed(() => {
-  return user.value?.app_metadata?.role === "admin";
-});
+const { isAdmin } = useClientUser();
 
 const isPreparing = ref(false);
 const showPrepareDialog = ref(false);
@@ -425,6 +422,10 @@ const { data, pending, refresh, error } = await useAsyncData(
   },
 );
 if (import.meta.server && error.value) throw error.value;
+if (import.meta.server && data.value?.game_data_status === "degraded") {
+  const requestEvent = useRequestEvent();
+  if (requestEvent) requestEvent.context.disablePublicPageCache = true;
+}
 
 const game = computed(() => data.value?.game);
 const dubbingProjects = computed(() => {
