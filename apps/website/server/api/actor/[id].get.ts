@@ -4,7 +4,9 @@ import { buildSupabaseImageUrl } from "../../utils/urls/supabase";
 import { buildTmdbImageUrl } from "../../utils/urls/tmdb";
 import { actorPageResponse, type ActorPageVoiceRole } from "../../utils/actor-page-response";
 import { withMediaServiceTimeout } from "../../utils/media-request";
-import { isRecord } from "@app/shared-logic";
+import { setPublicCacheHeaders } from "../../utils/cache/http";
+import { hasSupabaseAuthCookie } from "../../utils/auth-session";
+import { APP_LOCALES, isRecord } from "@app/shared-logic";
 type TmdbCastMember = Record<string, unknown> & {
   profile_path?: string | null;
   poster_path?: string | null;
@@ -83,6 +85,21 @@ function getNumberProperty(value: Record<string, unknown>, key: string): number 
   return typeof property === "number" ? property : undefined;
 }
 
+function isCompleteActorPageData(value: unknown): boolean {
+  if (!isRecord(value) || typeof value.id !== "number" || typeof value.name !== "string") {
+    return false;
+  }
+
+  const movieCredits = value.movie_credits;
+  const tvCredits = value.tv_credits;
+  return (
+    isRecord(movieCredits) &&
+    Array.isArray(movieCredits.cast) &&
+    isRecord(tvCredits) &&
+    Array.isArray(tvCredits.cast)
+  );
+}
+
 function hasStatusCode(value: unknown): value is { statusCode: number } {
   return isRecord(value) && typeof value.statusCode === "number";
 }
@@ -98,32 +115,37 @@ async function getActor(
   );
 }
 
-async function getActorPageVoiceRoles(actorId: number): Promise<ActorPageVoiceRole[]> {
+async function getActorPageVoiceRoles(
+  actorId: number,
+): Promise<{ roles: ActorPageVoiceRole[]; failed: boolean }> {
   try {
     const workData = await getActorPageWorkByActor(actorId);
-    return workData.map((row) => ({
-      id: row.id,
-      performance: row.performance,
-      dubbing_projects: isRecord(row.dubbing_projects)
-        ? {
-            language: row.dubbing_projects.language,
-            content_id: row.dubbing_projects.content_id,
-          }
-        : null,
-      voice_actors: row.voice_actors
-        ? [
-            {
-              id: row.voice_actors.id,
-              firstname: row.voice_actors.firstname,
-              lastname: row.voice_actors.lastname,
-              profile_picture: buildSupabaseImageUrl(row.voice_actors.profile_picture),
-            },
-          ]
-        : [],
-    }));
+    return {
+      roles: workData.map((row) => ({
+        id: row.id,
+        performance: row.performance,
+        dubbing_projects: isRecord(row.dubbing_projects)
+          ? {
+              language: row.dubbing_projects.language,
+              content_id: row.dubbing_projects.content_id,
+            }
+          : null,
+        voice_actors: row.voice_actors
+          ? [
+              {
+                id: row.voice_actors.id,
+                firstname: row.voice_actors.firstname,
+                lastname: row.voice_actors.lastname,
+                profile_picture: buildSupabaseImageUrl(row.voice_actors.profile_picture),
+              },
+            ]
+          : [],
+      })),
+      failed: false,
+    };
   } catch (e) {
     console.error("Error fetching voice roles:", e);
-    return [];
+    return { roles: [], failed: true };
   }
 }
 
@@ -238,13 +260,21 @@ export default defineEventHandler(async (event) => {
   const tmdbClient = useTmdbClient();
   const query = getQuery(event);
   const projection = query.projection;
+  const requestedLanguage = typeof query.lang === "string" ? query.lang.trim() : "";
+  const canonicalLanguages = APP_LOCALES.map((locale) => locale.language);
+  const language = canonicalLanguages.includes(requestedLanguage)
+    ? requestedLanguage
+    : acceptLanguage;
+  const parsedFilmographyPage = readPage(query.filmographyPage);
   const filmographyPage =
-    query.filmographyPage === undefined ? undefined : (readPage(query.filmographyPage) ?? 1);
+    query.filmographyPage === undefined ? undefined : (parsedFilmographyPage ?? 1);
+  const validFilmographyPage =
+    query.filmographyPage === undefined || parsedFilmographyPage !== undefined;
 
   try {
-    const personRequest = getActor(actorId, tmdbClient, acceptLanguage);
+    const personRequest = getActor(actorId, tmdbClient, language);
     if (projection === "actor-page") {
-      const [actor, voiceRoles] = await Promise.all([
+      const [actor, voiceRoleResult] = await Promise.all([
         personRequest,
         getActorPageVoiceRoles(actorId),
       ]);
@@ -258,15 +288,34 @@ export default defineEventHandler(async (event) => {
         filmographyPage,
       );
 
-      return actorPageResponse(
+      const response = actorPageResponse(
         actor,
         actorPageCredits.credits,
-        voiceRoles,
+        voiceRoleResult.roles,
         buildTmdbImageUrl(getStringProperty(actor, "profile_path")),
         filmographyPage === undefined
           ? undefined
           : { filmographyCount: actorPageCredits.filmographyCount },
       );
+      const isAnonymous =
+        !getHeader(event, "authorization") &&
+        !hasSupabaseAuthCookie(
+          getHeader(event, "cookie"),
+          useRuntimeConfig(event).public.supabase.cookiePrefix,
+        );
+      const hasCanonicalLanguage = canonicalLanguages.includes(requestedLanguage);
+
+      if (
+        isAnonymous &&
+        hasCanonicalLanguage &&
+        validFilmographyPage &&
+        isCompleteActorPageData(actor) &&
+        !voiceRoleResult.failed
+      ) {
+        setPublicCacheHeaders(event, "detail-json");
+      }
+
+      return response;
     }
 
     const [actor, voiceRoles] = await Promise.all([

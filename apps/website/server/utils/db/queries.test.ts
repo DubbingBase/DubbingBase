@@ -11,6 +11,7 @@ vi.mock("./client", () => ({
 
 import {
   getDubbingProjects,
+  getActorPageWorkByActor,
   getDubbingProjectsForMediaEndpoint,
   getAdvertisementPageDubbingProjects,
   getMediaPageDubbingProjectData,
@@ -20,8 +21,8 @@ import {
   getToyPageDubbingProjects,
 } from "./queries";
 
-function createSupabaseMock(rows: unknown[]) {
-  const result = { data: rows, error: null };
+function createSupabaseMock(rows: unknown[], error: unknown = null) {
+  const result = { data: rows, error };
   const builder = {
     select(columns: string) {
       queryMocks.selectedColumns.push(columns);
@@ -547,5 +548,19 @@ describe("dubbing project detail queries", () => {
     ]);
     expect(projects[0]).not.toHaveProperty("works");
     expect(queryMocks.selectedColumns[0]).toContain("voice_actor:voice_actors(id)");
+  });
+});
+
+describe("actor page work query", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    queryMocks.selectedColumns.length = 0;
+  });
+
+  it("throws Supabase errors so callers can avoid caching a degraded empty result", async () => {
+    const error = new Error("Database unavailable");
+    queryMocks.useSupabaseAdmin.mockReturnValue(createSupabaseMock([], error));
+
+    await expect(getActorPageWorkByActor(31)).rejects.toBe(error);
   });
 });
