@@ -1,6 +1,6 @@
 import { createCacheNamespace, SimpleCache } from "../cache";
 import { buildCacheKey } from "../cache/constants";
-import type { Audiobook, OpenLibraryAuthor } from "@app/shared-logic";
+import { readProperty, type Audiobook, type OpenLibraryAuthor } from "@app/shared-logic";
 
 export function buildOpenLibraryCoverUrl(coverId: number, size: "S" | "M" | "L" = "L"): string {
   return `https://covers.openlibrary.org/b/id/${coverId}-${size}.jpg`;
@@ -33,6 +33,87 @@ interface OpenLibraryAuthorResponse {
   personal_name?: string;
   birth_date?: string;
   death_date?: string;
+}
+
+interface OpenLibraryIsbnResponse {
+  title?: string;
+  description?: string | { value: string };
+  covers?: number[];
+  publish_date?: string;
+  works?: Array<{ key: string }>;
+}
+
+// Open Library responses are untrusted JSON: each field is kept only when it has the expected
+// type, so a malformed field is dropped instead of crashing later code.
+function optString(value: unknown): string | undefined {
+  return typeof value === "string" ? value : undefined;
+}
+
+function optNumber(value: unknown): number | undefined {
+  return typeof value === "number" ? value : undefined;
+}
+
+function optStringArray(value: unknown): string[] | undefined {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string")
+    : undefined;
+}
+
+function optNumberArray(value: unknown): number[] | undefined {
+  return Array.isArray(value)
+    ? value.filter((item): item is number => typeof item === "number")
+    : undefined;
+}
+
+function parseDescription(value: unknown): string | { type: string; value: string } | undefined {
+  if (typeof value === "string") return value;
+  const text = readProperty(value, "value");
+  return typeof text === "string"
+    ? { type: optString(readProperty(value, "type")) ?? "", value: text }
+    : undefined;
+}
+
+function parseDoc(value: unknown): OpenLibraryDoc {
+  return {
+    key: optString(readProperty(value, "key")),
+    title: optString(readProperty(value, "title")),
+    author_name: optStringArray(readProperty(value, "author_name")),
+    first_publish_year: optNumber(readProperty(value, "first_publish_year")),
+    cover_i: optNumber(readProperty(value, "cover_i")),
+    isbn: optStringArray(readProperty(value, "isbn")),
+    language: optStringArray(readProperty(value, "language")),
+    edition_count: optNumber(readProperty(value, "edition_count")),
+    ratings_average: optNumber(readProperty(value, "ratings_average")),
+    ratings_count: optNumber(readProperty(value, "ratings_count")),
+  };
+}
+
+function parseWork(value: unknown): OpenLibraryWorkResponse {
+  const rawAuthors = readProperty(value, "authors");
+  const authors: NonNullable<OpenLibraryWorkResponse["authors"]> = [];
+  if (Array.isArray(rawAuthors)) {
+    for (const item of rawAuthors) {
+      const key = optString(readProperty(readProperty(item, "author"), "key"));
+      if (key) authors.push({ author: { key } });
+    }
+  }
+  return {
+    title: optString(readProperty(value, "title")),
+    description: parseDescription(readProperty(value, "description")),
+    covers: optNumberArray(readProperty(value, "covers")),
+    authors: Array.isArray(rawAuthors) ? authors : undefined,
+    first_publish_date: optString(readProperty(value, "first_publish_date")),
+    subjects: optStringArray(readProperty(value, "subjects")),
+  };
+}
+
+function parseIsbnEdition(value: unknown): OpenLibraryIsbnResponse {
+  return {
+    title: optString(readProperty(value, "title")),
+    description: parseDescription(readProperty(value, "description")),
+    covers: optNumberArray(readProperty(value, "covers")),
+    publish_date: optString(readProperty(value, "publish_date")),
+  };
 }
 
 const OPENLIBRARY_AUTHOR_CACHE = createCacheNamespace<string | null>();
@@ -73,8 +154,12 @@ export class OpenLibraryClient {
         throw new Error(`OpenLibrary search failed with status: ${res.status}`);
       }
 
-      const data: { docs?: OpenLibraryDoc[] } = await res.json();
-      const docs = data.docs || [];
+      const raw: unknown = await res.json();
+      const rawDocs = readProperty(raw, "docs");
+      if (rawDocs !== undefined && !Array.isArray(rawDocs)) {
+        throw new Error("Invalid OpenLibrary search response: docs is not an array");
+      }
+      const docs = (rawDocs ?? []).map(parseDoc);
 
       const books: Audiobook[] = [];
       for (const doc of docs) {
@@ -186,7 +271,7 @@ export class OpenLibraryClient {
         throw new Error(`OpenLibrary API error: ${res.status}`);
       }
 
-      const data: OpenLibraryWorkResponse = await res.json();
+      const data = parseWork(await res.json());
       if (!data.title) return null;
 
       let description = "";
@@ -263,13 +348,7 @@ export class OpenLibraryClient {
         throw new Error(`OpenLibrary API error: ${res.status}`);
       }
 
-      const data: {
-        title?: string;
-        description?: string | { value: string };
-        covers?: number[];
-        publish_date?: string;
-        works?: Array<{ key: string }>;
-      } = await res.json();
+      const data = parseIsbnEdition(await res.json());
 
       if (!data.title) return null;
 

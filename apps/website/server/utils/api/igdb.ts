@@ -1,6 +1,7 @@
 import { SimpleCache, createCacheNamespace } from "../cache";
 import {
   DEFAULT_LANGUAGE,
+  isRecord,
   readProperty,
   type IgdbCharacter,
   type IgdbGame,
@@ -54,6 +55,36 @@ interface IgdbGameLocalization {
   game: number;
   name: string;
   region?: { identifier?: string };
+}
+
+/**
+ * An IGDB row guard: IGDB always returns a numeric `id` and the queries always request `name`.
+ * A present `cover` must carry an `image_id`, since it is used to build the image URL.
+ */
+export function isIgdbGame(value: unknown): value is IgdbGame {
+  if (!isRecord(value) || typeof value.id !== "number" || typeof value.name !== "string") {
+    return false;
+  }
+  return (
+    value.cover === undefined || (isRecord(value.cover) && typeof value.cover.image_id === "string")
+  );
+}
+
+export function isIgdbCharacter(value: unknown): value is IgdbCharacter {
+  return isRecord(value) && typeof value.id === "number" && typeof value.name === "string";
+}
+
+function isIgdbPopularityPrimitive(value: unknown): value is IgdbPopularityPrimitive {
+  return (
+    isRecord(value) &&
+    typeof value.game_id === "number" &&
+    typeof value.popularity_type === "number" &&
+    typeof value.value === "number"
+  );
+}
+
+function isIgdbGameLocalization(value: unknown): value is IgdbGameLocalization {
+  return isRecord(value) && typeof value.game === "number" && typeof value.name === "string";
 }
 
 export class IgdbClient {
@@ -167,7 +198,11 @@ export class IgdbClient {
     return result.accessToken;
   }
 
-  async query<T>(endpoint: string, body: string): Promise<T[]> {
+  async query<T>(
+    endpoint: string,
+    body: string,
+    isRow: (value: unknown) => value is T,
+  ): Promise<T[]> {
     let token = await this.authenticate();
 
     try {
@@ -210,7 +245,9 @@ export class IgdbClient {
       }
 
       const result: unknown = await response.json();
-      if (!Array.isArray(result)) throw new Error(`Invalid IGDB response: /${endpoint}`);
+      if (!Array.isArray(result) || !result.every(isRow)) {
+        throw new Error(`Invalid IGDB response: /${endpoint}`);
+      }
       return result;
     } catch (error: unknown) {
       if (
@@ -234,7 +271,7 @@ export class IgdbClient {
        platforms.id, platforms.name,
        involved_companies.id, involved_companies.company.id, involved_companies.company.name,
        involved_companies.developer, involved_companies.publisher;`;
-    const results = await this.query<IgdbGame>(
+    const results = await this.query(
       "games",
       pageProjection
         ? `fields ${pageFields}
@@ -249,19 +286,21 @@ export class IgdbClient {
        external_games.uid, external_games.category,
        websites.url, websites.category;
        where id = ${id};`,
+      isIgdbGame,
     );
     return results[0] ?? null;
   }
 
   async searchGames(queryText: string): Promise<IgdbGame[]> {
     const escapedQuery = queryText.replace(/"/g, '\\"');
-    const results = await this.query<IgdbGame>(
+    const results = await this.query(
       "games",
       `search "${escapedQuery}";
        fields id, name, summary, rating, rating_count, first_release_date,
               cover.image_id, genres.name, platforms.name;
        where version_parent = null;
        limit 10;`,
+      isIgdbGame,
     );
 
     return results;
@@ -278,13 +317,14 @@ export class IgdbClient {
       if (pageNumber > 0) {
         await new Promise((resolve) => setTimeout(resolve, 250));
       }
-      const page = await this.query<IgdbCharacter>(
+      const page = await this.query(
         "characters",
         `fields ${pageProjection ? "id, name, mug_shot.image_id, mug_shot.url" : "id, name, description, species, gender, mug_shot.image_id, mug_shot.url, games"};
          where games = (${gameId});
          sort id asc;
          limit ${pageSize};
          offset ${offset};`,
+        isIgdbCharacter,
       );
       for (const character of page) {
         if (!characterIds.has(character.id)) {
@@ -303,12 +343,13 @@ export class IgdbClient {
     limit = 20,
     language = DEFAULT_LANGUAGE,
   ): Promise<IgdbTrendingGamesResult> {
-    const primitives = await this.query<IgdbPopularityPrimitive>(
+    const primitives = await this.query(
       "popularity_primitives",
       `fields game_id, value, popularity_type;
        where popularity_type = (1, 2);
        sort value desc;
        limit 100;`,
+      isIgdbPopularityPrimitive,
     );
 
     const scoreMap = new Map<number, number>();
@@ -325,19 +366,21 @@ export class IgdbClient {
 
     if (topIds.length === 0) return { games: [], degraded: false };
 
-    const gamesRequest = this.query<IgdbGame>(
+    const gamesRequest = this.query(
       "games",
       `fields id, name, summary, rating, first_release_date,
               cover.image_id, genres.name, platforms.name;
        where id = (${topIds.join(",")}) & (themes != (42) | themes = null);
       limit ${limit};`,
+      isIgdbGame,
     );
 
-    const localizationsRequest = this.query<IgdbGameLocalization>(
+    const localizationsRequest = this.query(
       "game_localizations",
       `fields game, name, region.identifier;
        where game = (${topIds.join(",")});
        limit ${Math.max(topIds.length * 10, 100)};`,
+      isIgdbGameLocalization,
     ).then(
       (localizations) => ({ localizations }),
       (error: unknown) => ({ error }),

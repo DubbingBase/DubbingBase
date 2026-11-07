@@ -56,8 +56,6 @@
     {
       "files": [
         "apps/website/server/middleware/00-e2e-mock.ts",
-        "apps/website/server/utils/api/igdb.ts",
-        "apps/website/server/utils/api/openlibrary.ts",
         "apps/website/server/utils/llm.ts",
         "apps/website/server/utils/services/media.ts",
         "apps/website/src/composables/useEditorFormState.ts",

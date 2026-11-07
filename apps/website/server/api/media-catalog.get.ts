@@ -1,11 +1,4 @@
-import type {
-  Advertisement,
-  Audiobook,
-  IgdbGame,
-  PaginatedResponse,
-  Podcast,
-  Toy,
-} from "@app/shared-logic";
+import type { Advertisement, Audiobook, PaginatedResponse, Podcast, Toy } from "@app/shared-logic";
 import {
   useAdvertisementClient,
   useIgdbClient,
@@ -14,7 +7,7 @@ import {
   useToyClient,
 } from "../utils";
 import { useSupabaseAdmin } from "../utils/db/client";
-import { buildIgdbImageUrl } from "../utils/api/igdb";
+import { buildIgdbImageUrl, isIgdbGame } from "../utils/api/igdb";
 import { parsePagination } from "../utils/pagination";
 
 const MEDIA_CATEGORIES = {
@@ -107,11 +100,12 @@ async function resolveGameCatalogItems(ids: number[]): Promise<CatalogItem[]> {
   if (ids.length === 0) return [];
 
   try {
-    const games = await useIgdbClient().query<IgdbGame>(
+    const games = await useIgdbClient().query(
       "games",
       `fields id, name, cover.image_id;
        where id = (${ids.join(",")});
        limit ${ids.length};`,
+      isIgdbGame,
     );
     const gamesById = new Map(games.map((game) => [game.id, game]));
 

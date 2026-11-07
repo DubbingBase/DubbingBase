@@ -1,3 +1,4 @@
+import { isRecord } from "@app/shared-logic";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { SimpleCache } from "../cache";
 import { IgdbClient } from "./igdb";
@@ -129,13 +130,13 @@ describe("IgdbClient token cache expiry", () => {
     const fetch = mockFetch();
     const client = new IgdbClient(createCache(values));
 
-    await client.query("games", "fields id;");
+    await client.query("games", "fields id;", isRecord);
     vi.setSystemTime(expiresAt - 1);
-    await client.query("games", "fields id;");
+    await client.query("games", "fields id;", isRecord);
     expect(fetch.tokenFetchCount).toBe(0);
 
     vi.setSystemTime(expiresAt);
-    await client.query("games", "fields id;");
+    await client.query("games", "fields id;", isRecord);
     expect(fetch.tokenFetchCount).toBe(1);
     expect(values.get("igdb:auth_token")).toMatchObject({
       accessToken: "fresh-token",
@@ -152,8 +153,8 @@ describe("IgdbClient token cache expiry", () => {
     const fetch = mockFetch();
     const client = new IgdbClient(createCache(values));
 
-    await client.query("games", "fields id;");
-    await client.query("games", "fields id;");
+    await client.query("games", "fields id;", isRecord);
+    await client.query("games", "fields id;", isRecord);
 
     expect(fetch.tokenFetchCount).toBe(1);
     expect(values.get("igdb:auth_token")).toMatchObject({
@@ -169,8 +170,8 @@ describe("IgdbClient token cache expiry", () => {
     const fetch = mockFetch();
     const client = new IgdbClient(createCache(values, true));
 
-    await client.query("games", "fields id;");
-    await client.query("games", "fields id;");
+    await client.query("games", "fields id;", isRecord);
+    await client.query("games", "fields id;", isRecord);
 
     expect(fetch.tokenFetchCount).toBe(1);
     expect(values.get("igdb:auth_token")).toMatchObject({
@@ -259,10 +260,10 @@ describe("IgdbClient token cache expiry", () => {
     const fetch = mockFetch(body);
     const client = new IgdbClient(createCache(values));
 
-    await expect(client.query("games", "fields id;")).rejects.toThrow(
+    await expect(client.query("games", "fields id;", isRecord)).rejects.toThrow(
       "Invalid Twitch OAuth token response",
     );
-    await expect(client.query("games", "fields id;")).rejects.toThrow(
+    await expect(client.query("games", "fields id;", isRecord)).rejects.toThrow(
       "Invalid Twitch OAuth token response",
     );
 
@@ -397,5 +398,17 @@ describe("IgdbClient game characters", () => {
 
     await expect(client.getGameCharacters(42)).rejects.toThrow("IGDB API error: 503");
     expect(characterRequests).toBe(2);
+  });
+});
+
+describe("IgdbClient row validation", () => {
+  it("rejects a response whose rows fail the guard", async () => {
+    const { isIgdbGame } = await import("./igdb");
+    expect(isIgdbGame({ id: 1, name: "Game" })).toBe(true);
+    expect(isIgdbGame({ id: "1", name: "Game" })).toBe(false);
+    expect(isIgdbGame({ id: 1 })).toBe(false);
+    expect(isIgdbGame(null)).toBe(false);
+    expect(isIgdbGame({ id: 1, name: "Game", cover: {} })).toBe(false);
+    expect(isIgdbGame({ id: 1, name: "Game", cover: { image_id: "abc" } })).toBe(true);
   });
 });
