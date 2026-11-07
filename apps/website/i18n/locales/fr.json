@@ -392,8 +392,11 @@
   "search": {
     "actor": "Acteur",
     "placeholder": "Rechercher...",
+    "clear": "Effacer la recherche",
     "noResults": "Aucun résultat trouvé",
+    "noResultsHint": "Essayez un autre titre, nom ou catégorie.",
     "emptyState": "Commencez à taper pour rechercher...",
+    "emptyStateHint": "Recherchez des films, séries, comédiens et plus.",
     "all": "Tous",
     "movie": "Films",
     "tv": "Séries",

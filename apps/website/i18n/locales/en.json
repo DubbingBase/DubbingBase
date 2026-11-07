@@ -393,8 +393,11 @@
   "search": {
     "actor": "Actor",
     "placeholder": "Search...",
+    "clear": "Clear search",
     "noResults": "No results found",
+    "noResultsHint": "Try a different title, name, or category.",
     "emptyState": "Start typing to search...",
+    "emptyStateHint": "Search movies, series, voice actors, and more.",
     "all": "All",
     "movie": "Movies",
     "tv": "Series",

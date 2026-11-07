@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen theme-bg theme-text">
-    <div class="mx-auto max-w-5xl px-4 py-8 md:px-6 md:py-12">
+    <div class="mx-auto max-w-5xl px-4 py-6 sm:py-8 md:px-6 md:py-12">
       <header class="mb-4 md:mb-8">
         <h1 class="text-3xl font-bold tracking-tight md:text-4xl">
           {{ t("search.title") }}
@@ -18,7 +18,7 @@
         </label>
         <div class="relative">
           <SearchIcon
-            class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 theme-text-muted"
+            class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 theme-text-secondary"
           />
           <input
             id="search-page-input"
@@ -29,7 +29,7 @@
             data-testid="search-input"
             autofocus
             :placeholder="t('search.placeholder')"
-            class="w-full rounded-full border py-3 pl-12 pr-4 text-base outline-none theme-border theme-surface-raised theme-text theme-placeholder theme-focus"
+            class="w-full rounded-full border py-3 pl-12 pr-12 text-base shadow-sm outline-none theme-border theme-surface-raised theme-text theme-placeholder theme-focus"
             :aria-expanded="!loading && filteredResults.length > 0"
             :aria-controls="filteredResults.length > 0 ? 'search-results-listbox' : undefined"
             :aria-activedescendant="activeResultId"
@@ -37,6 +37,16 @@
             @keydown.up.prevent="navigateResults(-1)"
             @keydown.enter.prevent="selectCurrent"
           />
+          <button
+            v-if="query"
+            type="button"
+            class="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full theme-text-muted theme-hover-surface-muted theme-focus"
+            :aria-label="t('search.clear')"
+            @pointerdown="keepInputFocus"
+            @click="clearSearch"
+          >
+            <XIcon class="h-4 w-4" aria-hidden="true" />
+          </button>
         </div>
         <SearchFilters v-model="selectedFilter" />
       </div>
@@ -60,7 +70,7 @@
           id="search-results-listbox"
           role="listbox"
           :aria-label="t('search.results')"
-          :class="['flex flex-col gap-1', loading ? 'pointer-events-none opacity-60' : '']"
+          :class="['flex flex-col gap-3', loading ? 'pointer-events-none opacity-60' : '']"
         >
           <SearchResultItem
             v-for="(item, index) in filteredResults"
@@ -79,12 +89,17 @@
         <div
           v-else-if="!loading && error"
           role="alert"
-          class="py-8 text-center text-sm theme-text-muted md:py-12"
+          class="flex w-full flex-col items-center rounded-2xl border px-6 py-8 text-center theme-border-subtle theme-surface-raised sm:py-10"
         >
-          <p>{{ t("search.error") }}</p>
+          <span
+            class="mb-3 flex h-12 w-12 items-center justify-center rounded-full theme-surface-muted theme-text-secondary"
+          >
+            <SearchIcon class="h-5 w-5" aria-hidden="true" />
+          </span>
+          <p class="font-semibold theme-text">{{ t("search.error") }}</p>
           <button
             type="button"
-            class="mt-3 rounded-lg px-4 py-2 theme-focus theme-selected"
+            class="mt-4 min-h-10 rounded-full px-5 py-2 text-sm font-semibold theme-focus theme-selected"
             @click="retrySearch"
           >
             {{ t("search.retry") }}
@@ -92,12 +107,29 @@
         </div>
         <div
           v-else-if="!loading && queryReady"
-          class="py-8 text-center text-sm theme-text-muted md:py-16"
+          class="flex w-full flex-col items-center rounded-2xl border px-6 py-8 text-center theme-border-subtle theme-surface-raised sm:py-10"
         >
-          {{ t("search.noResults") }}
+          <span
+            class="mb-3 flex h-12 w-12 items-center justify-center rounded-full theme-surface-muted theme-text-secondary"
+          >
+            <SearchIcon class="h-5 w-5" aria-hidden="true" />
+          </span>
+          <p class="font-semibold theme-text">{{ t("search.noResults") }}</p>
+          <p class="mt-1 text-sm theme-text-muted">{{ t("search.noResultsHint") }}</p>
         </div>
-        <div v-else-if="!loading" class="py-8 text-center text-sm theme-text-muted md:py-16">
-          {{ query.trim() ? t("search.typeMore") : t("search.emptyState") }}
+        <div
+          v-else-if="!loading"
+          class="flex w-full flex-col items-center rounded-2xl border px-6 py-8 text-center theme-border-subtle theme-surface-raised sm:py-10"
+        >
+          <span
+            class="mb-3 flex h-12 w-12 items-center justify-center rounded-full theme-surface-muted theme-text-secondary"
+          >
+            <SearchIcon class="h-5 w-5" aria-hidden="true" />
+          </span>
+          <p class="font-semibold theme-text">{{ t("search.emptyState") }}</p>
+          <p class="mt-1 text-sm theme-text-muted">
+            {{ query.trim() ? t("search.typeMore") : t("search.emptyStateHint") }}
+          </p>
         </div>
       </section>
     </div>
@@ -108,7 +140,7 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
-import { Loader2Icon, SearchIcon } from "lucide-vue-next";
+import { Loader2Icon, SearchIcon, XIcon } from "lucide-vue-next";
 import { fetchSearchData, type SearchResult } from "@app/shared-logic";
 import SearchFilters from "../components/SearchFilters.vue";
 import SearchResultItem from "../components/SearchResultItem.vue";
@@ -127,7 +159,7 @@ const results = ref<SearchResult[]>([]);
 const loading = ref(false);
 const error = ref(false);
 const selectedFilter = ref<SearchFilter>("all");
-const selectedIndex = ref(0);
+const selectedIndex = ref(-1);
 const searchInput = ref<HTMLInputElement | null>(null);
 let activeController: AbortController | null = null;
 
@@ -211,7 +243,7 @@ const scheduleSearch = (value: string): void => {
   searchVersion += 1;
   activeController?.abort();
   const version = searchVersion;
-  selectedIndex.value = 0;
+  selectedIndex.value = -1;
   syncQueryToUrl(trimmed);
 
   if (debounceTimeout) clearTimeout(debounceTimeout);
@@ -229,15 +261,25 @@ const scheduleSearch = (value: string): void => {
 };
 
 const retrySearch = (): void => scheduleSearch(query.value);
+/** Clear the current query and return focus to the search field. */
+const clearSearch = (): void => {
+  query.value = "";
+  void nextTick(() => searchInput.value?.focus());
+};
+/** Keep the search field focused when a touch user applies a category filter. */
+const keepInputFocus = (event: PointerEvent): void => {
+  if (event.pointerType === "touch") event.preventDefault();
+};
 
 const handleSelect = (item: SearchResult): void => {
   void router.push(localePath(getSearchResultRoute(item)));
 };
 
+/** Open the selected result, or the first result when none is selected. */
 const selectCurrent = (): void => {
   if (loading.value) return;
 
-  const item = filteredResults.value[selectedIndex.value];
+  const item = filteredResults.value[selectedIndex.value] ?? filteredResults.value[0];
   if (item) handleSelect(item);
 };
 
@@ -251,7 +293,7 @@ const navigateResults = (direction: number): void => {
 
 watch(query, scheduleSearch);
 watch(selectedFilter, () => {
-  selectedIndex.value = 0;
+  selectedIndex.value = -1;
 });
 watch(
   () => route.query.q,
