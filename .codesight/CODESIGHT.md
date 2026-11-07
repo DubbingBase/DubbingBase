@@ -5,7 +5,7 @@
 
 > 91 routes | 28 models | 132 components | 123 lib files | 64 env vars | 15 middleware | 52% test coverage
 > **Token savings:** this file is ~18,000 tokens. Without it, AI exploration would cost ~154,400 tokens. **Saves ~136,400 tokens per conversation.**
-> **Last scanned:** 2026-11-06 13:29 — re-run after significant changes
+> **Last scanned:** 2026-11-07 09:01 — re-run after significant changes
 
 ---
 
@@ -1012,7 +1012,7 @@
 # Test Coverage
 
 > **52%** of routes and models are covered by tests
-> 154 test files found
+> 155 test files found
 
 ## Covered Routes
 
@@ -1107,7 +1107,7 @@
   - `pnpm/action-setup@v4`
   - `actions/setup-node@v4`
   - `jdx/mise-action@v2`
-- **e2e-tests** on `ubuntu-latest` — 7 steps (needs: detect)
+- **e2e-tests** on `ubuntu-latest` — 8 steps (needs: detect)
   - `actions/checkout@v4`
   - `pnpm/action-setup@v4`
   - `actions/setup-node@v4`
