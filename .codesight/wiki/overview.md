@@ -51,7 +51,7 @@
 - **[List-voice-actors.get](./list-voice-actors.get.md)** — 1 routes
 - **[List_users.get](./list_users.get.md)** — 1 routes — touches: auth
 - **[Manage-subscription.post](./manage-subscription.post.md)** — 1 routes — touches: auth, db
-- **[Media-catalog.get](./media-catalog.get.md)** — 1 routes
+- **[Media-catalog.get](./media-catalog.get.md)** — 1 routes — touches: db
 - **[Media-queue.post](./media-queue.post.md)** — 1 routes — touches: auth, queue
 - **[Merge_voice_actor_duplicates.post](./merge_voice_actor_duplicates.post.md)** — 1 routes — touches: auth
 - **[Movies.get](./movies.get.md)** — 1 routes — touches: cache
@@ -99,7 +99,7 @@ Changes to these files have the widest blast radius across the codebase:
 - `apps/website/server/utils/index.ts` — imported by **28** files
 - `apps/website/server/utils/cache/index.ts` — imported by **19** files
 - `apps/website/server/utils/auth.ts` — imported by **16** files
-- `apps/website/server/utils/api/igdb.ts` — imported by **13** files
+- `apps/website/server/utils/api/igdb.ts` — imported by **14** files
 
 ## Required Environment Variables
 

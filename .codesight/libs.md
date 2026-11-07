@@ -7,6 +7,8 @@
 - `apps/website/server/utils/api/advertisement.ts` — class AdvertisementClient
 - `apps/website/server/utils/api/igdb.ts`
   - function buildIgdbImageUrl: (hash, size) => string
+  - function isIgdbGame: (value) => value is IgdbGame
+  - function isIgdbCharacter: (value) => value is IgdbCharacter
   - class IgdbClient
   - interface IgdbTrendingGamesResult
   - interface IgdbPopularityPrimitive

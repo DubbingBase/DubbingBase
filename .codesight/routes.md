@@ -49,7 +49,7 @@
 - `GET` `/api/list-voice-actors`
 - `GET` `/api/list_users` [auth]
 - `POST` `/api/manage-subscription` [auth, db] ✓
-- `GET` `/api/media-catalog`
+- `GET` `/api/media-catalog` [db]
 - `POST` `/api/media-queue` [auth, queue] ✓
 - `POST` `/api/merge_voice_actor_duplicates` [auth]
 - `GET` `/api/movie/:id` params(id) [queue]
