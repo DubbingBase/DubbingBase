@@ -14,6 +14,7 @@
 - `GET` `/api/audiobook/:id` params(id) [queue]
 - `GET` `/api/career-grid`
 - `POST` `/api/cast-vote` [auth] ✓
+- `GET` `/api/character/:source/:id` params(source, id)
 - `POST` `/api/count-voice-actor-works` ✓
 - `POST` `/api/create-user-profile` [auth, db]
 - `GET` `/api/dashboard-stats` [auth]
