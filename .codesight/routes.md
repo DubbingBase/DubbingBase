@@ -26,7 +26,7 @@
 - `POST` `/api/extract-credits-from-image` [upload]
 - `POST` `/api/extract-voice-actor-info` [auth] ✓
 - `GET` `/api/find_duplicate_voice_actors` [auth] ✓
-- `GET` `/api/game/:id` params(id) [queue]
+- `GET` `/api/game/:id` params(id)
 - `PUT` `/api/game-characters/:id` params(id) [auth]
 - `POST` `/api/game-characters` [auth] ✓
 - `POST` `/api/generate-social-content` [auth, email]
