@@ -1,7 +1,18 @@
 import { resolveUser } from "../utils/auth";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { isRecord, type Database } from "@app/shared-logic";
+import { isRecord, readProperty, type Database } from "@app/shared-logic";
+import { asString } from "../utils/narrow";
 import { useSupabaseAdmin } from "../utils/db/client";
+
+/**
+ * Reads a name from the embedded `voice_actors` row. PostgREST returns a single object for this
+ * many-to-one relation, but an array is tolerated too. `Array.isArray` narrows to `any[]`, so the
+ * embed is read as `unknown`.
+ */
+function embeddedName(embedded: unknown, key: "firstname" | "lastname"): string | undefined {
+  const row: unknown = Array.isArray(embedded) ? embedded[0] : embedded;
+  return asString(readProperty(row, key));
+}
 
 function isPositiveId(value: unknown): value is number {
   return typeof value === "number" && Number.isSafeInteger(value) && value > 0;
@@ -40,12 +51,8 @@ export default defineEventHandler(async (event) => {
 
     const subscriptions = data.map((sub) => ({
       voice_actor_id: sub.voice_actor_id,
-      firstname: Array.isArray(sub.voice_actors)
-        ? sub.voice_actors[0]?.firstname
-        : sub.voice_actors?.firstname,
-      lastname: Array.isArray(sub.voice_actors)
-        ? sub.voice_actors[0]?.lastname
-        : sub.voice_actors?.lastname,
+      firstname: embeddedName(sub.voice_actors, "firstname"),
+      lastname: embeddedName(sub.voice_actors, "lastname"),
     }));
 
     return { subscriptions };

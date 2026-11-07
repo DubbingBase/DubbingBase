@@ -55,11 +55,6 @@
     },
     {
       "files": [
-        "apps/website/server/api/get-user-voice-actor.ts",
-        "apps/website/server/api/manage-subscription.post.ts",
-        "apps/website/server/api/notify-subscribers.post.ts",
-        "apps/website/server/api/request-voice-actor-page.post.ts",
-        "apps/website/server/api/revert-task.post.ts",
         "apps/website/server/middleware/00-e2e-mock.ts",
         "apps/website/server/utils/api/igdb.ts",
         "apps/website/server/utils/api/openlibrary.ts",
