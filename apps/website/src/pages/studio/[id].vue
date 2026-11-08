@@ -37,8 +37,9 @@
           >{{ $t("studio.visitWebsite") }}<ExternalLinkIcon class="w-4 h-4 opacity-70" />
         </a>
       </template>
-      <template #right v-if="isAdmin">
+      <template #right>
         <NuxtLink
+          v-if="isAdmin"
           :to="localePath(`/studio/${studio.id}/edit`)"
           class="text-sm theme-primary-text theme-hover-primary-text transition-colors flex items-center gap-1.5 font-medium"
         >
@@ -52,6 +53,7 @@
           </svg>
           <span class="hidden sm:inline">{{ $t("studioEdit.titleEdit") }}</span>
         </NuxtLink>
+        <DetailsShareButton :title="studio.name" />
       </template>
     </DetailsActionBar>
 
@@ -262,6 +264,7 @@ import { refDebounced } from "@vueuse/core";
 import DetailsPage from "../../components/layout/details/DetailsPage.vue";
 import DetailsHero from "../../components/layout/details/DetailsHero.vue";
 import DetailsActionBar from "../../components/layout/details/DetailsActionBar.vue";
+import DetailsShareButton from "../../components/layout/details/DetailsShareButton.vue";
 import PersonSkeleton from "../../components/PersonSkeleton.vue";
 
 import { useI18n } from "vue-i18n";

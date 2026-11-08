@@ -3,6 +3,7 @@
     <MediaSkeleton v-if="pending && !game" />
     <MediaDetailsLayout
       v-else-if="game"
+      :share-dub="activeDubProject?.id"
       :title="game.name"
       :backdrop-url="game.artworks?.[0]?.url || game.screenshots?.[0]?.url || null"
       :poster-url="coverUrl"

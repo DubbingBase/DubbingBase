@@ -15,6 +15,7 @@
       <DetailsActionBar>
         <template #right>
           <slot name="actions"></slot>
+          <DetailsShareButton :title="name ?? ''" />
         </template>
       </DetailsActionBar>
 
@@ -31,6 +32,7 @@
 import DetailsPage from "./details/DetailsPage.vue";
 import DetailsHero from "./details/DetailsHero.vue";
 import DetailsActionBar from "./details/DetailsActionBar.vue";
+import DetailsShareButton from "./details/DetailsShareButton.vue";
 defineProps<{
   name?: string;
   profileUrl?: string | null;

@@ -6,6 +6,7 @@
     <!-- Main Content -->
     <MediaDetailsLayout
       v-else-if="advertisement"
+      :share-dub="activeDubProject?.id"
       :title="advertisement.title"
       :backdrop-url="null"
       :poster-url="posterUrl"
