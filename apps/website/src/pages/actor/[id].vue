@@ -342,7 +342,23 @@
                       <div
                         class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden theme-surface-raised theme-surface-muted sm:mb-3 relative flex-shrink-0"
                       >
+                        <img
+                          v-if="characterImages[characterImageKey(item)]"
+                          :key="characterImages[characterImageKey(item)]?.src"
+                          :src="characterImages[characterImageKey(item)]?.src"
+                          :alt="characterImageAlt(item)"
+                          :title="characterImages[characterImageKey(item)]?.attribution"
+                          :data-character-image-source="
+                            characterImages[characterImageKey(item)]?.source
+                          "
+                          class="w-full h-full object-cover"
+                          loading="lazy"
+                          decoding="async"
+                          referrerpolicy="no-referrer"
+                          @error="reportCharacterImageError(item)"
+                        />
                         <div
+                          v-else
                           class="w-full h-full flex items-center justify-center theme-text-muted"
                         >
                           <svg
@@ -371,6 +387,14 @@
                         >
                           {{ item.character || $t("details.unknownCharacter") }}
                         </span>
+                        <a
+                          v-if="characterImages[characterImageKey(item)]?.sourceUrl"
+                          :href="characterImages[characterImageKey(item)]?.sourceUrl"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="text-[10px] theme-text-muted underline line-clamp-1"
+                          >{{ characterImages[characterImageKey(item)]?.attribution }}</a
+                        >
                       </div>
                     </div>
                   </div>
@@ -398,6 +422,10 @@ import { refDebounced } from "@vueuse/core";
 import { APP_LOCALES, useActorData, fetchActorData } from "@app/shared-logic";
 import ReportModal from "../../components/ReportModal.vue";
 import { prepareActorSsrData } from "../../utils/actor-ssr-data";
+import {
+  characterImageKey,
+  useActorCharacterImages,
+} from "../../composables/useActorCharacterImages";
 
 const isReportModalOpen = ref(false);
 const hasOpenedReportModal = ref(false);
@@ -497,6 +525,18 @@ async function setFilmographyPageWithData(page: number): Promise<void> {
 const voiceActorItems = filteredUniqueVoiceActorsByLanguage;
 const voiceActorsTotal = computed(() => voiceActorItems.value.length);
 const filmographyItems = enhancedFilmography;
+const { images: characterImages, reportImageError: reportCharacterImageError } =
+  useActorCharacterImages(id, filmographyItems, actorLanguage);
+
+function characterImageAlt(item: {
+  character: string;
+  title?: string;
+  name?: string;
+  media_type: "movie" | "tv";
+  id: number;
+}): string {
+  return [item.character, item.title || item.name].filter(Boolean).join(" – ");
+}
 const filmographyTotal = computed(() =>
   filmographyComplete.value ? filteredCredits.value.length : filmographyCount.value,
 );
