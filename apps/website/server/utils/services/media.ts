@@ -512,8 +512,6 @@ export class MediaService {
               key: `${contentType}:${contentId}`,
               data: {
                 media: null,
-                characterProfilePictures: new Array<CharacterProfilePicture>(),
-                tvdbId: null,
               },
             };
           }
@@ -538,8 +536,6 @@ export class MediaService {
             key: `${contentType}:${contentId}`,
             data: {
               media: processedBook,
-              characterProfilePictures: new Array<CharacterProfilePicture>(),
-              tvdbId: null,
             },
           };
         } catch (err) {
@@ -548,8 +544,6 @@ export class MediaService {
             key: `${contentType}:${contentId}`,
             data: {
               media: null,
-              characterProfilePictures: new Array<CharacterProfilePicture>(),
-              tvdbId: null,
             },
           };
         }
@@ -564,8 +558,6 @@ export class MediaService {
               key: `${contentType}:${contentId}`,
               data: {
                 media: null,
-                characterProfilePictures: new Array<CharacterProfilePicture>(),
-                tvdbId: null,
               },
             };
           }
@@ -594,8 +586,6 @@ export class MediaService {
             key: `${contentType}:${contentId}`,
             data: {
               media: processedGame,
-              characterProfilePictures: new Array<CharacterProfilePicture>(),
-              tvdbId: null,
             },
           };
         } catch (err) {
@@ -604,8 +594,6 @@ export class MediaService {
             key: `${contentType}:${contentId}`,
             data: {
               media: null,
-              characterProfilePictures: new Array<CharacterProfilePicture>(),
-              tvdbId: null,
             },
           };
         }
@@ -620,8 +608,6 @@ export class MediaService {
               key: `${contentType}:${contentId}`,
               data: {
                 media: null,
-                characterProfilePictures: new Array<CharacterProfilePicture>(),
-                tvdbId: null,
               },
             };
           }
@@ -642,8 +628,6 @@ export class MediaService {
             key: `${contentType}:${contentId}`,
             data: {
               media: processedPodcast,
-              characterProfilePictures: new Array<CharacterProfilePicture>(),
-              tvdbId: null,
             },
           };
         } catch (err) {
@@ -652,8 +636,6 @@ export class MediaService {
             key: `${contentType}:${contentId}`,
             data: {
               media: null,
-              characterProfilePictures: new Array<CharacterProfilePicture>(),
-              tvdbId: null,
             },
           };
         }
@@ -680,8 +662,6 @@ export class MediaService {
             key: `${contentType}:${contentId}`,
             data: {
               media: processedAd,
-              characterProfilePictures: new Array<CharacterProfilePicture>(),
-              tvdbId: null,
             },
           };
         } catch (err) {
@@ -690,8 +670,6 @@ export class MediaService {
             key: `${contentType}:${contentId}`,
             data: {
               media: null,
-              characterProfilePictures: new Array<CharacterProfilePicture>(),
-              tvdbId: null,
             },
           };
         }
@@ -718,8 +696,6 @@ export class MediaService {
             key: `${contentType}:${contentId}`,
             data: {
               media: processedToy,
-              characterProfilePictures: new Array<CharacterProfilePicture>(),
-              tvdbId: null,
             },
           };
         } catch (err) {
@@ -728,8 +704,6 @@ export class MediaService {
             key: `${contentType}:${contentId}`,
             data: {
               media: null,
-              characterProfilePictures: new Array<CharacterProfilePicture>(),
-              tvdbId: null,
             },
           };
         }
@@ -744,8 +718,6 @@ export class MediaService {
         key: `${contentType}:${contentId}`,
         data: {
           media: (await fetchTmdbMedia({ contentType, contentId }))?.media ?? null,
-          characterProfilePictures: new Array<CharacterProfilePicture>(),
-          tvdbId: null,
         },
       };
     };
@@ -818,8 +790,6 @@ export class MediaService {
       for (const [key, media] of Object.entries(cachedTmdbMedia.medias)) {
         fetchedResultsMap.set(key, {
           media,
-          characterProfilePictures: new Array<CharacterProfilePicture>(),
-          tvdbId: null,
         });
       }
     }
@@ -885,7 +855,6 @@ export class MediaService {
         profile_picture: undefined,
       };
       let characterName = work.character_name || undefined;
-      let characterImage: string | undefined;
 
       const castMember =
         typeof work.actor_id === "number" ? castByActorId.get(work.actor_id) : undefined;
@@ -898,23 +867,6 @@ export class MediaService {
         };
         if (!characterName) {
           characterName = castMember.character || undefined;
-        }
-      }
-
-      if (
-        mediaResult.characterProfilePictures &&
-        mediaResult.characterProfilePictures.length > 0 &&
-        characterName
-      ) {
-        const lowerChar = characterName.toLowerCase();
-        const pic = mediaResult.characterProfilePictures.find(
-          (cp) =>
-            (cp.movieId === contentId || cp.seriesId === contentId) &&
-            cp.name &&
-            cp.name.toLowerCase() === lowerChar,
-        );
-        if (pic) {
-          characterImage = pic.image || undefined;
         }
       }
 
@@ -950,7 +902,6 @@ export class MediaService {
         media: compactMedia,
         data: {
           character: characterName,
-          characterImage,
           actor: actorData,
         },
         sortDate,
@@ -983,7 +934,6 @@ export class MediaService {
       voiceActor: voiceActorWithImages,
       enhancedWorks,
       medias: Array.from(compactMediasMap.values()),
-      characterProfilePictures: new Array<CharacterProfilePicture>(),
       potentialWikipediaUrl,
       backdropPath,
     };
@@ -1002,7 +952,7 @@ export class MediaService {
       : "default";
     const cacheKey = buildCacheKey({
       provider: "tvdb",
-      resource: "characters-by-tmdb-id",
+      resource: "characters-extended-by-tmdb-id",
       id: contentId,
       language: normalizedLanguage,
       params: { contentType },
@@ -1094,7 +1044,7 @@ export class MediaService {
             } else {
               const res = await tvdbClient.getSeriesById(
                 tvdbId,
-                { meta: "episodes", short: false },
+                { short: false },
                 this.acceptLanguage,
               );
               const rawCharacters = readPath(res, "data", "characters");

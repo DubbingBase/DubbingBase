@@ -25,16 +25,10 @@ export async function fetchMovieData(event: H3Event, movieId: number) {
         ...(projection === "media-page" ? { projection: "media-page" } : {}),
       }),
     "TMDB movie",
-  ).then(async (result) => {
-    const { characters: characterProfilePictures, tvdbId } =
-      await mediaService.getCharacterProfilePictures("movie", movieId, result.media);
-    return {
-      movieWithImageUrls: result.media,
-      characterProfilePictures,
-      collection: result.collection,
-      tvdbId,
-    };
-  });
+  ).then((result) => ({
+    movieWithImageUrls: result.media,
+    collection: result.collection,
+  }));
 
   const dbDataPromise =
     projection === "media-page"
@@ -49,7 +43,7 @@ export async function fetchMovieData(event: H3Event, movieId: number) {
     ? undefined
     : dubbingProjectData.voiceActors;
 
-  const { movieWithImageUrls, characterProfilePictures, collection, tvdbId } = apiData;
+  const { movieWithImageUrls, collection } = apiData;
 
   // ── Lazy Wikipedia Queue Enqueue ─────────────────────────────────
   // Gated by PostHog 'enqueue-on-navigate' (server-side)
@@ -103,10 +97,8 @@ export async function fetchMovieData(event: H3Event, movieId: number) {
 
   const baseData = {
     movie: movieWithImageUrls,
-    characterProfilePictures,
     dubbingProjects,
     collection,
-    tvdbId,
     ...(voiceActors === undefined ? {} : { voiceActors }),
   };
   return baseData;

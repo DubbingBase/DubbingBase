@@ -267,12 +267,11 @@ describe("GET /api/season parent metadata", () => {
       includeCredits: false,
       projection: "media-page",
     });
-    expect(responseBody).toMatchObject({ characterProfilePictures: [] });
+    expect(responseBody).not.toHaveProperty("characterProfilePictures");
     expect(routeMocks.cacheGetOrFetch).not.toHaveBeenCalled();
   });
 
-  it("keeps season credits and TVDB character pictures for the full projection", async () => {
-    routeMocks.cacheGetOrFetch.mockResolvedValue([{ id: 10, name: "Character", image: null }]);
+  it("keeps season credits for the full projection without TVDB lookups", async () => {
     const app = createApp();
     app.use(
       "/",
@@ -285,9 +284,9 @@ describe("GET /api/season parent metadata", () => {
 
     expect(responseBody).toMatchObject({
       season: { credits: { cast: [{ name: "Unused cast" }] } },
-      characterProfilePictures: [{ id: 10, name: "Character", image: null }],
     });
+    expect(responseBody).not.toHaveProperty("characterProfilePictures");
     expect(routeMocks.getSeason).toHaveBeenCalledWith("season", 42, 2);
-    expect(routeMocks.cacheGetOrFetch).toHaveBeenCalledTimes(1);
+    expect(routeMocks.cacheGetOrFetch).not.toHaveBeenCalled();
   });
 });

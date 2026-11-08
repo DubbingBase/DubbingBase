@@ -342,24 +342,30 @@
                       <div
                         class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden theme-surface-raised theme-surface-muted sm:mb-3 relative flex-shrink-0"
                       >
-                        <div
-                          class="w-full h-full flex items-center justify-center theme-text-muted"
+                        <CharacterPhoto
+                          :image="imageFor(characterRequest(item))"
+                          :alt="characterImageAlt(item)"
+                          @error="reportImageError(characterRequest(item))"
                         >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            aria-hidden="true"
-                            class="w-6 h-6 sm:w-8 sm:h-8 opacity-20"
+                          <div
+                            class="w-full h-full flex items-center justify-center theme-text-muted"
                           >
-                            <circle cx="12" cy="8" r="5" />
-                            <path d="M20 21a8 8 0 0 0-16 0" />
-                          </svg>
-                        </div>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              aria-hidden="true"
+                              class="w-6 h-6 sm:w-8 sm:h-8 opacity-20"
+                            >
+                              <circle cx="12" cy="8" r="5" />
+                              <path d="M20 21a8 8 0 0 0-16 0" />
+                            </svg>
+                          </div>
+                        </CharacterPhoto>
                       </div>
                       <div class="flex flex-col min-w-0 flex-1">
                         <span
@@ -371,6 +377,14 @@
                         >
                           {{ item.character || $t("details.unknownCharacter") }}
                         </span>
+                        <a
+                          v-if="imageFor(characterRequest(item))?.sourceUrl"
+                          :href="imageFor(characterRequest(item))?.sourceUrl"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="text-[10px] theme-text-muted underline line-clamp-1"
+                          >{{ imageFor(characterRequest(item))?.attribution }}</a
+                        >
                       </div>
                     </div>
                   </div>
@@ -398,6 +412,8 @@ import { refDebounced } from "@vueuse/core";
 import { APP_LOCALES, useActorData, fetchActorData } from "@app/shared-logic";
 import ReportModal from "../../components/ReportModal.vue";
 import { prepareActorSsrData } from "../../utils/actor-ssr-data";
+import CharacterPhoto from "../../components/CharacterPhoto.vue";
+import { useCharacterImages } from "../../composables/useCharacterImages";
 
 const isReportModalOpen = ref(false);
 const hasOpenedReportModal = ref(false);
@@ -497,6 +513,22 @@ async function setFilmographyPageWithData(page: number): Promise<void> {
 const voiceActorItems = filteredUniqueVoiceActorsByLanguage;
 const voiceActorsTotal = computed(() => voiceActorItems.value.length);
 const filmographyItems = enhancedFilmography;
+function characterRequest(item: { id: number; media_type: "movie" | "tv"; character: string }) {
+  return { mediaType: item.media_type, mediaId: item.id, names: [item.character] };
+}
+const { imageFor, reportImageError } = useCharacterImages(
+  computed(() => filmographyItems.value.map(characterRequest)),
+);
+
+function characterImageAlt(item: {
+  character: string;
+  title?: string;
+  name?: string;
+  media_type: "movie" | "tv";
+  id: number;
+}): string {
+  return [item.character, item.title || item.name].filter(Boolean).join(" – ");
+}
 const filmographyTotal = computed(() =>
   filmographyComplete.value ? filteredCredits.value.length : filmographyCount.value,
 );

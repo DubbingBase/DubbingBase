@@ -1,8 +1,5 @@
-import type { MediaDetailCharacterProfilePicture } from "../types/media-detail";
-
 export type SeasonDataResponse = {
   season: Record<string, unknown>;
-  characterProfilePictures?: MediaDetailCharacterProfilePicture[];
 } & Record<string, unknown>;
 
 export async function fetchSeasonData(

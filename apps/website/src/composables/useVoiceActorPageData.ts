@@ -54,7 +54,6 @@ export async function fetchVoiceActorPageData(
       workCount: response.workCount,
       enhancedWorks,
       medias: response.medias,
-      characterProfilePictures: response.characterProfilePictures ?? [],
       potentialWikipediaUrl: response.potentialWikipediaUrl ?? null,
       profilePicture: response.voiceActor.profile_picture,
       backdropPath: response.backdropPath ?? null,

@@ -519,13 +519,6 @@ export const MOCK_MOVIE = {
       ],
     },
   },
-  characterProfilePictures: [
-    {
-      movieId: 85,
-      name: "Indiana Jones",
-      image: "/indy_char.jpg",
-    },
-  ],
   dubbingProjects: [
     {
       id: 8501,
@@ -606,7 +599,6 @@ export const MOCK_MOVIE = {
     },
   ],
   collection: null,
-  tvdbId: null,
 };
 
 export const MOCK_SHOW = {
@@ -685,7 +677,6 @@ export const MOCK_SHOW = {
       ],
     },
   },
-  characterProfilePictures: [],
   aggregateCredits: {
     cast: [
       {
@@ -814,7 +805,6 @@ export const MOCK_SEASON = {
     ],
   },
   dubbingProjects: MOCK_SHOW.dubbingProjects,
-  characterProfilePictures: [],
   votes: {},
 };
 
@@ -832,7 +822,6 @@ export const MOCK_EPISODE = {
     credits: { cast: MOCK_SHOW.aggregateCredits.cast },
   },
   dubbingProjects: MOCK_SHOW.dubbingProjects,
-  characterProfilePictures: [],
   votes: {},
 };
 
@@ -1464,6 +1453,11 @@ export default defineEventHandler(async (event) => {
     const response =
       url.searchParams.get("projection") === "page" ? projectVoiceActorPage(data) : data;
     return send(event, JSON.stringify(response), "application/json");
+  }
+
+  // Character images are lazy and best-effort: the e2e mocks have no provider data.
+  if (path === "/api/character-images") {
+    return send(event, JSON.stringify({ images: {}, tvdbIds: {} }), "application/json");
   }
 
   // 2. Movie Detail

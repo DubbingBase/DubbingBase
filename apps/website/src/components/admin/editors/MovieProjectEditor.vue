@@ -369,11 +369,8 @@
 </template>
 
 <script setup lang="ts">
-import {
-  createCharacterMatcher,
-  validateDubbingLanguage,
-  type MediaDetailCharacterProfilePicture,
-} from "@app/shared-logic";
+import { validateDubbingLanguage } from "@app/shared-logic";
+import { useCharacterImages } from "../../../composables/useCharacterImages";
 import { ref, onMounted, computed, nextTick, watch, type Ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { ChevronDownIcon, Loader2Icon, PlusIcon, StarIcon } from "lucide-vue-next";
@@ -614,24 +611,21 @@ const selectedCastKey = ref<string | null>(null);
 const selectedRow = computed(
   () => castRows.value.find((row) => row.key === selectedCastKey.value) ?? null,
 );
-const characterImageFor = (characterName: string): string | null => {
-  if (!characterName) return null;
-  const matches = createCharacterMatcher(characterName);
-  const match = characterPictures.value.find(
-    (picture) => picture.name && picture.image && matches(picture.name),
-  );
-  return match?.image ?? null;
-};
+// Saved rows may carry only the original actor; the public pages fall back to the TMDB character.
+const characterNameFor = (row: {
+  character_name?: string | null;
+  actor_id?: string | number | null;
+}) =>
+  row.character_name || tmdbCast.value.find((c) => c.id === row.actor_id)?.character?.trim() || "";
 const castView = computed<CastWorkspaceRow[]>(() =>
   castRows.value.map((row) => {
     const actor = tmdbCast.value.find((c) => c.id === row.actor_id);
-    // Saved rows may carry only the original actor; the public pages fall back to the TMDB character.
-    const characterName = row.character_name || actor?.character?.trim() || "";
+    const characterName = characterNameFor(row);
     return {
       key: row.key,
       characterName,
       originalActorName: actor?.name ?? "",
-      characterImage: characterImageFor(characterName),
+      characterImage: characterImageFor(characterRequestFor(characterName))?.src ?? null,
       originalActorImage: tmdbProfileUrl(actor?.profile_path),
       voiceActorName: row.voice_actor_id ? lookups.voiceActorLabel(row.voice_actor_id) : "",
       voiceActorImage: lookups.voiceActorImage(row.voice_actor_id),
@@ -643,7 +637,16 @@ const castView = computed<CastWorkspaceRow[]>(() =>
 );
 
 const tmdbCast = ref<EditorTmdbCastMember[]>([]);
-const characterPictures = ref<MediaDetailCharacterProfilePicture[]>([]);
+const characterRequestFor = (characterName: string) => ({
+  mediaType: "movie" as const,
+  mediaId: tmdbMovieId.value ?? "",
+  names: [characterName],
+});
+// Bounded: at most two batches of lookups for very large casts.
+const characterRequests = computed(() =>
+  castRows.value.slice(0, 48).map((row) => characterRequestFor(characterNameFor(row))),
+);
+const { imageFor: characterImageFor } = useCharacterImages(characterRequests);
 const tmdbProfileUrl = (path: string | null | undefined): string | null =>
   path ? (path.startsWith("/") ? `${TMDB_PROFILE_BASE}${path}` : path) : null;
 const initialTmdbCastOptions = computed(() => tmdbCast.value.slice(0, 50));
@@ -792,7 +795,6 @@ const {
   `movie-edit-${tmdbMovieId.value}-${projectIdParam}`,
   async () => {
     let tmdbData: TmdbMovieData | null = null;
-    let characterPictures: MediaDetailCharacterProfilePicture[] = [];
     let projects: EditorProjectTab[] = [];
     let project: EditorProjectRecord | null = null;
     let studioName: string | null = null;
@@ -804,12 +806,10 @@ const {
       try {
         const data = await $fetch<{
           movie?: TmdbMovieData | null;
-          characterProfilePictures?: MediaDetailCharacterProfilePicture[];
         }>(`/api/movie/${tmdbMovieId.value}`);
         if (data && data.movie) {
           tmdbData = data.movie;
         }
-        characterPictures = data?.characterProfilePictures ?? [];
       } catch (e) {
         console.error("Failed to fetch TMDB data.", e);
       }
@@ -859,7 +859,6 @@ const {
 
     return {
       tmdbData,
-      characterPictures,
       projects,
       project,
       studioName,
@@ -895,7 +894,6 @@ watch(
         }
       }
 
-      characterPictures.value = data.characterPictures;
       movieDubbingProjects.value = data.projects;
 
       if (data.project) {

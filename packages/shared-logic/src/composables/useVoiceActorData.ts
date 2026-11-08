@@ -15,7 +15,6 @@ export async function fetchVoiceActorData(
     voiceActor: voiceActorResponse.voiceActor,
     enhancedWorks: voiceActorResponse.enhancedWorks || [],
     medias: voiceActorResponse.medias || [],
-    characterProfilePictures: voiceActorResponse.characterProfilePictures || [],
     potentialWikipediaUrl: voiceActorResponse.potentialWikipediaUrl || null,
     profilePicture: voiceActorResponse.voiceActor.profile_picture || null,
     backdropPath: voiceActorResponse.backdropPath || null,
@@ -79,14 +78,6 @@ export type VoiceActorResponse = {
   enhancedWorks?: EnhancedWorkItem[];
   medias: VoiceActorMedia[];
   potentialWikipediaUrl?: string | null;
-  characterProfilePictures?: Array<{
-    work_id?: number;
-    profile_path?: string | null;
-    image?: string | null;
-    movieId?: number;
-    showId?: number;
-    name?: string;
-  }>;
 };
 
 export type EnhancedWorkItem = {
@@ -94,7 +85,6 @@ export type EnhancedWorkItem = {
   work: VoiceActorWork;
   data: {
     character: string | undefined;
-    characterImage?: string;
     actor: PersonData<Actor>;
   };
   sortDate: string;
@@ -119,7 +109,6 @@ export type VoiceActorDataPayload = {
   voiceActor?: VoiceActorResponse["voiceActor"];
   enhancedWorks?: EnhancedWorkItem[];
   medias: VoiceActorResponse["medias"];
-  characterProfilePictures: NonNullable<VoiceActorResponse["characterProfilePictures"]>;
   potentialWikipediaUrl: string | null;
   profilePicture?: string | null;
   backdropPath?: string | null;
@@ -132,9 +121,6 @@ export function useVoiceActorData(
   const voiceActor = shallowRef<VoiceActorResponse["voiceActor"] | undefined>(initial?.voiceActor);
   const enhancedWorksRef = shallowRef<EnhancedWorkItem[]>(initial?.enhancedWorks || []);
   const medias = shallowRef<VoiceActorResponse["medias"]>(initial?.medias || []);
-  const characterProfilePictures = shallowRef<
-    NonNullable<VoiceActorResponse["characterProfilePictures"]>
-  >(initial?.characterProfilePictures || []);
   const profilePicture = ref<string | null | undefined>(initial?.profilePicture);
   const backdropPath = ref<string | null | undefined>(initial?.backdropPath);
   const loading = ref<boolean>(!initial);
@@ -150,7 +136,6 @@ export function useVoiceActorData(
           enhancedWorksRef.value = payload.enhancedWorks;
         }
         medias.value = payload.medias;
-        characterProfilePictures.value = payload.characterProfilePictures;
         potentialWikipediaUrl.value = payload.potentialWikipediaUrl;
         profilePicture.value = payload.profilePicture;
         backdropPath.value = payload.backdropPath;
@@ -173,7 +158,6 @@ export function useVoiceActorData(
         enhancedWorksRef.value = payload.enhancedWorks;
       }
       medias.value = payload.medias;
-      characterProfilePictures.value = payload.characterProfilePictures;
       potentialWikipediaUrl.value = payload.potentialWikipediaUrl;
       profilePicture.value = payload.profilePicture;
       backdropPath.value = payload.backdropPath;
@@ -199,17 +183,6 @@ export function useVoiceActorData(
       if (m && m.id) mediaMap.set(m.id, m);
     }
 
-    const charPicMap = new Map<
-      string,
-      NonNullable<VoiceActorResponse["characterProfilePictures"]>[number]
-    >();
-    for (const cp of characterProfilePictures.value) {
-      const mediaId = cp.movieId || cp.showId;
-      if (mediaId && cp.name) {
-        charPicMap.set(`${mediaId}:${cp.name.toLowerCase()}`, cp);
-      }
-    }
-
     const result = voiceActor.value.work
       .map((work) => {
         const contentId = work.dubbing_projects?.content_id;
@@ -223,18 +196,8 @@ export function useVoiceActorData(
         if (!actor) return null;
 
         const character = actor.character;
-        let characterImage: string | undefined;
-
-        if (character) {
-          const pic = charPicMap.get(`${media.id}:${character.toLowerCase()}`);
-          if (pic) {
-            characterImage = pic.image || pic.profile_path || undefined;
-          }
-        }
-
         const data = {
           character,
-          characterImage,
           actor: actorToPersonData(actor),
         };
 
@@ -296,7 +259,6 @@ export function useVoiceActorData(
     voiceActor,
     enhancedWorks: enhancedWorksRef,
     medias,
-    characterProfilePictures,
     profilePicture,
     backdropPath,
     loading,

@@ -67,8 +67,6 @@ export interface MediaDetailCharacterProfilePicture extends Record<string, unkno
 interface MediaDetailResponseBase {
   dubbingProjects: MediaDetailDubbingProject[];
   voiceActors?: MediaDetailVoiceActor[];
-  characterProfilePictures: MediaDetailCharacterProfilePicture[];
-  tvdbId: number | null;
 }
 
 export interface MovieDetailResponse extends MediaDetailResponseBase {
