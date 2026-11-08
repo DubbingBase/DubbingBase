@@ -1,4 +1,4 @@
-import { useCache, useTmdbClient } from "../../utils";
+import { useTmdbClient } from "../../utils";
 import { MediaService } from "../../utils/services/media";
 import {
   getDubbingProjectsForMediaEndpoint,
@@ -7,16 +7,6 @@ import {
 } from "../../utils/db/queries";
 import { parseEpisodeQuery, withMediaServiceTimeout } from "../../utils/media-request";
 import { withTimeout } from "../../utils/with-timeout";
-import type { CharacterProfilePicture } from "../../../src/utils/media-cast";
-import { buildCacheKey } from "../../utils/cache/constants";
-import { createCacheNamespace } from "../../utils/cache";
-
-type CachedTvdbCharacterData =
-  | CharacterProfilePicture[]
-  | { characters?: CharacterProfilePicture[] }
-  | null;
-
-const tvdbCharacterCacheNamespace = createCacheNamespace<CachedTvdbCharacterData>();
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
@@ -36,7 +26,6 @@ export default defineEventHandler(async (event) => {
   const { id, seasonNumber, episodeNumber } = parseEpisodeQuery(query);
   const episodePageProjection = query.projection === "episode-page";
   const acceptLanguage = getHeader(event, "accept-language") || undefined;
-  const cache = useCache(event);
   const tmdbClient = useTmdbClient();
   const mediaService = new MediaService(tmdbClient, acceptLanguage);
 
@@ -52,25 +41,7 @@ export default defineEventHandler(async (event) => {
             query.projection === "media-page" || episodePageProjection ? "media-page" : undefined,
         },
       );
-      // Fetch character profile pictures from cache for the parent TV show if available
-      const language = acceptLanguage ? (acceptLanguage.split(",")[0] || "en").trim() : "default";
-      const showCacheKey = buildCacheKey({
-        provider: "tvdb",
-        resource: "characters-by-tmdb-id",
-        id,
-        language,
-        params: { contentType: "tv" },
-      });
-      const cachedChars = await cache.getOrFetch<CachedTvdbCharacterData>(
-        tvdbCharacterCacheNamespace,
-        showCacheKey,
-        async () => null,
-        { cachePolicy: "read-only" },
-      );
-      const characterProfilePictures = Array.isArray(cachedChars)
-        ? cachedChars
-        : (cachedChars?.characters ?? []);
-      return { episode: result.media, characterProfilePictures };
+      return { episode: result.media };
     }, "TMDB episode request");
 
     const dbDataPromise = withTimeout(
@@ -115,7 +86,6 @@ export default defineEventHandler(async (event) => {
             activeProjectWorks: dbData.activeProjectWorks,
           }
         : {}),
-      characterProfilePictures: apiData.characterProfilePictures,
       votes: dbData.voteData,
     };
 

@@ -1,6 +1,5 @@
 import type { MediaDetailMedia, MediaDubbingProject } from "@app/shared-logic";
 import type { CastActorReference, CastWorkReference } from "./media-cast";
-import type { CharacterProfilePicture } from "./show-character-pictures";
 
 export type SeasonPageDubbingProject = Pick<
   MediaDubbingProject,
@@ -35,7 +34,6 @@ interface SeasonPageDataResponse {
     poster_path: string | null;
   } | null;
   dubbingProjects: SeasonPageDubbingProject[];
-  characterProfilePictures: CharacterProfilePicture[];
   votes: Record<number, unknown>;
 }
 
@@ -66,7 +64,6 @@ export interface EpisodePageDataResponse {
   voiceActors: EpisodePageVoiceActor[];
   activeProjectId: number | null;
   activeProjectWorks: CastWorkReference[];
-  characterProfilePictures: CharacterProfilePicture[];
   votes: Record<number, unknown>;
 }
 

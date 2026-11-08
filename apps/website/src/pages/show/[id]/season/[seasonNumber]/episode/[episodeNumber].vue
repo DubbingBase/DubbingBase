@@ -171,14 +171,10 @@
                     <div
                       class="w-16 sm:w-full relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
                     >
-                      <NuxtImg
-                        format="webp"
-                        v-if="actor.characterImage"
-                        :src="actor.characterImage"
-                        decoding="async"
-                        loading="lazy"
-                        class="w-full h-full object-cover"
-                        alt="Character"
+                      <CharacterPhoto
+                        :image="imageFor(characterRequest(actor))"
+                        :alt="actor.character || actor.workCharacterName || ''"
+                        @error="reportImageError(characterRequest(actor))"
                       />
                     </div>
                     <div class="flex flex-col min-w-0 flex-1 w-full overflow-hidden">
@@ -394,10 +390,8 @@ import {
   type DisplayCastActor,
   type MediaProjectView,
 } from "../../../../../../utils/media-cast";
-import {
-  indexCharacterPictures,
-  type CharacterProfilePicture,
-} from "../../../../../../utils/show-character-pictures";
+import CharacterPhoto from "../../../../../../components/CharacterPhoto.vue";
+import { useCharacterImages } from "../../../../../../composables/useCharacterImages";
 
 const isReportModalOpen = ref(false);
 const { page: castPage, setPage: setCastPage } = useUrlPagination("castPage");
@@ -480,12 +474,6 @@ function retryPageData(): void {
 
 const data = computed(() =>
   pageData.value?.requestKey === cacheKey.value ? pageData.value.response : undefined,
-);
-const characterProfilePictures = computed<CharacterProfilePicture[]>(
-  () => data.value?.characterProfilePictures || [],
-);
-const characterPictureIndex = computed(() =>
-  indexCharacterPictures(characterProfilePictures.value),
 );
 const episode = computed(() => data.value?.episode);
 const projectDataById = ref(new Map<number, EpisodePageProjectWorksResponse>());
@@ -675,7 +663,6 @@ const formattedCast = computed<DisplayCastActor[]>(() => {
       profile_path: null,
       character: work.character_name || null,
       voiceActor: voiceActor ? { ...voiceActor, note: work.note } : null,
-      characterImage: null,
       workCharacterName: work.character_name || null,
     };
   });
@@ -707,23 +694,30 @@ const castTotal = computed(() => filteredCast.value.length);
 const castItems = computed<EpisodeDisplayCastActor[]>(() => {
   const start = (castPage.value - 1) * 12;
   return filteredCast.value.slice(start, start + 12).map((actor) => {
-    const characterName = actor.character || actor.workCharacterName;
-    let characterImage: string | null = null;
-    if (actor.actorId !== undefined) {
-      characterImage = characterName
-        ? characterPictureIndex.value.get(characterName.toLowerCase()) || null
-        : characterProfilePictures.value.find((picture) => !picture.name)?.image || null;
-    }
-
     return {
       ...actor,
       actorPath: actor.actorId ? localePath(`/actor/${actor.actorId}`) : undefined,
       roleNames: (actor.roles || []).map((role) => role.character),
       voiceActorPath: actor.voiceActor ? localePath(`/voice-actor/${actor.voiceActor.id}`) : "",
-      characterImage: characterImage || null,
     };
   });
 });
+
+// Only original cast members have a production-scoped character image here.
+function characterRequest(actor: {
+  actorId?: number;
+  character?: string | null;
+  workCharacterName?: string | null;
+}) {
+  return {
+    mediaType: "tv" as const,
+    mediaId: showId.value,
+    names: actor.actorId === undefined ? [] : [actor.character, actor.workCharacterName],
+  };
+}
+const { imageFor, reportImageError } = useCharacterImages(
+  computed(() => castItems.value.map(characterRequest)),
+);
 
 useHead({
   title: computed(() => {

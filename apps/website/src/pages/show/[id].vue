@@ -217,14 +217,10 @@
                     <div
                       class="w-16 sm:w-full relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
                     >
-                      <NuxtImg
-                        format="webp"
-                        decoding="async"
-                        loading="lazy"
-                        v-if="actor.characterImage"
-                        :src="actor.characterImage"
-                        class="w-full h-full object-cover"
-                        alt="Character"
+                      <CharacterPhoto
+                        :image="imageFor(characterRequest(actor))"
+                        :alt="actor.character || actor.workCharacterName || ''"
+                        @error="reportImageError(characterRequest(actor))"
                       />
                     </div>
                     <div class="flex flex-col min-w-0 flex-1 w-full overflow-hidden">
@@ -235,8 +231,8 @@
                         <span class="truncate block w-full">{{ $t("details.character") }}</span>
                       </div>
                       <NuxtLink
-                        v-if="actor.characterDetailPath"
-                        :to="actor.characterDetailPath"
+                        v-if="characterDetailPath(actor)"
+                        :to="characterDetailPath(actor)"
                         class="font-bold text-sm theme-text truncate block w-full hover:underline"
                         :title="actor.roleLabels.join(', ') || actor.workCharacterName || ''"
                       >
@@ -387,15 +383,13 @@ import DetailsMetaChip from "../../components/layout/details/DetailsMetaChip.vue
 import DetailsExternalLink from "../../components/layout/details/DetailsExternalLink.vue";
 import DetailsSynopsis from "../../components/layout/details/DetailsSynopsis.vue";
 import DetailsCastHeader from "../../components/layout/details/DetailsCastHeader.vue";
+import CharacterPhoto from "../../components/CharacterPhoto.vue";
+import { useCharacterImages } from "../../composables/useCharacterImages";
 import { useRoute, useRouter } from "vue-router";
 import type { Link as HeadLink } from "@unhead/vue";
 import { NuxtLink } from "#components";
 
-import type {
-  MediaDetailCharacterProfilePicture,
-  MediaDetailCredits,
-  MediaDetailDubbingProject,
-} from "@app/shared-logic";
+import type { MediaDetailCredits, MediaDetailDubbingProject } from "@app/shared-logic";
 import { computed, ref, watch } from "vue";
 import { refDebounced } from "@vueuse/core";
 import { ArrowLeftIcon, ClapperboardIcon, UserIcon, MicIcon, StarIcon } from "lucide-vue-next";
@@ -408,7 +402,6 @@ import {
   type DisplayCastActor,
   type MediaProjectView,
 } from "../../utils/media-cast";
-import { findCharacterImage, indexCharacterPictures } from "../../utils/show-character-pictures";
 
 const isReportModalOpen = ref(false);
 
@@ -494,12 +487,6 @@ const voiceActorsById = computed(
 function projectVoiceActorCount(project: MediaDetailDubbingProject): number {
   return projectVoiceActorMetrics.value.actorCounts.get(project.id) || 0;
 }
-const characterProfilePictures = computed<MediaDetailCharacterProfilePicture[]>(
-  () => data.value?.characterProfilePictures || [],
-);
-const characterPictureIndex = computed(() =>
-  indexCharacterPictures(characterProfilePictures.value),
-);
 const aggregateCredits = computed<MediaDetailCredits>(
   () => data.value?.aggregateCredits || { cast: [] },
 );
@@ -510,7 +497,6 @@ const originalVersionRequested = computed(() => isOriginalVersionQuery(route.que
 const isOriginalVersion = computed(
   () => canShowOriginalVersion.value && originalVersionRequested.value,
 );
-const tvdbId = computed(() => data.value?.tvdbId);
 
 const backdropUrl = computed(() => {
   if (!serie.value?.backdrop_path) return null;
@@ -562,7 +548,6 @@ const getDisplayLanguage = useDubbingLanguageLabel();
 // Format cast and attach voice actors
 type ShowDisplayCastActor = DisplayCastActor & {
   actorLinkPath?: string;
-  characterDetailPath?: string;
   roleLabels: string[];
   voiceActorLinkPath: string;
 };
@@ -617,7 +602,6 @@ const formattedCast = computed<DisplayCastActor[]>(() => {
       profile_path: null,
       character: work.character_name || null,
       voiceActor: voiceActor ? { ...voiceActor, note: work.note } : null,
-      characterImage: null,
       workCharacterName: work.character_name || null,
     };
   });
@@ -669,39 +653,6 @@ const castItems = computed<ShowDisplayCastActor[]>(() => {
     const roles = actor.roles || [];
     const roleNames = roles.map((role) => role.character);
     const roleLabel = roleNames.join(", ");
-    let characterImage: string | null = null;
-    let characterDetailPath: string | undefined;
-    if (roleLabel || actor.workCharacterName) {
-      // Try to match any of the roles, then fallback to workCharacterName
-      const namesToTry = [
-        ...roleNames.filter(Boolean),
-        ...(actor.workCharacterName ? [actor.workCharacterName] : []),
-      ];
-      characterImage = findCharacterImage(characterPictureIndex.value, namesToTry);
-      const matches = characterProfilePictures.value.filter((picture) =>
-        namesToTry.some((name) => name && picture.name?.toLowerCase() === name.toLowerCase()),
-      );
-      const uniqueCharacters = new Map(
-        matches
-          .filter((picture) => typeof picture.id === "number" || typeof picture.id === "string")
-          .map((picture) => [String(picture.id), picture]),
-      );
-      if (uniqueCharacters.size === 1) {
-        const [characterId] = uniqueCharacters.keys();
-        if (
-          characterId &&
-          /^\d+$/.test(characterId) &&
-          Number.isSafeInteger(Number(characterId)) &&
-          Number(characterId) > 0
-        ) {
-          characterDetailPath = localePath({
-            path: `/character/tvdb/${characterId}`,
-            query: { mediaType: "tv", mediaId: route.params.id },
-          });
-        }
-      }
-    }
-
     return {
       ...actor,
       actorLinkPath: actor.actorId ? localePath(`/actor/${actor.actorId}`) : undefined,
@@ -709,11 +660,34 @@ const castItems = computed<ShowDisplayCastActor[]>(() => {
       roleLabels: roles.map((role) =>
         role.episode_count ? `${role.character} (${role.episode_count} eps)` : role.character,
       ),
-      characterImage,
-      characterDetailPath,
     };
   });
 });
+
+type CardRole = {
+  roles?: Array<{ character: string }>;
+  workCharacterName?: string | null;
+};
+function characterRequest(actor: CardRole) {
+  return {
+    mediaType: "tv" as const,
+    mediaId: String(route.params.id),
+    names: [...(actor.roles ?? []).map((role) => role.character), actor.workCharacterName],
+  };
+}
+const { imageFor, characterIdFor, reportImageError, tvdbIds } = useCharacterImages(
+  computed(() => castItems.value.map(characterRequest)),
+);
+const tvdbId = computed(() => tvdbIds.value[`tv:${route.params.id}`]);
+function characterDetailPath(actor: CardRole): string | undefined {
+  const characterId = characterIdFor(characterRequest(actor));
+  return characterId
+    ? localePath({
+        path: `/character/tvdb/${characterId}`,
+        query: { mediaType: "tv", mediaId: route.params.id },
+      })
+    : undefined;
+}
 
 useHead({
   title: computed(() => {

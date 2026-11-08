@@ -1,52 +1,42 @@
 import { describe, expect, it, vi } from "vitest";
 import {
-  getCreditedCharacter,
   resolveCharacterImage,
-  selectTvdbCharacterImage,
+  selectTvdbCharacter,
   type CharacterImageResolver,
-} from "./actor-character-images";
+} from "./character-images";
 
-describe("getCreditedCharacter", () => {
-  const credits = {
-    cast: [
-      { id: 671, character: "Ron Weasley" },
-      { id: 672, character: "Ron Weasley (voice)" },
-      { id: 700, character: "A" },
-      { id: 700, character: "B" },
-    ],
-  };
-
-  it("returns the cleaned role credited in that production only", () => {
-    expect(getCreditedCharacter(credits, 671)).toBe("Ron Weasley");
-    expect(getCreditedCharacter(credits, 672)).toBe("Ron Weasley");
-    expect(getCreditedCharacter(credits, 999)).toBeNull();
-  });
-
-  it("is conservative when one production has several roles", () => {
-    expect(getCreditedCharacter(credits, 700)).toBeNull();
-  });
-});
-
-describe("selectTvdbCharacterImage", () => {
+describe("selectTvdbCharacter", () => {
   const movie671 = [
-    { name: "Ron Weasley", image: "https://artworks.thetvdb.com/ron-2001.jpg" },
-    { name: "Harry Potter", image: "https://artworks.thetvdb.com/harry.jpg" },
+    { id: 1, name: "Ron Weasley", image: "https://artworks.thetvdb.com/ron-2001.jpg" },
+    { id: 2, name: "Harry Potter", image: "https://artworks.thetvdb.com/harry.jpg" },
   ];
-  const movie672 = [{ name: "Ron Weasley", image: "https://artworks.thetvdb.com/ron-2002.jpg" }];
+  const movie672 = [
+    { id: 9, name: "Ron Weasley", image: "https://artworks.thetvdb.com/ron-2002.jpg" },
+  ];
 
   it("resolves the two Ron Weasley movies separately from their own production", () => {
-    expect(selectTvdbCharacterImage("Ron Weasley", movie671)).toBe(
-      "https://artworks.thetvdb.com/ron-2001.jpg",
-    );
-    expect(selectTvdbCharacterImage("ron weasley", movie672)).toBe(
-      "https://artworks.thetvdb.com/ron-2002.jpg",
-    );
+    expect(selectTvdbCharacter(["Ron Weasley"], movie671)).toEqual({
+      id: "1",
+      image: "https://artworks.thetvdb.com/ron-2001.jpg",
+    });
+    expect(selectTvdbCharacter(["ron weasley (voice)"], movie672)).toEqual({
+      id: "9",
+      image: "https://artworks.thetvdb.com/ron-2002.jpg",
+    });
+  });
+
+  it("tries candidate names in order", () => {
+    expect(selectTvdbCharacter(["Unknown", "Harry Potter"], movie671)?.id).toBe("2");
   });
 
   it("rejects ambiguous, missing and non-http matches", () => {
-    expect(selectTvdbCharacterImage("Ron Weasley", [...movie671, ...movie672])).toBeNull();
-    expect(selectTvdbCharacterImage("Hermione", movie671)).toBeNull();
-    expect(selectTvdbCharacterImage("Ron", [{ name: "Ron", image: "javascript:x" }])).toBeNull();
+    expect(selectTvdbCharacter(["Ron Weasley"], [...movie671, ...movie672])).toBeNull();
+    expect(selectTvdbCharacter(["Hermione Granger"], movie671)).toBeNull();
+    // Non-http images are dropped, but the role itself still identifies the character.
+    expect(selectTvdbCharacter(["Ron"], [{ id: 3, name: "Ron", image: "javascript:x" }])).toEqual({
+      id: "3",
+      image: null,
+    });
   });
 });
 
