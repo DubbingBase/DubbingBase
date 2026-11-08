@@ -26,10 +26,21 @@ const { getPreferredLocale, rememberLocale } = useLocalePreference();
 const preferredLocale = ref<SupportedLocale | null>(null);
 const showBanner = ref(false);
 
+// Dismissal is remembered per suggested locale, so a newly preferred language can still be suggested.
+const dismissalKey = (lang: SupportedLocale) => `lang_banner_dismissed:${lang}`;
+
+const isDismissed = (lang: SupportedLocale): boolean => {
+  try {
+    return localStorage.getItem(dismissalKey(lang)) === "true";
+  } catch {
+    return false;
+  }
+};
+
 onMounted(() => {
   // Suggest only (never redirect): the server HTML is identical for everyone.
   const preferred = getPreferredLocale();
-  if (preferred && preferred !== locale.value && !sessionStorage.getItem("lang_banner_dismissed")) {
+  if (preferred && preferred !== locale.value && !isDismissed(preferred)) {
     preferredLocale.value = preferred;
     showBanner.value = true;
   }
@@ -46,6 +57,11 @@ const switchToPreferred = () => {
 
 const dismiss = () => {
   showBanner.value = false;
-  sessionStorage.setItem("lang_banner_dismissed", "true");
+  if (!preferredLocale.value) return;
+  try {
+    localStorage.setItem(dismissalKey(preferredLocale.value), "true");
+  } catch {
+    // Storage unavailable (private mode/quota): dismissal lasts for this page view only.
+  }
 };
 </script>
