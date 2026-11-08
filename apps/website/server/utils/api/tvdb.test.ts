@@ -87,8 +87,21 @@ describe("TVDB authentication", () => {
     expect(harness.writes).toEqual([]);
     expect(harness.fetchMock).toHaveBeenCalledTimes(1);
     const [url, init] = harness.fetchMock.mock.calls[0]!;
-    expect(String(url)).toBe("https://api4.thetvdb.com/v4/series/42");
+    expect(String(url)).toBe("https://api4.thetvdb.com/v4/series/42/extended");
     expect(new Headers(init?.headers).get("Authorization")).toBe("Bearer valid-token");
+  });
+
+  it("reads movies from the extended record, the only one that carries characters", async () => {
+    const harness = makeHarness({
+      values: new Map([[TOKEN_KEY, "valid-token"]]),
+      fetch: () => response({ data: { id: 66 } }),
+    });
+
+    await harness.client.getMovieById(66, { meta: "translations" });
+
+    expect(String(harness.fetchMock.mock.calls[0]![0])).toBe(
+      "https://api4.thetvdb.com/v4/movies/66/extended?meta=translations",
+    );
   });
 
   it("logs in on a cache miss and persists a token after an authenticated response", async () => {
@@ -247,10 +260,10 @@ describe("TVDB authentication", () => {
           });
         }
         const authorization = new Headers(init?.headers).get("Authorization");
-        if (url.pathname.endsWith("/series/2") && authorization === "Bearer old-token") {
+        if (url.pathname.endsWith("/series/2/extended") && authorization === "Bearer old-token") {
           return response({}, 401);
         }
-        return response({ data: { id: url.pathname.split("/").pop() } });
+        return response({ data: { id: url.pathname.split("/")[3] } });
       },
     });
 
@@ -283,7 +296,7 @@ describe("TVDB authentication", () => {
           });
         }
         return response({
-          data: { id: Number(url.pathname.split("/").pop()) },
+          data: { id: Number(url.pathname.split("/")[3]) },
         });
       },
     });
@@ -329,7 +342,7 @@ describe("TVDB authentication", () => {
       values: new Map([[TOKEN_KEY, "old-token"]]),
       fetch: (url, init) => {
         if (url.pathname.endsWith("/login")) return response({ data: { token: "new-token" } });
-        if (url.pathname.endsWith("/series/41")) {
+        if (url.pathname.endsWith("/series/41/extended")) {
           if (new Headers(init?.headers).get("Authorization") === "Bearer old-token") {
             return new Promise<Response>((resolve) => {
               rejectOldRequest = resolve;

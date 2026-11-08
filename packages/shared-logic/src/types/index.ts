@@ -99,13 +99,6 @@ export interface MediaDubbingProject {
 
 export interface MovieResponse {
   movie: Movie & WithCast & WithExtrernalIds;
-  characterProfilePictures?: Array<{
-    id: number;
-    name: string;
-    image: string;
-    tvdbPeopleId: number;
-    showId: number;
-  }>;
   dubbingProjects?: MediaDubbingProject[];
   votes?: WorkVotes;
   collection?: {
@@ -165,13 +158,6 @@ export interface SerieResponse {
 export interface ShowResponse {
   serie: Serie & WithCast & WithExtrernalIds;
   aggregateCredits?: MediaDetailCredits;
-  characterProfilePictures?: Array<{
-    id: number;
-    name: string;
-    image: string;
-    tvdbPeopleId: number;
-    showId: number;
-  }>;
   dubbingProjects?: MediaDubbingProject[];
   votes?: WorkVotes;
 }

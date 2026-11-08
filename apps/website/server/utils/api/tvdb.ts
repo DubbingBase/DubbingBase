@@ -168,6 +168,8 @@ export class TVDBClient {
     }
   }
 
+  // Characters (and their images) only exist on the /extended record; the base
+  // record has none.
   async getSeriesById(
     seriesId: number,
     extended?: { meta?: string; short?: boolean },
@@ -176,7 +178,7 @@ export class TVDBClient {
     const params: Record<string, string> = {};
     if (extended?.meta) params.meta = extended.meta;
     if (extended?.short) params.short = "true";
-    return this.get(`/series/${seriesId}`, params, language);
+    return this.get(`/series/${seriesId}/extended`, params, language);
   }
 
   async getCharacterById(characterId: number, language?: string) {
@@ -190,7 +192,7 @@ export class TVDBClient {
   ) {
     const params: Record<string, string> = {};
     if (extended?.meta) params.meta = extended.meta;
-    return this.get(`/movies/${movieId}`, params, language);
+    return this.get(`/movies/${movieId}/extended`, params, language);
   }
 
   async searchSeries(query: string, language?: string) {

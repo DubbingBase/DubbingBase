@@ -395,21 +395,17 @@
                       <div
                         class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden theme-surface-raised theme-surface-muted sm:mb-3 relative flex-shrink-0"
                       >
-                        <NuxtImg
-                          format="webp"
-                          decoding="async"
-                          loading="lazy"
-                          v-if="item.data.characterImage"
-                          :src="resolveImageUrl(item.data.characterImage)"
-                          :alt="item.data.character"
-                          class="w-full h-full object-cover"
-                        />
-                        <div
-                          v-else
-                          class="w-full h-full flex items-center justify-center theme-text-muted"
+                        <CharacterPhoto
+                          :image="imageFor(characterRequest(item))"
+                          :alt="item.data.character || ''"
+                          @error="reportImageError(characterRequest(item))"
                         >
-                          <UserIcon class="w-6 h-6 sm:w-8 sm:h-8 opacity-20" />
-                        </div>
+                          <div
+                            class="w-full h-full flex items-center justify-center theme-text-muted"
+                          >
+                            <UserIcon class="w-6 h-6 sm:w-8 sm:h-8 opacity-20" />
+                          </div>
+                        </CharacterPhoto>
                         <div
                           v-if="item.work.performance"
                           class="absolute bottom-1 left-1 right-1 flex justify-center"
@@ -575,21 +571,17 @@
                         <div
                           class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden theme-surface-raised theme-surface-muted sm:mb-3 relative flex-shrink-0"
                         >
-                          <NuxtImg
-                            format="webp"
-                            decoding="async"
-                            loading="lazy"
-                            v-if="item.data.characterImage"
-                            :src="resolveImageUrl(item.data.characterImage)"
-                            :alt="item.data.character"
-                            class="w-full h-full object-cover"
-                          />
-                          <div
-                            v-else
-                            class="w-full h-full flex items-center justify-center theme-text-muted"
+                          <CharacterPhoto
+                            :image="imageFor(characterRequest(item))"
+                            :alt="item.data.character || ''"
+                            @error="reportImageError(characterRequest(item))"
                           >
-                            <UserIcon class="w-6 h-6 opacity-20" />
-                          </div>
+                            <div
+                              class="w-full h-full flex items-center justify-center theme-text-muted"
+                            >
+                              <UserIcon class="w-6 h-6 opacity-20" />
+                            </div>
+                          </CharacterPhoto>
                           <div
                             v-if="item.work.performance"
                             class="absolute bottom-1 left-1 right-1 flex justify-center"
@@ -668,6 +660,8 @@ import {
   Smile as SmileIcon,
 } from "lucide-vue-next";
 import ReportModal from "../../components/ReportModal.vue";
+import CharacterPhoto from "../../components/CharacterPhoto.vue";
+import { useCharacterImages } from "../../composables/useCharacterImages";
 import { computed, ref, watch } from "vue";
 import { refDebounced } from "@vueuse/core";
 
@@ -764,7 +758,6 @@ function syncVoiceActorData(newData: typeof data.value): void {
     voiceActorData.enhancedWorks.value = newData.enhancedWorks;
   }
   voiceActorData.medias.value = newData.medias;
-  voiceActorData.characterProfilePictures.value = newData.characterProfilePictures;
   voiceActorData.profilePicture.value = newData.profilePicture;
   voiceActorData.backdropPath.value = newData.backdropPath;
   voiceActorData.potentialWikipediaUrl.value = newData.potentialWikipediaUrl;
@@ -937,6 +930,24 @@ const worksItems = computed(() =>
   ),
 );
 const groupedWorks = computed(() => worksPageData.value.data.filter(isVoiceActorWorkGroup));
+// Only the 12 works of the current page are looked up, lazily after hydration.
+function characterRequest(item: VoiceActorWorkItem) {
+  const contentType = item.work.dubbing_projects?.content_type;
+  const contentId = item.work.dubbing_projects?.content_id;
+  return {
+    mediaType: contentType === "tv" ? ("tv" as const) : ("movie" as const),
+    mediaId: contentId ?? "",
+    names:
+      (contentType === "movie" || contentType === "tv") && contentId ? [item.data.character] : [],
+  };
+}
+const { imageFor, reportImageError } = useCharacterImages(
+  computed(() =>
+    [...worksItems.value, ...groupedWorks.value.flatMap((group) => group.works)].map(
+      characterRequest,
+    ),
+  ),
+);
 const worksTotal = computed(() => worksPageData.value.pagination.totalItems);
 const currentWorksPage = computed(() => worksPageData.value.pagination.page);
 

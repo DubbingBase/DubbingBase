@@ -627,7 +627,7 @@ export default defineEventHandler(async (event) => {
         });
       }
 
-      const { voiceActor, enhancedWorks, medias, characterProfilePictures } = result;
+      const { voiceActor, enhancedWorks, medias } = result;
 
       let mappedWorks: MappedWork[] = [];
 
@@ -636,11 +636,6 @@ export default defineEventHandler(async (event) => {
           let characterName = item.data?.character || item.work?.performance || "";
           if (characterName.toLowerCase().includes("dialogue")) {
             characterName = "";
-          }
-
-          let characterImage = item.data?.characterImage || null;
-          if (characterImage && characterImage.includes("/w185/")) {
-            characterImage = characterImage.replace("/w185/", "/w92/");
           }
 
           let mediaPoster = item.media?.poster_path || null;
@@ -655,7 +650,7 @@ export default defineEventHandler(async (event) => {
             characterName: characterName || "",
             popularity: item.media?.popularity || 0,
             mediaPosterUrl: mediaPoster,
-            characterImageUrl: characterImage,
+            characterImageUrl: null,
           };
         });
       } else {
@@ -676,25 +671,6 @@ export default defineEventHandler(async (event) => {
           let characterImage = null;
           if (castMember.profile_path) {
             characterImage = castMember.profile_path.replace("/w500/", "/w92/");
-          }
-
-          if (
-            !characterImage &&
-            characterProfilePictures &&
-            Array.isArray(characterProfilePictures)
-          ) {
-            const pic = characterProfilePictures.find(
-              (cp) =>
-                (cp.movieId === contentId || ("showId" in cp && cp.showId === contentId)) &&
-                cp.name &&
-                characterName &&
-                cp.name.toLowerCase() === characterName.toLowerCase(),
-            );
-            if (pic) {
-              const image = "image" in pic ? asString(pic.image) : undefined;
-              const profilePath = "profile_path" in pic ? asString(pic.profile_path) : undefined;
-              characterImage = image || profilePath || null;
-            }
           }
 
           let title = "Unknown Work";
