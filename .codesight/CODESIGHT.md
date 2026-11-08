@@ -5,14 +5,14 @@
 
 > 92 routes | 28 models | 133 components | 123 lib files | 64 env vars | 15 middleware | 52% test coverage
 > **Token savings:** this file is ~18,100 tokens. Without it, AI exploration would cost ~155,300 tokens. **Saves ~137,200 tokens per conversation.**
-> **Last scanned:** 2026-11-07 22:00 — re-run after significant changes
+> **Last scanned:** 2026-11-08 09:39 — re-run after significant changes
 
 ---
 
 # Routes
 
 - `GET` `/api/about-preference` ✓
-- `GET` `/api/actor/:id` params(id)
+- `GET` `/api/actor/:id` params(id) [auth, cache]
 - `GET` `/api/admin/dubbing-project` [auth] ✓
 - `POST` `/api/admin/dubbing-project` [auth] ✓
 - `POST` `/api/admin/queue/clear` [auth, queue]
@@ -985,10 +985,10 @@
 - `apps/website/server/utils/api/igdb.ts` — imported by **14** files
 - `packages/shared-logic/src/types/index.ts` — imported by **12** files
 - `apps/website/server/utils/urls/supabase.ts` — imported by **11** files
+- `apps/website/server/utils/cache/http.ts` — imported by **11** files
 - `apps/website/server/utils/notifications/discord.ts` — imported by **11** files
 - `apps/website/server/utils/db/queries.ts` — imported by **10** files
 - `apps/website/server/utils/dubbing-language.ts` — imported by **10** files
-- `apps/website/server/utils/cache/http.ts` — imported by **10** files
 - `apps/website/server/utils/narrow.ts` — imported by **10** files
 - `apps/website/server/utils/urls/tmdb.ts` — imported by **9** files
 - `apps/website/server/utils/media-request.ts` — imported by **9** files
@@ -1008,8 +1008,8 @@
 - `apps/website/server/utils/api/igdb.ts` ← `apps/website/server/api/character/[source]/[id].get.ts`, `apps/website/server/api/game/[id].get.ts`, `apps/website/server/api/internal-media-credits.get.ts`, `apps/website/server/api/internal-media-metadata.get.ts`, `apps/website/server/api/media-catalog.get.ts` +9 more
 - `packages/shared-logic/src/types/index.ts` ← `packages/shared-logic/src/composables/useAdvertisementData.ts`, `packages/shared-logic/src/composables/useAudiobookData.ts`, `packages/shared-logic/src/composables/useDetailCollections.ts`, `packages/shared-logic/src/composables/useDetailCollections.ts`, `packages/shared-logic/src/composables/useGameData.ts` +7 more
 - `apps/website/server/utils/urls/supabase.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/dashboard-stats.get.ts`, `apps/website/server/api/find_duplicate_voice_actors.get.ts`, `apps/website/server/api/list-voice-actors.get.ts`, `apps/website/server/api/recent-voice-actors.get.ts` +6 more
+- `apps/website/server/utils/cache/http.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/admin/work-duplicates.get.ts`, `apps/website/server/api/get-media-credits.get.ts`, `apps/website/server/api/og-image/index.get.ts`, `apps/website/server/api/trending/games.get.ts` +6 more
 - `apps/website/server/utils/notifications/discord.ts` ← `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/media-queue.post.ts`, `apps/website/server/api/movie/[id].get.ts`, `apps/website/server/api/podcast/[id].get.ts` +6 more
-- `apps/website/server/utils/db/queries.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/character/[source]/[id].get.ts`, `apps/website/server/api/detail-collections.get.ts` +5 more
 
 ---
 

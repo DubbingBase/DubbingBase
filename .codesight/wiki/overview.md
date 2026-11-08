@@ -12,7 +12,7 @@
 
 ## Subsystems
 
-- **[[id].get](./[id].get.md)** — 11 routes — touches: queue
+- **[[id].get](./[id].get.md)** — 11 routes — touches: auth, cache, queue
 - **[[id].put](./[id].put.md)** — 1 routes — touches: auth
 - **[About-preference.get](./about-preference.get.md)** — 1 routes
 - **[Admin](./admin.md)** — 8 routes — touches: auth, queue, cache
@@ -118,4 +118,4 @@ Changes to these files have the widest blast radius across the codebase:
 - _...29 more_
 
 ---
-_Back to [index.md](./index.md) · Generated 2026-11-07_
+_Back to [index.md](./index.md) · Generated 2026-11-08_

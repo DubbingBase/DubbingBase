@@ -2,11 +2,11 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The [id].get subsystem handles **11 routes** and touches: queue.
+The [id].get subsystem handles **11 routes** and touches: auth, cache, queue.
 
 ## Routes
 
-- `GET` `/api/actor/:id` params(id)
+- `GET` `/api/actor/:id` params(id) [auth, cache]
   `apps/website/server/api/actor/[id].get.ts`
 - `GET` `/api/advertisement/:id` params(id) [queue]
   `apps/website/server/api/advertisement/[id].get.ts`
