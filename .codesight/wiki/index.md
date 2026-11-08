@@ -16,6 +16,7 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 - [Admin](./admin.md)
 - [Career-grid.get](./career-grid.get.md)
 - [Cast-vote.post](./cast-vote.post.md)
+- [Character-images.get](./character-images.get.md)
 - [Count-voice-actor-works.post](./count-voice-actor-works.post.md)
 - [Create-user-profile.post](./create-user-profile.post.md)
 - [Dashboard-stats.get](./dashboard-stats.get.md)
@@ -86,9 +87,9 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 
 ## Quick Stats
 
-- Routes: **92**
+- Routes: **93**
 - Models: **28**
-- Components: **134**
+- Components: **135**
 - Env vars: **41** required, **23** with defaults
 
 ## How to Use
@@ -116,4 +117,4 @@ These exist in your codebase but are **not** reflected in wiki articles:
 When in doubt, search the source. The wiki is a starting point, not a complete inventory.
 
 ---
-_Last compiled: 2026-11-08 · 76 articles · [codesight](https://github.com/Houseofmvps/codesight)_
+_Last compiled: 2026-11-08 · 77 articles · [codesight](https://github.com/Houseofmvps/codesight)_

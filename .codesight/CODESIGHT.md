@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 92 routes | 28 models | 134 components | 124 lib files | 64 env vars | 15 middleware | 52% test coverage
-> **Token savings:** this file is ~18,200 tokens. Without it, AI exploration would cost ~155,900 tokens. **Saves ~137,700 tokens per conversation.**
-> **Last scanned:** 2026-11-08 12:15 — re-run after significant changes
+> 93 routes | 28 models | 135 components | 126 lib files | 64 env vars | 15 middleware | 52% test coverage
+> **Token savings:** this file is ~18,400 tokens. Without it, AI exploration would cost ~157,200 tokens. **Saves ~138,800 tokens per conversation.**
+> **Last scanned:** 2026-11-08 17:26 — re-run after significant changes
 
 ---
 
@@ -26,6 +26,7 @@
 - `GET` `/api/career-grid`
 - `POST` `/api/cast-vote` [auth] ✓
 - `GET` `/api/character/:source/:id` params(source, id)
+- `GET` `/api/character-images` [cache] ✓
 - `POST` `/api/count-voice-actor-works` ✓
 - `POST` `/api/create-user-profile` [auth, db]
 - `GET` `/api/dashboard-stats` [auth]
@@ -33,7 +34,7 @@
 - `POST` `/api/delete-voice-actor-link` [auth] ✓
 - `POST` `/api/delete_user` [auth]
 - `GET` `/api/detail-collections` ✓
-- `GET` `/api/episode/index` [cache]
+- `GET` `/api/episode/index`
 - `POST` `/api/extract-credits-from-image` [upload]
 - `POST` `/api/extract-voice-actor-info` [auth] ✓
 - `GET` `/api/find_duplicate_voice_actors` [auth] ✓
@@ -81,7 +82,7 @@
 - `POST` `/api/save-toy-metadata` [auth] ✓
 - `GET` `/api/search/index` [db]
 - `GET` `/api/search-voice-actors`
-- `GET` `/api/season/index` [cache]
+- `GET` `/api/season/index`
 - `GET` `/api/show/:id` params(id) [queue]
 - `POST` `/api/submit-task` [auth, db, upload] ✓
 - `POST` `/api/submit-user-report` [auth, db] ✓
@@ -313,6 +314,7 @@
 # Components
 
 - **app** [client] — `apps/website/src/app.vue`
+- **CharacterPhoto** [client] — props: image — `apps/website/src/components/CharacterPhoto.vue`
 - **Footer** [client] — `apps/website/src/components/Footer.vue`
 - **ForceEnqueueButton** [client] — props: mediaType, mediaId, seasonNumber, episodeNumber, wikipediaLanguage — `apps/website/src/components/ForceEnqueueButton.vue`
 - **Header** [client] — `apps/website/src/components/Header.vue`
@@ -514,6 +516,14 @@
   - function selectDubbingCandidateSections: (sections) => Promise<DubbingSectionCandidate[]>
   - function selectDubbingSections: (sections) => Promise<string[]>
   - _...6 more_
+- `apps/website/server/utils/character-images.ts`
+  - function isCharacterImageSource: (value) => value is CharacterImageSource
+  - function selectTvdbCharacter: (names, characters) => void
+  - function resolveCharacterImage: (resolvers, skip, onError?, error) => void
+  - type CharacterImageSource
+  - type CharacterImage
+  - type CharacterImageResolver
+  - _...1 more_
 - `apps/website/server/utils/contribution/task-submission-validation.ts`
   - function isTaskClaimId: (value) => value is string
   - function authorizeTaskContribution: (input) => void
@@ -647,6 +657,10 @@
   - function getValidatedExtractionSections: (options) => Promise<ValidatedExtractionSections>
   - interface ScanSectionMetadata
   - type ValidatedExtractionSections
+- `apps/website/server/utils/services/wikimedia-character-image.ts`
+  - function getWikimediaCharacterImage: (input) => Promise<WikimediaCharacterImage | null>
+  - type WikimediaCharacterImage
+  - const WIKIMEDIA_CHARACTER_IMAGE_NAMESPACE
 - `apps/website/server/utils/sitemap-data.ts` — function listSitemapChunks: (event) => Promise<, function loadSitemapChunk: (event, name, chunk) => Promise<SitemapRecord[]>
 - `apps/website/server/utils/sitemap-response.ts` — function getSitemapOrigin: (event) => string, function sendSitemapXml: (event, xml) => string
 - `apps/website/server/utils/sitemap.ts`
@@ -687,6 +701,12 @@
   - function useAdminReports
   - type UserReport
   - const ADMIN_REPORTS_PAGE_SIZE
+- `apps/website/src/composables/useCharacterImages.ts`
+  - function characterImageKey: (request) => string | null
+  - function useCharacterImages: (requests) => void
+  - type CharacterImageSource
+  - type CharacterImage
+  - type CharacterImageRequest
 - `apps/website/src/composables/useClientUser.ts` — function useClientUser: () => void
 - `apps/website/src/composables/useContribute.ts`
   - function fetchRandomTask
@@ -773,11 +793,6 @@
   - function shareUrl: (title, url, {...}, writeText }) => Promise<ShareOutcome>
   - type ShareDub
   - type ShareOutcome
-- `apps/website/src/utils/show-character-pictures.ts`
-  - function indexCharacterPictures: (pictures) => CharacterPictureIndex
-  - function findCharacterImage: (index, namesToTry) => void
-  - interface CharacterProfilePicture
-  - type CharacterPictureIndex
 - `apps/website/src/utils/voice-actor-og-image.ts`
   - function isVoiceActorOgImagesEnabled: (value) => boolean
   - function getVoiceActorOgImageMetadata: (enabled, voiceActorId, siteUrl) => VoiceActorOgImageMetadata
@@ -985,36 +1000,36 @@
 
 - `apps/website/server/utils/db/client.ts` — imported by **72** files
 - `apps/website/server/utils/auth-handlers.ts` — imported by **37** files
-- `apps/website/server/utils/index.ts` — imported by **28** files
-- `apps/website/server/utils/cache/index.ts` — imported by **19** files
+- `apps/website/server/utils/index.ts` — imported by **30** files
+- `apps/website/server/utils/cache/index.ts` — imported by **18** files
 - `apps/website/server/utils/auth.ts` — imported by **16** files
 - `apps/website/server/utils/api/igdb.ts` — imported by **14** files
+- `apps/website/server/utils/cache/http.ts` — imported by **12** files
 - `packages/shared-logic/src/types/index.ts` — imported by **12** files
 - `apps/website/server/utils/urls/supabase.ts` — imported by **11** files
-- `apps/website/server/utils/cache/http.ts` — imported by **11** files
 - `apps/website/server/utils/notifications/discord.ts` — imported by **11** files
 - `apps/website/server/utils/db/queries.ts` — imported by **10** files
+- `apps/website/server/utils/media-request.ts` — imported by **10** files
 - `apps/website/server/utils/dubbing-language.ts` — imported by **10** files
 - `apps/website/server/utils/narrow.ts` — imported by **10** files
 - `apps/website/server/utils/urls/tmdb.ts` — imported by **9** files
-- `apps/website/server/utils/media-request.ts` — imported by **9** files
-- `apps/website/server/utils/services/media.ts` — imported by **8** files
-- `apps/website/server/utils/cache/constants.ts` — imported by **8** files
+- `apps/website/server/utils/services/media.ts` — imported by **9** files
 - `e2e/helpers/mock-api.ts` — imported by **8** files
+- `apps/website/server/utils/cache/constants.ts` — imported by **7** files
 - `apps/website/server/utils/background.ts` — imported by **6** files
-- `apps/website/server/utils/cache/wikipedia.ts` — imported by **5** files
+- `apps/website/server/utils/with-timeout.ts` — imported by **5** files
 
 ## Import Map (who imports what)
 
 - `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/reprocess-legacy-wiki-check-reviews.post.ts` +67 more
 - `apps/website/server/utils/auth-handlers.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/reprocess-legacy-wiki-check-reviews.post.ts` +32 more
-- `apps/website/server/utils/index.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/character/[source]/[id].get.ts` +23 more
-- `apps/website/server/utils/cache/index.ts` ← `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/season/index.get.ts`, `apps/website/server/utils/api/igdb.test.ts`, `apps/website/server/utils/api/igdb.ts`, `apps/website/server/utils/api/openlibrary.test.ts` +14 more
+- `apps/website/server/utils/index.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/character/[source]/[id].get.ts` +25 more
+- `apps/website/server/utils/cache/index.ts` ← `apps/website/server/utils/api/igdb.test.ts`, `apps/website/server/utils/api/igdb.ts`, `apps/website/server/utils/api/openlibrary.test.ts`, `apps/website/server/utils/api/openlibrary.ts`, `apps/website/server/utils/api/podcast.test.ts` +13 more
 - `apps/website/server/utils/auth.ts` ← `apps/website/server/api/admin/work-duplicates.get.ts`, `apps/website/server/api/cast-vote.post.ts`, `apps/website/server/api/generate-social-content.post.ts`, `apps/website/server/api/get-work-votes.get.ts`, `apps/website/server/api/manage-subscription.post.ts` +11 more
 - `apps/website/server/utils/api/igdb.ts` ← `apps/website/server/api/character/[source]/[id].get.ts`, `apps/website/server/api/game/[id].get.ts`, `apps/website/server/api/internal-media-credits.get.ts`, `apps/website/server/api/internal-media-metadata.get.ts`, `apps/website/server/api/media-catalog.get.ts` +9 more
+- `apps/website/server/utils/cache/http.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/admin/work-duplicates.get.ts`, `apps/website/server/api/character-images.get.ts`, `apps/website/server/api/get-media-credits.get.ts`, `apps/website/server/api/og-image/index.get.ts` +7 more
 - `packages/shared-logic/src/types/index.ts` ← `packages/shared-logic/src/composables/useAdvertisementData.ts`, `packages/shared-logic/src/composables/useAudiobookData.ts`, `packages/shared-logic/src/composables/useDetailCollections.ts`, `packages/shared-logic/src/composables/useDetailCollections.ts`, `packages/shared-logic/src/composables/useGameData.ts` +7 more
 - `apps/website/server/utils/urls/supabase.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/dashboard-stats.get.ts`, `apps/website/server/api/find_duplicate_voice_actors.get.ts`, `apps/website/server/api/list-voice-actors.get.ts`, `apps/website/server/api/recent-voice-actors.get.ts` +6 more
-- `apps/website/server/utils/cache/http.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/admin/work-duplicates.get.ts`, `apps/website/server/api/get-media-credits.get.ts`, `apps/website/server/api/og-image/index.get.ts`, `apps/website/server/api/trending/games.get.ts` +6 more
 - `apps/website/server/utils/notifications/discord.ts` ← `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/media-queue.post.ts`, `apps/website/server/api/movie/[id].get.ts`, `apps/website/server/api/podcast/[id].get.ts` +6 more
 
 ---
@@ -1022,7 +1037,7 @@
 # Test Coverage
 
 > **52%** of routes and models are covered by tests
-> 159 test files found
+> 162 test files found
 
 ## Covered Routes
 
@@ -1031,6 +1046,7 @@
 - POST:/api/admin/dubbing-project
 - POST:/api/admin/queue/reprocess-legacy-wiki-check-reviews
 - POST:/api/cast-vote
+- GET:/api/character-images
 - POST:/api/count-voice-actor-works
 - POST:/api/delete-user-voice-actor-link
 - POST:/api/delete-voice-actor-link

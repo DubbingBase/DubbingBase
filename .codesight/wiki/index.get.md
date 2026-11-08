@@ -6,13 +6,13 @@ The Index.get subsystem handles **4 routes** and touches: cache, db.
 
 ## Routes
 
-- `GET` `/api/episode/index` [cache]
+- `GET` `/api/episode/index`
   `apps/website/server/api/episode/index.get.ts`
 - `GET` `/api/og-image/index` [cache]
   `apps/website/server/api/og-image/index.get.ts`
 - `GET` `/api/search/index` [db]
   `apps/website/server/api/search/index.get.ts`
-- `GET` `/api/season/index` [cache]
+- `GET` `/api/season/index`
   `apps/website/server/api/season/index.get.ts`
 
 ## Source Files

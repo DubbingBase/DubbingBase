@@ -1,6 +1,7 @@
 # Components
 
 - **app** [client] — `apps/website/src/app.vue`
+- **CharacterPhoto** [client] — props: image — `apps/website/src/components/CharacterPhoto.vue`
 - **Footer** [client] — `apps/website/src/components/Footer.vue`
 - **ForceEnqueueButton** [client] — props: mediaType, mediaId, seasonNumber, episodeNumber, wikipediaLanguage — `apps/website/src/components/ForceEnqueueButton.vue`
 - **Header** [client] — `apps/website/src/components/Header.vue`

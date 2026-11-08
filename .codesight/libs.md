@@ -63,6 +63,14 @@
   - function selectDubbingCandidateSections: (sections) => Promise<DubbingSectionCandidate[]>
   - function selectDubbingSections: (sections) => Promise<string[]>
   - _...6 more_
+- `apps/website/server/utils/character-images.ts`
+  - function isCharacterImageSource: (value) => value is CharacterImageSource
+  - function selectTvdbCharacter: (names, characters) => void
+  - function resolveCharacterImage: (resolvers, skip, onError?, error) => void
+  - type CharacterImageSource
+  - type CharacterImage
+  - type CharacterImageResolver
+  - _...1 more_
 - `apps/website/server/utils/contribution/task-submission-validation.ts`
   - function isTaskClaimId: (value) => value is string
   - function authorizeTaskContribution: (input) => void
@@ -196,6 +204,10 @@
   - function getValidatedExtractionSections: (options) => Promise<ValidatedExtractionSections>
   - interface ScanSectionMetadata
   - type ValidatedExtractionSections
+- `apps/website/server/utils/services/wikimedia-character-image.ts`
+  - function getWikimediaCharacterImage: (input) => Promise<WikimediaCharacterImage | null>
+  - type WikimediaCharacterImage
+  - const WIKIMEDIA_CHARACTER_IMAGE_NAMESPACE
 - `apps/website/server/utils/sitemap-data.ts` — function listSitemapChunks: (event) => Promise<, function loadSitemapChunk: (event, name, chunk) => Promise<SitemapRecord[]>
 - `apps/website/server/utils/sitemap-response.ts` — function getSitemapOrigin: (event) => string, function sendSitemapXml: (event, xml) => string
 - `apps/website/server/utils/sitemap.ts`
@@ -236,6 +248,12 @@
   - function useAdminReports
   - type UserReport
   - const ADMIN_REPORTS_PAGE_SIZE
+- `apps/website/src/composables/useCharacterImages.ts`
+  - function characterImageKey: (request) => string | null
+  - function useCharacterImages: (requests) => void
+  - type CharacterImageSource
+  - type CharacterImage
+  - type CharacterImageRequest
 - `apps/website/src/composables/useClientUser.ts` — function useClientUser: () => void
 - `apps/website/src/composables/useContribute.ts`
   - function fetchRandomTask
@@ -322,11 +340,6 @@
   - function shareUrl: (title, url, {...}, writeText }) => Promise<ShareOutcome>
   - type ShareDub
   - type ShareOutcome
-- `apps/website/src/utils/show-character-pictures.ts`
-  - function indexCharacterPictures: (pictures) => CharacterPictureIndex
-  - function findCharacterImage: (index, namesToTry) => void
-  - interface CharacterProfilePicture
-  - type CharacterPictureIndex
 - `apps/website/src/utils/voice-actor-og-image.ts`
   - function isVoiceActorOgImagesEnabled: (value) => boolean
   - function getVoiceActorOgImageMetadata: (enabled, voiceActorId, siteUrl) => VoiceActorOgImageMetadata

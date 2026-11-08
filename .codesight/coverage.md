@@ -1,7 +1,7 @@
 # Test Coverage
 
 > **52%** of routes and models are covered by tests
-> 159 test files found
+> 162 test files found
 
 ## Covered Routes
 
@@ -10,6 +10,7 @@
 - POST:/api/admin/dubbing-project
 - POST:/api/admin/queue/reprocess-legacy-wiki-check-reviews
 - POST:/api/cast-vote
+- GET:/api/character-images
 - POST:/api/count-voice-actor-works
 - POST:/api/delete-user-voice-actor-link
 - POST:/api/delete-voice-actor-link

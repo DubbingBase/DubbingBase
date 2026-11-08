@@ -15,6 +15,7 @@
 - `GET` `/api/career-grid`
 - `POST` `/api/cast-vote` [auth] ✓
 - `GET` `/api/character/:source/:id` params(source, id)
+- `GET` `/api/character-images` [cache] ✓
 - `POST` `/api/count-voice-actor-works` ✓
 - `POST` `/api/create-user-profile` [auth, db]
 - `GET` `/api/dashboard-stats` [auth]
@@ -22,7 +23,7 @@
 - `POST` `/api/delete-voice-actor-link` [auth] ✓
 - `POST` `/api/delete_user` [auth]
 - `GET` `/api/detail-collections` ✓
-- `GET` `/api/episode/index` [cache]
+- `GET` `/api/episode/index`
 - `POST` `/api/extract-credits-from-image` [upload]
 - `POST` `/api/extract-voice-actor-info` [auth] ✓
 - `GET` `/api/find_duplicate_voice_actors` [auth] ✓
@@ -70,7 +71,7 @@
 - `POST` `/api/save-toy-metadata` [auth] ✓
 - `GET` `/api/search/index` [db]
 - `GET` `/api/search-voice-actors`
-- `GET` `/api/season/index` [cache]
+- `GET` `/api/season/index`
 - `GET` `/api/show/:id` params(id) [queue]
 - `POST` `/api/submit-task` [auth, db, upload] ✓
 - `POST` `/api/submit-user-report` [auth, db] ✓

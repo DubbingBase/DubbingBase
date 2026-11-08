@@ -2,11 +2,12 @@
 
 > **Navigation aid.** Component inventory and prop signatures extracted via AST. Read the source files before adding props or modifying component logic.
 
-**134 components** (vue)
+**135 components** (vue)
 
 ## Client Components
 
 - **app** — `apps/website/src/app.vue`
+- **CharacterPhoto** — props: image — `apps/website/src/components/CharacterPhoto.vue`
 - **Footer** — `apps/website/src/components/Footer.vue`
 - **ForceEnqueueButton** — props: mediaType, mediaId, seasonNumber, episodeNumber, wikipediaLanguage — `apps/website/src/components/ForceEnqueueButton.vue`
 - **Header** — `apps/website/src/components/Header.vue`
