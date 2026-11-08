@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Component inventory and prop signatures extracted via AST. Read the source files before adding props or modifying component logic.
 
-**133 components** (vue)
+**134 components** (vue)
 
 ## Client Components
 
@@ -47,7 +47,7 @@
 - **PodcastProjectEditor** — `apps/website/src/components/admin/editors/PodcastProjectEditor.vue`
 - **ShowProjectEditor** — `apps/website/src/components/admin/editors/ShowProjectEditor.vue`
 - **ToyProjectEditor** — `apps/website/src/components/admin/editors/ToyProjectEditor.vue`
-- **MediaDetailsLayout** — props: title, backdropUrl, posterUrl, loading — `apps/website/src/components/layout/MediaDetailsLayout.vue`
+- **MediaDetailsLayout** — props: shareDub, title, backdropUrl, posterUrl, loading — `apps/website/src/components/layout/MediaDetailsLayout.vue`
 - **PersonDetailsLayout** — props: name, profileUrl, backdropUrl, loading — `apps/website/src/components/layout/PersonDetailsLayout.vue`
 - **DetailsActionBar** — `apps/website/src/components/layout/details/DetailsActionBar.vue`
 - **DetailsBackLink** — props: to — `apps/website/src/components/layout/details/DetailsBackLink.vue`
@@ -61,6 +61,7 @@
 - **DetailsMetaChip** — props: variant, label — `apps/website/src/components/layout/details/DetailsMetaChip.vue`
 - **DetailsPage** — `apps/website/src/components/layout/details/DetailsPage.vue`
 - **DetailsReportButton** — `apps/website/src/components/layout/details/DetailsReportButton.vue`
+- **DetailsShareButton** — props: title, dub, keepQuery — `apps/website/src/components/layout/details/DetailsShareButton.vue`
 - **DetailsStudioLink** — props: studio — `apps/website/src/components/layout/details/DetailsStudioLink.vue`
 - **DetailsSynopsis** — props: text — `apps/website/src/components/layout/details/DetailsSynopsis.vue`
 - **DetailsVoiceCastCard** — props: item — `apps/website/src/components/layout/details/DetailsVoiceCastCard.vue`

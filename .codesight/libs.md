@@ -317,6 +317,11 @@
   - interface EpisodePageVoiceActor
   - interface EpisodePageDataResponse
   - _...2 more_
+- `apps/website/src/utils/share.ts`
+  - function buildShareUrl: ({...}, path, dub, keepQuery }) => string
+  - function shareUrl: (title, url, {...}, writeText }) => Promise<ShareOutcome>
+  - type ShareDub
+  - type ShareOutcome
 - `apps/website/src/utils/show-character-pictures.ts`
   - function indexCharacterPictures: (pictures) => CharacterPictureIndex
   - function findCharacterImage: (index, namesToTry) => void

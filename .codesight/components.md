@@ -41,7 +41,7 @@
 - **PodcastProjectEditor** [client] — `apps/website/src/components/admin/editors/PodcastProjectEditor.vue`
 - **ShowProjectEditor** [client] — `apps/website/src/components/admin/editors/ShowProjectEditor.vue`
 - **ToyProjectEditor** [client] — `apps/website/src/components/admin/editors/ToyProjectEditor.vue`
-- **MediaDetailsLayout** [client] — props: title, backdropUrl, posterUrl, loading — `apps/website/src/components/layout/MediaDetailsLayout.vue`
+- **MediaDetailsLayout** [client] — props: shareDub, title, backdropUrl, posterUrl, loading — `apps/website/src/components/layout/MediaDetailsLayout.vue`
 - **PersonDetailsLayout** [client] — props: name, profileUrl, backdropUrl, loading — `apps/website/src/components/layout/PersonDetailsLayout.vue`
 - **DetailsActionBar** [client] — `apps/website/src/components/layout/details/DetailsActionBar.vue`
 - **DetailsBackLink** [client] — props: to — `apps/website/src/components/layout/details/DetailsBackLink.vue`
@@ -55,6 +55,7 @@
 - **DetailsMetaChip** [client] — props: variant, label — `apps/website/src/components/layout/details/DetailsMetaChip.vue`
 - **DetailsPage** [client] — `apps/website/src/components/layout/details/DetailsPage.vue`
 - **DetailsReportButton** [client] — `apps/website/src/components/layout/details/DetailsReportButton.vue`
+- **DetailsShareButton** [client] — props: title, dub, keepQuery — `apps/website/src/components/layout/details/DetailsShareButton.vue`
 - **DetailsStudioLink** [client] — props: studio — `apps/website/src/components/layout/details/DetailsStudioLink.vue`
 - **DetailsSynopsis** [client] — props: text — `apps/website/src/components/layout/details/DetailsSynopsis.vue`
 - **DetailsVoiceCastCard** [client] — props: item — `apps/website/src/components/layout/details/DetailsVoiceCastCard.vue`

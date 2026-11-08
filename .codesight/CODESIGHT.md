@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 92 routes | 28 models | 133 components | 123 lib files | 64 env vars | 15 middleware | 52% test coverage
-> **Token savings:** this file is ~18,100 tokens. Without it, AI exploration would cost ~155,300 tokens. **Saves ~137,200 tokens per conversation.**
-> **Last scanned:** 2026-11-08 09:47 — re-run after significant changes
+> 92 routes | 28 models | 134 components | 124 lib files | 64 env vars | 15 middleware | 52% test coverage
+> **Token savings:** this file is ~18,200 tokens. Without it, AI exploration would cost ~155,900 tokens. **Saves ~137,700 tokens per conversation.**
+> **Last scanned:** 2026-11-08 12:15 — re-run after significant changes
 
 ---
 
@@ -353,7 +353,7 @@
 - **PodcastProjectEditor** [client] — `apps/website/src/components/admin/editors/PodcastProjectEditor.vue`
 - **ShowProjectEditor** [client] — `apps/website/src/components/admin/editors/ShowProjectEditor.vue`
 - **ToyProjectEditor** [client] — `apps/website/src/components/admin/editors/ToyProjectEditor.vue`
-- **MediaDetailsLayout** [client] — props: title, backdropUrl, posterUrl, loading — `apps/website/src/components/layout/MediaDetailsLayout.vue`
+- **MediaDetailsLayout** [client] — props: shareDub, title, backdropUrl, posterUrl, loading — `apps/website/src/components/layout/MediaDetailsLayout.vue`
 - **PersonDetailsLayout** [client] — props: name, profileUrl, backdropUrl, loading — `apps/website/src/components/layout/PersonDetailsLayout.vue`
 - **DetailsActionBar** [client] — `apps/website/src/components/layout/details/DetailsActionBar.vue`
 - **DetailsBackLink** [client] — props: to — `apps/website/src/components/layout/details/DetailsBackLink.vue`
@@ -367,6 +367,7 @@
 - **DetailsMetaChip** [client] — props: variant, label — `apps/website/src/components/layout/details/DetailsMetaChip.vue`
 - **DetailsPage** [client] — `apps/website/src/components/layout/details/DetailsPage.vue`
 - **DetailsReportButton** [client] — `apps/website/src/components/layout/details/DetailsReportButton.vue`
+- **DetailsShareButton** [client] — props: title, dub, keepQuery — `apps/website/src/components/layout/details/DetailsShareButton.vue`
 - **DetailsStudioLink** [client] — props: studio — `apps/website/src/components/layout/details/DetailsStudioLink.vue`
 - **DetailsSynopsis** [client] — props: text — `apps/website/src/components/layout/details/DetailsSynopsis.vue`
 - **DetailsVoiceCastCard** [client] — props: item — `apps/website/src/components/layout/details/DetailsVoiceCastCard.vue`
@@ -767,6 +768,11 @@
   - interface EpisodePageVoiceActor
   - interface EpisodePageDataResponse
   - _...2 more_
+- `apps/website/src/utils/share.ts`
+  - function buildShareUrl: ({...}, path, dub, keepQuery }) => string
+  - function shareUrl: (title, url, {...}, writeText }) => Promise<ShareOutcome>
+  - type ShareDub
+  - type ShareOutcome
 - `apps/website/src/utils/show-character-pictures.ts`
   - function indexCharacterPictures: (pictures) => CharacterPictureIndex
   - function findCharacterImage: (index, namesToTry) => void
@@ -1016,7 +1022,7 @@
 # Test Coverage
 
 > **52%** of routes and models are covered by tests
-> 158 test files found
+> 159 test files found
 
 ## Covered Routes
 
