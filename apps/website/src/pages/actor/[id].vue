@@ -5,6 +5,7 @@
       v-else-if="actor"
       :name="actor.name"
       :profile-url="actor.profile_path ? resolveImageUrl(actor.profile_path) : null"
+      :backdrop-url="actor.backdrop_path ? resolveImageUrl(actor.backdrop_path) : null"
       :loading="loading"
     >
       <template #metadata>
