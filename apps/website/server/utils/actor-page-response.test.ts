@@ -307,6 +307,7 @@ describe("actor page API projection", () => {
         deathday: null,
         place_of_birth: "City",
         profile_path: "https://image.tmdb.org/t/p/w500/actor.png",
+        backdrop_path: null,
         known_for_department: "Acting",
         credits: {
           cast: [
