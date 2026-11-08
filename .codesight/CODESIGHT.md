@@ -4,8 +4,8 @@
 > **Monorepo:** @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
 > 93 routes | 28 models | 135 components | 126 lib files | 64 env vars | 15 middleware | 52% test coverage
-> **Token savings:** this file is ~18,400 tokens. Without it, AI exploration would cost ~157,200 tokens. **Saves ~138,800 tokens per conversation.**
-> **Last scanned:** 2026-11-08 17:26 — re-run after significant changes
+> **Token savings:** this file is ~18,500 tokens. Without it, AI exploration would cost ~157,200 tokens. **Saves ~138,800 tokens per conversation.**
+> **Last scanned:** 2026-11-08 17:33 — re-run after significant changes
 
 ---
 
@@ -456,7 +456,10 @@
 - `apps/website/server/api/movie/[id].get.ts` — function fetchMovieData: (event, movieId) => void
 - `apps/website/server/api/show/[id].get.ts` — function fetchShowData: (event, showId) => void
 - `apps/website/server/api/trending/games.get.ts` — function getTrendingGamesResponse: (event, language, config, igdbClient, language?) => Promise<IgdbTrendingGamesResult>;
-- `apps/website/server/utils/actor-page-response.ts` — function actorPageResponse: (actor, unknown>, actorCredits, unknown>[], voiceRoles, profilePath, options?) => void, type ActorPageVoiceRole
+- `apps/website/server/utils/actor-page-response.ts`
+  - function pickTrendingBackdropPath: (creditGroups) => string | null
+  - function actorPageResponse: (actor, unknown>, actorCredits, unknown>[], voiceRoles, profilePath, backdropPath, options?) => void
+  - type ActorPageVoiceRole
 - `apps/website/server/utils/api/advertisement.ts` — class AdvertisementClient
 - `apps/website/server/utils/api/igdb.ts`
   - function buildIgdbImageUrl: (hash, size) => string
