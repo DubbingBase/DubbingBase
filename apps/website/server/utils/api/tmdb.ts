@@ -155,6 +155,16 @@ export class TMDBClient {
     return this.get("search/multi", { query, page: String(page) }, language);
   }
 
+  async getAlternativeTitles(mediaType: "movie" | "tv", id: number): Promise<string[]> {
+    const data = await this.get(`${mediaType}/${id}/alternative_titles`, undefined, "en-US");
+    const entries = mediaType === "tv" ? data.results : data.titles;
+    if (!Array.isArray(entries)) return [];
+    return entries.flatMap((entry) => {
+      const title = readProperty(entry, "title");
+      return typeof title === "string" && title.length > 0 ? [title] : [];
+    });
+  }
+
   async getCollection(collectionId: number) {
     return this.get(`collection/${collectionId}`);
   }

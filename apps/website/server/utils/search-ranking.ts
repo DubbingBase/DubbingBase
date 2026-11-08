@@ -15,6 +15,8 @@ export type SearchItem = {
   first_air_date?: string | null;
   first_release_date?: number | null;
   studio_names?: string[];
+  /** Provider-sourced alternate/translated titles; used for matching only and never returned. */
+  alternative_titles?: string[];
   tmdb_id?: number | null;
   profile_picture?: string | null;
   profile_path?: string | null;
@@ -39,6 +41,7 @@ function getSearchNames(item: SearchItem): string[] {
     item.voice_actor_name,
     item.original_title,
     item.original_name,
+    ...(item.alternative_titles ?? []),
     typeof item.product_line === "string" ? item.product_line : "",
     typeof item.manufacturer === "string" ? item.manufacturer : "",
     typeof item.brand === "string" ? item.brand : "",
@@ -48,7 +51,7 @@ function getSearchNames(item: SearchItem): string[] {
   ].filter((name): name is string => typeof name === "string" && name.length > 0);
 }
 
-function calculateScore(item: SearchItem, query: string, now: number): number {
+function getMatchTier(item: SearchItem, query: string): "exact" | "prefix" | "contains" | "none" {
   const queryHasPunctuation = /[^\p{L}\p{N}\s]/u.test(query);
   const normalizedQuery = foldAccents(query).toLowerCase().replace(/\s+/g, " ").trim();
   const names = getSearchNames(item).map((name) => ({
@@ -68,7 +71,40 @@ function calculateScore(item: SearchItem, query: string, now: number): number {
     isMatch(name, (value) => value.includes(queryHasPunctuation ? normalizedQuery : looseQuery)),
   );
 
-  let score = exact ? 3000 : prefix ? 2000 : contains ? 1000 : 0;
+  return exact ? "exact" : prefix ? "prefix" : contains ? "contains" : "none";
+}
+
+/** Maximum movie/TV candidates whose alternate titles are fetched per search. */
+export const ALIAS_LOOKUP_LIMIT = 5;
+
+/**
+ * Picks the few non-exact movie/TV candidates worth an alternate-title lookup:
+ * highest popularity, then vote count, then ID, so the choice is deterministic.
+ */
+export function selectAliasLookupCandidates(
+  items: SearchItem[],
+  query: string,
+  limit = ALIAS_LOOKUP_LIMIT,
+): SearchItem[] {
+  return items
+    .filter(
+      (item) =>
+        (item.media_type === "movie" || item.media_type === "tv") &&
+        typeof item.id === "number" &&
+        getMatchTier(item, query) !== "exact",
+    )
+    .sort(
+      (a, b) =>
+        (b.popularity ?? 0) - (a.popularity ?? 0) ||
+        (b.vote_count ?? 0) - (a.vote_count ?? 0) ||
+        Number(a.id) - Number(b.id),
+    )
+    .slice(0, limit);
+}
+
+function calculateScore(item: SearchItem, query: string, now: number): number {
+  const tier = getMatchTier(item, query);
+  let score = tier === "exact" ? 3000 : tier === "prefix" ? 2000 : tier === "contains" ? 1000 : 0;
   score += Math.min(Math.sqrt(item.popularity || 0) * 3, 50);
   score += Math.min((item.vote_average || 0) * 0.1, 1);
   score += Math.min(Math.log10((item.vote_count || 0) + 1) * 3, 15);
@@ -80,7 +116,10 @@ function calculateScore(item: SearchItem, query: string, now: number): number {
 
   if (releaseMs && !Number.isNaN(releaseMs)) {
     const ageYears = Math.max(0, (now - releaseMs) / (365.25 * 24 * 3600 * 1000));
-    score += Math.max(0, 15 - ageYears * 1.5);
+    // Items with no popularity or vote evidence (e.g. most books) get half the recency
+    // bonus so a fresh, unrated record does not outrank an established exact match.
+    const hasEvidence = (item.popularity ?? 0) > 0 || (item.vote_count ?? 0) > 0;
+    score += Math.max(0, 15 - ageYears * 1.5) * (hasEvidence ? 1 : 0.5);
   }
 
   return score;
@@ -93,7 +132,10 @@ export function rankSearchResults(
 ): SearchItem[] {
   return items
     .filter((item) => item != null)
-    .map((item) => ({ ...item, score: calculateScore(item, query, now) }))
+    .map(({ alternative_titles: _aliases, ...item }) => ({
+      ...item,
+      score: calculateScore({ ...item, alternative_titles: _aliases }, query, now),
+    }))
     .sort(
       (a, b) =>
         (b.score ?? 0) - (a.score ?? 0) ||

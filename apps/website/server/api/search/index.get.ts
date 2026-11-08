@@ -11,13 +11,17 @@ import { normalizeString } from "../../utils/normalize";
 import { processMedia } from "../../utils/urls/tmdb";
 import { buildSupabaseImageUrl } from "../../utils/urls/supabase";
 import { useSupabaseAdmin } from "../../utils/db/client";
+import { withTimeout } from "../../utils/with-timeout";
 import { readProperty } from "@app/shared-logic";
 import {
   getTmdbLocale,
   projectSearchResult,
   rankSearchResults,
+  selectAliasLookupCandidates,
   type SearchItem,
 } from "../../utils/search-ranking";
+
+const ALIAS_LOOKUP_TIMEOUT_MS = 1500;
 
 function isSearchItem(value: unknown): value is SearchItem {
   if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
@@ -122,6 +126,26 @@ export default defineEventHandler(async (event) => {
         successfulTracks += 1;
       } catch (e) {
         console.error("TMDB fetch error:", e);
+        return results;
+      }
+
+      // Bounded alias lookup: TMDB matches alternate titles but only returns the localized
+      // one, so fetch aliases for a few top non-exact candidates. Failures are non-fatal.
+      const lookups = await Promise.allSettled(
+        selectAliasLookupCandidates(results, providerQuery).map(async (item) => {
+          const mediaType = item.media_type === "tv" ? "tv" : "movie";
+          const aliases = await withTimeout(
+            tmdbClient.getAlternativeTitles(mediaType, Number(item.id)),
+            ALIAS_LOOKUP_TIMEOUT_MS,
+            "TMDB alternative titles",
+          );
+          return { item, aliases };
+        }),
+      );
+      for (const lookup of lookups) {
+        if (lookup.status === "fulfilled" && lookup.value.aliases.length > 0) {
+          lookup.value.item.alternative_titles = lookup.value.aliases;
+        }
       }
       return results;
     })();

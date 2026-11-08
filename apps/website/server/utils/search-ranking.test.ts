@@ -3,6 +3,7 @@ import {
   getTmdbLocale,
   projectSearchResult,
   rankSearchResults,
+  selectAliasLookupCandidates,
   type SearchItem,
 } from "./search-ranking";
 
@@ -114,5 +115,91 @@ describe("search ranking", () => {
       product_line: undefined,
       overview: undefined,
     });
+  });
+
+  // Fixtures recorded from TMDB / OpenLibrary on 2026-11-08 (movie 406994 = Better Watch Out).
+  const betterWatchOut: SearchItem = {
+    id: 406994,
+    media_type: "movie",
+    title: "Better Watch Out",
+    original_title: "Better Watch Out",
+    release_date: "2017-10-06",
+    popularity: 3.0034,
+    vote_average: 6.5,
+    vote_count: 1725,
+  };
+  const now = Date.parse("2026-11-08T00:00:00Z");
+
+  it("treats a provider alias as an exact match without displacing other exact titles", () => {
+    const results = rankSearchResults(
+      [
+        { id: 1079890, media_type: "movie", title: "Watch Out", release_date: "2023-01-01" },
+        {
+          id: 74864,
+          media_type: "movie",
+          title: "Watch Out",
+          release_date: "2008-01-01",
+          vote_count: 6,
+        },
+        { ...betterWatchOut, alternative_titles: ["Safe Neighborhood", "Watch Out"] },
+        { id: 1715068, media_type: "movie", title: "Watch Out, Kid", release_date: "2026-01-01" },
+      ],
+      "Watch Out",
+      now,
+    );
+
+    expect(results.map(({ id }) => id)).toEqual([406994, 1079890, 74864, 1715068]);
+    expect(results.slice(0, 3).every((item) => (item.score ?? 0) >= 3000)).toBe(true);
+    expect(results.every((item) => !("alternative_titles" in item))).toBe(true);
+  });
+
+  it("falls back to the title tier when alias metadata is absent or empty", () => {
+    for (const aliases of [undefined, []]) {
+      const [result] = rankSearchResults(
+        [{ ...betterWatchOut, alternative_titles: aliases }],
+        "Watch Out",
+        now,
+      );
+      expect(result?.score).toBeGreaterThan(1000);
+      expect(result?.score).toBeLessThan(2000);
+    }
+  });
+
+  it("ranks the established movie above unrated exact-title books without a media-type rule", () => {
+    const book = (id: number, year: number): SearchItem => ({
+      id,
+      media_type: "audiobook",
+      title: "Better Watch Out",
+      release_date: `${year}-01-01`,
+    });
+    const books = [book(42453480, 2024), book(36848566, 2023), book(5805908, 1997)];
+
+    const ranked = rankSearchResults([...books, betterWatchOut], "Better Watch Out", now);
+    expect(ranked[0]?.id).toBe(406994);
+    expect((ranked[0]?.score ?? 0) - (ranked[1]?.score ?? 0)).toBeGreaterThan(8);
+
+    // A book with real rating evidence is not penalised for being a book.
+    const ratedBook: SearchItem = { ...book(1, 2025), popularity: 400, vote_count: 50_000 };
+    expect(rankSearchResults([betterWatchOut, ratedBook], "Better Watch Out", now)[0]?.id).toBe(1);
+  });
+
+  it("selects a bounded, deterministic set of non-exact movie/TV alias candidates", () => {
+    const items: SearchItem[] = [
+      { id: 1, media_type: "movie", title: "Watch Out", popularity: 99 },
+      ...Array.from({ length: 8 }, (_, n) => ({
+        id: 100 + n,
+        media_type: n % 2 ? "tv" : "movie",
+        title: `Other ${n}`,
+        popularity: n,
+      })),
+      { id: 3, media_type: "person", name: "Someone", popularity: 500 },
+      { id: 4, media_type: "audiobook", title: "Book", popularity: 500 },
+    ];
+
+    const picked = selectAliasLookupCandidates(items, "Watch Out");
+    expect(picked.map(({ id }) => id)).toEqual([107, 106, 105, 104, 103]);
+    expect(
+      selectAliasLookupCandidates([...items].reverse(), "Watch Out").map(({ id }) => id),
+    ).toEqual(picked.map(({ id }) => id));
   });
 });
