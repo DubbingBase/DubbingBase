@@ -4,6 +4,7 @@
 
     <MediaDetailsLayout
       v-else-if="toy"
+      :share-dub="activeDubProject?.id"
       :title="toy.name"
       :backdrop-url="null"
       :poster-url="toy.cover_url"

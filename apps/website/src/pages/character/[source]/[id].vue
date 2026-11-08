@@ -60,6 +60,13 @@
             :href="character.externalUrl"
             label="TVDB"
           />
+          <DetailsShareButton
+            :title="character.name"
+            :keep-query="{
+              mediaType: queryText(route.query.mediaType),
+              mediaId: queryText(route.query.mediaId),
+            }"
+          />
         </template>
       </DetailsActionBar>
 
@@ -180,10 +187,14 @@ import DetailsEmptyState from "../../../components/layout/details/DetailsEmptySt
 import DetailsExternalLink from "../../../components/layout/details/DetailsExternalLink.vue";
 import DetailsMetaChip from "../../../components/layout/details/DetailsMetaChip.vue";
 import DetailsActionBar from "../../../components/layout/details/DetailsActionBar.vue";
+import DetailsShareButton from "../../../components/layout/details/DetailsShareButton.vue";
 import DetailsPage from "../../../components/layout/details/DetailsPage.vue";
 import PersonSkeleton from "../../../components/PersonSkeleton.vue";
 
 const route = useRoute();
+function queryText(value: unknown): string | undefined {
+  return typeof value === "string" ? value : undefined;
+}
 const localePath = useLocalePath();
 const source = computed(() => String(route.params.source));
 const id = computed(() => String(route.params.id));

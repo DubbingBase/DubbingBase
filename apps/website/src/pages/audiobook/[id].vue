@@ -3,6 +3,7 @@
     <MediaSkeleton v-if="pending && !audiobook" />
     <MediaDetailsLayout
       v-else-if="audiobook"
+      :share-dub="activeDubProject?.id"
       :title="audiobook.title"
       :backdrop-url="null"
       :poster-url="coverUrl"

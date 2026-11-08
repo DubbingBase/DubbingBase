@@ -3,6 +3,7 @@
     <MediaSkeleton v-if="pending && !season" />
     <MediaDetailsLayout
       v-else-if="season"
+      :share-dub="isOriginalVersion ? 'original' : activeDubId"
       :title="seasonPageTitle"
       :backdrop-url="backdropUrl"
       :poster-url="posterUrl"

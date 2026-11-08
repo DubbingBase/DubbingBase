@@ -18,6 +18,7 @@
         </template>
         <template #right>
           <slot name="actions-right"></slot>
+          <DetailsShareButton :title="title ?? ''" :dub="shareDub" />
         </template>
       </DetailsActionBar>
 
@@ -33,7 +34,11 @@
 import DetailsPage from "./details/DetailsPage.vue";
 import DetailsHero from "./details/DetailsHero.vue";
 import DetailsActionBar from "./details/DetailsActionBar.vue";
+import DetailsShareButton from "./details/DetailsShareButton.vue";
+import type { ShareDub } from "../../utils/share";
 defineProps<{
+  /** Currently selected valid dubbing project id, or "original". */
+  shareDub?: ShareDub;
   title?: string;
   backdropUrl?: string | null;
   posterUrl?: string | null;
