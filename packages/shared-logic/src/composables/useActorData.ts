@@ -36,6 +36,7 @@ export type ActorResponse = {
     deathday: string | null;
     place_of_birth: string | null;
     profile_path: string | null;
+    backdrop_path?: string | null;
     known_for_department: string;
     credits: {
       cast: Array<{

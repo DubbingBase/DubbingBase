@@ -2,7 +2,11 @@ import { useTmdbClient } from "../../utils";
 import { getActorPageWorkByActor, getWorkByActor } from "../../utils/db/queries";
 import { buildSupabaseImageUrl } from "../../utils/urls/supabase";
 import { buildTmdbImageUrl } from "../../utils/urls/tmdb";
-import { actorPageResponse, type ActorPageVoiceRole } from "../../utils/actor-page-response";
+import {
+  actorPageResponse,
+  pickTrendingBackdropPath,
+  type ActorPageVoiceRole,
+} from "../../utils/actor-page-response";
 import { withMediaServiceTimeout } from "../../utils/media-request";
 import { setPublicCacheHeaders } from "../../utils/cache/http";
 import { hasSupabaseAuthCookie } from "../../utils/auth-session";
@@ -293,6 +297,7 @@ export default defineEventHandler(async (event) => {
         actorPageCredits.credits,
         voiceRoleResult.roles,
         buildTmdbImageUrl(getStringProperty(actor, "profile_path")),
+        buildTmdbImageUrl(pickTrendingBackdropPath([actor.movie_credits, actor.tv_credits])),
         filmographyPage === undefined
           ? undefined
           : { filmographyCount: actorPageCredits.filmographyCount },
@@ -346,6 +351,9 @@ export default defineEventHandler(async (event) => {
       actor: {
         ...actor,
         profile_path: buildTmdbImageUrl(getStringProperty(actor, "profile_path")),
+        backdrop_path: buildTmdbImageUrl(
+          pickTrendingBackdropPath([actor.movie_credits, actor.tv_credits]),
+        ),
         credits: {
           cast: actorCredits,
         },
