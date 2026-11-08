@@ -73,14 +73,11 @@
           <span class="font-mono text-sm font-bold theme-text"
             >{{ currentIndex + 1 }} / {{ totalGroups }}</span
           >
-          <span
-            class="rounded-full theme-surface-muted px-2.5 py-1 text-xs font-semibold theme-text-secondary"
-            >{{
-              t("admin.duplicatesWork.recordsInGroup", {
-                count: currentGroup.works.length,
-              })
-            }}</span
-          >
+          <AppChip>{{
+            t("admin.duplicatesWork.recordsInGroup", {
+              count: currentGroup.works.length,
+            })
+          }}</AppChip>
         </div>
         <div class="flex items-center gap-2">
           <button

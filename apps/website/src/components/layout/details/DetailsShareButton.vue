@@ -1,11 +1,6 @@
 <template>
   <div class="relative">
-    <button
-      type="button"
-      class="min-h-10 px-3 rounded-lg text-sm font-medium transition-colors border theme-border-subtle theme-border theme-surface theme-text-secondary theme-hover-surface-muted flex items-center gap-1.5 focus-visible:outline-2 focus-visible:outline-offset-2"
-      :aria-label="$t('common.share')"
-      @click="onShare"
-    >
+    <DetailsActionButton :aria-label="$t('common.share')" @click="onShare">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         class="w-4 h-4"
@@ -24,7 +19,7 @@
         <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
       </svg>
       <span>{{ $t("common.share") }}</span>
-    </button>
+    </DetailsActionButton>
 
     <p v-if="feedback" role="status" class="sr-only">{{ feedback }}</p>
     <span
@@ -66,6 +61,7 @@
 </template>
 
 <script setup lang="ts">
+import DetailsActionButton from "./DetailsActionButton.vue";
 import { buildShareUrl, shareUrl, type ShareDub } from "../../../utils/share";
 
 const props = defineProps<{

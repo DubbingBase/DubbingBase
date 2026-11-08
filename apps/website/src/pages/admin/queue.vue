@@ -273,53 +273,54 @@
                 <!-- Media details column -->
                 <td class="py-4 px-6">
                   <div class="flex items-center space-x-2">
-                    <span
-                      class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase border"
-                      :class="getTypeClass(item.media_type)"
-                    >
+                    <AppChip size="xs" uppercase :tone="getTypeTone(item.media_type)">
                       {{ item.media_type }}
-                    </span>
-                    <span
+                    </AppChip>
+                    <AppChip
                       v-if="item.queue_name === 'wiki_extract'"
-                      class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase theme-status-info border"
-                      >{{ $t("admin.queue.llmReady") }}</span
+                      size="xs"
+                      uppercase
+                      tone="info"
+                      >{{ $t("admin.queue.llmReady") }}</AppChip
                     >
-                    <span
+                    <AppChip
                       v-else-if="item.queue_name === 'wiki_scan'"
-                      class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase theme-status-warning border"
-                      >{{ $t("admin.queue.wikiScan") }}</span
+                      size="xs"
+                      uppercase
+                      tone="warning"
+                      >{{ $t("admin.queue.wikiScan") }}</AppChip
                     >
-                    <span
+                    <AppChip
                       v-else-if="item.queue_name === 'wiki_check'"
-                      class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase theme-status-info border"
-                      >{{ $t("admin.queue.tocCheck") }}</span
+                      size="xs"
+                      uppercase
+                      tone="info"
+                      >{{ $t("admin.queue.tocCheck") }}</AppChip
                     >
-                    <span
+                    <AppChip
                       v-else-if="item.queue_name === 'wiki_discovery'"
-                      class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase theme-status-warning border"
-                      >{{ $t("admin.queue.discovery") }}</span
+                      size="xs"
+                      uppercase
+                      tone="warning"
+                      >{{ $t("admin.queue.discovery") }}</AppChip
                     >
-                    <span
-                      v-if="item.wikipedia_language"
-                      class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase theme-status-info border"
-                    >
+                    <AppChip v-if="item.wikipedia_language" size="xs" uppercase tone="info">
                       {{ $t("admin.wikipediaLanguage") }}:
                       {{ item.wikipedia_language }}
-                    </span>
-                    <span
-                      v-if="item.dubbing_language"
-                      class="px-2 py-0.5 rounded-full text-[10px] font-extrabold theme-status-info border"
-                    >
+                    </AppChip>
+                    <AppChip v-if="item.dubbing_language" size="xs" tone="info">
                       {{ $t("admin.regionalDubbingLanguage") }}:
                       {{ item.dubbing_language }}
-                    </span>
-                    <span
+                    </AppChip>
+                    <AppChip
                       v-if="item.is_manual"
-                      class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-rose-950/60 border border-rose-800/80 theme-status-danger-text flex items-center space-x-1"
+                      size="xs"
+                      uppercase
+                      tone="danger"
                       title="Enqueued manually (top priority)"
                     >
-                      <span>{{ $t("admin.queue.priority") }}</span>
-                    </span>
+                      {{ $t("admin.queue.priority") }}
+                    </AppChip>
                     <div class="flex items-center space-x-3">
                       <a
                         :href="`https://www.themoviedb.org/${item.media_type === 'tv' || item.media_type === 'season' || item.media_type === 'episode' ? 'tv' : 'movie'}/${item.tmdb_id}`"
@@ -428,16 +429,13 @@
                 <!-- Status column -->
                 <td class="py-4 px-6">
                   <div class="flex items-center space-x-2">
-                    <span
-                      class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase border flex items-center space-x-1.5"
-                      :class="getStatusClass(item.status)"
-                    >
+                    <AppChip size="xs" uppercase :tone="getStatusTone(item.status)">
                       <span
                         v-if="item.status === 'processing'"
                         class="h-2 w-2 rounded-full bg-blue-400 animate-pulse"
                       ></span>
                       <span>{{ item.status }}</span>
-                    </span>
+                    </AppChip>
                   </div>
                 </td>
 
@@ -629,6 +627,7 @@ import { ref, computed, watch } from "vue";
 import type { Database } from "@app/supabase";
 import type { QueueItem } from "~/utils/queue-item";
 import { isRecord } from "@app/shared-logic";
+import type { AppChipTone } from "~/components/AppChip.vue";
 import { readErrorMessage } from "~/utils/error-message";
 
 interface ListUsersResponse {
@@ -709,45 +708,45 @@ function formatArchiveMetadata(value: unknown): string {
   return typeof serialized === "string" ? serialized : "[]";
 }
 
-const getStatusClass = (status: string) => {
+const getStatusTone = (status: string): AppChipTone => {
   switch (status) {
     case "completed":
-      return "theme-status-success";
+      return "success";
     case "processing":
-      return "theme-status-info";
+      return "info";
     case "pending":
-      return "theme-status-warning";
+      return "warning";
     case "failed":
     case "error":
-      return "theme-status-danger";
+      return "danger";
     default:
-      return "theme-surface-muted theme-border theme-text-muted";
+      return "neutral";
   }
 };
 
-const getTypeClass = (type: string) => {
+const getTypeTone = (type: string): AppChipTone => {
   switch (type) {
     case "movie":
-      return "theme-status-info";
+      return "info";
     case "tv":
-      return "theme-status-info";
+      return "info";
     case "season":
-      return "theme-status-info";
+      return "info";
     case "episode":
-      return "theme-status-info";
+      return "info";
     case "video_game":
     case "game":
-      return "theme-status-info";
+      return "info";
     case "audiobook":
-      return "theme-status-info";
+      return "info";
     case "podcast":
-      return "theme-status-info";
+      return "info";
     case "advertisement":
-      return "theme-status-info";
+      return "info";
     case "toy":
-      return "theme-status-info";
+      return "info";
     default:
-      return "theme-surface-muted theme-border theme-text-muted";
+      return "neutral";
   }
 };
 

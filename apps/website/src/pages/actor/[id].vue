@@ -8,21 +8,15 @@
       :loading="loading"
     >
       <template #metadata>
-        <span
-          v-if="actor.place_of_birth"
-          class="px-3 py-1 theme-surface-raised theme-surface-muted theme-text-secondary rounded-full text-sm"
-          >{{ actor.place_of_birth }}</span
-        >
-        <span
-          v-if="actor.birthday"
-          class="theme-text font-semibold text-base md:text-lg theme-surface-overlay backdrop-blur-md px-3 py-1 rounded-lg"
-          >{{ $t("common.born", { year: actor.birthday.split("-")[0] }) }}</span
-        >
-        <span
-          v-if="actor.deathday"
-          class="theme-text font-semibold text-base md:text-lg theme-surface-overlay backdrop-blur-md px-3 py-1 rounded-lg"
-          >{{ $t("common.died", { year: actor.deathday.split("-")[0] }) }}</span
-        >
+        <DetailsMetaChip v-if="actor.place_of_birth" variant="secondary">{{
+          actor.place_of_birth
+        }}</DetailsMetaChip>
+        <DetailsMetaChip v-if="actor.birthday">{{
+          $t("common.born", { year: actor.birthday.split("-")[0] })
+        }}</DetailsMetaChip>
+        <DetailsMetaChip v-if="actor.deathday">{{
+          $t("common.died", { year: actor.deathday.split("-")[0] })
+        }}</DetailsMetaChip>
       </template>
 
       <template #biography>
@@ -405,6 +399,7 @@
 </template>
 
 <script setup lang="ts">
+import DetailsMetaChip from "../../components/layout/details/DetailsMetaChip.vue";
 import PersonDetailsLayout from "../../components/layout/PersonDetailsLayout.vue";
 import { ref, watch, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";

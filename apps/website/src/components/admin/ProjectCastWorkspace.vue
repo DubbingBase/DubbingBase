@@ -59,23 +59,16 @@
 
       <!-- Assignment filter -->
       <div class="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1" role="group">
-        <button
+        <AppFilterChip
           v-for="chip in filters"
           :key="chip.id"
-          type="button"
-          class="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-focus)]"
-          :class="
-            filter === chip.id
-              ? 'theme-status-info theme-status-info-text border-[var(--app-color-focus)]'
-              : 'theme-border theme-surface-overlay theme-text-secondary theme-hover-surface-muted'
-          "
-          :aria-pressed="filter === chip.id"
+          :selected="filter === chip.id"
           :data-testid="`cast-filter-${chip.id}`"
           @click="filter = chip.id"
         >
           {{ chip.label }}
           <span class="tabular-nums opacity-70">{{ chip.count }}</span>
-        </button>
+        </AppFilterChip>
       </div>
 
       <ul v-if="visibleRows.length > 0" class="space-y-2" data-testid="cast-list">
@@ -138,13 +131,15 @@
                   {{ row.voiceActorName }}
                 </span>
               </span>
-              <span
+              <AppChip
                 v-else
-                class="inline-flex max-w-full items-center gap-1.5 rounded-full border border-dashed border-[var(--app-color-warning-border)] px-3 py-1 text-xs font-semibold text-[var(--app-color-warning-text)]"
+                tone="warning"
+                dashed
+                class="max-w-full !bg-transparent font-semibold"
               >
                 <PlusIcon class="h-3 w-3 shrink-0" aria-hidden="true" />
                 <span class="truncate">{{ $t("projectEditor.castAssignPrompt") }}</span>
-              </span>
+              </AppChip>
             </span>
             <ChevronRightIcon class="mt-3 h-4 w-4 shrink-0 theme-text-muted" aria-hidden="true" />
           </button>

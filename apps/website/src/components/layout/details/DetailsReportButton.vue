@@ -1,10 +1,5 @@
 <template>
-  <button
-    type="button"
-    class="text-sm theme-text-muted theme-hover-danger-text transition-colors flex items-center gap-1.5"
-    :title="$t('report.title')"
-    :aria-label="$t('report.title')"
-  >
+  <DetailsActionButton hover="danger" :title="$t('report.title')" :aria-label="$t('report.title')">
     <svg
       xmlns="http://www.w3.org/2000/svg"
       class="w-4 h-4"
@@ -19,5 +14,9 @@
       <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
       <line x1="4" y1="22" x2="4" y2="15" />
     </svg>
-  </button>
+  </DetailsActionButton>
 </template>
+
+<script setup lang="ts">
+import DetailsActionButton from "./DetailsActionButton.vue";
+</script>

@@ -25,34 +25,27 @@
         class="-mx-1 flex gap-2 overflow-x-auto px-1 pb-0.5"
         :aria-label="$t('projectEditor.dubbingLanguage')"
       >
-        <NuxtLink
+        <AppFilterChip
           v-for="project in movieDubbingProjects"
           :key="project.id"
           :to="localePath(`/movie/${tmdbMovieId}/projects/${project.id}/edit`)"
-          class="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full border px-4 text-sm font-medium transition-colors"
-          :class="
-            project.id === Number(projectIdParam)
-              ? 'theme-primary-bg theme-primary-border'
-              : 'theme-surface-overlay theme-text-secondary theme-border theme-hover-surface-muted'
-          "
+          :selected="project.id === Number(projectIdParam)"
+          size="md"
         >
           {{ getDisplayLanguage(project.language) }}
           <span v-if="project.studios?.name" class="text-xs opacity-75">{{
             project.studios.name
           }}</span>
-        </NuxtLink>
-        <NuxtLink
+        </AppFilterChip>
+        <AppFilterChip
           :to="localePath(`/movie/${tmdbMovieId}/projects/new`)"
-          class="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full border border-dashed px-4 text-sm font-medium transition-colors"
-          :class="
-            projectIdParam === 'new'
-              ? 'theme-status-info theme-status-info-text'
-              : 'theme-text-muted theme-border theme-hover-surface-muted theme-hover-text'
-          "
+          :selected="projectIdParam === 'new'"
+          dashed
+          size="md"
         >
           <PlusIcon class="h-4 w-4" aria-hidden="true" />
           {{ $t("projectEditor.addLanguage") }}
-        </NuxtLink>
+        </AppFilterChip>
       </nav>
     </AdminEditorHero>
 
