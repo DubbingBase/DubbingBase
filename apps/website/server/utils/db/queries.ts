@@ -37,7 +37,7 @@ export async function getActorPageWorkByActor(actorId: number) {
     )
     .eq("actor_id", actorId);
 
-  if (error) return [];
+  if (error) throw error;
   return data || [];
 }
 

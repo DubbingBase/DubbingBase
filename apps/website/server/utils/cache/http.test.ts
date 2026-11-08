@@ -18,6 +18,8 @@ describe("HTTP cache headers", () => {
     expect(getCloudflareCacheControl("discovery")).toBe(
       "public, max-age=600, stale-while-revalidate=3600",
     );
+    expect(getPublicCacheControl("detail-json")).toBe("public, max-age=0, must-revalidate");
+    expect(getCloudflareCacheControl("detail-json")).toBe("public, max-age=300");
     expect(getPublicCacheControl("static")).toBe(
       "public, max-age=86400, stale-while-revalidate=2592000",
     );
