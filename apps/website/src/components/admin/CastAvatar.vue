@@ -41,7 +41,11 @@ const onError = () => {
 const initials = computed(() => getInitials(props.name));
 
 const SIZES = {
-  md: { classes: "h-14 w-14 rounded-xl text-base", width: 56, height: 56 },
+  md: {
+    classes: "h-14 w-14 rounded-xl text-base sm:h-20 sm:w-20 sm:text-lg",
+    width: 80,
+    height: 80,
+  },
   sm: { classes: "h-10 w-10 rounded-xl text-xs", width: 40, height: 40 },
 } as const;
 const dimensions = computed(() => SIZES[props.size ?? "sm"]);
