@@ -30,6 +30,13 @@ export function useAdminLookups() {
     studioLabels.set(id, name);
   };
 
+  // profile_picture holds a bare Storage path (e.g. "4438.jpg"); other values are already URLs.
+  const profilePictureUrl = (path: string | null | undefined): string | null => {
+    if (!path) return null;
+    if (path.startsWith("http")) return path;
+    return supabase.storage.from("voice_actor_profile_pictures").getPublicUrl(path).data.publicUrl;
+  };
+
   const rememberVoiceActor = (
     id: number | null | undefined,
     name: string | null | undefined,
@@ -37,7 +44,8 @@ export function useAdminLookups() {
   ) => {
     if (id == null || !name) return;
     voiceActorLabels.set(id, name);
-    if (image) voiceActorImages.set(id, image);
+    const url = profilePictureUrl(image);
+    if (url) voiceActorImages.set(id, url);
   };
 
   const voiceActorImage = (id: number | null | undefined): string | null =>
@@ -82,7 +90,7 @@ export function useAdminLookups() {
     const options = (data || []).map((voiceActor) => ({
       id: voiceActor.id,
       name: formatVoiceActorName(voiceActor),
-      image: voiceActor.profile_picture,
+      image: profilePictureUrl(voiceActor.profile_picture),
     }));
     options.forEach((option) => rememberVoiceActor(option.id, option.name, option.image));
     return options;

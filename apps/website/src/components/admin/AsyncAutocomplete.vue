@@ -9,10 +9,17 @@
       class="w-full relative"
     >
       <ComboboxAnchor class="relative w-full">
+        <div
+          v-if="$slots.leading"
+          class="pointer-events-none absolute left-1.5 top-1/2 -translate-y-1/2"
+        >
+          <slot name="leading" />
+        </div>
         <ComboboxInput
           v-model="searchTerm"
           :display-value="(val) => (val == null ? '' : resolveLabel(val))"
-          class="w-full pl-4 pr-16 py-2.5 theme-input border theme-border rounded-xl theme-text placeholder-[#707070] focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm disabled:opacity-50"
+          class="w-full h-11 pr-16 theme-input border theme-border rounded-xl theme-text placeholder-[#707070] focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm disabled:opacity-50"
+          :class="$slots.leading ? 'pl-12' : 'pl-4'"
           :placeholder="placeholder"
           :aria-label="ariaLabel || placeholder"
           :aria-busy="isLoading"

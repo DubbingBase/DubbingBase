@@ -4,7 +4,7 @@
     data-testid="editor-save-bar"
   >
     <div
-      class="theme-surface-overlay border theme-border rounded-2xl shadow-2xl px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between gap-2 sm:gap-3"
+      class="theme-surface border theme-border rounded-2xl shadow-2xl px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between gap-2 sm:gap-3"
     >
       <div class="min-w-0 flex-1 text-xs sm:text-sm flex items-start gap-2">
         <span
@@ -25,7 +25,7 @@
           v-else
           role="status"
           aria-live="polite"
-          class="theme-text-secondary truncate sm:whitespace-normal"
+          class="theme-text-secondary leading-tight"
           data-testid="editor-save-status"
         >
           {{ statusLabel }}

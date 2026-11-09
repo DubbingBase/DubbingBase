@@ -56,11 +56,20 @@ export default defineNuxtConfig({
     },
   },
 
+  // Nuxt DevTools injects a full-viewport always-on-top overlay (vue-tracer) and a floating pill,
+  // which get in the way of element pickers such as Paseo's design mode.
+  devtools: { enabled: false },
+
   nitro: {
     preset: process.env.NITRO_PRESET || "node-server",
     // The Playwright mock interceptor is only compiled for E2E runs so its
     // fixtures never ship in (or add a per-request check to) the production bundle.
     ignore: ["**/*.test.ts", ...(process.env.E2E_TEST ? [] : ["**/middleware/00-e2e-mock.ts"])],
+    // Dev only: the browser reaches Supabase through /supabase (see plugins/dev-supabase-proxy.client.ts),
+    // so the site works from any host. ws keeps Realtime working.
+    devProxy: supabaseUrl
+      ? { "/supabase": { target: supabaseUrl, changeOrigin: true, ws: true } }
+      : {},
     prerender: {
       routes: [...ABOUT_PRERENDER_ROUTES, "/robots.txt"],
     },
@@ -130,6 +139,8 @@ export default defineNuxtConfig({
       // Temporarily enable actor-specific previews with NUXT_PUBLIC_OG_IMAGES_ENABLED=true.
       ogImagesEnabled: false,
       supabaseUrl: supabaseUrl || "https://mock.supabase.co",
+      // True when nitro.devProxy forwards /supabase to a real Supabase (dev only).
+      devSupabaseProxy: Boolean(supabaseUrl),
       supabaseKey: supabasePublishableKey || "mock-publishable-key",
     },
   },
@@ -196,6 +207,9 @@ export default defineNuxtConfig({
 
   vite: {
     plugins: [tailwindcss()],
+    // Dev server only: accept any Host (Tailscale/MagicDNS names, LAN hostnames) so the site is
+    // reachable from every URL; no effect on production builds.
+    server: { allowedHosts: true },
     resolve: {
       dedupe: [
         "vue",
@@ -254,7 +268,14 @@ export default defineNuxtConfig({
   },
 
   image: {
-    domains: ["image.tmdb.org", "images.igdb.com"],
+    domains: [
+      "image.tmdb.org",
+      "images.igdb.com",
+      ...(supabaseUrl ? [new URL(supabaseUrl).host] : []),
+    ],
+    // Dev: server-built storage URLs are "/supabase/..." (see server/utils/urls/supabase.ts);
+    // the image optimizer fetches them from the real Supabase URL.
+    alias: supabaseUrl ? { "/supabase": supabaseUrl } : {},
     format: ["avif", "webp"],
   },
 
