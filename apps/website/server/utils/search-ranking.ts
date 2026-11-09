@@ -15,8 +15,8 @@ export type SearchItem = {
   first_air_date?: string | null;
   first_release_date?: number | null;
   studio_names?: string[];
-  /** Set on TMDB's own best movie/TV hit; TMDB already matched titles/aliases. Never returned. */
-  provider_top_match?: boolean;
+  /** 0-based position in TMDB's own relevance order (pages concatenated). Never returned. */
+  provider_rank?: number;
   tmdb_id?: number | null;
   profile_picture?: string | null;
   profile_path?: string | null;
@@ -51,9 +51,6 @@ function getSearchNames(item: SearchItem): string[] {
 }
 
 function getMatchTier(item: SearchItem, query: string): "exact" | "prefix" | "contains" | "none" {
-  // TMDB matches alternate/translated titles itself but returns only one localized title,
-  // so its top hit is trusted as an exact match instead of re-deriving it from that title.
-  if (item.provider_top_match) return "exact";
   const queryHasPunctuation = /[^\p{L}\p{N}\s]/u.test(query);
   const normalizedQuery = foldAccents(query).toLowerCase().replace(/\s+/g, " ").trim();
   const names = getSearchNames(item).map((name) => ({
@@ -76,9 +73,18 @@ function getMatchTier(item: SearchItem, query: string): "exact" | "prefix" | "co
   return exact ? "exact" : prefix ? "prefix" : contains ? "contains" : "none";
 }
 
+const PROVIDER_RANK_TOP = 3000;
+const PROVIDER_RANK_STEP = 50;
+
 function calculateScore(item: SearchItem, query: string, now: number): number {
   const tier = getMatchTier(item, query);
   let score = tier === "exact" ? 3000 : tier === "prefix" ? 2000 : tier === "contains" ? 1000 : 0;
+  // TMDB already handles typos, translations and alternate titles but returns only one
+  // localized title, so its own order is a graded relevance floor: position 0 ties an exact
+  // match and the 40th result ties a partial one. Local text matching can only raise it.
+  if (typeof item.provider_rank === "number") {
+    score = Math.max(score, PROVIDER_RANK_TOP - item.provider_rank * PROVIDER_RANK_STEP);
+  }
   score += Math.min(Math.sqrt(item.popularity || 0) * 3, 50);
   score += Math.min((item.vote_average || 0) * 0.1, 1);
   score += Math.min(Math.log10((item.vote_count || 0) + 1) * 3, 15);
@@ -106,9 +112,9 @@ export function rankSearchResults(
 ): SearchItem[] {
   return items
     .filter((item) => item != null)
-    .map(({ provider_top_match, ...item }) => ({
+    .map(({ provider_rank, ...item }) => ({
       ...item,
-      score: calculateScore({ ...item, provider_top_match }, query, now),
+      score: calculateScore({ ...item, provider_rank }, query, now),
     }))
     .sort(
       (a, b) =>

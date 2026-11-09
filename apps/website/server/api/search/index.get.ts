@@ -111,19 +111,13 @@ export default defineEventHandler(async (event) => {
           [1, 2].map((page) => tmdbClient.searchMulti(providerQuery, page, tmdbLocale)),
         );
 
-        let topMatchPending = true;
+        let rank = 0;
         for (const response of pageResponses) {
           if (response.results && Array.isArray(response.results)) {
             for (const item of response.results.filter(isSearchItem)) {
               const processed = processMedia(item);
               if (!isSearchItem(processed)) continue;
-              const isTitle = processed.media_type === "movie" || processed.media_type === "tv";
-              if (topMatchPending && isTitle) {
-                topMatchPending = false;
-                results.push({ ...processed, provider_top_match: true });
-              } else {
-                results.push(processed);
-              }
+              results.push({ ...processed, provider_rank: rank++ });
             }
           }
         }

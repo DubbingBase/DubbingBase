@@ -190,7 +190,7 @@ describe("global search response", () => {
     ],
   });
 
-  it("surfaces TMDB's top hit among exact titles without extra provider calls", async () => {
+  it("surfaces a TMDB-ranked movie among exact titles without extra provider calls", async () => {
     mocks.tmdbSearch.mockImplementation(async (_q: string, page: number) =>
       page === 1 ? tmdbWatchOut() : { results: [] },
     );
@@ -199,7 +199,7 @@ describe("global search response", () => {
     const results: Array<Record<string, unknown>> = await response.json();
 
     expect(results.slice(0, 3).map(({ id }) => id)).toEqual([406994, 1079890, 74864]);
-    expect(results.every((item) => !("provider_top_match" in item))).toBe(true);
+    expect(results.every((item) => !("provider_rank" in item))).toBe(true);
     expect(mocks.tmdbSearch).toHaveBeenCalledTimes(2);
   });
 

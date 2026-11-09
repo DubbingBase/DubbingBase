@@ -129,7 +129,7 @@ describe("search ranking", () => {
   };
   const now = Date.parse("2026-11-08T00:00:00Z");
 
-  it("trusts TMDB's top hit as exact without displacing other exact titles", () => {
+  it("uses TMDB's relevance order as a graded floor without displacing real exact titles", () => {
     const results = rankSearchResults(
       [
         { id: 1079890, media_type: "movie", title: "Watch Out", release_date: "2023-01-01" },
@@ -140,19 +140,46 @@ describe("search ranking", () => {
           release_date: "2008-01-01",
           vote_count: 6,
         },
-        { ...betterWatchOut, provider_top_match: true },
-        { id: 1715068, media_type: "movie", title: "Watch Out, Kid", release_date: "2026-01-01" },
+        { ...betterWatchOut, provider_rank: 0 },
+        {
+          id: 109693,
+          media_type: "tv",
+          name: "Watch Out Boss",
+          first_air_date: "2018-01-01",
+          provider_rank: 1,
+        },
+        {
+          id: 1715068,
+          media_type: "movie",
+          title: "Watch Out, Kid",
+          release_date: "2026-01-01",
+          provider_rank: 5,
+        },
       ],
       "Watch Out",
       now,
     );
 
-    expect(results.map(({ id }) => id)).toEqual([406994, 1079890, 74864, 1715068]);
-    expect(results.slice(0, 3).every((item) => (item.score ?? 0) >= 3000)).toBe(true);
-    expect(results.every((item) => !("provider_top_match" in item))).toBe(true);
+    expect(results.map(({ id }) => id)).toEqual([406994, 1079890, 74864, 109693, 1715068]);
+    expect(results.every((item) => !("provider_rank" in item))).toBe(true);
   });
 
-  it("keeps the title tier when TMDB did not flag a top hit", () => {
+  it("keeps typo and translated-title hits that TMDB ranked high above weak local matches", () => {
+    const results = rankSearchResults(
+      [
+        { id: 1, media_type: "movie", title: "Something Containing beter watch out inside" },
+        { ...betterWatchOut, provider_rank: 0 },
+        { id: 2, media_type: "movie", title: "Safe Neighborhood", provider_rank: 35 },
+      ],
+      "beter watch out",
+      now,
+    );
+
+    expect(results.map(({ id }) => id)).toEqual([406994, 2, 1]);
+    expect(results[0]?.score).toBeGreaterThan(2900);
+  });
+
+  it("falls back to local title tiers when no provider order is available", () => {
     const [result] = rankSearchResults([betterWatchOut], "Watch Out", now);
     expect(result?.score).toBeGreaterThan(1000);
     expect(result?.score).toBeLessThan(2000);
