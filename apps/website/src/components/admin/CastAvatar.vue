@@ -27,7 +27,7 @@ import { computed, ref, watch } from "vue";
 import { getInitials } from "~/utils/cast-workspace";
 
 /**
- * `portrait` is a character (tall, rounded rectangle); `md` and the default are
+ * `portrait` is a character (tall, rounded rectangle); `md` and the default `sm` are
  * people (round), so the identity type is readable without a label.
  */
 const props = defineProps<{ name: string; src: string | null; size?: "sm" | "md" | "portrait" }>();

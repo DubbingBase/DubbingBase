@@ -72,11 +72,11 @@
           v-for="(row, index) in visibleRows"
           :id="rowDomId(row.key)"
           :key="row.key"
-          class="scroll-mt-36 scroll-mb-32 overflow-hidden rounded-2xl border transition-colors"
+          class="scroll-mt-36 scroll-mb-32 overflow-hidden rounded-2xl border transition-colors theme-surface-overlay"
           :class="
             row.key === selectedKey
-              ? 'border-[var(--app-color-focus)] theme-surface-overlay'
-              : 'theme-border theme-surface-overlay'
+              ? 'border-[var(--app-color-focus)]'
+              : 'theme-border [content-visibility:auto] [contain-intrinsic-size:auto_9rem]'
           "
         >
           <!-- Collapsed summary: all three identities stay visible, labelled, in every state. -->
@@ -85,13 +85,7 @@
             type="button"
             class="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 p-3 text-left transition-colors theme-hover-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-color-focus)] sm:gap-4 sm:p-4"
             :aria-expanded="row.key === selectedKey"
-            :aria-controls="`${rowDomId(row.key)}-panel`"
-            :aria-label="
-              $t('projectEditor.castSelectRow', {
-                index: index + 1,
-                label: row.characterName || $t('projectEditor.castUnknownCharacter'),
-              })
-            "
+            :aria-controls="row.key === selectedKey ? `${rowDomId(row.key)}-panel` : undefined"
             data-testid="cast-row"
             @click="toggleRow(row.key)"
           >
@@ -196,7 +190,10 @@
                 class="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-[var(--app-color-danger-text)] hover:bg-[var(--app-color-danger-bg)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-focus)]"
                 :aria-label="removeLabel"
                 data-testid="remove-cast-row"
-                @click="emit('remove', row.key)"
+                @click="
+                  focusNeighbour(row.key);
+                  emit('remove', row.key);
+                "
               >
                 <Trash2Icon class="h-4 w-4" aria-hidden="true" />
                 {{ $t("projectEditor.castRemoveRole") }}
@@ -288,10 +285,17 @@ watch(
     if (key === null) return;
     await nextTick();
     const element = document.getElementById(rowDomId(key));
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    element?.scrollIntoView({ block: "nearest", behavior: reduceMotion ? "auto" : "smooth" });
+    element?.scrollIntoView({ block: "nearest", behavior: "auto" });
   },
 );
+
+// Removing the open row destroys the focused button; hand focus to a neighbouring row header.
+const focusNeighbour = async (key: string) => {
+  const index = visibleRows.value.findIndex((row) => row.key === key);
+  const neighbour = visibleRows.value[index + 1] ?? visibleRows.value[index - 1];
+  await nextTick();
+  if (neighbour) document.getElementById(`${rowDomId(neighbour.key)}-header`)?.focus();
+};
 
 const removeLabel = computed(() => {
   const index = props.rows.findIndex((row) => row.key === props.selectedKey);

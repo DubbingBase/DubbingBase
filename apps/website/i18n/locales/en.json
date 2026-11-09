@@ -1291,7 +1291,6 @@
     "castCharacter": "Character",
     "castUnknownCharacter": "Unnamed character",
     "castOriginalActor": "Original actor",
-    "castSelectRow": "Edit cast row {index}: {label}",
     "studioName": "Studio name",
     "firstName": "First name",
     "lastName": "Last name",

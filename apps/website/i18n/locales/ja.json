@@ -1291,7 +1291,6 @@
     "castCharacter": "キャラクター",
     "castUnknownCharacter": "名前のないキャラクター",
     "castOriginalActor": "オリジナルの俳優",
-    "castSelectRow": "{index} 行目を編集: {label}",
     "studioName": "スタジオ名",
     "firstName": "名",
     "lastName": "姓",
