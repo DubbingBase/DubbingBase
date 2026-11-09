@@ -1,6 +1,8 @@
 # Components
 
 - **app** [client] — `apps/website/src/app.vue`
+- **AppChip** [client] — props: tone, size, dashed, uppercase — `apps/website/src/components/AppChip.vue`
+- **AppFilterChip** [client] — props: selected, to, dashed, size — `apps/website/src/components/AppFilterChip.vue`
 - **CharacterPhoto** [client] — props: image — `apps/website/src/components/CharacterPhoto.vue`
 - **Footer** [client] — `apps/website/src/components/Footer.vue`
 - **ForceEnqueueButton** [client] — props: mediaType, mediaId, seasonNumber, episodeNumber, wikipediaLanguage — `apps/website/src/components/ForceEnqueueButton.vue`
@@ -45,6 +47,7 @@
 - **MediaDetailsLayout** [client] — props: shareDub, title, backdropUrl, posterUrl, loading — `apps/website/src/components/layout/MediaDetailsLayout.vue`
 - **PersonDetailsLayout** [client] — props: name, profileUrl, backdropUrl, loading — `apps/website/src/components/layout/PersonDetailsLayout.vue`
 - **DetailsActionBar** [client] — `apps/website/src/components/layout/details/DetailsActionBar.vue`
+- **DetailsActionButton** [client] — props: to, hover, tone — `apps/website/src/components/layout/details/DetailsActionButton.vue`
 - **DetailsBackLink** [client] — props: to — `apps/website/src/components/layout/details/DetailsBackLink.vue`
 - **DetailsCastHeader** [client] — props: title, subtitle, searchable, placeholder — `apps/website/src/components/layout/details/DetailsCastHeader.vue`
 - **DetailsCrewCard** [client] — props: title, crew — `apps/website/src/components/layout/details/DetailsCrewCard.vue`
@@ -53,7 +56,7 @@
 - **DetailsEmptyState** [client] — `apps/website/src/components/layout/details/DetailsEmptyState.vue`
 - **DetailsExternalLink** [client] — props: href — `apps/website/src/components/layout/details/DetailsExternalLink.vue`
 - **DetailsHero** [client] — props: title, backdropUrl, blurBackdrop, imageUrl, imageAspectRatio — `apps/website/src/components/layout/details/DetailsHero.vue`
-- **DetailsMetaChip** [client] — props: variant, label — `apps/website/src/components/layout/details/DetailsMetaChip.vue`
+- **DetailsMetaChip** [client] — props: variant, label, href — `apps/website/src/components/layout/details/DetailsMetaChip.vue`
 - **DetailsPage** [client] — `apps/website/src/components/layout/details/DetailsPage.vue`
 - **DetailsReportButton** [client] — `apps/website/src/components/layout/details/DetailsReportButton.vue`
 - **DetailsShareButton** [client] — props: title, dub, keepQuery — `apps/website/src/components/layout/details/DetailsShareButton.vue`

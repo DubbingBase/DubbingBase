@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 93 routes | 28 models | 135 components | 126 lib files | 64 env vars | 15 middleware | 52% test coverage
-> **Token savings:** this file is ~18,500 tokens. Without it, AI exploration would cost ~157,200 tokens. **Saves ~138,800 tokens per conversation.**
-> **Last scanned:** 2026-11-08 18:26 — re-run after significant changes
+> 93 routes | 28 models | 138 components | 126 lib files | 64 env vars | 15 middleware | 52% test coverage
+> **Token savings:** this file is ~18,600 tokens. Without it, AI exploration would cost ~158,200 tokens. **Saves ~139,700 tokens per conversation.**
+> **Last scanned:** 2026-11-09 08:44 — re-run after significant changes
 
 ---
 
@@ -314,6 +314,8 @@
 # Components
 
 - **app** [client] — `apps/website/src/app.vue`
+- **AppChip** [client] — props: tone, size, dashed, uppercase — `apps/website/src/components/AppChip.vue`
+- **AppFilterChip** [client] — props: selected, to, dashed, size — `apps/website/src/components/AppFilterChip.vue`
 - **CharacterPhoto** [client] — props: image — `apps/website/src/components/CharacterPhoto.vue`
 - **Footer** [client] — `apps/website/src/components/Footer.vue`
 - **ForceEnqueueButton** [client] — props: mediaType, mediaId, seasonNumber, episodeNumber, wikipediaLanguage — `apps/website/src/components/ForceEnqueueButton.vue`
@@ -358,6 +360,7 @@
 - **MediaDetailsLayout** [client] — props: shareDub, title, backdropUrl, posterUrl, loading — `apps/website/src/components/layout/MediaDetailsLayout.vue`
 - **PersonDetailsLayout** [client] — props: name, profileUrl, backdropUrl, loading — `apps/website/src/components/layout/PersonDetailsLayout.vue`
 - **DetailsActionBar** [client] — `apps/website/src/components/layout/details/DetailsActionBar.vue`
+- **DetailsActionButton** [client] — props: to, hover, tone — `apps/website/src/components/layout/details/DetailsActionButton.vue`
 - **DetailsBackLink** [client] — props: to — `apps/website/src/components/layout/details/DetailsBackLink.vue`
 - **DetailsCastHeader** [client] — props: title, subtitle, searchable, placeholder — `apps/website/src/components/layout/details/DetailsCastHeader.vue`
 - **DetailsCrewCard** [client] — props: title, crew — `apps/website/src/components/layout/details/DetailsCrewCard.vue`
@@ -366,7 +369,7 @@
 - **DetailsEmptyState** [client] — `apps/website/src/components/layout/details/DetailsEmptyState.vue`
 - **DetailsExternalLink** [client] — props: href — `apps/website/src/components/layout/details/DetailsExternalLink.vue`
 - **DetailsHero** [client] — props: title, backdropUrl, blurBackdrop, imageUrl, imageAspectRatio — `apps/website/src/components/layout/details/DetailsHero.vue`
-- **DetailsMetaChip** [client] — props: variant, label — `apps/website/src/components/layout/details/DetailsMetaChip.vue`
+- **DetailsMetaChip** [client] — props: variant, label, href — `apps/website/src/components/layout/details/DetailsMetaChip.vue`
 - **DetailsPage** [client] — `apps/website/src/components/layout/details/DetailsPage.vue`
 - **DetailsReportButton** [client] — `apps/website/src/components/layout/details/DetailsReportButton.vue`
 - **DetailsShareButton** [client] — props: title, dub, keepQuery — `apps/website/src/components/layout/details/DetailsShareButton.vue`
