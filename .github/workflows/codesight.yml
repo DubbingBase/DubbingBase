@@ -11,6 +11,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: codesight-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   update:
     if: github.ref == 'refs/heads/main'
@@ -20,7 +24,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm install -g codesight && codesight --wiki
+      - name: Refresh Codesight context
+        run: |
+          cp AGENTS.md "$RUNNER_TEMP/root-agents.md"
+          restore_root_agents() {
+            cp "$RUNNER_TEMP/root-agents.md" AGENTS.md
+          }
+          trap restore_root_agents EXIT
+
+          npx --yes codesight@1.19.0 --wiki --profile agents
+          cp AGENTS.md .codesight/AGENTS.md
+          restore_root_agents
+          trap - EXIT
       - name: Commit updated Codesight context
         run: |
           git config user.name "github-actions[bot]"
