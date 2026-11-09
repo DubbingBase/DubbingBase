@@ -27,7 +27,7 @@ import { computed, ref, watch } from "vue";
 import { getInitials } from "~/utils/cast-workspace";
 
 /** Rounded squares; `md` is the size shared by the character, actor and voice-actor portraits. */
-const props = defineProps<{ name: string; src: string | null; size?: "sm" | "md" }>();
+const props = defineProps<{ name: string; src: string | null; size?: "xs" | "sm" | "md" }>();
 const emit = defineEmits<{ error: [] }>();
 const failed = ref(false);
 watch(
@@ -47,6 +47,7 @@ const SIZES = {
     height: 80,
   },
   sm: { classes: "h-10 w-10 rounded-xl text-xs", width: 40, height: 40 },
+  xs: { classes: "h-8 w-8 rounded-lg text-[10px]", width: 32, height: 32 },
 } as const;
 const dimensions = computed(() => SIZES[props.size ?? "sm"]);
 const sizeClass = computed(() => dimensions.value.classes);

@@ -115,7 +115,7 @@
                       >
                         <template #leading>
                           <AdminCastAvatar
-                            size="sm"
+                            size="xs"
                             :name="castViewFor(selectedRow.key)?.originalActorName ?? ''"
                             :src="castViewFor(selectedRow.key)?.originalActorImage ?? null"
                           />
@@ -136,9 +136,9 @@
                       for-id="cast-detail-character"
                     >
                       <div class="relative">
-                        <div class="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2">
+                        <div class="pointer-events-none absolute left-1.5 top-1/2 -translate-y-1/2">
                           <AdminCastAvatar
-                            size="sm"
+                            size="xs"
                             :name="characterNameFor(selectedRow)"
                             :src="castViewFor(selectedRow.key)?.characterImage ?? null"
                           />
@@ -148,7 +148,7 @@
                           v-model="selectedRow.character_name"
                           type="text"
                           :placeholder="characterNameFor(selectedRow)"
-                          class="h-11 w-full rounded-xl border theme-border theme-input pl-14 pr-4 text-base sm:text-sm theme-text focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)]"
+                          class="h-11 w-full rounded-xl border theme-border theme-input pl-12 pr-4 text-base sm:text-sm theme-text focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)]"
                         />
                       </div>
                     </AdminFormField>
@@ -179,7 +179,7 @@
                       >
                         <template #leading>
                           <AdminCastAvatar
-                            size="sm"
+                            size="xs"
                             :name="castViewFor(selectedRow.key)?.voiceActorName ?? ''"
                             :src="castViewFor(selectedRow.key)?.voiceActorImage ?? null"
                           />
