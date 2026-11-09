@@ -1,6 +1,6 @@
 <template>
   <div
-    class="admin-project-editor mx-auto max-w-6xl space-y-4 px-4 py-4 sm:space-y-6 sm:px-6 sm:py-8"
+    class="admin-project-editor mx-auto max-w-7xl space-y-4 px-4 py-4 sm:space-y-6 sm:px-6 sm:py-8"
     :inert="isSaving"
     :aria-busy="isSaving"
   >
@@ -86,81 +86,90 @@
             :rows="castView"
             @add="addCastRow"
             @remove="removeCastRow"
+            @character-image-error="reportCharacterImageError"
           >
             <template #detail>
-              <div v-if="selectedRow" :key="selectedRow.key" class="space-y-5">
-                <AdminFormField :label="$t('projectEditor.voiceActor')">
-                  <AdminAsyncAutocomplete
-                    v-model="selectedRow.voice_actor_id"
-                    :options="initialVoiceActorOptions"
-                    :search-fn="lookups.searchVoiceActors"
-                    placeholder="Search Voice Actor..."
-                    :allow-create="true"
-                    :display-fn="lookups.voiceActorLabel"
-                    @create="
-                      (q: string) =>
-                        openCreateVaDialog(q, (id: number) => (selectedRow!.voice_actor_id = id))
-                    "
-                  >
-                    <template #option="{ option }"
-                      ><span class="flex items-center gap-2"
-                        ><AdminCastAvatar :name="option.name" :src="option.image ?? null" />{{
-                          option.name
-                        }}</span
-                      ></template
-                    >
-                  </AdminAsyncAutocomplete>
-                </AdminFormField>
-
-                <fieldset class="space-y-1.5">
-                  <legend class="text-xs font-semibold theme-text-secondary">
-                    {{ $t("projectEditor.performanceType") }}
-                  </legend>
-                  <div class="-mx-1 flex flex-wrap gap-2 px-1" role="radiogroup">
-                    <button
-                      v-for="option in performanceOptions"
-                      :key="option.value"
-                      type="button"
-                      role="radio"
-                      :aria-checked="selectedRow.performance === option.value"
-                      class="min-h-10 rounded-full border px-4 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-focus)]"
-                      :class="
-                        selectedRow.performance === option.value
-                          ? 'theme-status-info theme-status-info-text border-[var(--app-color-focus)]'
-                          : 'theme-border theme-surface-overlay theme-text-secondary theme-hover-surface-muted'
+              <div
+                v-if="selectedRow"
+                :key="selectedRow.key"
+                class="grid gap-x-8 gap-y-5 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]"
+              >
+                <div class="min-w-0 space-y-5">
+                  <AdminFormField :label="$t('projectEditor.voiceActor')">
+                    <AdminAsyncAutocomplete
+                      v-model="selectedRow.voice_actor_id"
+                      :options="initialVoiceActorOptions"
+                      :search-fn="lookups.searchVoiceActors"
+                      placeholder="Search Voice Actor..."
+                      :allow-create="true"
+                      :display-fn="lookups.voiceActorLabel"
+                      @create="
+                        (q: string) =>
+                          openCreateVaDialog(q, (id: number) => (selectedRow!.voice_actor_id = id))
                       "
-                      @click="selectedRow.performance = option.value"
                     >
-                      {{ option.label }}
-                    </button>
-                  </div>
-                </fieldset>
+                      <template #option="{ option }"
+                        ><span class="flex items-center gap-2"
+                          ><AdminCastAvatar :name="option.name" :src="option.image ?? null" />{{
+                            option.name
+                          }}</span
+                        ></template
+                      >
+                    </AdminAsyncAutocomplete>
+                  </AdminFormField>
 
-                <AdminFormField :label="$t('projectEditor.castNote')" for-id="cast-detail-note">
-                  <input
-                    id="cast-detail-note"
-                    v-model="selectedRow.note"
-                    type="text"
-                    enterkeyhint="done"
-                    class="h-11 w-full rounded-xl border theme-border theme-input px-4 text-base sm:text-sm theme-text focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)]"
-                  />
-                </AdminFormField>
+                  <fieldset class="space-y-1.5">
+                    <legend class="text-xs font-semibold theme-text-secondary">
+                      {{ $t("projectEditor.performanceType") }}
+                    </legend>
+                    <div class="-mx-1 flex flex-wrap gap-2 px-1" role="radiogroup">
+                      <button
+                        v-for="option in performanceOptions"
+                        :key="option.value"
+                        type="button"
+                        role="radio"
+                        :aria-checked="selectedRow.performance === option.value"
+                        class="min-h-10 rounded-full border px-4 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-focus)]"
+                        :class="
+                          selectedRow.performance === option.value
+                            ? 'theme-status-info theme-status-info-text border-[var(--app-color-focus)]'
+                            : 'theme-border theme-surface-overlay theme-text-secondary theme-hover-surface-muted'
+                        "
+                        @click="selectedRow.performance = option.value"
+                      >
+                        {{ option.label }}
+                      </button>
+                    </div>
+                  </fieldset>
+                </div>
 
-                <label
-                  class="flex min-h-12 cursor-pointer items-center justify-between gap-3 rounded-xl border theme-border theme-surface-overlay px-4 text-sm theme-text-secondary"
-                >
-                  <span class="flex items-center gap-2">
-                    <StarIcon class="h-4 w-4 text-[var(--app-color-rating)]" aria-hidden="true" />
-                    {{ $t("projectEditor.highlightCharacter") }}
-                  </span>
-                  <input
-                    v-model="selectedRow.highlight"
-                    type="checkbox"
-                    class="h-5 w-5 rounded accent-[var(--app-color-primary)]"
-                  />
-                </label>
+                <div class="min-w-0 space-y-5">
+                  <AdminFormField :label="$t('projectEditor.castNote')" for-id="cast-detail-note">
+                    <input
+                      id="cast-detail-note"
+                      v-model="selectedRow.note"
+                      type="text"
+                      enterkeyhint="done"
+                      class="h-11 w-full rounded-xl border theme-border theme-input px-4 text-base sm:text-sm theme-text focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)]"
+                    />
+                  </AdminFormField>
 
-                <details class="group rounded-xl border theme-border">
+                  <label
+                    class="flex min-h-12 cursor-pointer items-center justify-between gap-3 rounded-xl border theme-border theme-surface-overlay px-4 text-sm theme-text-secondary"
+                  >
+                    <span class="flex items-center gap-2">
+                      <StarIcon class="h-4 w-4 text-[var(--app-color-rating)]" aria-hidden="true" />
+                      {{ $t("projectEditor.highlightCharacter") }}
+                    </span>
+                    <input
+                      v-model="selectedRow.highlight"
+                      type="checkbox"
+                      class="h-5 w-5 rounded accent-[var(--app-color-primary)]"
+                    />
+                  </label>
+                </div>
+
+                <details class="group rounded-xl border theme-border lg:col-span-2">
                   <summary
                     class="flex min-h-12 cursor-pointer list-none items-center justify-between gap-2 px-4 text-sm font-semibold theme-text-secondary [&::-webkit-details-marker]:hidden"
                   >
@@ -170,7 +179,7 @@
                       aria-hidden="true"
                     />
                   </summary>
-                  <div class="space-y-5 border-t theme-border p-4">
+                  <div class="grid gap-5 border-t theme-border p-4 md:grid-cols-2">
                     <AdminFormField
                       :label="$t('projectEditor.castCharacterName')"
                       for-id="cast-detail-character"
@@ -639,7 +648,12 @@ const characterRequestFor = (characterName: string) => ({
 const characterRequests = computed(() =>
   castRows.value.slice(0, 48).map((row) => characterRequestFor(characterNameFor(row))),
 );
-const { imageFor: characterImageFor } = useCharacterImages(characterRequests);
+const { imageFor: characterImageFor, reportImageError } = useCharacterImages(characterRequests);
+// A character image that fails in the browser is re-requested from the next source (PR #389).
+const reportCharacterImageError = (key: string) => {
+  const row = castRows.value.find((item) => item.key === key);
+  if (row) reportImageError(characterRequestFor(characterNameFor(row)));
+};
 const tmdbProfileUrl = (path: string | null | undefined): string | null =>
   path ? (path.startsWith("/") ? `${TMDB_PROFILE_BASE}${path}` : path) : null;
 const initialTmdbCastOptions = computed(() => tmdbCast.value.slice(0, 50));
