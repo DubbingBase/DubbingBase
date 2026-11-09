@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 93 routes | 28 models | 137 components | 126 lib files | 65 env vars | 15 middleware | 52% test coverage
-> **Token savings:** this file is ~18,600 tokens. Without it, AI exploration would cost ~158,000 tokens. **Saves ~139,400 tokens per conversation.**
-> **Last scanned:** 2026-11-09 17:37 — re-run after significant changes
+> 93 routes | 28 models | 147 components | 132 lib files | 65 env vars | 15 middleware | 52% test coverage
+> **Token savings:** this file is ~19,200 tokens. Without it, AI exploration would cost ~162,800 tokens. **Saves ~143,600 tokens per conversation.**
+> **Last scanned:** 2026-11-09 19:45 — re-run after significant changes
 
 ---
 
@@ -336,15 +336,24 @@
 - **UnderConstruction** [client] — `apps/website/src/components/UnderConstruction.vue`
 - **AsyncAutocomplete** [client] — props: modelValue, options, loading, placeholder, ariaLabel, disabled, allowCreate, displayFn, searchFn — `apps/website/src/components/admin/AsyncAutocomplete.vue`
 - **CastAvatar** [client] — props: name — `apps/website/src/components/admin/CastAvatar.vue`
+- **CastNoteHighlight** [client] — `apps/website/src/components/admin/CastNoteHighlight.vue`
+- **CastPerformanceField** [client] — `apps/website/src/components/admin/CastPerformanceField.vue`
+- **CastVoiceActorField** [client] — props: options — `apps/website/src/components/admin/CastVoiceActorField.vue`
 - **CreateStudioDialog** [client] — props: open, initialName, create — `apps/website/src/components/admin/CreateStudioDialog.vue`
 - **CreateVoiceActorDialog** [client] — props: open, initialQuery, status — `apps/website/src/components/admin/CreateVoiceActorDialog.vue`
 - **EditorHero** [client] — props: title, eyebrow, backTo, backLabel, posterUrl, chips — `apps/website/src/components/admin/EditorHero.vue`
 - **EditorSaveBar** [client] — props: status, isDirty, errorMessage, saveLabel, formId, disabled — `apps/website/src/components/admin/EditorSaveBar.vue`
 - **EditorTabs** [client] — props: items — `apps/website/src/components/admin/EditorTabs.vue`
+- **EditorToast** [client] — props: toast — `apps/website/src/components/admin/EditorToast.vue`
 - **FormCard** [client] — props: title — `apps/website/src/components/admin/FormCard.vue`
 - **FormField** [client] — props: label — `apps/website/src/components/admin/FormField.vue`
 - **LanguageSelect** [client] — props: id — `apps/website/src/components/admin/LanguageSelect.vue`
-- **ProjectCastWorkspace** [client] — props: rows, selectedKey — `apps/website/src/components/admin/ProjectCastWorkspace.vue`
+- **ProjectCastWorkspace** [client] — props: rows, selectedKey, showOriginalActor — `apps/website/src/components/admin/ProjectCastWorkspace.vue`
+- **ProjectCrewCard** [client] — props: title, description, studioLabel, fields, crew, studioOptions, voiceActorOptions, lookups — `apps/website/src/components/admin/ProjectCrewCard.vue`
+- **ProjectEditorLayout** [client] — props: title, eyebrow, backTo, backLabel, posterUrl, chips, projectsBasePath, projects, projectIdParam, languageLabel — `apps/website/src/components/admin/ProjectEditorLayout.vue`
+- **ProjectSettingsCard** [client] — props: idPrefix — `apps/website/src/components/admin/ProjectSettingsCard.vue`
+- **SimpleCastRoleDetail** [client] — props: voiceActorOptions, lookups, roleLabel — `apps/website/src/components/admin/SimpleCastRoleDetail.vue`
+- **TextField** [client] — props: label, id, type, placeholder, hint, maxlength, min, max, rows, multiline — `apps/website/src/components/admin/TextField.vue`
 - **UnsavedChangesDialog** [client] — props: open — `apps/website/src/components/admin/UnsavedChangesDialog.vue`
 - **BarChart** [client] — `apps/website/src/components/admin/charts/BarChart.vue`
 - **LineChart** [client] — `apps/website/src/components/admin/charts/LineChart.vue`
@@ -355,6 +364,7 @@
 - **MovieProjectEditor** [client] — `apps/website/src/components/admin/editors/MovieProjectEditor.vue`
 - **PodcastProjectEditor** [client] — `apps/website/src/components/admin/editors/PodcastProjectEditor.vue`
 - **ShowProjectEditor** [client] — `apps/website/src/components/admin/editors/ShowProjectEditor.vue`
+- **TmdbProjectEditor** [client] — props: kind — `apps/website/src/components/admin/editors/TmdbProjectEditor.vue`
 - **ToyProjectEditor** [client] — `apps/website/src/components/admin/editors/ToyProjectEditor.vue`
 - **MediaDetailsLayout** [client] — props: shareDub, title, backdropUrl, posterUrl, loading — `apps/website/src/components/layout/MediaDetailsLayout.vue`
 - **PersonDetailsLayout** [client] — props: name, profileUrl, backdropUrl, loading — `apps/website/src/components/layout/PersonDetailsLayout.vue`
@@ -723,6 +733,8 @@
   - type ContributionCategory
   - type ClaimedCategory
   - type ContributionClaim
+- `apps/website/src/composables/useCrewRefs.ts` — function useCrewRefs
+- `apps/website/src/composables/useDisplayLanguage.ts` — function useDisplayLanguage
 - `apps/website/src/composables/useDragScroll.ts` — function useDragScroll: (scrollRef) => void
 - `apps/website/src/composables/useDubbingLanguageLabel.ts` — function useDubbingLanguageLabel: () => void
 - `apps/website/src/composables/useEditorFormState.ts`
@@ -733,6 +745,15 @@
   - interface EditorFormStateOptions
   - interface EditorFormState
   - _...2 more_
+- `apps/website/src/composables/useEditorToast.ts`
+  - function useEditorToast
+  - interface EditorToastState
+  - type EditorToastKind
+- `apps/website/src/composables/useFullCrewState.ts`
+  - function useFullCrewState
+  - type FullCrewKey
+  - type FullCrewSnapshot
+  - const FULL_CREW_JOBS
 - `apps/website/src/composables/useKeyboardInset.ts` — function computeKeyboardInset, function useKeyboardInset
 - `apps/website/src/composables/useLocalePathPrefix.ts` — function useLocalePathPrefix: () => (path: string) => string
 - `apps/website/src/composables/useLocalePreference.ts` — function useLocalePreference: () => void
@@ -742,6 +763,7 @@
   - type VoiceActorCreationPayload
 - `apps/website/src/composables/useReports.ts` — function useReports
 - `apps/website/src/composables/useShowPageData.ts` — function useShowPageData: (showId, locale) => void
+- `apps/website/src/composables/useSimpleCastWorkspace.ts` — function useSimpleCastWorkspace
 - `apps/website/src/composables/useTheme.ts` — function useTheme: () => void
 - `apps/website/src/composables/useUrlPagination.ts` — function readUrlPage: (value) => number, function useUrlPagination: (queryKey) => void
 - `apps/website/src/composables/useVoiceActorPageData.ts` — function fetchVoiceActorPageData: (id, lang?) => Promise<VoiceActorPageDataPayload | null>
@@ -801,6 +823,14 @@
   - function shareUrl: (title, url, {...}, writeText }) => Promise<ShareOutcome>
   - type ShareDub
   - type ShareOutcome
+- `apps/website/src/utils/tmdb-project-editor.ts`
+  - function tmdbEditorApiPath
+  - function extractCastRoles
+  - function parseTmdbMovie
+  - function parseTmdbShow
+  - function fetchTmdbMediaSummary
+  - interface TmdbMediaSummary
+  - _...2 more_
 - `apps/website/src/utils/voice-actor-og-image.ts`
   - function isVoiceActorOgImagesEnabled: (value) => boolean
   - function getVoiceActorOgImageMetadata: (enabled, voiceActorId, siteUrl) => VoiceActorOgImageMetadata
@@ -1046,7 +1076,7 @@
 # Test Coverage
 
 > **52%** of routes and models are covered by tests
-> 162 test files found
+> 163 test files found
 
 ## Covered Routes
 

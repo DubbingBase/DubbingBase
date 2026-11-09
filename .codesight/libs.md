@@ -268,6 +268,8 @@
   - type ContributionCategory
   - type ClaimedCategory
   - type ContributionClaim
+- `apps/website/src/composables/useCrewRefs.ts` — function useCrewRefs
+- `apps/website/src/composables/useDisplayLanguage.ts` — function useDisplayLanguage
 - `apps/website/src/composables/useDragScroll.ts` — function useDragScroll: (scrollRef) => void
 - `apps/website/src/composables/useDubbingLanguageLabel.ts` — function useDubbingLanguageLabel: () => void
 - `apps/website/src/composables/useEditorFormState.ts`
@@ -278,6 +280,15 @@
   - interface EditorFormStateOptions
   - interface EditorFormState
   - _...2 more_
+- `apps/website/src/composables/useEditorToast.ts`
+  - function useEditorToast
+  - interface EditorToastState
+  - type EditorToastKind
+- `apps/website/src/composables/useFullCrewState.ts`
+  - function useFullCrewState
+  - type FullCrewKey
+  - type FullCrewSnapshot
+  - const FULL_CREW_JOBS
 - `apps/website/src/composables/useKeyboardInset.ts` — function computeKeyboardInset, function useKeyboardInset
 - `apps/website/src/composables/useLocalePathPrefix.ts` — function useLocalePathPrefix: () => (path: string) => string
 - `apps/website/src/composables/useLocalePreference.ts` — function useLocalePreference: () => void
@@ -287,6 +298,7 @@
   - type VoiceActorCreationPayload
 - `apps/website/src/composables/useReports.ts` — function useReports
 - `apps/website/src/composables/useShowPageData.ts` — function useShowPageData: (showId, locale) => void
+- `apps/website/src/composables/useSimpleCastWorkspace.ts` — function useSimpleCastWorkspace
 - `apps/website/src/composables/useTheme.ts` — function useTheme: () => void
 - `apps/website/src/composables/useUrlPagination.ts` — function readUrlPage: (value) => number, function useUrlPagination: (queryKey) => void
 - `apps/website/src/composables/useVoiceActorPageData.ts` — function fetchVoiceActorPageData: (id, lang?) => Promise<VoiceActorPageDataPayload | null>
@@ -346,6 +358,14 @@
   - function shareUrl: (title, url, {...}, writeText }) => Promise<ShareOutcome>
   - type ShareDub
   - type ShareOutcome
+- `apps/website/src/utils/tmdb-project-editor.ts`
+  - function tmdbEditorApiPath
+  - function extractCastRoles
+  - function parseTmdbMovie
+  - function parseTmdbShow
+  - function fetchTmdbMediaSummary
+  - interface TmdbMediaSummary
+  - _...2 more_
 - `apps/website/src/utils/voice-actor-og-image.ts`
   - function isVoiceActorOgImagesEnabled: (value) => boolean
   - function getVoiceActorOgImageMetadata: (enabled, voiceActorId, siteUrl) => VoiceActorOgImageMetadata

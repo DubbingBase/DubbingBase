@@ -2,9 +2,9 @@
 
 > **Navigation aid.** Library inventory extracted via AST. Read the source files listed here before modifying exported functions.
 
-**126 library files** across 4 modules
+**132 library files** across 4 modules
 
-## Website (102 files)
+## Website (108 files)
 
 - `apps/website/server/utils/db/queries.ts` — getVoiceActorWithWork, getWorkByActor, getActorPageWorkByActor, getDubbingProjects, getDubbingProjectsForMediaEndpoint, getAdvertisementPageDubbingProjects, …
 - `apps/website/src/utils/dubbing-project-save.ts` — getEditableDubbingProjectStatus, serializeGameProjectCastRows, createStableRequestIdFactory, createDubbingProjectSaveClient, isDubbingProjectSaveConflict, getDubbingProjectSaveErrorMessage, …
@@ -19,6 +19,7 @@
 - `apps/website/server/utils/cache/index.ts` — createCacheNamespace, CacheNamespace, SimpleCache, CacheKv, CachePolicy, CacheTTLPreset, …
 - `apps/website/src/composables/useEditorFormState.ts` — createEditorFormState, createUnsavedChangesLeaveGuard, useEditorFormState, createEditorRowKey, EditorFormStateOptions, EditorFormState, …
 - `apps/website/src/utils/season-data.ts` — fetchSeasonPageData, fetchEpisodePageData, fetchEpisodeProjectWorks, EpisodePageDubbingProject, EpisodePageVoiceActor, EpisodePageDataResponse, …
+- `apps/website/src/utils/tmdb-project-editor.ts` — tmdbEditorApiPath, extractCastRoles, parseTmdbMovie, parseTmdbShow, fetchTmdbMediaSummary, TmdbMediaSummary, …
 - `apps/website/server/utils/character-images.ts` — isCharacterImageSource, selectTvdbCharacter, resolveCharacterImage, CharacterImageSource, CharacterImage, CharacterImageResolver, …
 - `apps/website/server/utils/contribution/task-submission-validation.ts` — isTaskClaimId, authorizeTaskContribution, validateTaskContribution, TaskCategory, TaskUpload, TaskContributionInput, …
 - `apps/website/server/utils/search-ranking.ts` — rankSearchResults, getTmdbLocale, projectSearchResult, SearchItem, MEDIA_TYPE_WEIGHTS, DEFAULT_MEDIA_TYPE_WEIGHT, …
@@ -30,8 +31,7 @@
 - `apps/website/src/composables/useContribute.ts` — fetchRandomTask, useContribute, ContributionTask, ContributionCategory, ClaimedCategory, ContributionClaim
 - `apps/website/server/utils/cache/constants.ts` — hashCacheValue, buildCacheKey, SimpleKeyValidator, CacheKeyInput, CACHE_SCHEMA_VERSION
 - `apps/website/server/utils/cache/response-policy.ts` — resolveCacheDecision, applyDefaultCachePolicy, applyCachePolicy, CacheDecisionInput, CacheDecision
-- `apps/website/server/utils/prepare-payload.ts` — validatePrepareGamePayload, prepareGameFromPayload, validatePrepareMediaPayload, PrepareGameInput, PrepareMediaInput
-- _…and 77 more files_
+- _…and 83 more files_
 
 ## Shared-logic (21 files)
 

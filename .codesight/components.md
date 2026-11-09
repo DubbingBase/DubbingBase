@@ -23,15 +23,24 @@
 - **UnderConstruction** [client] — `apps/website/src/components/UnderConstruction.vue`
 - **AsyncAutocomplete** [client] — props: modelValue, options, loading, placeholder, ariaLabel, disabled, allowCreate, displayFn, searchFn — `apps/website/src/components/admin/AsyncAutocomplete.vue`
 - **CastAvatar** [client] — props: name — `apps/website/src/components/admin/CastAvatar.vue`
+- **CastNoteHighlight** [client] — `apps/website/src/components/admin/CastNoteHighlight.vue`
+- **CastPerformanceField** [client] — `apps/website/src/components/admin/CastPerformanceField.vue`
+- **CastVoiceActorField** [client] — props: options — `apps/website/src/components/admin/CastVoiceActorField.vue`
 - **CreateStudioDialog** [client] — props: open, initialName, create — `apps/website/src/components/admin/CreateStudioDialog.vue`
 - **CreateVoiceActorDialog** [client] — props: open, initialQuery, status — `apps/website/src/components/admin/CreateVoiceActorDialog.vue`
 - **EditorHero** [client] — props: title, eyebrow, backTo, backLabel, posterUrl, chips — `apps/website/src/components/admin/EditorHero.vue`
 - **EditorSaveBar** [client] — props: status, isDirty, errorMessage, saveLabel, formId, disabled — `apps/website/src/components/admin/EditorSaveBar.vue`
 - **EditorTabs** [client] — props: items — `apps/website/src/components/admin/EditorTabs.vue`
+- **EditorToast** [client] — props: toast — `apps/website/src/components/admin/EditorToast.vue`
 - **FormCard** [client] — props: title — `apps/website/src/components/admin/FormCard.vue`
 - **FormField** [client] — props: label — `apps/website/src/components/admin/FormField.vue`
 - **LanguageSelect** [client] — props: id — `apps/website/src/components/admin/LanguageSelect.vue`
-- **ProjectCastWorkspace** [client] — props: rows, selectedKey — `apps/website/src/components/admin/ProjectCastWorkspace.vue`
+- **ProjectCastWorkspace** [client] — props: rows, selectedKey, showOriginalActor — `apps/website/src/components/admin/ProjectCastWorkspace.vue`
+- **ProjectCrewCard** [client] — props: title, description, studioLabel, fields, crew, studioOptions, voiceActorOptions, lookups — `apps/website/src/components/admin/ProjectCrewCard.vue`
+- **ProjectEditorLayout** [client] — props: title, eyebrow, backTo, backLabel, posterUrl, chips, projectsBasePath, projects, projectIdParam, languageLabel — `apps/website/src/components/admin/ProjectEditorLayout.vue`
+- **ProjectSettingsCard** [client] — props: idPrefix — `apps/website/src/components/admin/ProjectSettingsCard.vue`
+- **SimpleCastRoleDetail** [client] — props: voiceActorOptions, lookups, roleLabel — `apps/website/src/components/admin/SimpleCastRoleDetail.vue`
+- **TextField** [client] — props: label, id, type, placeholder, hint, maxlength, min, max, rows, multiline — `apps/website/src/components/admin/TextField.vue`
 - **UnsavedChangesDialog** [client] — props: open — `apps/website/src/components/admin/UnsavedChangesDialog.vue`
 - **BarChart** [client] — `apps/website/src/components/admin/charts/BarChart.vue`
 - **LineChart** [client] — `apps/website/src/components/admin/charts/LineChart.vue`
@@ -42,6 +51,7 @@
 - **MovieProjectEditor** [client] — `apps/website/src/components/admin/editors/MovieProjectEditor.vue`
 - **PodcastProjectEditor** [client] — `apps/website/src/components/admin/editors/PodcastProjectEditor.vue`
 - **ShowProjectEditor** [client] — `apps/website/src/components/admin/editors/ShowProjectEditor.vue`
+- **TmdbProjectEditor** [client] — props: kind — `apps/website/src/components/admin/editors/TmdbProjectEditor.vue`
 - **ToyProjectEditor** [client] — `apps/website/src/components/admin/editors/ToyProjectEditor.vue`
 - **MediaDetailsLayout** [client] — props: shareDub, title, backdropUrl, posterUrl, loading — `apps/website/src/components/layout/MediaDetailsLayout.vue`
 - **PersonDetailsLayout** [client] — props: name, profileUrl, backdropUrl, loading — `apps/website/src/components/layout/PersonDetailsLayout.vue`

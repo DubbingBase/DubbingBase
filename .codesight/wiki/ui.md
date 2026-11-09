@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Component inventory and prop signatures extracted via AST. Read the source files before adding props or modifying component logic.
 
-**137 components** (vue)
+**147 components** (vue)
 
 ## Client Components
 
@@ -29,15 +29,24 @@
 - **UnderConstruction** — `apps/website/src/components/UnderConstruction.vue`
 - **AsyncAutocomplete** — props: modelValue, options, loading, placeholder, ariaLabel, disabled, allowCreate, displayFn, searchFn — `apps/website/src/components/admin/AsyncAutocomplete.vue`
 - **CastAvatar** — props: name — `apps/website/src/components/admin/CastAvatar.vue`
+- **CastNoteHighlight** — `apps/website/src/components/admin/CastNoteHighlight.vue`
+- **CastPerformanceField** — `apps/website/src/components/admin/CastPerformanceField.vue`
+- **CastVoiceActorField** — props: options — `apps/website/src/components/admin/CastVoiceActorField.vue`
 - **CreateStudioDialog** — props: open, initialName, create — `apps/website/src/components/admin/CreateStudioDialog.vue`
 - **CreateVoiceActorDialog** — props: open, initialQuery, status — `apps/website/src/components/admin/CreateVoiceActorDialog.vue`
 - **EditorHero** — props: title, eyebrow, backTo, backLabel, posterUrl, chips — `apps/website/src/components/admin/EditorHero.vue`
 - **EditorSaveBar** — props: status, isDirty, errorMessage, saveLabel, formId, disabled — `apps/website/src/components/admin/EditorSaveBar.vue`
 - **EditorTabs** — props: items — `apps/website/src/components/admin/EditorTabs.vue`
+- **EditorToast** — props: toast — `apps/website/src/components/admin/EditorToast.vue`
 - **FormCard** — props: title — `apps/website/src/components/admin/FormCard.vue`
 - **FormField** — props: label — `apps/website/src/components/admin/FormField.vue`
 - **LanguageSelect** — props: id — `apps/website/src/components/admin/LanguageSelect.vue`
-- **ProjectCastWorkspace** — props: rows, selectedKey — `apps/website/src/components/admin/ProjectCastWorkspace.vue`
+- **ProjectCastWorkspace** — props: rows, selectedKey, showOriginalActor — `apps/website/src/components/admin/ProjectCastWorkspace.vue`
+- **ProjectCrewCard** — props: title, description, studioLabel, fields, crew, studioOptions, voiceActorOptions, lookups — `apps/website/src/components/admin/ProjectCrewCard.vue`
+- **ProjectEditorLayout** — props: title, eyebrow, backTo, backLabel, posterUrl, chips, projectsBasePath, projects, projectIdParam, languageLabel — `apps/website/src/components/admin/ProjectEditorLayout.vue`
+- **ProjectSettingsCard** — props: idPrefix — `apps/website/src/components/admin/ProjectSettingsCard.vue`
+- **SimpleCastRoleDetail** — props: voiceActorOptions, lookups, roleLabel — `apps/website/src/components/admin/SimpleCastRoleDetail.vue`
+- **TextField** — props: label, id, type, placeholder, hint, maxlength, min, max, rows, multiline — `apps/website/src/components/admin/TextField.vue`
 - **UnsavedChangesDialog** — props: open — `apps/website/src/components/admin/UnsavedChangesDialog.vue`
 - **BarChart** — `apps/website/src/components/admin/charts/BarChart.vue`
 - **LineChart** — `apps/website/src/components/admin/charts/LineChart.vue`
@@ -48,6 +57,7 @@
 - **MovieProjectEditor** — `apps/website/src/components/admin/editors/MovieProjectEditor.vue`
 - **PodcastProjectEditor** — `apps/website/src/components/admin/editors/PodcastProjectEditor.vue`
 - **ShowProjectEditor** — `apps/website/src/components/admin/editors/ShowProjectEditor.vue`
+- **TmdbProjectEditor** — props: kind — `apps/website/src/components/admin/editors/TmdbProjectEditor.vue`
 - **ToyProjectEditor** — `apps/website/src/components/admin/editors/ToyProjectEditor.vue`
 - **MediaDetailsLayout** — props: shareDub, title, backdropUrl, posterUrl, loading — `apps/website/src/components/layout/MediaDetailsLayout.vue`
 - **PersonDetailsLayout** — props: name, profileUrl, backdropUrl, loading — `apps/website/src/components/layout/PersonDetailsLayout.vue`
