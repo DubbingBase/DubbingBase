@@ -1,29 +1,6 @@
 <template>
   <section class="min-w-0" :aria-label="$t('projectEditor.voiceCast')" data-testid="cast-workspace">
     <div class="min-w-0 space-y-4">
-      <!-- Progress: the cast workflow is "assign every role", so surface how far along it is. -->
-      <div class="rounded-2xl border theme-border theme-surface-overlay p-4 space-y-2.5">
-        <div class="flex items-baseline justify-between gap-3">
-          <p class="text-sm font-semibold theme-text" aria-live="polite">
-            {{ $t("projectEditor.castProgress", summary) }}
-          </p>
-          <span class="text-xs tabular-nums theme-text-muted">{{ summary.percent }}%</span>
-        </div>
-        <div
-          class="h-1.5 overflow-hidden rounded-full theme-surface-muted"
-          role="progressbar"
-          :aria-valuenow="summary.percent"
-          aria-valuemin="0"
-          aria-valuemax="100"
-          :aria-label="$t('projectEditor.castProgress', summary)"
-        >
-          <div
-            class="h-full rounded-full bg-[var(--app-color-success-text)] transition-[width] duration-300"
-            :style="{ width: `${summary.percent}%` }"
-          />
-        </div>
-      </div>
-
       <!-- Toolbar -->
       <div class="flex items-center gap-2">
         <div class="relative min-w-0 flex-1">

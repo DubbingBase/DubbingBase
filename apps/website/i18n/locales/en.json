@@ -1276,7 +1276,6 @@
     "castSearch": "Filter cast by character or name",
     "castNoMatch": "No cast entry matches \"{query}\".",
     "castClearSearch": "Clear filter",
-    "castProgress": "{assigned} of {total} voices assigned",
     "castFilterAll": "All",
     "castFilterUnassigned": "To assign",
     "castFilterAssigned": "Assigned",

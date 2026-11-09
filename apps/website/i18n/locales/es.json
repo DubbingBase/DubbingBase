@@ -1276,7 +1276,6 @@
     "castSearch": "Filtrar por personaje o nombre",
     "castNoMatch": "Ninguna entrada coincide con «{query}».",
     "castClearSearch": "Borrar filtro",
-    "castProgress": "{assigned} de {total} voces asignadas",
     "castFilterAll": "Todos",
     "castFilterUnassigned": "Por asignar",
     "castFilterAssigned": "Asignados",

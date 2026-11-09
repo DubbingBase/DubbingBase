@@ -6,8 +6,9 @@ export function buildSupabaseImageUrl(
   if (!imagePath) return null;
   if (imagePath.startsWith("http")) return imagePath;
 
-  const config = useRuntimeConfig();
-  const supabaseUrl = config.supabaseUrl;
+  // Dev: browsers load images through the same-origin /supabase proxy (nitro.devProxy), because
+  // the real URL is loopback and unreachable from other devices.
+  const supabaseUrl = import.meta.dev ? "/supabase" : useRuntimeConfig().supabaseUrl;
   return `${supabaseUrl}/storage/v1/object/public/${bucket}/${imagePath}`;
 }
 
