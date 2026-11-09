@@ -32,7 +32,7 @@ export const MEDIA_TYPE_WEIGHTS: Readonly<Record<string, number>> = {
   voice_actor: 1.5,
   movie: 1,
   tv: 1,
-  video_game: 0.8,
+  video_game: 0.9,
   person: 0.6,
 };
 export const DEFAULT_MEDIA_TYPE_WEIGHT = 0.4;

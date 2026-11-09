@@ -56,12 +56,22 @@ describe("search ranking (weighted reciprocal rank fusion)", () => {
     expect(keys(results)).toEqual([
       "voice_actor:40", // 1.5 / 5   = 0.300
       "movie:1", //        1   / 5   = 0.200
+      "video_game:10", //  0.9 / 5   = 0.180
       "movie:2", //        1   / 6   = 0.167
-      "video_game:10", //  0.8 / 5   = 0.160
       "movie:3", //        1   / 7   = 0.143
       "person:30", //      0.6 / 5   = 0.120
       "audiobook:20", //   0.4 / 5   = 0.080
     ]);
+  });
+
+  it("lets a game's best hit sit just behind the best movie/show hit and ahead of the second", () => {
+    const results = rankSearchResults([
+      item("tv", 1, 0),
+      item("tv", 2, 1),
+      item("video_game", 3, 0),
+      item("video_game", 4, 1),
+    ]);
+    expect(keys(results)).toEqual(["tv:1", "video_game:3", "tv:2", "video_game:4"]);
   });
 
   it("gives books, ads, podcasts and toys the same weight so their own positions decide", () => {
