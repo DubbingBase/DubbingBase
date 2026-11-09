@@ -18,7 +18,7 @@
       }}</span>
     </div>
     <span
-      class="font-medium text-xs theme-hover-primary-text transition-colors truncate max-w-[120px]"
+      class="font-medium text-sm theme-hover-primary-text transition-colors truncate max-w-[120px]"
       >{{ studio.name }}</span
     >
   </DetailsActionButton>

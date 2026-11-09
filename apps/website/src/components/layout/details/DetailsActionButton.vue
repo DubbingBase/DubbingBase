@@ -17,8 +17,10 @@ const props = withDefaults(
     to?: RouteLocationRaw;
     /** Colour the control takes on hover. */
     hover?: "default" | "primary" | "danger";
+    /** Status tint (e.g. after an action); replaces the neutral colours. */
+    tone?: "neutral" | "success" | "warning" | "danger";
   }>(),
-  { to: undefined, hover: "default" },
+  { to: undefined, hover: "default", tone: "neutral" },
 );
 
 const NuxtLink = resolveComponent("NuxtLink");
@@ -31,9 +33,17 @@ const hoverClasses = {
   danger: "theme-hover-surface-muted theme-hover-danger-text",
 } as const;
 
+const toneClasses = {
+  neutral: "theme-border-subtle theme-border theme-surface theme-text-secondary",
+  success: "theme-status-success",
+  warning: "theme-status-warning",
+  danger: "theme-status-danger",
+} as const;
+
 const classes = computed(() => [
   "inline-flex min-h-10 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium cursor-pointer",
-  "theme-border-subtle theme-border theme-surface theme-text-secondary transition-colors",
+  "transition-colors",
+  toneClasses[props.tone],
   "focus-visible:outline-2 focus-visible:outline-offset-2",
   hoverClasses[props.hover],
 ]);

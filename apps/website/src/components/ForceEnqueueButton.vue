@@ -1,12 +1,11 @@
 <template>
   <div class="relative inline-flex items-center">
-    <button
-      type="button"
+    <DetailsActionButton
+      :tone="buttonTone"
+      hover="primary"
       @click.prevent="handleEnqueue"
       :disabled="isLoading"
       :title="buttonTitle"
-      class="p-1.5 rounded-lg text-sm transition-all duration-200 flex items-center justify-center gap-1 shrink-0 border border-transparent"
-      :class="buttonClass"
       aria-label="Force enqueue media"
     >
       <!-- Loading Spinner -->
@@ -91,7 +90,7 @@
           d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
         />
       </svg>
-    </button>
+    </DetailsActionButton>
 
     <!-- Teleported Floating Toast with Copiable Error -->
     <Teleport to="body">
@@ -224,6 +223,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
+import DetailsActionButton from "./layout/details/DetailsActionButton.vue";
 import { API_CLIENT_HEADER, API_CLIENT_VALUE } from "@app/shared-logic";
 
 const props = defineProps<{
@@ -265,17 +265,11 @@ const buttonTitle = computed(() => {
   return "Forcer l'analyse / re-scanner Wikipédia (enqueue)";
 });
 
-const buttonClass = computed(() => {
-  if (status.value === "success") {
-    return "bg-emerald-500/10 border-emerald-500/30 theme-status-success-text";
-  }
-  if (status.value === "already_queued") {
-    return "bg-amber-500/10 border-amber-500/30 theme-status-warning-text";
-  }
-  if (status.value === "error") {
-    return "bg-rose-500/10 border-rose-500/30 theme-status-danger-text";
-  }
-  return "theme-text-muted theme-hover-primary-text theme-hover-surface-muted";
+const buttonTone = computed(() => {
+  if (status.value === "success") return "success";
+  if (status.value === "already_queued") return "warning";
+  if (status.value === "error") return "danger";
+  return "neutral";
 });
 
 const toastBorderClass = computed(() => {

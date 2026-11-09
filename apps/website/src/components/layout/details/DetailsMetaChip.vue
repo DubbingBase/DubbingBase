@@ -1,27 +1,39 @@
 <template>
-  <span :class="classes"
-    ><span v-if="label" class="theme-text-muted font-medium mr-1.5">{{ label }}</span
-    ><slot
-  /></span>
+  <component
+    :is="href ? 'a' : 'span'"
+    :href="href"
+    :target="href ? '_blank' : undefined"
+    :rel="href ? 'noopener noreferrer' : undefined"
+    :class="classes"
+  >
+    <span v-if="label" class="theme-text-muted font-medium mr-1.5">{{ label }}</span>
+    <slot />
+  </component>
 </template>
 
 <script setup lang="ts">
 const props = withDefaults(
   defineProps<{
-    variant?: "primary" | "secondary" | "rating" | "text" | "tag";
+    variant?: "primary" | "secondary" | "rating" | "text" | "tag" | "link";
     /** Small muted prefix, e.g. "Developer". */
     label?: string;
+    /** Renders the chip as an external link. */
+    href?: string;
   }>(),
-  { variant: "primary" },
+  { variant: "primary", label: undefined, href: undefined },
 );
 
-const base = "theme-surface-overlay backdrop-blur-md rounded-lg";
+// Every hero chip shares the same height, padding, radius and type size; variants only
+// change colour, weight and truncation.
+const base =
+  "theme-surface-overlay backdrop-blur-md rounded-lg px-3 py-1 text-sm md:text-base inline-flex items-center";
 const variants = {
-  primary: "px-3 py-1 theme-text font-semibold text-base md:text-lg",
-  text: "px-3 py-1 theme-text font-medium text-sm md:text-base truncate max-w-[200px] md:max-w-xs",
-  secondary: "px-3 py-1 theme-text-secondary font-medium text-sm md:text-base",
-  rating: "px-3 py-1 flex items-center gap-1.5 theme-text font-bold text-sm md:text-base",
-  tag: "px-2.5 py-1 theme-text-secondary font-medium text-xs md:text-sm",
+  primary: "theme-text font-semibold",
+  text: "theme-text font-medium truncate max-w-[200px] md:max-w-xs",
+  secondary: "theme-text-secondary font-medium",
+  rating: "gap-1.5 theme-text font-semibold",
+  tag: "theme-text-secondary font-medium",
+  link: "gap-1.5 theme-text font-semibold theme-hover-surface-muted transition-colors",
 } as const;
 
 const classes = computed(() => [base, variants[props.variant]]);
