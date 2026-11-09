@@ -174,10 +174,13 @@
   - function fetchMediaRequest: (input, init?) => Promise<Response>
   - class RetryableMediaRequestError
 - `apps/website/server/utils/search-ranking.ts`
-  - function rankSearchResults: (items, query, now) => void
+  - function rankSearchResults: (items) => SearchItem[]
   - function getTmdbLocale: (locale) => string
   - function projectSearchResult: (item) => SearchItem
   - type SearchItem
+  - const MEDIA_TYPE_WEIGHTS: Readonly<Record<string, number>>
+  - const DEFAULT_MEDIA_TYPE_WEIGHT
+  - _...1 more_
 - `apps/website/server/utils/services/media-preparation.ts`
   - function checkMediaDubbingSections: (options) => Promise<CheckSectionsResult>
   - function checkGameDubbingSections: (options) => Promise<CheckSectionsResult>

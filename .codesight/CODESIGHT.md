@@ -4,8 +4,8 @@
 > **Monorepo:** @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
 > 93 routes | 28 models | 138 components | 126 lib files | 64 env vars | 15 middleware | 52% test coverage
-> **Token savings:** this file is ~18,600 tokens. Without it, AI exploration would cost ~158,200 tokens. **Saves ~139,700 tokens per conversation.**
-> **Last scanned:** 2026-11-09 08:44 — re-run after significant changes
+> **Token savings:** this file is ~18,600 tokens. Without it, AI exploration would cost ~158,200 tokens. **Saves ~139,600 tokens per conversation.**
+> **Last scanned:** 2026-11-09 09:56 — re-run after significant changes
 
 ---
 
@@ -630,10 +630,13 @@
   - function fetchMediaRequest: (input, init?) => Promise<Response>
   - class RetryableMediaRequestError
 - `apps/website/server/utils/search-ranking.ts`
-  - function rankSearchResults: (items, query, now) => void
+  - function rankSearchResults: (items) => SearchItem[]
   - function getTmdbLocale: (locale) => string
   - function projectSearchResult: (item) => SearchItem
   - type SearchItem
+  - const MEDIA_TYPE_WEIGHTS: Readonly<Record<string, number>>
+  - const DEFAULT_MEDIA_TYPE_WEIGHT
+  - _...1 more_
 - `apps/website/server/utils/services/media-preparation.ts`
   - function checkMediaDubbingSections: (options) => Promise<CheckSectionsResult>
   - function checkGameDubbingSections: (options) => Promise<CheckSectionsResult>
