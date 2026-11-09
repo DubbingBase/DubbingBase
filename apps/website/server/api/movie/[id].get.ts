@@ -86,6 +86,7 @@ export async function fetchMovieData(event: H3Event, movieId: number) {
                 : {}),
               url: `/movie/${movieId}`,
               color: 0x5865f2,
+              routine: true,
               event,
             },
           );

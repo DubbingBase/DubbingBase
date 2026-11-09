@@ -61,6 +61,7 @@ export default defineEventHandler(async (event): Promise<ToyResponse> => {
               ...(toy?.cover_url ? { imageUrl: toy.cover_url } : {}),
               url: `/toy/${toyId}`,
               color: 0x5865f2,
+              routine: true,
               event,
             },
           );

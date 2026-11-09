@@ -62,6 +62,7 @@ export default defineEventHandler(async (event): Promise<AudiobookResponse> => {
               ...(book?.cover_url ? { imageUrl: book.cover_url } : {}),
               url: `/audiobook/${bookId}`,
               color: 0x5865f2,
+              routine: true,
               event,
             },
           );

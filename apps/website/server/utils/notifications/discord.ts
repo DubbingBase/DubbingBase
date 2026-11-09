@@ -1,4 +1,5 @@
 import type { H3Event } from "h3";
+import { readProperty } from "@app/shared-logic";
 
 export type QueueName = "wiki_discovery" | "wiki_check" | "wiki_extract" | string;
 export type DiscordNotificationCategory = "general" | "discovery" | "check" | "extract";
@@ -10,6 +11,31 @@ export interface DiscordWebhookOptions {
   color?: number;
   event?: H3Event;
   category?: DiscordNotificationCategory;
+  /**
+   * Routine progress message (enqueued, discovery skipped/completed). Logged to the
+   * console only, unless DISCORD_NOTIFY_ROUTINE=true. Outcomes and failures are not routine.
+   */
+  routine?: boolean;
+}
+
+function shouldSkipRoutine(options?: DiscordWebhookOptions): boolean {
+  if (options?.routine !== true) return false;
+
+  let config: unknown;
+  try {
+    config = options.event ? useRuntimeConfig(options.event) : useRuntimeConfig();
+  } catch {
+    config = undefined;
+  }
+  const configuredValue = readProperty(config, "discordNotifyRoutine");
+  const cloudflareValue = options.event?.context.cloudflare?.env?.DISCORD_NOTIFY_ROUTINE;
+
+  return (
+    configuredValue !== true &&
+    configuredValue !== "true" &&
+    cloudflareValue !== "true" &&
+    process.env.DISCORD_NOTIFY_ROUTINE !== "true"
+  );
 }
 
 function getDiscordWebhookUrls(queue?: string, event?: H3Event): string[] {
@@ -136,6 +162,10 @@ export async function sendDiscordAdminNotification(
   message: string,
   options?: DiscordWebhookOptions,
 ) {
+  if (shouldSkipRoutine(options)) {
+    console.info(`[Discord] routine notification suppressed: ${title}`);
+    return;
+  }
   const webhookUrls = getDiscordWebhookUrls(options?.queue, options?.event);
   const deliveryUrls =
     options?.queue === "wiki_check" || options?.queue === "check"

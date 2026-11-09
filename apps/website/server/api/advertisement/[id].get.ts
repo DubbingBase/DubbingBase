@@ -61,6 +61,7 @@ export default defineEventHandler(async (event): Promise<AdvertisementResponse> 
               ...(ad?.poster_url ? { imageUrl: ad.poster_url } : {}),
               url: `/advertisement/${adId}`,
               color: 0x5865f2,
+              routine: true,
               event,
             },
           );

@@ -166,6 +166,8 @@ export default defineEventHandler(async (event) => {
       {
         queue: wikipediaLanguage ? "wiki_check" : "wiki_discovery",
         color: 0x5865f2,
+        routine: true,
+        event,
       },
     );
 

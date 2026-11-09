@@ -101,6 +101,7 @@ export async function fetchShowData(event: H3Event, showId: number) {
                 : {}),
               url: `/show/${showId}`,
               color: 0x5865f2,
+              routine: true,
               event,
             },
           );
