@@ -53,6 +53,7 @@ export default defineEventHandler(async (event): Promise<PodcastResponse> => {
               ...(podcast?.cover_url ? { imageUrl: podcast.cover_url } : {}),
               url: `/podcast/${podcastId}`,
               color: 0x5865f2,
+              routine: true,
               event,
             },
           );

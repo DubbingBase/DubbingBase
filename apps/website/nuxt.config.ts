@@ -120,6 +120,7 @@ export default defineNuxtConfig({
     discordWebhookExtractUrl:
       env("DISCORD_WEBHOOK_EXTRACT_URL") || env("DISCORD_EXTRACT_WEBHOOK_URL"),
     discordWebhookUrl: env("DISCORD_WEBHOOK_URL") || env("DISCORD_ADMIN_WEBHOOK_LOG_URL"),
+    discordNotifyRoutine: env("DISCORD_NOTIFY_ROUTINE"),
     resendApiKey: env("RESEND_API_KEY"),
     resendFromEmail: env("RESEND_FROM_EMAIL"),
     resendToEmail: env("RESEND_TO_EMAIL"),

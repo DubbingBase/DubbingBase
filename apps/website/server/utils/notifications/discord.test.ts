@@ -126,4 +126,18 @@ describe("Discord admin notifications", () => {
       "[Discord] wiki_check notification not attempted: no valid queue-specific or fallback webhook URL configured",
     );
   });
+
+  it("suppresses routine notifications unless DISCORD_NOTIFY_ROUTINE=true", async () => {
+    vi.stubEnv("DISCORD_WEBHOOK_URL", "https://discord.example/general");
+    const fetchMock = vi.fn(async () => new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetchMock);
+    vi.spyOn(console, "info").mockImplementation(() => {});
+
+    await sendDiscordAdminNotification("Enqueued", "Details", { routine: true });
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    vi.stubEnv("DISCORD_NOTIFY_ROUTINE", "true");
+    await sendDiscordAdminNotification("Enqueued", "Details", { routine: true });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
 });

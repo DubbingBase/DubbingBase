@@ -452,7 +452,7 @@ export default defineEventHandler(async (event) => {
                 await sendDiscordAdminNotification(
                   "Queue Discovery Skipped (18+ Adult Content)",
                   `**${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}) is marked as adult content and was excluded.`,
-                  { event, queue: "wiki_scan" },
+                  { event, queue: "wiki_scan", routine: true },
                 );
 
                 return {
@@ -475,7 +475,7 @@ export default defineEventHandler(async (event) => {
             await sendDiscordAdminNotification(
               "Queue Discovery Skipped",
               `No Wikidata ID found for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}). Discovery archived.`,
-              { event, queue: "wiki_scan" },
+              { event, queue: "wiki_scan", routine: true },
             );
 
             return {
@@ -510,7 +510,7 @@ export default defineEventHandler(async (event) => {
             await sendDiscordAdminNotification(
               "Queue Discovery: No Wikipedia Pages",
               `No Wikipedia pages found for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}).\n\`\`\`\n${errMsg}\n\`\`\`\n🔗 **Wikidata Item:** ${wikidataUrl}`,
-              { event, queue: "wiki_scan", url: wikidataUrl },
+              { event, queue: "wiki_scan", routine: true, url: wikidataUrl },
             );
 
             return {
@@ -571,7 +571,7 @@ export default defineEventHandler(async (event) => {
           await sendDiscordAdminNotification(
             "Queue Discovery Completed",
             `Discovered **${allLanguages.length} language(s)** for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}) [top ${maxLanguagesPerDiscovery}].\n• Enqueued **${enqueuedCount}** new checks\n• **${alreadyEnqueuedCount}** skipped/deduped.`,
-            { event, queue: "wiki_scan" },
+            { event, queue: "wiki_scan", routine: true },
           );
         } catch (err) {
           const errMsg = getErrorMessage(err);
