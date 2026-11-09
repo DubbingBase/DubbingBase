@@ -54,7 +54,7 @@
         <form
           role="search"
           data-testid="home-search-form"
-          class="mx-auto flex w-full max-w-2xl items-center rounded-full theme-surface p-1 text-left text-base shadow-xl md:p-1.5 md:text-lg"
+          class="home-search-form mx-auto flex w-full max-w-2xl items-center rounded-full theme-surface p-1 text-left text-base shadow-xl md:p-1.5 md:text-lg"
           @submit.prevent="submitHomeSearch"
         >
           <label class="sr-only" for="home-search-input">
@@ -69,7 +69,7 @@
             required
             data-testid="home-search-input"
             :placeholder="$t('home.hero.searchPlaceholder')"
-            class="min-w-0 flex-1 bg-transparent py-2 pl-3 pr-2 text-base outline-none theme-text theme-placeholder theme-focus md:py-3 md:pl-5 md:text-lg"
+            class="min-w-0 flex-1 bg-transparent py-2 pl-3 pr-2 text-base outline-none theme-text theme-placeholder md:py-3 md:pl-5 md:text-lg"
           />
           <button
             type="submit"
@@ -569,6 +569,15 @@ const errorTopContributors = computed(() => topContributorsData.error.value?.mes
 </script>
 
 <style scoped>
+.home-search-form:has(input:focus-visible) {
+  outline: 2px solid var(--app-color-focus);
+  outline-offset: 2px;
+}
+
+.home-search-form input:focus-visible {
+  outline: none;
+}
+
 .home-card-rail {
   content-visibility: auto;
   contain-intrinsic-size: auto 22rem;
