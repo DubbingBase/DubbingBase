@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 93 routes | 28 models | 138 components | 126 lib files | 64 env vars | 15 middleware | 52% test coverage
-> **Token savings:** this file is ~18,600 tokens. Without it, AI exploration would cost ~158,200 tokens. **Saves ~139,600 tokens per conversation.**
-> **Last scanned:** 2026-11-09 09:56 — re-run after significant changes
+> 93 routes | 28 models | 138 components | 126 lib files | 65 env vars | 15 middleware | 52% test coverage
+> **Token savings:** this file is ~18,600 tokens. Without it, AI exploration would cost ~158,300 tokens. **Saves ~139,700 tokens per conversation.**
+> **Last scanned:** 2026-11-09 13:04 — re-run after significant changes
 
 ---
 
@@ -914,6 +914,7 @@
 - `DISCORD_CHECK_WEBHOOK_URL` **required** — apps/website/server/utils/notifications/discord.ts
 - `DISCORD_DISCOVERY_WEBHOOK_URL` **required** — apps/website/server/utils/notifications/discord.ts
 - `DISCORD_EXTRACT_WEBHOOK_URL` **required** — apps/website/server/utils/notifications/discord.ts
+- `DISCORD_NOTIFY_ROUTINE` **required** — apps/website/server/utils/notifications/discord.ts
 - `DISCORD_WEBHOOK_CHECK_URL` **required** — apps/website/server/utils/notifications/discord.ts
 - `DISCORD_WEBHOOK_DISCOVERY_URL` **required** — apps/website/server/utils/notifications/discord.ts
 - `DISCORD_WEBHOOK_EXTRACT_URL` **required** — apps/website/server/utils/notifications/discord.ts

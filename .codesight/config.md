@@ -9,6 +9,7 @@
 - `DISCORD_CHECK_WEBHOOK_URL` **required** — apps/website/server/utils/notifications/discord.ts
 - `DISCORD_DISCOVERY_WEBHOOK_URL` **required** — apps/website/server/utils/notifications/discord.ts
 - `DISCORD_EXTRACT_WEBHOOK_URL` **required** — apps/website/server/utils/notifications/discord.ts
+- `DISCORD_NOTIFY_ROUTINE` **required** — apps/website/server/utils/notifications/discord.ts
 - `DISCORD_WEBHOOK_CHECK_URL` **required** — apps/website/server/utils/notifications/discord.ts
 - `DISCORD_WEBHOOK_DISCOVERY_URL` **required** — apps/website/server/utils/notifications/discord.ts
 - `DISCORD_WEBHOOK_EXTRACT_URL` **required** — apps/website/server/utils/notifications/discord.ts

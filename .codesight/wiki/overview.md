@@ -8,7 +8,7 @@
 
 ## Scale
 
-93 API routes · 28 database models · 138 UI components · 126 library files · 15 middleware layers · 64 environment variables
+93 API routes · 28 database models · 138 UI components · 126 library files · 15 middleware layers · 65 environment variables
 
 ## Subsystems
 
@@ -109,14 +109,14 @@ Changes to these files have the widest blast radius across the codebase:
 - `DISCORD_CHECK_WEBHOOK_URL` — `apps/website/server/utils/notifications/discord.ts`
 - `DISCORD_DISCOVERY_WEBHOOK_URL` — `apps/website/server/utils/notifications/discord.ts`
 - `DISCORD_EXTRACT_WEBHOOK_URL` — `apps/website/server/utils/notifications/discord.ts`
+- `DISCORD_NOTIFY_ROUTINE` — `apps/website/server/utils/notifications/discord.ts`
 - `DISCORD_WEBHOOK_CHECK_URL` — `apps/website/server/utils/notifications/discord.ts`
 - `DISCORD_WEBHOOK_DISCOVERY_URL` — `apps/website/server/utils/notifications/discord.ts`
 - `DISCORD_WEBHOOK_EXTRACT_URL` — `apps/website/server/utils/notifications/discord.ts`
 - `DISCORD_WEBHOOK_URL` — `apps/website/server/utils/notifications/discord.ts`
 - `DISCORD_WEBHOOK_URL_1` — `apps/website/server/utils/notifications/discord.ts`
 - `DISCORD_WEBHOOK_URL_2` — `apps/website/server/utils/notifications/discord.ts`
-- `DISCORD_WEBHOOK_URL_3` — `apps/website/server/utils/notifications/discord.ts`
-- _...29 more_
+- _...30 more_
 
 ---
 _Back to [index.md](./index.md) · Generated 2026-11-09_
