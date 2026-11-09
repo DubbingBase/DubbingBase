@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Component inventory and prop signatures extracted via AST. Read the source files before adding props or modifying component logic.
 
-**138 components** (vue)
+**137 components** (vue)
 
 ## Client Components
 
@@ -29,7 +29,6 @@
 - **UnderConstruction** — `apps/website/src/components/UnderConstruction.vue`
 - **AsyncAutocomplete** — props: modelValue, options, loading, placeholder, ariaLabel, disabled, allowCreate, displayFn, searchFn — `apps/website/src/components/admin/AsyncAutocomplete.vue`
 - **CastAvatar** — props: name — `apps/website/src/components/admin/CastAvatar.vue`
-- **CastRoleSummary** — props: row — `apps/website/src/components/admin/CastRoleSummary.vue`
 - **CreateStudioDialog** — props: open, initialName, create — `apps/website/src/components/admin/CreateStudioDialog.vue`
 - **CreateVoiceActorDialog** — props: open, initialQuery, status — `apps/website/src/components/admin/CreateVoiceActorDialog.vue`
 - **EditorHero** — props: title, eyebrow, backTo, backLabel, posterUrl, chips — `apps/website/src/components/admin/EditorHero.vue`

@@ -23,7 +23,6 @@
 - **UnderConstruction** [client] — `apps/website/src/components/UnderConstruction.vue`
 - **AsyncAutocomplete** [client] — props: modelValue, options, loading, placeholder, ariaLabel, disabled, allowCreate, displayFn, searchFn — `apps/website/src/components/admin/AsyncAutocomplete.vue`
 - **CastAvatar** [client] — props: name — `apps/website/src/components/admin/CastAvatar.vue`
-- **CastRoleSummary** [client] — props: row — `apps/website/src/components/admin/CastRoleSummary.vue`
 - **CreateStudioDialog** [client] — props: open, initialName, create — `apps/website/src/components/admin/CreateStudioDialog.vue`
 - **CreateVoiceActorDialog** [client] — props: open, initialQuery, status — `apps/website/src/components/admin/CreateVoiceActorDialog.vue`
 - **EditorHero** [client] — props: title, eyebrow, backTo, backLabel, posterUrl, chips — `apps/website/src/components/admin/EditorHero.vue`

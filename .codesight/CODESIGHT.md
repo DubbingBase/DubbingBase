@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 93 routes | 28 models | 138 components | 126 lib files | 65 env vars | 15 middleware | 52% test coverage
-> **Token savings:** this file is ~18,600 tokens. Without it, AI exploration would cost ~158,300 tokens. **Saves ~139,700 tokens per conversation.**
-> **Last scanned:** 2026-11-09 13:04 — re-run after significant changes
+> 93 routes | 28 models | 137 components | 126 lib files | 65 env vars | 15 middleware | 52% test coverage
+> **Token savings:** this file is ~18,600 tokens. Without it, AI exploration would cost ~158,000 tokens. **Saves ~139,400 tokens per conversation.**
+> **Last scanned:** 2026-11-09 14:35 — re-run after significant changes
 
 ---
 
@@ -336,7 +336,6 @@
 - **UnderConstruction** [client] — `apps/website/src/components/UnderConstruction.vue`
 - **AsyncAutocomplete** [client] — props: modelValue, options, loading, placeholder, ariaLabel, disabled, allowCreate, displayFn, searchFn — `apps/website/src/components/admin/AsyncAutocomplete.vue`
 - **CastAvatar** [client] — props: name — `apps/website/src/components/admin/CastAvatar.vue`
-- **CastRoleSummary** [client] — props: row — `apps/website/src/components/admin/CastRoleSummary.vue`
 - **CreateStudioDialog** [client] — props: open, initialName, create — `apps/website/src/components/admin/CreateStudioDialog.vue`
 - **CreateVoiceActorDialog** [client] — props: open, initialQuery, status — `apps/website/src/components/admin/CreateVoiceActorDialog.vue`
 - **EditorHero** [client] — props: title, eyebrow, backTo, backLabel, posterUrl, chips — `apps/website/src/components/admin/EditorHero.vue`
