@@ -1,346 +1,109 @@
 <template>
-  <div
-    class="admin-project-editor max-w-6xl mx-auto space-y-6"
-    :inert="isSaving"
-    :aria-busy="isSaving"
+  <AdminProjectEditorLayout
+    v-model:section="section"
+    :title="
+      mediaTitle ||
+      (isEditMode ? 'Modifier le projet publicitaire' : 'Créer un projet publicitaire')
+    "
+    :eyebrow="
+      isEditMode
+        ? $t('projectEditor.editAdvertisementProject')
+        : $t('projectEditor.createAdvertisementProject')
+    "
+    :poster-url="''"
+    :back-to="parsedAdId ? localePath(`/advertisement/${parsedAdId}`) : localePath('/')"
+    :back-label="
+      parsedAdId ? $t('projectEditor.backToAdvertisement') : $t('projectEditor.backHome')
+    "
+    :chips="heroChips"
+    :projects-base-path="parsedAdId ? `/advertisement/${parsedAdId}` : null"
+    :projects="adDubbingProjects"
+    :project-id-param="projectIdParam"
+    :language-label="getDisplayLanguage"
+    form-id="advertisement-project-form"
+    :save-label="isEditMode ? $t('projectEditor.saveChanges') : $t('projectEditor.createProject')"
+    :form="form"
+    :is-loading="isLoading"
+    :cast-count="castList.length"
+    @submit="saveAdProject"
   >
-    <!-- Header -->
-    <div
-      class="theme-surface-overlay p-6 rounded-2xl border theme-border flex justify-between items-center shadow-xl"
-    >
-      <div>
-        <h3 class="text-xl font-bold theme-text flex items-center gap-2">
-          <MegaphoneIcon class="w-6 h-6 theme-status-success-text" />
-          {{ isEditMode ? "Modifier le projet publicitaire" : "Créer un projet publicitaire" }}
-        </h3>
-        <p class="text-sm theme-text-muted mt-1">
-          {{
-            isEditMode
-              ? `Mise à jour du spot #${projectIdParam}`
-              : "Informations sur le spot, marque, studio et comédiens voix off."
-          }}
-        </p>
-      </div>
-      <NuxtLink
-        :to="parsedAdId ? localePath(`/advertisement/${parsedAdId}`) : localePath('/')"
-        class="text-xs font-semibold px-4 py-2.5 theme-surface-muted theme-hover-surface-muted theme-text-secondary theme-hover-text rounded-xl border theme-border transition-colors flex items-center space-x-2"
+    <template #cast>
+      <AdminProjectCastWorkspace
+        v-model:selected-key="selectedCastKey"
+        :rows="castView"
+        :show-original-actor="false"
+        @add="addNewCastRow"
+        @remove="removeCastRow"
       >
-        <span>{{ parsedAdId ? "← Retour au spot" : "← Accueil" }}</span>
-      </NuxtLink>
-    </div>
+        <template #detail>
+          <AdminSimpleCastRoleDetail
+            v-if="selectedRow"
+            :key="selectedRow.key"
+            v-model:voice-actor-id="selectedRow.voice_actor_id"
+            v-model:character-name="selectedRow.character_name"
+            v-model:performance="selectedRow.performance"
+            v-model:note="selectedRow.note"
+            :voice-actor-options="initialVoiceActorOptions"
+            :lookups="lookups"
+            :role-label="$t('common.roleCharacter')"
+            @create-voice-actor="
+              (query: string) =>
+                openCreateVaDialog(query, (id: number) => (selectedRow!.voice_actor_id = id))
+            "
+          />
+        </template>
+      </AdminProjectCastWorkspace>
+    </template>
 
-    <!-- Navigation Tabs -->
-    <div v-if="parsedAdId" class="flex flex-wrap gap-2 pb-2 border-b theme-border">
-      <NuxtLink
-        v-for="project in adDubbingProjects"
-        :key="project.id"
-        :to="localePath(`/advertisement/${parsedAdId}/projects/${project.id}/edit`)"
-        class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border"
-        :class="
-          project.id === Number(projectIdParam)
-            ? 'theme-primary-bg theme-primary-border'
-            : 'theme-surface-overlay theme-text-secondary theme-border theme-hover-surface-muted'
-        "
+    <template #overview>
+      <AdminFormCard
+        :title="$t('advertisementEditor.spotInfo')"
+        :description="$t('advertisementEditor.campaign')"
       >
-        {{ getDisplayLanguage(project.language) }}
-        <span v-if="project.studios?.name" class="opacity-75 text-xs ml-1"
-          >({{ project.studios.name }})</span
-        >
-      </NuxtLink>
-      <NuxtLink
-        :to="localePath(`/advertisement/${parsedAdId}/projects/new`)"
-        class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-dashed"
-        :class="
-          projectIdParam === 'new'
-            ? 'theme-status-success theme-status-success-text border'
-            : 'theme-surface-overlay theme-text-muted theme-border theme-hover-surface-muted theme-hover-text'
-        "
-        >{{ $t("common.addLanguage") }}</NuxtLink
-      >
-    </div>
-
-    <!-- Loading overlay -->
-    <div
-      v-if="isLoading"
-      class="flex flex-col items-center justify-center py-24 gap-4 theme-text-muted"
-    >
-      <Loader2Icon class="w-8 h-8 animate-spin theme-status-success-text" />
-      <span class="text-sm">{{ $t("common.loadingProjectData") }}</span>
-    </div>
-
-    <form v-else id="advertisement-project-form" @submit.prevent="saveAdProject" class="space-y-6">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Media Metadata Card (Left Column) -->
-        <div
-          class="theme-surface-overlay border theme-border rounded-2xl p-6 space-y-5 h-fit shadow-xl"
-        >
-          <h4
-            class="text-sm font-bold theme-text uppercase tracking-wider border-b theme-border pb-3 flex items-center justify-between"
-          >
-            <span>{{ $t("advertisementEditor.spotInfo") }}</span>
-            <span class="text-xs theme-status-success-text font-normal">{{
-              $t("advertisementEditor.campaign")
-            }}</span>
-          </h4>
-
-          <!-- Content ID -->
-          <div class="space-y-1">
-            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-              $t("advertisementEditor.adId")
-            }}</label>
-            <input
-              v-model.number="contentId"
-              type="number"
-              required
-              :disabled="!!parsedAdId"
-              placeholder="Ex: 9001"
-              class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text theme-placeholder focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            />
-          </div>
-
-          <!-- Title / Campaign Name -->
-          <div class="space-y-1">
-            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-              $t("advertisementEditor.spotTitle")
-            }}</label>
-            <input
-              v-model="mediaTitle"
-              type="text"
-              required
-              placeholder="Ex: Renault Megane E-Tech - Électrique"
-              class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text theme-placeholder focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm"
-            />
-          </div>
-
-          <!-- Language -->
-          <div class="space-y-1">
-            <label
-              for="advertisement-project-dubbing-language"
-              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-              >{{ $t("common.language") }}</label
-            >
-            <AdminLanguageSelect
-              id="advertisement-project-dubbing-language"
-              v-model="dubbingLanguage"
-              required
-            />
-          </div>
-
-          <!-- Status -->
-          <div class="space-y-1">
-            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-              $t("common.status")
-            }}</label>
-            <select
-              v-model="status"
-              class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm"
-            >
-              <option value="validated">{{ $t("common.validated") }}</option>
-              <option value="pending">
-                {{ $t("common.pendingValidation") }}
-              </option>
-              <option value="draft">{{ $t("common.draft") }}</option>
-            </select>
-          </div>
+        <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+          <AdminTextField
+            v-model="contentId"
+            id="advertisement-project-content-id"
+            type="number"
+            required
+            :disabled="!!parsedAdId"
+            :label="$t('advertisementEditor.adId')"
+          />
+          <AdminTextField
+            v-model="mediaTitle"
+            id="advertisement-project-title"
+            required
+            :label="$t('advertisementEditor.spotTitle')"
+          />
         </div>
+      </AdminFormCard>
+    </template>
 
-        <!-- Technical Crew Form (Right 2 Columns) -->
-        <div
-          class="lg:col-span-2 theme-surface-overlay border theme-border rounded-2xl p-6 space-y-6 shadow-xl"
-        >
-          <h4
-            class="text-sm font-bold theme-text uppercase tracking-wider border-b theme-border pb-3 flex items-center justify-between"
-          >
-            <span>{{ $t("advertisementEditor.advertiserStudio") }}</span>
-            <span class="text-xs theme-text-muted">{{ $t("common.production") }}</span>
-          </h4>
+    <template #settings>
+      <AdminProjectSettingsCard
+        v-model:language="dubbingLanguage"
+        v-model:status="status"
+        id-prefix="advertisement-project"
+      />
+    </template>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <!-- Studio / Brand -->
-            <div class="space-y-1">
-              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-                $t("advertisementEditor.soundStudioAgency")
-              }}</label>
-              <AdminAsyncAutocomplete
-                v-model="selectedStudioId"
-                :options="initialStudioOptions"
-                :search-fn="lookups.searchStudios"
-                placeholder="Rechercher (ex: Prodigious, Schmooze...)"
-                :allow-create="true"
-                :display-fn="lookups.studioLabel"
-                @create="
-                  (q: string) => openCreateStudioDialog(q, (id: number) => (selectedStudioId = id))
-                "
-              />
-            </div>
+    <template #crew>
+      <AdminProjectCrewCard
+        v-model:studio-id="selectedStudioId"
+        :title="$t('advertisementEditor.advertiserStudio')"
+        :description="$t('common.production')"
+        :studio-label="$t('advertisementEditor.soundStudioAgency')"
+        :fields="crewFields"
+        :crew="crewValues"
+        :studio-options="initialStudioOptions"
+        :voice-actor-options="initialVoiceActorOptions"
+        :lookups="lookups"
+        @update:crew="setCrewMember"
+        @create-studio="openCreateStudioDialog"
+        @create-voice-actor="openCreateVaDialog"
+      />
+    </template>
 
-            <!-- Direction Artistique -->
-            <div class="space-y-1">
-              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-                $t("advertisementEditor.artisticDirectionCasting")
-              }}</label>
-              <AdminAsyncAutocomplete
-                v-model="artisticDirectorId"
-                :options="initialVoiceActorOptions"
-                :search-fn="lookups.searchVoiceActors"
-                placeholder="Rechercher..."
-                :allow-create="true"
-                :display-fn="lookups.voiceActorLabel"
-                @create="
-                  (q: string) => openCreateVaDialog(q, (id: number) => (artisticDirectorId = id))
-                "
-              />
-            </div>
-
-            <!-- Prise de son -->
-            <div class="space-y-1">
-              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-                $t("audiobookEditor.recordingEngineer")
-              }}</label>
-              <AdminAsyncAutocomplete
-                v-model="recordingId"
-                :options="initialVoiceActorOptions"
-                :search-fn="lookups.searchVoiceActors"
-                placeholder="Rechercher..."
-                :allow-create="true"
-                :display-fn="lookups.voiceActorLabel"
-                @create="(q: string) => openCreateVaDialog(q, (id: number) => (recordingId = id))"
-              />
-            </div>
-
-            <!-- Mixage -->
-            <div class="space-y-1">
-              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-                $t("advertisementEditor.mixagePub")
-              }}</label>
-              <AdminAsyncAutocomplete
-                v-model="mixingId"
-                :options="initialVoiceActorOptions"
-                :search-fn="lookups.searchVoiceActors"
-                placeholder="Rechercher..."
-                :allow-create="true"
-                :display-fn="lookups.voiceActorLabel"
-                @create="(q: string) => openCreateVaDialog(q, (id: number) => (mixingId = id))"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Cast Roster Section -->
-      <div class="theme-surface-overlay border theme-border rounded-2xl p-6 space-y-6 shadow-xl">
-        <div
-          class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b theme-border pb-4"
-        >
-          <div>
-            <h4 class="text-sm font-bold theme-text uppercase tracking-wider">
-              {{ $t("advertisementEditor.voiceOffActors") }}
-            </h4>
-            <p class="text-xs theme-text-muted mt-0.5">
-              {{ $t("advertisementEditor.associateActors") }}
-            </p>
-          </div>
-          <button
-            type="button"
-            @click="addNewCastRow"
-            class="px-4 py-2 theme-primary-bg hover:bg-[var(--app-color-primary-hover)] rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors"
-          >
-            <span>{{ $t("common.addVoice") }}</span>
-          </button>
-        </div>
-
-        <div v-if="castList.length === 0" class="text-center py-8 theme-text-muted text-sm">
-          {{ $t("common.noVoiceRecorded") }}
-        </div>
-
-        <div v-else class="space-y-4">
-          <div
-            v-for="(row, index) in castList"
-            :key="row.key"
-            class="grid grid-cols-1 md:grid-cols-12 gap-3 p-4 theme-input rounded-xl border theme-border items-end"
-          >
-            <!-- Voice Actor -->
-            <div class="md:col-span-4 space-y-1">
-              <label class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider">{{
-                $t("common.actor")
-              }}</label>
-              <AdminAsyncAutocomplete
-                v-model="row.voice_actor_id"
-                :options="initialVoiceActorOptions"
-                :search-fn="lookups.searchVoiceActors"
-                placeholder="Rechercher un comédien..."
-                :allow-create="true"
-                :display-fn="lookups.voiceActorLabel"
-                @create="
-                  (q: string) => openCreateVaDialog(q, (id: number) => (row.voice_actor_id = id))
-                "
-              />
-            </div>
-
-            <!-- Role / Character Name -->
-            <div class="md:col-span-2 space-y-1">
-              <label class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider">{{
-                $t("common.roleCharacter")
-              }}</label>
-              <input
-                v-model="row.character_name"
-                type="text"
-                placeholder="Ex: Voix off principale..."
-                class="w-full px-3 py-2 theme-surface-overlay border theme-border rounded-xl theme-text text-xs theme-placeholder focus:outline-none focus:ring-1 focus:ring-[var(--app-color-focus)]"
-              />
-            </div>
-
-            <div class="md:col-span-2 space-y-1">
-              <label class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider">{{
-                $t("projectEditor.castNote")
-              }}</label>
-              <input
-                v-model="row.note"
-                type="text"
-                class="w-full px-3 py-2 theme-surface-overlay border theme-border rounded-xl theme-text text-xs theme-placeholder focus:outline-none focus:ring-1 focus:ring-[var(--app-color-focus)]"
-              />
-            </div>
-
-            <!-- Performance Type -->
-            <div class="md:col-span-3 space-y-1">
-              <label class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider">{{
-                $t("common.performanceType")
-              }}</label>
-              <input
-                v-model="row.performance"
-                type="text"
-                placeholder="Ex: Voix off, Dialogue pub..."
-                class="w-full px-3 py-2 theme-surface-overlay border theme-border rounded-xl theme-text text-xs theme-placeholder focus:outline-none focus:ring-1 focus:ring-[var(--app-color-focus)]"
-              />
-            </div>
-
-            <!-- Remove Button -->
-            <div class="md:col-span-1 flex justify-end">
-              <button
-                type="button"
-                @click="removeCastRow(row.key)"
-                class="p-2 theme-text-muted hover:text-[var(--app-color-danger-text)] transition-colors rounded-lg min-h-11 min-w-11 inline-flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-focus)]"
-                :aria-label="$t('projectEditor.removeCastRow', { index: index + 1 })"
-                :title="$t('projectEditor.removeCastRow', { index: index + 1 })"
-                data-testid="remove-cast-row"
-              >
-                <Trash2Icon class="w-4 h-4" aria-hidden="true" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </form>
-
-    <AdminEditorSaveBar
-      v-if="!isLoading"
-      :status="form.status.value"
-      :is-dirty="form.isDirty.value"
-      :error-message="form.errorMessage.value"
-      :save-label="isEditMode ? 'Enregistrer les modifications' : 'Créer le projet'"
-      form-id="advertisement-project-form"
-      @discard="form.discard"
-    />
     <AdminCreateStudioDialog
       v-model:open="isCreateStudioOpen"
       :initial-name="newStudioName"
@@ -353,23 +116,13 @@
       status="active"
       @created="onVoiceActorCreated"
     />
-    <AdminUnsavedChangesDialog
-      :open="form.isLeavePromptOpen.value"
-      @stay="form.stayOnPage"
-      @discard="form.discardAndLeave"
-    />
-  </div>
+  </AdminProjectEditorLayout>
 </template>
 
 <script setup lang="ts">
-import { validateDubbingLanguage, displayDubbingLanguage } from "@app/shared-logic";
+import { validateDubbingLanguage } from "@app/shared-logic";
 import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import {
-  Megaphone as MegaphoneIcon,
-  Loader2 as Loader2Icon,
-  Trash2 as Trash2Icon,
-} from "lucide-vue-next";
 import {
   createDubbingProjectSaveClient,
   getEditableDubbingProjectStatus,
@@ -385,8 +138,13 @@ import {
 } from "~/composables/useAdminLookups";
 import { createEditorRowKey, useEditorFormState } from "~/composables/useEditorFormState";
 import type { EditorCastRowBase, EditorProjectTab } from "~/utils/admin-project-editor-types";
+import type { EditorSection } from "~/components/admin/ProjectEditorLayout.vue";
+import { useDisplayLanguage } from "~/composables/useDisplayLanguage";
+import { useCrewRefs } from "~/composables/useCrewRefs";
+import { useSimpleCastWorkspace } from "~/composables/useSimpleCastWorkspace";
 import { firstRouteParam } from "~/utils/route-param";
 
+const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const localePath = useLocalePath();
@@ -458,7 +216,28 @@ const form = useEditorFormState({
     castList.value = saved.castList;
   },
 });
-const isSaving = form.isSaving;
+// Workspace presentation state
+const section = ref<EditorSection>("cast");
+const heroChips = computed(() =>
+  [
+    dubbingLanguage.value ? getDisplayLanguage(dubbingLanguage.value) : "",
+    selectedStudioId.value ? lookups.studioLabel(selectedStudioId.value) : "",
+    t(status.value === "pending" ? "common.pendingValidation" : `common.${status.value}`),
+  ].filter((chip) => chip.length > 0),
+);
+const crewFields = computed(() => [
+  {
+    key: "artisticDirector",
+    label: t("advertisementEditor.artisticDirectionCasting"),
+  },
+  { key: "recording", label: t("audiobookEditor.recordingEngineer") },
+  { key: "mixing", label: t("advertisementEditor.mixagePub") },
+]);
+const { crewValues, setCrewMember } = useCrewRefs({
+  artisticDirector: artisticDirectorId,
+  recording: recordingId,
+  mixing: mixingId,
+});
 
 // Inline creation uses the shared dialogs; typed input survives failures.
 function openCreateStudioDialog(name: string, cb: (id: number) => void) {
@@ -484,23 +263,18 @@ function onVoiceActorCreated(voiceActor: AdminLookupOption) {
   pendingVaSelect = null;
 }
 
-function addNewCastRow() {
-  castList.value.push({
-    key: createEditorRowKey(),
-    voice_actor_id: null,
-    character_name: "Voix off",
-    performance: "Voix off",
-    note: "",
-  });
-}
+const {
+  selectedKey: selectedCastKey,
+  selectedRow,
+  castView,
+  addRow: addNewCastRow,
+  removeRow: removeCastRow,
+} = useSimpleCastWorkspace(castList, lookups, {
+  characterName: "Voix off",
+  performance: "Voix off",
+});
 
-function removeCastRow(key: string) {
-  castList.value = castList.value.filter((row) => row.key !== key);
-}
-
-function getDisplayLanguage(langCode?: string | null): string {
-  return langCode ? displayDubbingLanguage(langCode, "fr") : "";
-}
+const getDisplayLanguage = useDisplayLanguage();
 
 onMounted(async () => {
   try {

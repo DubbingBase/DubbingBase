@@ -1,377 +1,126 @@
 <template>
-  <div
-    class="admin-project-editor max-w-6xl mx-auto space-y-6"
-    :inert="isSaving"
-    :aria-busy="isSaving"
+  <AdminProjectEditorLayout
+    v-model:section="section"
+    :title="
+      mediaTitle ||
+      (isEditMode ? 'Modifier le projet de livre audio' : 'Créer un projet de livre audio')
+    "
+    :eyebrow="
+      isEditMode
+        ? $t('projectEditor.editAudiobookProject')
+        : $t('projectEditor.createAudiobookProject')
+    "
+    :poster-url="posterUrl ?? ''"
+    :back-to="openLibraryBookId ? localePath(`/audiobook/${openLibraryBookId}`) : localePath('/')"
+    :back-label="
+      openLibraryBookId ? $t('projectEditor.backToAudiobook') : $t('projectEditor.backHome')
+    "
+    :chips="heroChips"
+    :projects-base-path="openLibraryBookId ? `/audiobook/${openLibraryBookId}` : null"
+    :projects="bookDubbingProjects"
+    :project-id-param="projectIdParam"
+    :language-label="getDisplayLanguage"
+    form-id="audiobook-project-form"
+    :save-label="isEditMode ? $t('projectEditor.saveChanges') : $t('projectEditor.createProject')"
+    :form="form"
+    :is-loading="isLoading"
+    :cast-count="castList.length"
+    @submit="saveBookProject"
   >
-    <!-- Header -->
-    <div
-      class="theme-surface-overlay p-6 rounded-2xl border theme-border flex justify-between items-center shadow-xl"
-    >
-      <div>
-        <h3 class="text-xl font-bold theme-text flex items-center gap-2">
-          <BookOpenIcon class="w-6 h-6 theme-status-warning-text" />
-          {{ isEditMode ? "Modifier le projet de livre audio" : "Créer un projet de livre audio" }}
-        </h3>
-        <p class="text-sm theme-text-muted mt-1">
-          {{
-            isEditMode
-              ? `Mise à jour du projet #${projectIdParam}`
-              : "Informations OpenLibrary, studio, narrateurs et casting."
-          }}
-        </p>
-      </div>
-      <NuxtLink
-        :to="openLibraryBookId ? localePath(`/audiobook/${openLibraryBookId}`) : localePath('/')"
-        class="text-xs font-semibold px-4 py-2.5 theme-surface-muted theme-hover-surface-muted theme-text-secondary theme-hover-text rounded-xl border theme-border transition-colors flex items-center space-x-2"
+    <template #cast>
+      <AdminProjectCastWorkspace
+        v-model:selected-key="selectedCastKey"
+        :rows="castView"
+        :show-original-actor="false"
+        @add="addNewCastRow"
+        @remove="removeCastRow"
       >
-        <span>{{ openLibraryBookId ? "← Retour au livre" : "← Accueil" }}</span>
-      </NuxtLink>
-    </div>
+        <template #detail>
+          <AdminSimpleCastRoleDetail
+            v-if="selectedRow"
+            :key="selectedRow.key"
+            v-model:voice-actor-id="selectedRow.voice_actor_id"
+            v-model:character-name="selectedRow.character_name"
+            v-model:performance="selectedRow.performance"
+            v-model:note="selectedRow.note"
+            :voice-actor-options="initialVoiceActorOptions"
+            :lookups="lookups"
+            :role-label="$t('common.roleCharacter')"
+            @create-voice-actor="
+              (query: string) =>
+                openCreateVaDialog(query, (id: number) => (selectedRow!.voice_actor_id = id))
+            "
+          />
+        </template>
+      </AdminProjectCastWorkspace>
+    </template>
 
-    <!-- Navigation Tabs -->
-    <div v-if="openLibraryBookId" class="flex flex-wrap gap-2 pb-2 border-b theme-border">
-      <NuxtLink
-        v-for="project in bookDubbingProjects"
-        :key="project.id"
-        :to="localePath(`/audiobook/${openLibraryBookId}/projects/${project.id}/edit`)"
-        class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border"
-        :class="
-          project.id === Number(projectIdParam)
-            ? 'theme-primary-bg theme-primary-border'
-            : 'theme-surface-overlay theme-text-secondary theme-border theme-hover-surface-muted'
-        "
+    <template #overview>
+      <AdminFormCard
+        :title="$t('audiobookEditor.bookInfo')"
+        :description="$t('audiobook.openLibrary')"
       >
-        {{ getDisplayLanguage(project.language) }}
-        <span v-if="project.studios?.name" class="opacity-75 text-xs ml-1"
-          >({{ project.studios.name }})</span
-        >
-      </NuxtLink>
-      <NuxtLink
-        :to="localePath(`/audiobook/${openLibraryBookId}/projects/new`)"
-        class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-dashed"
-        :class="
-          projectIdParam === 'new'
-            ? 'theme-status-warning theme-status-warning-text border'
-            : 'theme-surface-overlay theme-text-muted theme-border theme-hover-surface-muted theme-hover-text'
-        "
-        >{{ $t("common.addLanguage") }}</NuxtLink
-      >
-    </div>
-
-    <!-- Loading overlay -->
-    <div
-      v-if="isLoading"
-      class="flex flex-col items-center justify-center py-24 gap-4 theme-text-muted"
-    >
-      <Loader2Icon class="w-8 h-8 animate-spin theme-status-warning-text" />
-      <span class="text-sm">{{ $t("common.loadingProjectData") }}</span>
-    </div>
-
-    <form v-else id="audiobook-project-form" @submit.prevent="saveBookProject" class="space-y-6">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Media Metadata Card (Left Column) -->
-        <div
-          class="theme-surface-overlay border theme-border rounded-2xl p-6 space-y-5 h-fit shadow-xl"
-        >
-          <h4
-            class="text-sm font-bold theme-text uppercase tracking-wider border-b theme-border pb-3 flex items-center justify-between"
-          >
-            <span>{{ $t("audiobookEditor.bookInfo") }}</span>
-            <span class="text-xs theme-status-warning-text font-normal">{{
-              $t("audiobook.openLibrary")
-            }}</span>
-          </h4>
-
-          <!-- Cover Preview -->
-          <div class="flex justify-center">
-            <div
-              class="relative h-48 w-32 rounded-xl overflow-hidden border theme-border theme-input flex items-center justify-center theme-text-muted shadow-md"
-            >
-              <NuxtImg
-                format="webp"
-                v-if="posterUrl"
-                :src="posterUrl"
-                class="h-full w-full object-cover"
-                alt="Cover"
-              />
-              <div v-else class="text-center p-3 theme-text-secondary">
-                <BookOpenIcon class="h-10 w-10 mx-auto mb-1 opacity-50" />
-                <span class="text-[10px]">{{ $t("audiobookEditor.noCover") }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Content ID / OpenLibrary Work ID -->
-          <div class="space-y-1">
-            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-              $t("audiobookEditor.openLibraryWorkId")
-            }}</label>
-            <div class="flex space-x-2">
-              <input
-                v-model.number="contentId"
-                type="number"
-                required
-                :disabled="!!openLibraryBookId"
-                placeholder="Ex: 82563"
-                class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text theme-placeholder focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              />
-              <button
-                type="button"
-                @click="fetchBookMetadata"
-                :disabled="isFetchingMetadata || !contentId"
-                class="px-3 py-2 theme-surface-muted theme-hover-surface-muted disabled:opacity-50 theme-text text-xs font-semibold rounded-xl border theme-border whitespace-nowrap"
-              >
-                <Loader2Icon v-if="isFetchingMetadata" class="w-4 h-4 animate-spin" />
-                <span v-else>{{ $t("common.fetch") }}</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Media Name / Title -->
-          <div class="space-y-1">
-            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-              $t("audiobookEditor.bookTitle")
-            }}</label>
-            <input
-              v-model="mediaTitle"
-              type="text"
+        <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+          <div class="flex items-end gap-2">
+            <AdminTextField
+              v-model="contentId"
+              class="min-w-0 flex-1"
+              id="audiobook-project-content-id"
+              type="number"
               required
-              class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text theme-placeholder focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm"
+              :disabled="!!openLibraryBookId"
+              :label="$t('audiobookEditor.openLibraryWorkId')"
             />
-          </div>
-
-          <!-- Language -->
-          <div class="space-y-1">
-            <label
-              for="audiobook-project-dubbing-language"
-              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-              >{{ $t("audiobookEditor.narrationLanguage") }}</label
+            <button
+              type="button"
+              class="inline-flex h-11 shrink-0 items-center justify-center rounded-xl border theme-border theme-surface-muted px-4 text-sm font-semibold theme-text theme-hover-surface-muted disabled:opacity-50"
+              :disabled="isFetchingMetadata || !contentId"
+              @click="fetchBookMetadata"
             >
-            <AdminLanguageSelect
-              id="audiobook-project-dubbing-language"
-              v-model="dubbingLanguage"
-              required
-            />
+              <Loader2Icon
+                v-if="isFetchingMetadata"
+                class="h-4 w-4 animate-spin"
+                aria-hidden="true"
+              />
+              <span v-else>{{ $t("common.fetch") }}</span>
+            </button>
           </div>
-
-          <!-- Status -->
-          <div class="space-y-1">
-            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-              $t("common.status")
-            }}</label>
-            <select
-              v-model="status"
-              class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm"
-            >
-              <option value="validated">{{ $t("common.validated") }}</option>
-              <option value="pending">
-                {{ $t("common.pendingValidation") }}
-              </option>
-              <option value="draft">{{ $t("common.draft") }}</option>
-            </select>
-          </div>
+          <AdminTextField
+            v-model="mediaTitle"
+            id="audiobook-project-title"
+            required
+            :label="$t('audiobookEditor.bookTitle')"
+          />
         </div>
+      </AdminFormCard>
+    </template>
 
-        <!-- Technical Crew Form (Right 2 Columns) -->
-        <div
-          class="lg:col-span-2 theme-surface-overlay border theme-border rounded-2xl p-6 space-y-6 shadow-xl"
-        >
-          <h4
-            class="text-sm font-bold theme-text uppercase tracking-wider border-b theme-border pb-3 flex items-center justify-between"
-          >
-            <span>{{ $t("audiobookEditor.technicalProduction") }}</span>
-            <span class="text-xs theme-text-muted">{{
-              $t("audiobookEditor.studioProduction")
-            }}</span>
-          </h4>
+    <template #settings>
+      <AdminProjectSettingsCard
+        v-model:language="dubbingLanguage"
+        v-model:status="status"
+        id-prefix="audiobook-project"
+        :language-label="$t('audiobookEditor.narrationLanguage')"
+      />
+    </template>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <!-- Studio / Publisher -->
-            <div class="space-y-1">
-              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-                $t("audiobookEditor.recordingStudio")
-              }}</label>
-              <AdminAsyncAutocomplete
-                v-model="selectedStudioId"
-                :options="initialStudioOptions"
-                :search-fn="lookups.searchStudios"
-                placeholder="Rechercher un studio (ex: Audiolib, Lizzie...)"
-                :allow-create="true"
-                :display-fn="lookups.studioLabel"
-                @create="
-                  (q: string) => openCreateStudioDialog(q, (id: number) => (selectedStudioId = id))
-                "
-              />
-            </div>
+    <template #crew>
+      <AdminProjectCrewCard
+        v-model:studio-id="selectedStudioId"
+        :title="$t('audiobookEditor.technicalProduction')"
+        :description="$t('audiobookEditor.studioProduction')"
+        :studio-label="$t('audiobookEditor.recordingStudio')"
+        :fields="crewFields"
+        :crew="crewValues"
+        :studio-options="initialStudioOptions"
+        :voice-actor-options="initialVoiceActorOptions"
+        :lookups="lookups"
+        @update:crew="setCrewMember"
+        @create-studio="openCreateStudioDialog"
+        @create-voice-actor="openCreateVaDialog"
+      />
+    </template>
 
-            <!-- Direction Artistique -->
-            <div class="space-y-1">
-              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-                $t("audiobookEditor.artisticDirection")
-              }}</label>
-              <AdminAsyncAutocomplete
-                v-model="artisticDirectorId"
-                :options="initialVoiceActorOptions"
-                :search-fn="lookups.searchVoiceActors"
-                placeholder="Rechercher un comédien/D.A..."
-                :allow-create="true"
-                :display-fn="lookups.voiceActorLabel"
-                @create="
-                  (q: string) => openCreateVaDialog(q, (id: number) => (artisticDirectorId = id))
-                "
-              />
-            </div>
-
-            <!-- Prise de son -->
-            <div class="space-y-1">
-              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-                $t("audiobookEditor.recordingEngineer")
-              }}</label>
-              <AdminAsyncAutocomplete
-                v-model="recordingId"
-                :options="initialVoiceActorOptions"
-                :search-fn="lookups.searchVoiceActors"
-                placeholder="Rechercher..."
-                :allow-create="true"
-                :display-fn="lookups.voiceActorLabel"
-                @create="(q: string) => openCreateVaDialog(q, (id: number) => (recordingId = id))"
-              />
-            </div>
-
-            <!-- Montage / Mixage -->
-            <div class="space-y-1">
-              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-                $t("audiobookEditor.mixing")
-              }}</label>
-              <AdminAsyncAutocomplete
-                v-model="mixingId"
-                :options="initialVoiceActorOptions"
-                :search-fn="lookups.searchVoiceActors"
-                placeholder="Rechercher..."
-                :allow-create="true"
-                :display-fn="lookups.voiceActorLabel"
-                @create="(q: string) => openCreateVaDialog(q, (id: number) => (mixingId = id))"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Narrators & Voice Cast Section -->
-      <div class="theme-surface-overlay border theme-border rounded-2xl p-6 space-y-6 shadow-xl">
-        <div
-          class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b theme-border pb-4"
-        >
-          <div>
-            <h4 class="text-sm font-bold theme-text uppercase tracking-wider">
-              {{ $t("audiobookEditor.narratorsVoiceRoles") }}
-            </h4>
-            <p class="text-xs theme-text-muted mt-0.5">
-              {{ $t("audiobookEditor.associateActors") }}
-            </p>
-          </div>
-          <button
-            type="button"
-            @click="addNewCastRow"
-            class="px-4 py-2 theme-primary-bg hover:bg-[var(--app-color-primary-hover)] rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors"
-          >
-            <span>{{ $t("audiobookEditor.addNarrator") }}</span>
-          </button>
-        </div>
-
-        <div v-if="castList.length === 0" class="text-center py-8 theme-text-muted text-sm">
-          {{ $t("audiobookEditor.noRoleNarrator") }}
-        </div>
-
-        <div v-else class="space-y-4">
-          <div
-            v-for="(row, index) in castList"
-            :key="row.key"
-            class="grid grid-cols-1 md:grid-cols-12 gap-3 p-4 theme-input rounded-xl border theme-border items-end"
-          >
-            <!-- Voice Actor (Narrator) -->
-            <div class="md:col-span-4 space-y-1">
-              <label class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider">{{
-                $t("audiobookEditor.actorNarrator")
-              }}</label>
-              <AdminAsyncAutocomplete
-                v-model="row.voice_actor_id"
-                :options="initialVoiceActorOptions"
-                :search-fn="lookups.searchVoiceActors"
-                placeholder="Rechercher un comédien..."
-                :allow-create="true"
-                :display-fn="lookups.voiceActorLabel"
-                @create="
-                  (q: string) => openCreateVaDialog(q, (id: number) => (row.voice_actor_id = id))
-                "
-              />
-            </div>
-
-            <!-- Role / Character Name -->
-            <div class="md:col-span-2 space-y-1">
-              <label class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider">{{
-                $t("common.roleCharacter")
-              }}</label>
-              <input
-                v-model="row.character_name"
-                type="text"
-                placeholder="Ex: Narrateur, Harry..."
-                class="w-full px-3 py-2 theme-surface-overlay border theme-border rounded-xl theme-text text-xs theme-placeholder focus:outline-none focus:ring-1 focus:ring-[var(--app-color-focus)]"
-              />
-            </div>
-
-            <div class="md:col-span-2 space-y-1">
-              <label class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider">{{
-                $t("projectEditor.castNote")
-              }}</label>
-              <input
-                v-model="row.note"
-                type="text"
-                class="w-full px-3 py-2 theme-surface-overlay border theme-border rounded-xl theme-text text-xs theme-placeholder focus:outline-none focus:ring-1 focus:ring-[var(--app-color-focus)]"
-              />
-            </div>
-
-            <!-- Performance Type -->
-            <div class="md:col-span-3 space-y-1">
-              <label class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider">{{
-                $t("common.performanceType")
-              }}</label>
-              <input
-                v-model="row.performance"
-                type="text"
-                placeholder="Ex: Narration intégrale, Rôle principal..."
-                class="w-full px-3 py-2 theme-surface-overlay border theme-border rounded-xl theme-text text-xs theme-placeholder focus:outline-none focus:ring-1 focus:ring-[var(--app-color-focus)]"
-              />
-            </div>
-
-            <!-- Remove Button -->
-            <div class="md:col-span-1 flex justify-end">
-              <button
-                type="button"
-                @click="removeCastRow(row.key)"
-                class="p-2 theme-text-muted hover:text-[var(--app-color-danger-text)] transition-colors rounded-lg min-h-11 min-w-11 inline-flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-focus)]"
-                :aria-label="$t('projectEditor.removeCastRow', { index: index + 1 })"
-                :title="$t('projectEditor.removeCastRow', { index: index + 1 })"
-                data-testid="remove-cast-row"
-              >
-                <Trash2Icon class="w-4 h-4" aria-hidden="true" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </form>
-
-    <AdminEditorSaveBar
-      v-if="!isLoading"
-      :status="form.status.value"
-      :is-dirty="form.isDirty.value"
-      :error-message="form.errorMessage.value"
-      :save-label="isEditMode ? 'Enregistrer les modifications' : 'Créer le projet'"
-      form-id="audiobook-project-form"
-      @discard="form.discard"
-    />
     <AdminCreateStudioDialog
       v-model:open="isCreateStudioOpen"
       :initial-name="newStudioName"
@@ -384,23 +133,14 @@
       status="active"
       @created="onVoiceActorCreated"
     />
-    <AdminUnsavedChangesDialog
-      :open="form.isLeavePromptOpen.value"
-      @stay="form.stayOnPage"
-      @discard="form.discardAndLeave"
-    />
-  </div>
+  </AdminProjectEditorLayout>
 </template>
 
 <script setup lang="ts">
-import { validateDubbingLanguage, displayDubbingLanguage } from "@app/shared-logic";
+import { validateDubbingLanguage } from "@app/shared-logic";
 import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import {
-  BookOpen as BookOpenIcon,
-  Loader2 as Loader2Icon,
-  Trash2 as Trash2Icon,
-} from "lucide-vue-next";
+import { Loader2 as Loader2Icon } from "lucide-vue-next";
 import {
   createDubbingProjectSaveClient,
   getEditableDubbingProjectStatus,
@@ -416,8 +156,13 @@ import {
 } from "~/composables/useAdminLookups";
 import { createEditorRowKey, useEditorFormState } from "~/composables/useEditorFormState";
 import type { EditorCastRowBase, EditorProjectTab } from "~/utils/admin-project-editor-types";
+import type { EditorSection } from "~/components/admin/ProjectEditorLayout.vue";
+import { useDisplayLanguage } from "~/composables/useDisplayLanguage";
+import { useCrewRefs } from "~/composables/useCrewRefs";
+import { useSimpleCastWorkspace } from "~/composables/useSimpleCastWorkspace";
 import { firstRouteParam } from "~/utils/route-param";
 
+const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const localePath = useLocalePath();
@@ -492,7 +237,28 @@ const form = useEditorFormState({
     castList.value = saved.castList;
   },
 });
-const isSaving = form.isSaving;
+// Workspace presentation state
+const section = ref<EditorSection>("cast");
+const heroChips = computed(() =>
+  [
+    dubbingLanguage.value ? getDisplayLanguage(dubbingLanguage.value) : "",
+    selectedStudioId.value ? lookups.studioLabel(selectedStudioId.value) : "",
+    t(status.value === "pending" ? "common.pendingValidation" : `common.${status.value}`),
+  ].filter((chip) => chip.length > 0),
+);
+const crewFields = computed(() => [
+  {
+    key: "artisticDirector",
+    label: t("audiobookEditor.artisticDirection"),
+  },
+  { key: "recording", label: t("audiobookEditor.recordingEngineer") },
+  { key: "mixing", label: t("audiobookEditor.mixing") },
+]);
+const { crewValues, setCrewMember } = useCrewRefs({
+  artisticDirector: artisticDirectorId,
+  recording: recordingId,
+  mixing: mixingId,
+});
 
 // Inline creation uses the shared dialogs; typed input survives failures.
 function openCreateStudioDialog(name: string, cb: (id: number) => void) {
@@ -518,23 +284,18 @@ function onVoiceActorCreated(voiceActor: AdminLookupOption) {
   pendingVaSelect = null;
 }
 
-function addNewCastRow() {
-  castList.value.push({
-    key: createEditorRowKey(),
-    voice_actor_id: null,
-    character_name: "Narrateur",
-    performance: "Narration",
-    note: "",
-  });
-}
+const {
+  selectedKey: selectedCastKey,
+  selectedRow,
+  castView,
+  addRow: addNewCastRow,
+  removeRow: removeCastRow,
+} = useSimpleCastWorkspace(castList, lookups, {
+  characterName: "Narrateur",
+  performance: "Narration",
+});
 
-function removeCastRow(key: string) {
-  castList.value = castList.value.filter((row) => row.key !== key);
-}
-
-function getDisplayLanguage(langCode?: string | null): string {
-  return langCode ? displayDubbingLanguage(langCode, "fr") : "";
-}
+const getDisplayLanguage = useDisplayLanguage();
 
 async function fetchBookMetadata() {
   if (!contentId.value) return;

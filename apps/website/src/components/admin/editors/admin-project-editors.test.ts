@@ -12,16 +12,33 @@ const editorNames = [
   "PodcastProjectEditor.vue",
 ];
 
+// Movie and show are thin wrappers around the one shared TMDB editor.
+const sharedEditors: Record<string, string> = {
+  "MovieProjectEditor.vue": "TmdbProjectEditor.vue",
+  "ShowProjectEditor.vue": "TmdbProjectEditor.vue",
+};
+const readSource = (relativePath: string): string =>
+  readFileSync(resolve(import.meta.dirname, relativePath), "utf8");
+// Layout, crew/settings cards and pickers shared by every editor.
+const sharedParts = [
+  "../ProjectEditorLayout.vue",
+  "../ProjectCrewCard.vue",
+  "../ProjectSettingsCard.vue",
+  "../CastVoiceActorField.vue",
+  "../SimpleCastRoleDetail.vue",
+  "../../../composables/useSimpleCastWorkspace.ts",
+]
+  .map(readSource)
+  .join("\n");
 const editorSource = (name: string): string =>
-  readFileSync(resolve(import.meta.dirname, name), "utf8");
+  readSource(sharedEditors[name] ?? name) + sharedParts;
 
 // Editors that render their cast through the shared workspace delegate row keys and removal to it.
 const workspaceSource = readFileSync(
   resolve(import.meta.dirname, "../ProjectCastWorkspace.vue"),
   "utf8",
 );
-const castSource = (name: string): string =>
-  name === "MovieProjectEditor.vue" ? editorSource(name) + workspaceSource : editorSource(name);
+const castSource = (name: string): string => editorSource(name) + workspaceSource;
 
 describe("admin project editors", () => {
   it.each(editorNames)("uses Nuxt's registered controls in %s", (name) => {
@@ -49,28 +66,14 @@ describe("admin project editors", () => {
     (name) => {
       const source = editorSource(name);
 
-      expect(source).toContain(':inert="isSaving"');
+      expect(source).toContain(':inert="form.isSaving.value"');
       expect(source).toContain("await refreshProject();");
       expect(source).toContain(
         "status.value = getEditableDubbingProjectStatus(data.project.status);",
       );
 
-      const crewFields = [
-        "artisticDirectorId",
-        "adaptationId",
-        "recordingId",
-        "editingId",
-        "mixingId",
-        "projectManagerId",
-        "creativeSupervisionId",
-      ];
-      const crewRows = source.indexOf("if (data.crew)");
-
-      for (const field of crewFields) {
-        const resetIndex = source.indexOf(`${field}.value = null;`);
-        expect(resetIndex).toBeGreaterThanOrEqual(0);
-        expect(crewRows).toBeGreaterThan(resetIndex);
-      }
+      // Roles absent from the reloaded crew are cleared by the shared crew state (unit tested).
+      expect(source).toContain("crewState.load(data.crew ?? [])");
     },
   );
 
