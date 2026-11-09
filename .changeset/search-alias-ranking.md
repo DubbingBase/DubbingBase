@@ -2,4 +2,4 @@
 "@app/website": patch
 ---
 
-Global search now uses TMDB's own relevance order as a graded ranking floor, since TMDB already matches alternate titles, with no extra provider calls. It also halves the recency bonus for results with no popularity or vote evidence so established exact matches outrank fresh unrated ones.
+Global search now merges provider results with weighted Reciprocal Rank Fusion instead of DubbingBase's own title-matching and quality scoring. Each provider's own order decides relevance within its list, and media-type weights (voice actors, then movies and shows, games, people, then books and the rest) decide how lists interleave.

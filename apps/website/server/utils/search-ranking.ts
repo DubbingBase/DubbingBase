@@ -15,7 +15,7 @@ export type SearchItem = {
   first_air_date?: string | null;
   first_release_date?: number | null;
   studio_names?: string[];
-  /** 0-based position in TMDB's own relevance order (pages concatenated). Never returned. */
+  /** 0-based position in the item's own provider list (provider relevance order). Never returned. */
   provider_rank?: number;
   tmdb_id?: number | null;
   profile_picture?: string | null;
@@ -24,116 +24,44 @@ export type SearchItem = {
   score?: number;
 };
 
-const foldAccents = (value: string): string =>
-  value.normalize("NFKD").replace(/(\p{Script=Latin})\p{M}+/gu, "$1");
+/**
+ * Relative weight of each media type when provider lists are merged. Order decided in 56365-135:
+ * voice actors > movies = shows > games > people > books = ads = everything else.
+ */
+export const MEDIA_TYPE_WEIGHTS: Readonly<Record<string, number>> = {
+  voice_actor: 1.5,
+  movie: 1,
+  tv: 1,
+  video_game: 0.8,
+  person: 0.6,
+};
+export const DEFAULT_MEDIA_TYPE_WEIGHT = 0.4;
 
-const normalizeSearchText = (value: string): string =>
-  foldAccents(value)
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}\p{M}\s]/gu, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+/** Reciprocal Rank Fusion constant: small, because provider lists are short (20-40 items). */
+export const RRF_K = 5;
 
-function getSearchNames(item: SearchItem): string[] {
-  return [
-    item.title,
-    item.name,
-    item.voice_actor_name,
-    item.original_title,
-    item.original_name,
-    typeof item.product_line === "string" ? item.product_line : "",
-    typeof item.manufacturer === "string" ? item.manufacturer : "",
-    typeof item.brand === "string" ? item.brand : "",
-    typeof item.firstname === "string" && typeof item.lastname === "string"
-      ? `${item.firstname} ${item.lastname}`
-      : "",
-  ].filter((name): name is string => typeof name === "string" && name.length > 0);
-}
-
-function getMatchTier(item: SearchItem, query: string): "exact" | "prefix" | "contains" | "none" {
-  const queryHasPunctuation = /[^\p{L}\p{N}\s]/u.test(query);
-  const normalizedQuery = foldAccents(query).toLowerCase().replace(/\s+/g, " ").trim();
-  const names = getSearchNames(item).map((name) => ({
-    strict: foldAccents(name).toLowerCase().replace(/\s+/g, " ").trim(),
-    loose: normalizeSearchText(name),
-  }));
-  const looseQuery = normalizeSearchText(query);
-  const isMatch = (name: (typeof names)[number], test: (value: string) => boolean): boolean =>
-    queryHasPunctuation ? test(name.strict) : test(name.loose);
-  const exact = names.some((name) =>
-    isMatch(name, (value) => value === (queryHasPunctuation ? normalizedQuery : looseQuery)),
-  );
-  const prefix = names.some((name) =>
-    isMatch(name, (value) => value.startsWith(queryHasPunctuation ? normalizedQuery : looseQuery)),
-  );
-  const contains = names.some((name) =>
-    isMatch(name, (value) => value.includes(queryHasPunctuation ? normalizedQuery : looseQuery)),
-  );
-
-  return exact ? "exact" : prefix ? "prefix" : contains ? "contains" : "none";
-}
-
-const PROVIDER_RANK_TOP = 3000;
-const PROVIDER_RANK_UNMATCHED_TOP = 1000;
-const PROVIDER_RANK_SHORT_QUERY_TOP = 2000;
-const PROVIDER_RANK_MIN_QUERY_LENGTH = 5;
-const PROVIDER_RANK_STEP = 50;
-
-function calculateScore(item: SearchItem, query: string, now: number): number {
-  const tier = getMatchTier(item, query);
-  let score = tier === "exact" ? 3000 : tier === "prefix" ? 2000 : tier === "contains" ? 1000 : 0;
-  // TMDB handles alternate titles but returns only one localized title, so its own order is a
-  // graded relevance floor (position 0 ties an exact match, the 40th a partial one). Only movie
-  // and TV hits are floored. A hit with no local text match could be an alias hit or a loose one,
-  // so it is capped at partial level; for very short queries a substring match is not evidence
-  // either, so those are capped at prefix level. Neither can outrank a real exact title.
-  if (
-    (item.media_type === "movie" || item.media_type === "tv") &&
-    typeof item.provider_rank === "number" &&
-    Number.isFinite(item.provider_rank)
-  ) {
-    const top =
-      tier === "none"
-        ? PROVIDER_RANK_UNMATCHED_TOP
-        : normalizeSearchText(query).length < PROVIDER_RANK_MIN_QUERY_LENGTH
-          ? PROVIDER_RANK_SHORT_QUERY_TOP
-          : PROVIDER_RANK_TOP;
-    score = Math.max(score, top - Math.max(0, item.provider_rank) * PROVIDER_RANK_STEP);
-  }
-  score += Math.min(Math.sqrt(item.popularity || 0) * 3, 50);
-  score += Math.min((item.vote_average || 0) * 0.1, 1);
-  score += Math.min(Math.log10((item.vote_count || 0) + 1) * 3, 15);
-
-  let releaseMs: number | null = null;
-  const isoDate = item.release_date || item.first_air_date;
-  if (isoDate) releaseMs = new Date(isoDate).getTime();
-  else if (typeof item.first_release_date === "number") releaseMs = item.first_release_date * 1000;
-
-  if (releaseMs && !Number.isNaN(releaseMs)) {
-    const ageYears = Math.max(0, (now - releaseMs) / (365.25 * 24 * 3600 * 1000));
-    // Items with no popularity or vote evidence (e.g. most books) get half the recency
-    // bonus so a fresh, unrated record does not outrank an established exact match.
-    const hasEvidence = (item.popularity ?? 0) > 0 || (item.vote_count ?? 0) > 0;
-    score += Math.max(0, 15 - ageYears * 1.5) * (hasEvidence ? 1 : 0.5);
-  }
-
-  return score;
-}
-
-export function rankSearchResults(
-  items: SearchItem[],
-  query: string,
-  now = Date.now(),
-): SearchItem[] {
+/**
+ * Merges the providers' own relevance orders into one list with weighted Reciprocal Rank
+ * Fusion. DubbingBase adds no text matching or quality formulas: each provider decides what is
+ * relevant within its list, and only the media-type weights decide how the lists interleave.
+ * Ties fall back to the provider's popularity, then media type and ID, so the order is
+ * deterministic regardless of arrival order.
+ */
+export function rankSearchResults(items: SearchItem[]): SearchItem[] {
   return items
     .filter((item) => item != null)
-    .map(({ provider_rank, ...item }) => ({
-      ...item,
-      score: calculateScore({ ...item, provider_rank }, query, now),
-    }))
+    .map(({ provider_rank, ...item }) => {
+      const weight = MEDIA_TYPE_WEIGHTS[item.media_type ?? ""] ?? DEFAULT_MEDIA_TYPE_WEIGHT;
+      const position =
+        typeof provider_rank === "number" && Number.isFinite(provider_rank)
+          ? Math.max(0, provider_rank)
+          : null;
+      return { ...item, score: position === null ? 0 : weight / (RRF_K + position) };
+    })
     .sort(
       (a, b) =>
         (b.score ?? 0) - (a.score ?? 0) ||
+        (b.popularity ?? 0) - (a.popularity ?? 0) ||
         String(a.media_type ?? "").localeCompare(String(b.media_type ?? "")) ||
         String(a.id ?? "").localeCompare(String(b.id ?? ""), undefined, { numeric: true }),
     );

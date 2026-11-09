@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => ({
   advertisementSearch: vi.fn(async (): Promise<Array<Record<string, unknown>>> => []),
   toySearch: vi.fn(async (): Promise<Array<Record<string, unknown>>> => []),
   voiceActorSearchFails: false,
+  voiceActors: new Array<Record<string, unknown>>(),
   useSupabaseAdmin: vi.fn(),
 }));
 
@@ -53,13 +54,14 @@ beforeEach(() => {
   mocks.advertisementSearch.mockResolvedValue([]);
   mocks.toySearch.mockResolvedValue([]);
   mocks.voiceActorSearchFails = false;
+  mocks.voiceActors = [];
 
   const voiceActorQuery = {
     select: vi.fn(),
     textSearch: vi.fn(),
     or: vi.fn(),
     limit: vi.fn(async () => ({
-      data: [],
+      data: mocks.voiceActors,
       error: mocks.voiceActorSearchFails ? { message: "database unavailable" } : null,
     })),
   };
@@ -81,14 +83,18 @@ async function request(path: string): Promise<Response> {
 }
 
 describe("global search response", () => {
-  it("forwards the trimmed query and active locale, then ranks all exact matches first", async () => {
-    mocks.tmdbSearch.mockImplementation(async () => ({
-      results: [
-        { id: 30, media_type: "person", name: "C#", popularity: 100_000 },
-        { id: 12, media_type: "person", name: "C++", popularity: 1 },
-        { id: 11, media_type: "person", name: "C++", popularity: 0 },
-      ],
-    }));
+  it("forwards the trimmed query and locale, then keeps TMDB's own order", async () => {
+    mocks.tmdbSearch.mockImplementation(async (_q: string, page: number) =>
+      page === 1
+        ? {
+            results: [
+              { id: 30, media_type: "person", name: "C#", popularity: 100_000 },
+              { id: 12, media_type: "person", name: "C++", popularity: 1 },
+              { id: 11, media_type: "person", name: "C++", popularity: 0 },
+            ],
+          }
+        : { results: [] },
+    );
 
     const response = await request("/?query=%20C%2B%2B%20&locale=fr");
     const results: unknown = await response.json();
@@ -97,9 +103,9 @@ describe("global search response", () => {
     expect(mocks.tmdbSearch).toHaveBeenCalledWith("C++", 1, "fr-FR");
     expect(mocks.tmdbSearch).toHaveBeenCalledWith("C++", 2, "fr-FR");
     expect(results).toEqual([
-      expect.objectContaining({ id: 12, name: "C++" }),
-      expect.objectContaining({ id: 11, name: "C++" }),
-      expect.objectContaining({ id: 30, name: "C#" }),
+      expect.objectContaining({ id: 30 }),
+      expect.objectContaining({ id: 12 }),
+      expect.objectContaining({ id: 11 }),
     ]);
   });
 
@@ -151,7 +157,7 @@ describe("global search response", () => {
     expect(totalFailure.status).toBe(503);
   });
 
-  // Recorded 2026-11-08: search/multi returns movie 406994 first for both queries.
+  // Recorded 2026-11-08: search/multi returns movie 406994 first for "Watch Out".
   const tmdbWatchOut = () => ({
     results: [
       {
@@ -160,136 +166,115 @@ describe("global search response", () => {
         title: "Better Watch Out",
         release_date: "2017-10-06",
         popularity: 3.0034,
-        vote_average: 6.5,
         vote_count: 1725,
       },
       {
-        id: 1079890,
-        media_type: "movie",
-        title: "Watch Out",
-        release_date: "2023-01-01",
-        popularity: 0.0329,
-        vote_count: 0,
+        id: 109693,
+        media_type: "tv",
+        name: "Watch Out Boss",
+        first_air_date: "2018-01-01",
+        popularity: 1.8628,
       },
       {
-        id: 74864,
+        id: 322957,
         media_type: "movie",
         title: "Watch Out",
-        release_date: "2008-01-01",
-        popularity: 0.2418,
-        vote_count: 6,
-      },
-      {
-        id: 324234,
-        media_type: "movie",
-        title: "You Better Watch Out!",
-        release_date: "2013-01-01",
-        popularity: 0.7385,
-        vote_count: 1,
+        release_date: "1953-01-01",
+        popularity: 0.3954,
       },
     ],
   });
-
-  it("surfaces a TMDB-ranked movie among exact titles without extra provider calls", async () => {
-    mocks.tmdbSearch.mockImplementation(async (_q: string, page: number) =>
-      page === 1 ? tmdbWatchOut() : { results: [] },
-    );
-
-    const response = await request("/?query=Watch%20Out&locale=en");
-    const results: Array<Record<string, unknown>> = await response.json();
-
-    expect(results.slice(0, 3).map(({ id }) => id)).toEqual([406994, 1079890, 74864]);
-    expect(results.every((item) => !("provider_rank" in item))).toBe(true);
-    expect(mocks.tmdbSearch).toHaveBeenCalledTimes(2);
+  const book = (id: number, title: string) => ({
+    id,
+    title,
+    name: title,
+    release_date: "2024-01-01",
   });
 
-  it("ranks Better Watch Out above exact-title books from 2024 and 2023", async () => {
+  it("ranks the provider's first hit first even when its title is an alias", async () => {
     mocks.tmdbSearch.mockImplementation(async (_q: string, page: number) =>
       page === 1 ? tmdbWatchOut() : { results: [] },
     );
-    mocks.openLibrarySearch.mockResolvedValue([
-      {
-        id: 42453480,
-        title: "Better Watch Out",
-        name: "Better Watch Out",
-        release_date: "2024-01-01",
-      },
-      {
-        id: 36848566,
-        title: "Better Watch Out",
-        name: "Better Watch Out",
-        release_date: "2023-01-01",
-      },
-    ]);
+    mocks.openLibrarySearch.mockResolvedValue([book(1, "Watch Out"), book(2, "Watch Out Again")]);
 
-    const response = await request("/?query=Better%20Watch%20Out");
-    const results: Array<Record<string, unknown>> = await response.json();
+    const results: Array<Record<string, unknown>> = await (
+      await request("/?query=Watch%20Out")
+    ).json();
 
-    expect(results.slice(0, 3).map(({ media_type, id }) => `${media_type}:${id}`)).toEqual([
+    // Interleaved by position and weight: movie/tv #0-#2 vs books #0-#1 at weight 0.4.
+    expect(results.map(({ media_type, id }) => `${media_type}:${id}`)).toEqual([
       "movie:406994",
-      "audiobook:42453480",
-      "audiobook:36848566",
+      "tv:109693",
+      "movie:322957",
+      "audiobook:1",
+      "audiobook:2",
     ]);
-    expect(results[0]?.score).toBeGreaterThan(Number(results[1]?.score) + 8);
   });
 
-  it("floors only TMDB movie/TV by position across both pages and strips the internal rank", async () => {
+  it("makes no extra provider calls and never returns the internal position", async () => {
     mocks.tmdbSearch.mockImplementation(async (_q: string, page: number) =>
-      page === 1
-        ? { results: [{ id: 1, media_type: "person", name: "Okami Person" }] }
-        : {
-            results: [
-              {
-                id: 406994,
-                media_type: "movie",
-                title: "Better Watch Out",
-                release_date: "2017-10-06",
-                vote_count: 1725,
-              },
-            ],
-          },
+      page === 1 ? tmdbWatchOut() : { results: [] },
     );
-    mocks.openLibrarySearch.mockResolvedValue([
-      { id: 7, title: "Okami", name: "Okami", release_date: "2020-01-01" },
-    ]);
 
     for (const path of ["/?query=Watch%20Out", "/?query=Watch%20Out&projection=search-page"]) {
       const results: Array<Record<string, unknown>> = await (await request(path)).json();
-      expect(results.every((item) => !("provider_rank" in item))).toBe(true);
-      expect(results.map(({ id }) => id)).toContain(406994);
+      expect(results.every((entry) => !("provider_rank" in entry))).toBe(true);
+      expect(results.every((entry) => typeof entry.score === "number")).toBe(true);
     }
+    expect(mocks.tmdbSearch).toHaveBeenCalledTimes(4);
+  });
+
+  it("weights media types: voice actors, then movies and shows, games, people, books", async () => {
+    mocks.tmdbSearch.mockImplementation(async (_q: string, page: number) =>
+      page === 1
+        ? {
+            results: [
+              { id: 1, media_type: "movie", title: "Example" },
+              { id: 2, media_type: "person", name: "Example" },
+            ],
+          }
+        : { results: [] },
+    );
+    mocks.igdbSearch.mockResolvedValue([{ id: 5, name: "Example" }]);
+    mocks.openLibrarySearch.mockResolvedValue([book(7, "Example")]);
+    mocks.voiceActors = [
+      { id: 9, firstname: "Example", lastname: "Actor", voice_actor_name: "Example Actor" },
+    ];
+
+    const results: Array<Record<string, unknown>> = await (await request("/?query=Example")).json();
+
+    expect(results.map(({ media_type, id }) => `${media_type}:${id}`)).toEqual([
+      "voice_actor:9",
+      "movie:1",
+      "video_game:5",
+      "person:2",
+      "audiobook:7",
+    ]);
   });
 
   it("keeps the best TMDB position when the same movie is returned on both pages", async () => {
-    const hit = {
-      id: 406994,
-      media_type: "movie",
-      title: "Better Watch Out",
-      release_date: "2017-10-06",
-    };
-    const filler = { id: 2, media_type: "movie", title: "Watch Out", release_date: "2010-01-01" };
+    const hit = { id: 406994, media_type: "movie", title: "Better Watch Out" };
+    const other = { id: 2, media_type: "movie", title: "Other" };
     mocks.tmdbSearch.mockImplementation(async (_q: string, page: number) =>
-      page === 1 ? { results: [{ ...hit }, { ...filler }] } : { results: [{ ...hit }] },
+      page === 1 ? { results: [{ ...other }, { ...hit }] } : { results: [{ ...hit }] },
     );
 
     const results: Array<Record<string, unknown>> = await (
       await request("/?query=Watch%20Out")
     ).json();
 
-    // Page-1 position 0 survives deduplication, so the movie ties the exact tier and wins on quality order.
-    expect(Number(results.find(({ id }) => id === 406994)?.score)).toBeGreaterThanOrEqual(2999);
+    expect(results.map(({ id }) => id)).toEqual([2, 406994]);
+    expect(results[1]?.score).toBeCloseTo(1 / 6);
   });
 
-  it("still ranks other providers when TMDB fails, with no rank floor involved", async () => {
+  it("still ranks other providers when TMDB fails", async () => {
     mocks.tmdbSearch.mockRejectedValue(new Error("TMDB unavailable"));
-    mocks.openLibrarySearch.mockResolvedValue([
-      { id: 7, title: "Better Watch Out", name: "Better Watch Out", release_date: "2024-01-01" },
-    ]);
+    mocks.openLibrarySearch.mockResolvedValue([book(7, "Better Watch Out"), book(8, "Another")]);
 
     const response = await request("/?query=Better%20Watch%20Out");
     const results: Array<Record<string, unknown>> = await response.json();
 
     expect(response.status).toBe(200);
-    expect(results).toEqual([expect.objectContaining({ id: 7, media_type: "audiobook" })]);
+    expect(results.map(({ id }) => id)).toEqual([7, 8]);
   });
 });

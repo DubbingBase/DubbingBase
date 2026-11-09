@@ -353,43 +353,39 @@ export default defineEventHandler(async (event) => {
 
     // Deduplicate IGDB games
     const igdbKeySet = new Set<string>();
-    for (const game of igdbResults) {
+    igdbResults.forEach((game, index) => {
       const key = `video_game:${game.id}`;
       if (!igdbKeySet.has(key)) {
         igdbKeySet.add(key);
-        resp.push(game);
+        resp.push({ ...game, provider_rank: index });
       }
-    }
+    });
 
     // Deduplicate OpenLibrary audiobooks
     const bookKeySet = new Set<string>();
-    for (const book of openLibraryResults) {
+    openLibraryResults.forEach((book, index) => {
       const key = `audiobook:${book.id}`;
       if (!bookKeySet.has(key)) {
         bookKeySet.add(key);
-        resp.push(book);
+        resp.push({ ...book, provider_rank: index });
       }
-    }
+    });
 
     // Deduplicate Podcasts
     const podcastKeySet = new Set<string>();
-    for (const pod of podcastResults) {
+    podcastResults.forEach((pod, index) => {
       const key = `podcast:${pod.id}`;
       if (!podcastKeySet.has(key)) {
         podcastKeySet.add(key);
-        resp.push(pod);
+        resp.push({ ...pod, provider_rank: index });
       }
-    }
+    });
 
     // Deduplicate Advertisements
-    for (const ad of adResults) {
-      resp.push(ad);
-    }
+    adResults.forEach((ad, index) => resp.push({ ...ad, provider_rank: index }));
 
     // Deduplicate Toys
-    for (const toy of toyResults) {
-      resp.push(toy);
-    }
+    toyResults.forEach((toy, index) => resp.push({ ...toy, provider_rank: index }));
 
     const voiceActorResults = [...dbVoiceActorResults];
 
@@ -403,7 +399,7 @@ export default defineEventHandler(async (event) => {
         }
       });
 
-      voiceActorResults.forEach((voiceActor) => {
+      voiceActorResults.forEach((voiceActor, index) => {
         const vaKey = `voice_actor:${voiceActor.id}`;
         if (voiceActor.tmdb_id != null) {
           const tmdbKey = `person:${voiceActor.tmdb_id}`;
@@ -412,6 +408,7 @@ export default defineEventHandler(async (event) => {
             respMap.delete(tmdbKey);
             respMap.set(vaKey, {
               ...voiceActor,
+              provider_rank: Math.min(index, person.provider_rank ?? index),
               actor: person,
               profile_path:
                 buildSupabaseImageUrl(voiceActor.profile_picture) ?? person.profile_path,
@@ -421,6 +418,7 @@ export default defineEventHandler(async (event) => {
           } else {
             respMap.set(vaKey, {
               ...voiceActor,
+              provider_rank: index,
               profile_path: buildSupabaseImageUrl(voiceActor.profile_picture),
               media_type: "voice_actor",
               popularity: 50,
@@ -430,6 +428,7 @@ export default defineEventHandler(async (event) => {
         } else {
           respMap.set(vaKey, {
             ...voiceActor,
+            provider_rank: index,
             profile_path: buildSupabaseImageUrl(voiceActor.profile_picture),
             media_type: "voice_actor",
             popularity: 30,
@@ -466,9 +465,8 @@ export default defineEventHandler(async (event) => {
     }
     resp = [...uniqueResults.values()];
 
-    // Score each result once; sort and return using the same score value.
-    const now = Date.now();
-    const results = rankSearchResults(resp, providerQuery, now);
+    // Merge the providers' own orders with weighted Reciprocal Rank Fusion.
+    const results = rankSearchResults(resp);
     return getQuery(event).projection === "search-page"
       ? results.map(projectSearchResult)
       : results;
