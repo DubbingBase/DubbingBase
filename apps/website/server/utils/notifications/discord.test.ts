@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { useRuntimeConfig } from "#app/nuxt";
 import { buildDiscordEmbed, normalizeDiscordUrl, sendDiscordAdminNotification } from "./discord";
 
 afterEach(() => {
@@ -8,6 +9,22 @@ afterEach(() => {
 });
 
 describe("Discord admin notifications", () => {
+  it("allows routine notifications with a parsed boolean runtime override", async () => {
+    const config = useRuntimeConfig();
+    const previousValue: unknown = Reflect.get(config, "discordNotifyRoutine");
+    Reflect.set(config, "discordNotifyRoutine", true);
+    vi.stubEnv("DISCORD_NOTIFY_ROUTINE", "false");
+    vi.stubEnv("DISCORD_WEBHOOK_URL", "https://discord.example/general");
+    const fetchMock = vi.fn(async () => new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      await sendDiscordAdminNotification("Enqueued", "Details", { routine: true });
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    } finally {
+      Reflect.set(config, "discordNotifyRoutine", previousValue);
+    }
+  });
+
   it("normalizes internal URLs once and preserves external URLs", () => {
     expect(normalizeDiscordUrl("/movie/42")).toBe("https://dubbingbase.com/fr/movie/42");
     expect(normalizeDiscordUrl("/fr/show/42")).toBe("https://dubbingbase.com/fr/show/42");

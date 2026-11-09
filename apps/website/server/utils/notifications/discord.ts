@@ -31,6 +31,7 @@ function shouldSkipRoutine(options?: DiscordWebhookOptions): boolean {
   const cloudflareValue = options.event?.context.cloudflare?.env?.DISCORD_NOTIFY_ROUTINE;
 
   return (
+    configuredValue !== true &&
     configuredValue !== "true" &&
     cloudflareValue !== "true" &&
     process.env.DISCORD_NOTIFY_ROUTINE !== "true"
