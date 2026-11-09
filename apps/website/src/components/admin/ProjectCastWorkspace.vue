@@ -90,7 +90,7 @@
             @click="toggleRow(row.key)"
           >
             <AdminCastAvatar
-              size="portrait"
+              size="md"
               :name="row.characterName"
               :src="row.characterImage"
               :title="$t('projectEditor.castCharacter')"

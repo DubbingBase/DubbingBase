@@ -26,8 +26,8 @@ import { UserIcon } from "lucide-vue-next";
 import { computed, ref, watch } from "vue";
 import { getInitials } from "~/utils/cast-workspace";
 
-/** All identities are rounded squares; only the size differs (portrait = character, md/sm = people). */
-const props = defineProps<{ name: string; src: string | null; size?: "sm" | "md" | "portrait" }>();
+/** Rounded squares; `md` is the size shared by the character, actor and voice-actor portraits. */
+const props = defineProps<{ name: string; src: string | null; size?: "sm" | "md" }>();
 const emit = defineEmits<{ error: [] }>();
 const failed = ref(false);
 watch(
@@ -41,8 +41,7 @@ const onError = () => {
 const initials = computed(() => getInitials(props.name));
 
 const SIZES = {
-  portrait: { classes: "h-[4.5rem] w-[4.5rem] rounded-xl text-base", width: 72, height: 72 },
-  md: { classes: "h-11 w-11 rounded-xl text-sm", width: 44, height: 44 },
+  md: { classes: "h-14 w-14 rounded-xl text-base", width: 56, height: 56 },
   sm: { classes: "h-10 w-10 rounded-xl text-xs", width: 40, height: 40 },
 } as const;
 const dimensions = computed(() => SIZES[props.size ?? "sm"]);
