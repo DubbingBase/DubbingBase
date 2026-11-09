@@ -31,13 +31,11 @@ describe("canonical GET API consumers", () => {
   });
 
   it("loads movie and show editor metadata through dynamic-id GET routes", () => {
-    const movieEditor = readWebsiteSource("src/components/admin/editors/MovieProjectEditor.vue");
-    const showEditor = readWebsiteSource("src/components/admin/editors/ShowProjectEditor.vue");
+    const util = readWebsiteSource("src/utils/tmdb-project-editor.ts");
 
-    expect(movieEditor).toContain("`/api/movie/${tmdbMovieId.value}`");
-    expect(movieEditor).not.toContain('"/api/movie",');
-    expect(showEditor).toContain("`/api/show/${tmdbShowId.value}`");
-    expect(showEditor).not.toContain('"/api/show",');
+    expect(util).toContain("`/api/${kind}/${id}`");
+    expect(util).not.toContain('"/api/movie",');
+    expect(util).not.toContain('"/api/show",');
   });
 });
 

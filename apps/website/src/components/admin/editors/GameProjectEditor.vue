@@ -1,551 +1,221 @@
 <template>
-  <div
-    class="admin-project-editor max-w-6xl mx-auto space-y-6"
-    :inert="isSaving"
-    :aria-busy="isSaving"
+  <AdminProjectEditorLayout
+    v-model:section="section"
+    :title="mediaTitle || $t('projectEditor.createGameProject')"
+    :eyebrow="
+      isEditMode ? $t('projectEditor.editGameProject') : $t('projectEditor.createGameProject')
+    "
+    :poster-url="posterUrl"
+    :back-to="igdbGameId ? localePath(`/game/${igdbGameId}`) : localePath('/')"
+    :back-label="igdbGameId ? $t('projectEditor.backToGame') : $t('projectEditor.backHome')"
+    :chips="heroChips"
+    :projects-base-path="igdbGameId ? `/game/${igdbGameId}` : null"
+    :projects="gameDubbingProjects"
+    :project-id-param="projectIdParam"
+    :language-label="getDisplayLanguage"
+    form-id="game-project-form"
+    :save-label="$t('projectEditor.saveGameProject')"
+    :form="form"
+    :is-loading="isLoading"
+    :load-error="loadError"
+    :cast-count="castRows.length"
+    @submit="saveGameProject"
   >
-    <!-- Header -->
-    <div
-      class="theme-surface-overlay p-6 rounded-2xl border theme-border flex flex-col gap-4 shadow-xl sm:flex-row sm:items-center sm:justify-between"
-    >
-      <div class="min-w-0">
-        <h3 class="text-xl font-bold theme-text flex items-center gap-2">
-          <Gamepad2Icon class="w-6 h-6 theme-status-info-text" />
-          {{
-            isEditMode ? $t("projectEditor.editGameProject") : $t("projectEditor.createGameProject")
-          }}
-        </h3>
-        <p class="text-sm theme-text-muted mt-1">
-          {{
-            isEditMode
-              ? `Updating dubbing project ID #${projectIdParam}`
-              : $t("projectEditor.fillInfoGame")
-          }}
-        </p>
-      </div>
-      <NuxtLink
-        :to="igdbGameId ? localePath(`/game/${igdbGameId}`) : localePath('/')"
-        class="self-start text-xs font-semibold px-4 py-2.5 theme-surface-muted theme-hover-surface-muted theme-text-secondary theme-hover-text rounded-xl border theme-border transition-colors flex items-center space-x-2 sm:self-auto"
+    <template #cast>
+      <AdminProjectCastWorkspace
+        v-model:selected-key="selectedCastKey"
+        :rows="castView"
+        :show-original-actor="false"
+        @add="addCastRow"
+        @remove="removeCastRow"
       >
-        <span>{{
-          igdbGameId ? $t("projectEditor.backToGame") : $t("projectEditor.backHome")
-        }}</span>
-      </NuxtLink>
-    </div>
-
-    <!-- Navigation Tabs -->
-    <div v-if="igdbGameId" class="flex flex-wrap gap-2 pb-2 border-b theme-border">
-      <NuxtLink
-        v-for="project in gameDubbingProjects"
-        :key="project.id"
-        :to="localePath(`/game/${igdbGameId}/projects/${project.id}/edit`)"
-        class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border"
-        :class="
-          project.id === Number(projectIdParam)
-            ? 'theme-primary-bg theme-primary-border'
-            : 'theme-surface-overlay theme-text-secondary theme-border theme-hover-surface-muted'
-        "
-      >
-        {{ getDisplayLanguage(project.language) }}
-        <span v-if="project.studios?.name" class="opacity-75 text-xs ml-1"
-          >({{ project.studios.name }})</span
-        >
-      </NuxtLink>
-      <NuxtLink
-        :to="localePath(`/game/${igdbGameId}/projects/new`)"
-        class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-dashed"
-        :class="
-          projectIdParam === 'new'
-            ? 'theme-status-info theme-status-info-text border'
-            : 'theme-surface-overlay theme-text-muted theme-border theme-hover-surface-muted theme-hover-text'
-        "
-        >{{ $t("projectEditor.addLanguage") }}</NuxtLink
-      >
-    </div>
-
-    <!-- Main Workspace -->
-    <!-- Loading overlay -->
-    <div
-      v-if="isLoading"
-      class="flex flex-col items-center justify-center py-24 gap-4 theme-text-muted"
-    >
-      <Loader2Icon class="w-8 h-8 animate-spin theme-status-info-text" />
-      <span class="text-sm">{{ $t("projectEditor.loadingData") }}</span>
-    </div>
-
-    <div
-      v-else-if="loadError"
-      role="alert"
-      class="rounded-xl border border-[var(--app-color-danger-border)] theme-status-danger p-6 text-sm theme-status-danger-text"
-    >
-      {{ loadError }}
-    </div>
-
-    <form v-else id="game-project-form" @submit.prevent="saveGameProject" class="space-y-6">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Media Metadata Card (Left Column) -->
-        <div
-          class="theme-surface-overlay border theme-border rounded-2xl p-6 space-y-5 h-fit shadow-xl"
-        >
-          <h4
-            class="text-sm font-bold theme-text uppercase tracking-wider border-b theme-border pb-3 flex items-center justify-between"
-          >
-            <span>{{ $t("admin.movieEditor.mediaInfo") }}</span>
-            <span class="text-xs theme-status-info-text font-normal">{{
-              $t("projectEditor.igdbLinked")
-            }}</span>
-          </h4>
-
-          <!-- Poster Preview -->
-          <div class="flex justify-center">
-            <div
-              class="relative h-48 w-32 rounded-xl overflow-hidden border theme-border theme-input flex items-center justify-center theme-text-muted shadow-md"
-            >
-              <NuxtImg
-                format="webp"
-                v-if="posterUrl"
-                :src="posterUrl"
-                class="h-full w-full object-cover"
-                alt="Poster"
-              />
-              <div v-else class="text-center p-3 theme-text-secondary">
-                <ImageIcon class="h-10 w-10 mx-auto mb-1 opacity-50" />
-                <span class="text-[10px]">{{ $t("projectEditor.noPoster") }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Content ID / IGDB ID -->
-          <div class="space-y-1">
-            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-              $t("projectEditor.igdbGameId")
-            }}</label>
-            <div class="flex space-x-2">
-              <input
-                v-model.number="contentId"
-                type="number"
-                required
-                :disabled="!!igdbGameId"
-                placeholder="e.g. 1020"
-                class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text theme-placeholder focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              />
-            </div>
-          </div>
-
-          <!-- Media Name / Title -->
-          <div class="space-y-1">
-            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-              $t("admin.movieEditor.mediaTitle")
-            }}</label>
-            <input
-              v-model="mediaTitle"
-              type="text"
-              required
-              readonly
-              class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text theme-placeholder focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm opacity-50 cursor-not-allowed"
-            />
-          </div>
-
-          <!-- Language -->
-          <div class="space-y-1">
-            <label
-              for="game-project-dubbing-language"
-              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-              >{{ $t("projectEditor.dubbingLanguage") }}</label
-            >
-            <AdminLanguageSelect
-              id="game-project-dubbing-language"
-              v-model="dubbingLanguage"
-              required
-            />
-          </div>
-
-          <!-- Status -->
-          <div class="space-y-1">
-            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-              $t("common.status")
-            }}</label>
-            <select
-              v-model="status"
-              class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm"
-            >
-              <option value="validated">
-                {{ $t("admin.movieEditor.validated") }}
-              </option>
-              <option value="pending">
-                {{ $t("admin.movieEditor.pending") }}
-              </option>
-              <option value="draft">
-                {{ $t("admin.movieEditor.draft") }}
-              </option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Technical Crew Form (Right 2 Columns) -->
-        <div
-          class="lg:col-span-2 theme-surface-overlay border theme-border rounded-2xl p-6 space-y-6 shadow-xl"
-        >
-          <h4
-            class="text-sm font-bold theme-text uppercase tracking-wider border-b theme-border pb-3 flex items-center justify-between"
-          >
-            <span>{{ $t("admin.movieEditor.technicalDubbingTeam") }}</span>
-            <span class="text-xs theme-text-muted">{{
-              $t("admin.movieEditor.crewAttributes")
-            }}</span>
-          </h4>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <!-- Studio -->
-            <div class="space-y-1">
-              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-                $t("details.dubbingStudio")
-              }}</label>
+        <template #detail>
+          <div v-if="selectedRow" :key="selectedRow.key" class="space-y-5">
+            <AdminFormField :label="$t('projectEditor.character')">
               <AdminAsyncAutocomplete
-                v-model="selectedStudioId"
-                :options="initialStudioOptions"
-                :search-fn="lookups.searchStudios"
-                placeholder="Search studio..."
-                :allow-create="true"
-                :display-fn="lookups.studioLabel"
-                @create="
-                  (q: string) => openCreateStudioDialog(q, (id: number) => (selectedStudioId = id))
+                v-model="selectedRow.character_ref"
+                @update:model-value="
+                  (val: string | number | null) => handleCharacterSelect(selectedRow!, val)
                 "
-              />
-            </div>
-
-            <!-- Artistic Director -->
-            <div class="space-y-1">
-              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-                $t("admin.movieEditor.artisticDirector")
-              }}</label>
-              <AdminAsyncAutocomplete
-                v-model="artisticDirectorId"
-                :options="initialVoiceActorOptions"
-                :search-fn="lookups.searchVoiceActors"
-                placeholder="Search Voice Actor..."
+                :options="initialCharacterOptions"
+                :search-fn="searchCharacters"
+                :placeholder="$t('projectEditor.searchGameCharacter')"
                 :allow-create="true"
-                :display-fn="lookups.voiceActorLabel"
-                @create="
-                  (q: string) => openCreateVaDialog(q, (id: number) => (artisticDirectorId = id))
+                :display-fn="
+                  (id: string | number) => getCharacterName(id) || selectedRow!.character_name
                 "
-              />
-            </div>
-
-            <!-- Adaptation -->
-            <div class="space-y-1">
-              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-                $t("admin.movieEditor.adaptation")
-              }}</label>
-              <AdminAsyncAutocomplete
-                v-model="adaptationId"
-                :options="initialVoiceActorOptions"
-                :search-fn="lookups.searchVoiceActors"
-                placeholder="Search Voice Actor..."
-                :allow-create="true"
-                :display-fn="lookups.voiceActorLabel"
-                @create="(q: string) => openCreateVaDialog(q, (id: number) => (adaptationId = id))"
-              />
-            </div>
-
-            <!-- Recording -->
-            <div class="space-y-1">
-              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-                $t("admin.movieEditor.soundRecording")
-              }}</label>
-              <AdminAsyncAutocomplete
-                v-model="recordingId"
-                :options="initialVoiceActorOptions"
-                :search-fn="lookups.searchVoiceActors"
-                placeholder="Search Voice Actor..."
-                :allow-create="true"
-                :display-fn="lookups.voiceActorLabel"
-                @create="(q: string) => openCreateVaDialog(q, (id: number) => (recordingId = id))"
-              />
-            </div>
-
-            <!-- Editing -->
-            <div class="space-y-1">
-              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-                $t("admin.movieEditor.soundEditing")
-              }}</label>
-              <AdminAsyncAutocomplete
-                v-model="editingId"
-                :options="initialVoiceActorOptions"
-                :search-fn="lookups.searchVoiceActors"
-                placeholder="Search Voice Actor..."
-                :allow-create="true"
-                :display-fn="lookups.voiceActorLabel"
-                @create="(q: string) => openCreateVaDialog(q, (id: number) => (editingId = id))"
-              />
-            </div>
-
-            <!-- Mixing -->
-            <div class="space-y-1">
-              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-                $t("dubbing.mixing")
-              }}</label>
-              <AdminAsyncAutocomplete
-                v-model="mixingId"
-                :options="initialVoiceActorOptions"
-                :search-fn="lookups.searchVoiceActors"
-                placeholder="Search Voice Actor..."
-                :allow-create="true"
-                :display-fn="lookups.voiceActorLabel"
-                @create="(q: string) => openCreateVaDialog(q, (id: number) => (mixingId = id))"
-              />
-            </div>
-
-            <!-- Project Manager -->
-            <div class="space-y-1">
-              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-                $t("admin.movieEditor.projectManager")
-              }}</label>
-              <AdminAsyncAutocomplete
-                v-model="projectManagerId"
-                :options="initialVoiceActorOptions"
-                :search-fn="lookups.searchVoiceActors"
-                placeholder="Search Voice Actor..."
-                :allow-create="true"
-                :display-fn="lookups.voiceActorLabel"
-                @create="
-                  (q: string) => openCreateVaDialog(q, (id: number) => (projectManagerId = id))
-                "
-              />
-            </div>
-
-            <!-- Creative Supervision -->
-            <div class="space-y-1">
-              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-                $t("admin.movieEditor.creativeSupervision")
-              }}</label>
-              <AdminAsyncAutocomplete
-                v-model="creativeSupervisionId"
-                :options="initialVoiceActorOptions"
-                :search-fn="lookups.searchVoiceActors"
-                placeholder="Search Voice Actor..."
-                :allow-create="true"
-                :display-fn="lookups.voiceActorLabel"
-                @create="
-                  (q: string) => openCreateVaDialog(q, (id: number) => (creativeSupervisionId = id))
-                "
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Cast / Voice Actors List -->
-      <div class="theme-surface-overlay border theme-border rounded-2xl p-6 space-y-6 shadow-xl">
-        <div class="flex justify-between items-center border-b theme-border pb-3">
-          <h4 class="text-sm font-bold theme-text uppercase tracking-wider">
-            {{ $t("projectEditor.voiceCast") }}
-          </h4>
-          <button
-            type="button"
-            @click="addCastRow"
-            class="px-4 py-2 theme-primary-bg hover:bg-[var(--app-color-primary-hover)] text-xs font-semibold rounded-xl flex items-center transition-colors"
-          >
-            {{ $t("projectEditor.addVoiceActor") }}
-          </button>
-        </div>
-
-        <div class="space-y-4">
-          <div
-            v-for="(row, index) in castRows"
-            :key="row.key"
-            class="p-4 theme-input border theme-border rounded-xl relative group"
-          >
-            <button
-              type="button"
-              @click="removeCastRow(row.key)"
-              class="absolute -top-3 -right-3 theme-status-danger hover:bg-[var(--app-color-danger-bg)] border p-2 min-h-10 min-w-10 inline-flex items-center justify-center rounded-full transition-colors shadow-lg z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-focus)]"
-              :aria-label="$t('projectEditor.removeCastRow', { index: index + 1 })"
-              :title="$t('projectEditor.removeCastRow', { index: index + 1 })"
-              data-testid="remove-cast-row"
-            >
-              <XIcon class="w-4 h-4" aria-hidden="true" />
-            </button>
-
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
-              <!-- Character fields -->
-              <div class="md:col-span-12 space-y-1">
-                <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-                  $t("projectEditor.character")
-                }}</label>
-                <AdminAsyncAutocomplete
-                  v-model="row.character_ref"
-                  @update:model-value="
-                    (val: string | number | null) => handleCharacterSelect(row, val)
-                  "
-                  :options="initialCharacterOptions"
-                  :search-fn="searchCharacters"
-                  placeholder="Search Game Character..."
-                  :allow-create="true"
-                  :display-fn="(id: string | number) => getCharacterName(id) || row.character_name"
-                  @create="(query: string) => handleCharacterCreate(row, query)"
-                />
-                <button
-                  type="button"
-                  class="text-xs theme-text-muted underline-offset-2 hover:underline"
-                  @click="handleCharacterFreeText(row)"
-                >
-                  Use free-text role
-                </button>
-                <p
-                  v-if="characterCatalogStatus === 'unavailable'"
-                  role="status"
-                  class="text-xs theme-status-warning-text"
-                >
-                  IGDB characters are unavailable. Local game characters remain available.
-                </p>
-                <p
-                  v-else-if="providerCharacterCount === 0"
-                  role="status"
-                  class="text-xs theme-text-muted"
-                >
-                  IGDB returned no characters for this game. You can add a local character.
-                </p>
+                @create="(query: string) => handleCharacterCreate(selectedRow!, query)"
+              >
+                <template #leading>
+                  <AdminCastAvatar
+                    size="xs"
+                    :name="
+                      selectedRow.character_name || getCharacterName(selectedRow.character_ref)
+                    "
+                    :src="characterImageById(selectedRow.character_ref)"
+                  />
+                </template>
+                <template #option="{ option }">
+                  <span class="flex items-center gap-2">
+                    <AdminCastAvatar
+                      size="sm"
+                      :name="option.name"
+                      :src="igdbImageUrl(option.mug_shot?.url)"
+                    />{{ option.name }}
+                  </span>
+                </template>
+              </AdminAsyncAutocomplete>
+              <button
+                type="button"
+                class="text-xs theme-text-muted underline-offset-2 hover:underline"
+                @click="handleCharacterFreeText(selectedRow!)"
+              >
+                {{ $t("projectEditor.gameFreeTextRole") }}
+              </button>
+              <p
+                v-if="characterCatalogStatus === 'unavailable'"
+                role="status"
+                class="text-xs theme-status-warning-text"
+              >
+                {{ $t("projectEditor.gameCharactersUnavailable") }}
+              </p>
+              <p
+                v-else-if="providerCharacterCount === 0"
+                role="status"
+                class="text-xs theme-text-muted"
+              >
+                {{ $t("projectEditor.gameNoProviderCharacters") }}
+              </p>
+              <div
+                v-if="getLocalCharacter(selectedRow!)"
+                class="mt-2 space-y-2 rounded-lg border theme-border theme-surface-muted p-3"
+              >
                 <div
-                  v-if="getLocalCharacter(row)"
-                  class="mt-2 space-y-2 rounded-lg border theme-border theme-surface-muted p-3"
+                  v-for="candidate in getIgdbCandidates(selectedRow!)"
+                  :key="candidate.id"
+                  class="flex flex-wrap items-center justify-between gap-2 text-xs"
                 >
-                  <div
-                    v-for="candidate in getIgdbCandidates(row)"
-                    :key="candidate.id"
-                    class="flex flex-wrap items-center justify-between gap-2 text-xs"
+                  <span class="theme-text-secondary">
+                    {{ $t("projectEditor.gamePossibleMatch", { name: candidate.name }) }}
+                  </span>
+                  <button
+                    type="button"
+                    class="theme-status-info-text underline-offset-2 hover:underline disabled:opacity-50"
+                    :disabled="isUpdatingCharacterReferences"
+                    @click="
+                      updateGameCharacterReferences(selectedRow!, {
+                        igdb_character_id: candidate.igdb_character_id,
+                      })
+                    "
                   >
-                    <span class="theme-text-secondary">
-                      Possible IGDB match: {{ candidate.name }}
-                    </span>
-                    <button
-                      type="button"
-                      class="theme-status-info-text underline-offset-2 hover:underline disabled:opacity-50"
-                      :disabled="isUpdatingCharacterReferences"
-                      @click="
-                        updateGameCharacterReferences(row, {
-                          igdb_character_id: candidate.igdb_character_id,
-                        })
-                      "
-                    >
-                      Confirm link
-                    </button>
-                  </div>
-                  <div class="flex flex-wrap items-end gap-2">
-                    <label class="min-w-48 flex-1 text-xs theme-text-secondary">
-                      Wikidata QID
-                      <input
-                        :value="getWikidataDraft(row)"
-                        type="text"
-                        inputmode="text"
-                        placeholder="Q12345"
-                        class="mt-1 w-full rounded-lg border theme-border theme-input px-2 py-1.5"
-                        @input="setWikidataDraft(row, $event)"
-                      />
-                    </label>
-                    <button
-                      type="button"
-                      class="theme-status-info-text underline-offset-2 hover:underline disabled:opacity-50"
-                      :disabled="isUpdatingCharacterReferences"
-                      @click="saveWikidataReference(row)"
-                    >
-                      Save QID
-                    </button>
-                    <button
-                      v-if="getLocalCharacter(row)?.igdb_character_id"
-                      type="button"
-                      class="theme-status-danger-text underline-offset-2 hover:underline disabled:opacity-50"
-                      :disabled="isUpdatingCharacterReferences"
-                      @click="
-                        updateGameCharacterReferences(row, {
-                          igdb_character_id: null,
-                        })
-                      "
-                    >
-                      Unlink IGDB
-                    </button>
-                  </div>
+                    {{ $t("projectEditor.gameConfirmLink") }}
+                  </button>
+                </div>
+                <div class="flex flex-wrap items-end gap-2">
+                  <label class="min-w-48 flex-1 text-xs theme-text-secondary">
+                    {{ $t("projectEditor.gameWikidataQid") }}
+                    <input
+                      :value="getWikidataDraft(selectedRow!)"
+                      type="text"
+                      inputmode="text"
+                      placeholder="Q12345"
+                      class="mt-1 w-full rounded-lg border theme-border theme-input px-2 py-1.5"
+                      @input="setWikidataDraft(selectedRow!, $event)"
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    class="theme-status-info-text underline-offset-2 hover:underline disabled:opacity-50"
+                    :disabled="isUpdatingCharacterReferences"
+                    @click="saveWikidataReference(selectedRow!)"
+                  >
+                    {{ $t("projectEditor.gameSaveQid") }}
+                  </button>
+                  <button
+                    v-if="getLocalCharacter(selectedRow!)?.igdb_character_id"
+                    type="button"
+                    class="theme-status-danger-text underline-offset-2 hover:underline disabled:opacity-50"
+                    :disabled="isUpdatingCharacterReferences"
+                    @click="
+                      updateGameCharacterReferences(selectedRow!, {
+                        igdb_character_id: null,
+                      })
+                    "
+                  >
+                    {{ $t("projectEditor.gameUnlinkIgdb") }}
+                  </button>
                 </div>
               </div>
+            </AdminFormField>
 
-              <!-- Voice Actor -->
-              <div class="md:col-span-8 space-y-1">
-                <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-                  $t("projectEditor.voiceActor")
-                }}</label>
-                <AdminAsyncAutocomplete
-                  v-model="row.voice_actor_id"
-                  :options="initialVoiceActorOptions"
-                  :search-fn="lookups.searchVoiceActors"
-                  placeholder="Search Voice Actor..."
-                  :allow-create="true"
-                  :display-fn="lookups.voiceActorLabel"
-                  @create="
-                    (q: string) => openCreateVaDialog(q, (id: number) => (row.voice_actor_id = id))
-                  "
-                />
-              </div>
-
-              <!-- Performance -->
-              <div class="md:col-span-4 space-y-1">
-                <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-                  $t("projectEditor.performanceType")
-                }}</label>
-                <select
-                  v-model="row.performance"
-                  class="w-full px-4 py-2 theme-surface-overlay border theme-border rounded-lg theme-text focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm"
-                >
-                  <option value="dialogues">
-                    {{ $t("admin.movieEditor.dialogues") }}
-                  </option>
-                  <option value="dialogues & chant">
-                    {{ $t("admin.movieEditor.dialoguesAndChant") }}
-                  </option>
-                  <option value="chant">
-                    {{ $t("admin.movieEditor.chant") }}
-                  </option>
-                  <option value="bruitages">
-                    {{ $t("projectEditor.performanceBruitages") }}
-                  </option>
-                  <option value="narration">
-                    {{ $t("projectEditor.performanceNarration") }}
-                  </option>
-                </select>
-              </div>
-
-              <div class="md:col-span-4 space-y-1">
-                <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
-                  $t("projectEditor.castNote")
-                }}</label>
-                <input
-                  v-model="row.note"
-                  type="text"
-                  class="w-full px-4 py-2 theme-surface-overlay border theme-border rounded-lg theme-text focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm"
-                />
-              </div>
-
-              <div class="md:col-span-12 flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  v-model="row.highlight"
-                  class="w-4 h-4 theme-surface-overlay theme-border rounded text-blue-500 focus:ring-[var(--app-color-focus)]"
-                />
-                <label class="text-xs theme-text-secondary">{{
-                  $t("projectEditor.highlightCharacter")
-                }}</label>
-              </div>
-            </div>
+            <AdminCastVoiceActorField
+              v-model="selectedRow.voice_actor_id"
+              :options="initialVoiceActorOptions"
+              :lookups="lookups"
+              @create="
+                (query: string) =>
+                  openCreateVaDialog(query, (id: number) => (selectedRow!.voice_actor_id = id))
+              "
+            />
+            <AdminCastPerformanceField v-model="selectedRow.performance" />
+            <AdminCastNoteHighlight
+              v-model:note="selectedRow.note"
+              v-model:highlight="selectedRow.highlight"
+            />
           </div>
+        </template>
+      </AdminProjectCastWorkspace>
+    </template>
 
-          <div
-            v-if="castRows.length === 0"
-            class="text-center py-10 theme-input border border-dashed theme-border rounded-xl theme-text-muted"
-          >
-            {{ $t("projectEditor.noCastMembers") }}
-          </div>
+    <template #overview>
+      <AdminFormCard
+        :title="$t('admin.movieEditor.mediaInfo')"
+        :description="$t('projectEditor.igdbLinked')"
+      >
+        <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+          <AdminTextField
+            v-model="contentId"
+            id="game-project-igdb-id"
+            type="number"
+            required
+            :disabled="!!igdbGameId"
+            :label="$t('projectEditor.igdbGameId')"
+          />
+          <AdminTextField
+            v-model="mediaTitle"
+            id="game-project-title"
+            required
+            readonly
+            :label="$t('admin.movieEditor.mediaTitle')"
+          />
         </div>
-      </div>
-    </form>
+      </AdminFormCard>
+    </template>
+
+    <template #settings>
+      <AdminProjectSettingsCard
+        v-model:language="dubbingLanguage"
+        v-model:status="status"
+        id-prefix="game-project"
+      />
+    </template>
+
+    <template #crew>
+      <AdminProjectCrewCard
+        v-model:studio-id="selectedStudioId"
+        :title="$t('admin.movieEditor.technicalDubbingTeam')"
+        :description="$t('admin.movieEditor.crewAttributes')"
+        :studio-label="$t('details.dubbingStudio')"
+        :fields="crewState.fields.value"
+        :crew="crewState.values.value"
+        :studio-options="initialStudioOptions"
+        :voice-actor-options="initialVoiceActorOptions"
+        :lookups="lookups"
+        @update:crew="crewState.set"
+        @create-studio="openCreateStudioDialog"
+        @create-voice-actor="openCreateVaDialog"
+      />
+    </template>
 
     <!-- Inline Create Studio Dialog -->
     <AdminCreateStudioDialog
@@ -562,43 +232,14 @@
       @created="onVoiceActorCreated"
     />
 
-    <!-- Toast -->
-    <div
-      v-if="toast.show"
-      class="fixed bottom-6 right-6 z-50 p-4 rounded-xl border shadow-2xl text-sm max-w-sm flex flex-col gap-2 theme-surface-overlay theme-border theme-text"
-    >
-      <span>{{ toast.message }}</span>
-      <a
-        v-if="toast.link"
-        :href="toast.link"
-        target="_blank"
-        class="theme-status-info-text hover:underline"
-        >{{ $t("projectEditor.viewDetails") }}</a
-      >
-    </div>
-
-    <AdminEditorSaveBar
-      v-if="!isLoading && !loadError"
-      :status="form.status.value"
-      :is-dirty="form.isDirty.value"
-      :error-message="form.errorMessage.value"
-      :save-label="$t('projectEditor.saveGameProject')"
-      form-id="game-project-form"
-      @discard="form.discard"
-    />
-    <AdminUnsavedChangesDialog
-      :open="form.isLeavePromptOpen.value"
-      @stay="form.stayOnPage"
-      @discard="form.discardAndLeave"
-    />
-  </div>
+    <AdminEditorToast :toast="toast" />
+  </AdminProjectEditorLayout>
 </template>
 
 <script setup lang="ts">
 import { validateDubbingLanguage } from "@app/shared-logic";
 import { ref, onMounted, computed, nextTick, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { Gamepad2Icon, Loader2Icon, ImageIcon, XIcon } from "lucide-vue-next";
 import {
   createDubbingProjectSaveClient,
   createStableRequestIdFactory,
@@ -616,6 +257,11 @@ import type {
   EditorProjectRecord,
   EditorProjectWork,
 } from "~/utils/admin-project-editor-types";
+import { useFullCrewState } from "~/composables/useFullCrewState";
+import type { EditorSection } from "~/components/admin/ProjectEditorLayout.vue";
+import type { CastWorkspaceRow } from "~/utils/cast-workspace";
+import { useDisplayLanguage } from "~/composables/useDisplayLanguage";
+import { useEditorToast } from "~/composables/useEditorToast";
 import { createEditorRowKey, useEditorFormState } from "~/composables/useEditorFormState";
 
 const supabase = useSupabaseClient();
@@ -658,13 +304,7 @@ const selectedStudioId = ref<number | null>(null);
 const projectUpdatedAt = ref<string | null>(null);
 
 // Crew state
-const artisticDirectorId = ref<number | null>(null);
-const adaptationId = ref<number | null>(null);
-const recordingId = ref<number | null>(null);
-const editingId = ref<number | null>(null);
-const mixingId = ref<number | null>(null);
-const projectManagerId = ref<number | null>(null);
-const creativeSupervisionId = ref<number | null>(null);
+const crewState = useFullCrewState(t);
 
 // Autocomplete State: each autocomplete owns its search results; labels are cached by id.
 const lookups = useAdminLookups();
@@ -683,7 +323,7 @@ let pendingVaSelect: ((id: number) => void) | null = null;
 type CastRow = GameProjectCastEditorRow;
 const castRows = ref<CastRow[]>([]);
 
-type SelectOption = { id: number; name: string };
+type SelectOption = AdminLookupOption;
 type GameProjectTab = {
   id: number;
   language: string | null;
@@ -693,7 +333,7 @@ type GameProjectTab = {
 type GameProjectCrew = EditorProjectCrew;
 type GameProjectWork = Omit<EditorProjectWork, "voice_actors"> &
   Pick<Tables<"work">, "game_character_id"> & {
-    voice_actors: Pick<Tables<"voice_actors">, "firstname" | "lastname"> | null;
+    voice_actors: Pick<Tables<"voice_actors">, "firstname" | "lastname" | "profile_picture"> | null;
   };
 type GameProjectRecord = Omit<EditorProjectRecord, "work"> & { work: GameProjectWork[] };
 type GameApiResponse = {
@@ -730,25 +370,9 @@ type GameCharacterApiRow = Omit<GameCharacterOption, "id"> & {
   stable_id: string;
 };
 
-// Toast
-const toast = ref({ show: false, message: "", type: "info", link: "" });
-const showToast = (message: string, type = "info", link = "") => {
-  toast.value = { show: true, message, type, link };
-  setTimeout(() => (toast.value.show = false), 5000);
-};
+const { toast, showToast } = useEditorToast();
 
-const getDisplayLanguage = (langCode: string | undefined | null) => {
-  if (!langCode) return "Inconnu";
-  try {
-    const displayNames = new Intl.DisplayNames(["fr"], { type: "language" });
-    const name = displayNames.of(langCode);
-    return typeof name === "string" && name.length > 0
-      ? name.charAt(0).toUpperCase() + name.slice(1)
-      : langCode;
-  } catch (e) {
-    return langCode;
-  }
-};
+const getDisplayLanguage = useDisplayLanguage();
 
 const isCreatingGameCharacter = ref(false);
 const isUpdatingCharacterReferences = ref(false);
@@ -762,15 +386,7 @@ const form = useEditorFormState({
     dubbingLanguage: dubbingLanguage.value,
     status: status.value,
     selectedStudioId: selectedStudioId.value,
-    crew: {
-      artisticDirectorId: artisticDirectorId.value,
-      adaptationId: adaptationId.value,
-      recordingId: recordingId.value,
-      editingId: editingId.value,
-      mixingId: mixingId.value,
-      projectManagerId: projectManagerId.value,
-      creativeSupervisionId: creativeSupervisionId.value,
-    },
+    crew: crewState.snapshot(),
     castRows: castRows.value,
   }),
   restore: (saved) => {
@@ -778,21 +394,30 @@ const form = useEditorFormState({
     dubbingLanguage.value = saved.dubbingLanguage;
     status.value = saved.status;
     selectedStudioId.value = saved.selectedStudioId;
-    artisticDirectorId.value = saved.crew.artisticDirectorId;
-    adaptationId.value = saved.crew.adaptationId;
-    recordingId.value = saved.crew.recordingId;
-    editingId.value = saved.crew.editingId;
-    mixingId.value = saved.crew.mixingId;
-    projectManagerId.value = saved.crew.projectManagerId;
-    creativeSupervisionId.value = saved.crew.creativeSupervisionId;
+    crewState.restore(saved.crew);
     castRows.value = saved.castRows;
   },
 });
-const isSaving = form.isSaving;
+// Workspace presentation state
+const section = ref<EditorSection>("cast");
+const heroChips = computed(() =>
+  [
+    dubbingLanguage.value ? getDisplayLanguage(dubbingLanguage.value) : "",
+    selectedStudioId.value ? lookups.studioLabel(selectedStudioId.value) : "",
+    t(`admin.movieEditor.${status.value}`),
+  ].filter((chip) => chip.length > 0),
+);
+const selectedCastKey = ref<string | null>(null);
+const selectedRow = computed(
+  () => castRows.value.find((row) => row.key === selectedCastKey.value) ?? null,
+);
 
 const addCastRow = () => {
+  const key = createEditorRowKey();
+  selectedCastKey.value = key;
+  section.value = "cast";
   castRows.value.push({
-    key: createEditorRowKey(),
+    key,
     character_ref: null,
     character_id: null,
     game_character_id: null,
@@ -805,6 +430,7 @@ const addCastRow = () => {
 };
 const removeCastRow = (key: string) => {
   castRows.value = castRows.value.filter((row) => row.key !== key);
+  if (selectedCastKey.value === key) selectedCastKey.value = null;
 };
 
 const igdbCharacters = ref<GameCharacterOption[]>([]);
@@ -849,7 +475,7 @@ const handleCharacterSelect = (row: CastRow, val: number | string | null) => {
 const handleCharacterFreeText = (row: CastRow) => {
   const name = lastCharacterQuery.trim() || row.character_name.trim();
   if (!name) {
-    showToast("Enter a role name before choosing free text.", "error");
+    showToast(t("projectEditor.gameEnterRoleName"), "error");
     return;
   }
   row.character_ref = `custom_${name}`;
@@ -971,7 +597,7 @@ const updateGameCharacterReferences = async (
     });
     characterReferenceRequestIds.clear();
     await reloadGameCharacterOptions();
-    showToast("Game character reference updated.", "success");
+    showToast(t("projectEditor.gameReferenceUpdated"), "success");
   } catch (error) {
     showToast(getDubbingProjectSaveErrorMessage(error), "error");
   } finally {
@@ -982,11 +608,31 @@ const updateGameCharacterReferences = async (
 const saveWikidataReference = async (row: CastRow) => {
   const qid = getWikidataDraft(row).trim();
   if (qid && !/^Q[1-9][0-9]*$/.test(qid)) {
-    showToast("Enter a valid Wikidata QID, such as Q12345.", "error");
+    showToast(t("projectEditor.gameInvalidQid"), "error");
     return;
   }
   await updateGameCharacterReferences(row, { wikidata_qid: qid || null });
 };
+
+// IGDB mug shots are protocol-relative URLs.
+const igdbImageUrl = (url: string | null | undefined): string | null =>
+  url ? (url.startsWith("//") ? `https:${url}` : url) : null;
+const characterImageById = (id: number | string | null): string | null =>
+  igdbImageUrl(igdbCharacters.value.find((character) => character.id === id)?.mug_shot?.url);
+const castView = computed<CastWorkspaceRow[]>(() =>
+  castRows.value.map((row) => ({
+    key: row.key,
+    characterName: row.character_name || getCharacterName(row.character_ref),
+    characterImage: characterImageById(row.character_ref),
+    originalActorName: "",
+    originalActorImage: null,
+    voiceActorName: row.voice_actor_id ? lookups.voiceActorLabel(row.voice_actor_id) : "",
+    voiceActorImage: lookups.voiceActorImage(row.voice_actor_id),
+    assigned: row.voice_actor_id !== null,
+    performance: row.performance,
+    highlight: row.highlight,
+  })),
+);
 
 // Inline Creation
 const openCreateStudioDialog = (query: string, callback?: (id: number) => void) => {
@@ -998,7 +644,11 @@ const openCreateStudioDialog = (query: string, callback?: (id: number) => void) 
 const onStudioCreated = (studio: AdminLookupOption) => {
   pendingStudioSelect?.(studio.id);
   pendingStudioSelect = null;
-  showToast(`Created ${studio.name}`, "success", `/studio/${studio.id}`);
+  showToast(
+    t("projectEditor.toastCreated", { name: studio.name }),
+    "success",
+    `/studio/${studio.id}`,
+  );
 };
 
 const openCreateVaDialog = (query: string, callback?: (id: number) => void) => {
@@ -1011,26 +661,16 @@ const onVoiceActorCreated = (voiceActor: AdminLookupOption) => {
   lookups.rememberVoiceActor(voiceActor.id, voiceActor.name);
   pendingVaSelect?.(voiceActor.id);
   pendingVaSelect = null;
-  showToast(`Created ${voiceActor.name}`, "success");
+  showToast(t("projectEditor.toastCreated", { name: voiceActor.name }), "success");
 };
 
 const saveGameProject = async () => {
-  if (!contentId.value) return showToast("IGDB ID required", "error");
-  if (!dubbingLanguage.value) return showToast("Language required", "error");
+  if (!contentId.value) return showToast(t("projectEditor.igdbIdRequired"), "error");
+  if (!dubbingLanguage.value) return showToast(t("projectEditor.languageRequired"), "error");
   form.beginSave();
   try {
     let projectId = isEditMode.value ? Number(projectIdParam) : null;
-    const crew: Array<{ job_id: number; person_id: number }> = [];
-    if (artisticDirectorId.value !== null)
-      crew.push({ job_id: 1, person_id: artisticDirectorId.value });
-    if (adaptationId.value !== null) crew.push({ job_id: 2, person_id: adaptationId.value });
-    if (recordingId.value !== null) crew.push({ job_id: 3, person_id: recordingId.value });
-    if (editingId.value !== null) crew.push({ job_id: 4, person_id: editingId.value });
-    if (mixingId.value !== null) crew.push({ job_id: 5, person_id: mixingId.value });
-    if (projectManagerId.value !== null)
-      crew.push({ job_id: 6, person_id: projectManagerId.value });
-    if (creativeSupervisionId.value !== null)
-      crew.push({ job_id: 7, person_id: creativeSupervisionId.value });
+    const crew = crewState.toSaveRows();
 
     const cast = serializeGameProjectCastRows(castRows.value);
 
@@ -1056,7 +696,7 @@ const saveGameProject = async () => {
       await nextTick();
     }
     form.saveSucceeded();
-    showToast("Project saved successfully!", "success");
+    showToast(t("projectEditor.toastSaved"), "success");
     if (!isEditMode.value && projectId && contentId.value) {
       await router.push(localePath(`/game/${contentId.value}/projects/${projectId}/edit`));
     }
@@ -1105,7 +745,7 @@ const {
       const projectId = Number(projectIdParam);
       const { data: proj, error: projectError } = await supabase
         .from("dubbing_projects")
-        .select("*, studios(name), work(*, voice_actors(firstname, lastname))")
+        .select("*, studios(name), work(*, voice_actors(firstname, lastname, profile_picture))")
         .eq("id", projectId)
         .single();
       if (projectError || !proj) throw projectError || new Error("Project not found");
@@ -1127,11 +767,12 @@ const {
 
     const { data: vaData } = await supabase
       .from("voice_actors")
-      .select("id, firstname, lastname")
+      .select("id, firstname, lastname, profile_picture")
       .limit(10);
     const initialVoiceActors = (vaData || []).map((va) => ({
       id: va.id,
       name: `${va.firstname || ""} ${va.lastname || ""}`.trim(),
+      image: va.profile_picture,
     }));
 
     return {
@@ -1188,27 +829,14 @@ watch(
         }
       }
 
-      artisticDirectorId.value = null;
-      adaptationId.value = null;
-      recordingId.value = null;
-      editingId.value = null;
-      mixingId.value = null;
-      projectManagerId.value = null;
-      creativeSupervisionId.value = null;
       if (data.crew) {
         data.crew.forEach((c) => {
           const name =
             `${c.voice_actors?.firstname || ""} ${c.voice_actors?.lastname || ""}`.trim();
           lookups.rememberVoiceActor(c.person_id, name);
-          if (c.job_id === 1) artisticDirectorId.value = c.person_id;
-          if (c.job_id === 2) adaptationId.value = c.person_id;
-          if (c.job_id === 3) recordingId.value = c.person_id;
-          if (c.job_id === 4) editingId.value = c.person_id;
-          if (c.job_id === 5) mixingId.value = c.person_id;
-          if (c.job_id === 6) projectManagerId.value = c.person_id;
-          if (c.job_id === 7) creativeSupervisionId.value = c.person_id;
         });
       }
+      crewState.load(data.crew ?? []);
 
       if (data.works) {
         castRows.value = data.works.map((w) => {
@@ -1224,7 +852,7 @@ watch(
           if (w.voice_actors && w.voice_actor_id !== null) {
             const name =
               `${w.voice_actors.firstname || ""} ${w.voice_actors.lastname || ""}`.trim();
-            lookups.rememberVoiceActor(w.voice_actor_id, name);
+            lookups.rememberVoiceActor(w.voice_actor_id, name, w.voice_actors.profile_picture);
           }
           return {
             key: createEditorRowKey(),
@@ -1264,7 +892,7 @@ watch(
 
       if (data.initialVoiceActors) {
         initialVoiceActorOptions.value = data.initialVoiceActors;
-        data.initialVoiceActors.forEach((f) => lookups.rememberVoiceActor(f.id, f.name));
+        data.initialVoiceActors.forEach((f) => lookups.rememberVoiceActor(f.id, f.name, f.image));
       }
 
       isLoading.value = false;

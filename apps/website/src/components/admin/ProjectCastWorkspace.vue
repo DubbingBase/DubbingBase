@@ -75,7 +75,12 @@
               @error="emit('characterImageError', row.key)"
             />
             <span
-              class="grid min-w-0 gap-2.5 sm:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)] sm:items-center sm:gap-5"
+              class="grid min-w-0 gap-2.5 sm:items-center sm:gap-5"
+              :class="
+                showOriginalActor
+                  ? 'sm:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)]'
+                  : 'sm:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]'
+              "
             >
               <span class="block min-w-0">
                 <span
@@ -96,7 +101,7 @@
                   />
                 </span>
               </span>
-              <span class="flex min-w-0 items-center gap-2.5">
+              <span v-if="showOriginalActor" class="flex min-w-0 items-center gap-2.5">
                 <AdminCastAvatar
                   size="md"
                   :name="row.originalActorName"
@@ -231,10 +236,15 @@ import {
 } from "~/utils/cast-workspace";
 
 const { t } = useI18n();
-const props = defineProps<{
-  rows: CastWorkspaceRow[];
-  selectedKey: string | null;
-}>();
+const props = withDefaults(
+  defineProps<{
+    rows: CastWorkspaceRow[];
+    selectedKey: string | null;
+    /** Media without an original cast (audiobooks, podcasts, ads...) hide that identity. */
+    showOriginalActor?: boolean;
+  }>(),
+  { showOriginalActor: true },
+);
 
 const emit = defineEmits<{
   add: [];
