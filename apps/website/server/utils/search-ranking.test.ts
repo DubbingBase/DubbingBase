@@ -164,19 +164,25 @@ describe("search ranking", () => {
     expect(results.every((item) => !("provider_rank" in item))).toBe(true);
   });
 
-  it("keeps typo and translated-title hits that TMDB ranked high above weak local matches", () => {
+  it("caps TMDB hits with no local text match below real exact titles", () => {
     const results = rankSearchResults(
       [
-        { id: 1, media_type: "movie", title: "Something Containing beter watch out inside" },
-        { ...betterWatchOut, provider_rank: 0 },
-        { id: 2, media_type: "movie", title: "Safe Neighborhood", provider_rank: 35 },
+        {
+          id: 1,
+          media_type: "movie",
+          title: "The Birthday Gift",
+          vote_count: 26,
+          provider_rank: 0,
+        },
+        { id: 2, media_type: "movie", title: "The Gift", vote_count: 3650, provider_rank: 2 },
+        { id: 3, media_type: "audiobook", title: "Unrelated book" },
       ],
-      "beter watch out",
+      "The Gift",
       now,
     );
 
-    expect(results.map(({ id }) => id)).toEqual([406994, 2, 1]);
-    expect(results[0]?.score).toBeGreaterThan(2900);
+    expect(results.map(({ id }) => id)).toEqual([2, 1, 3]);
+    expect(results[1]?.score).toBeLessThan(2000);
   });
 
   it("falls back to local title tiers when no provider order is available", () => {

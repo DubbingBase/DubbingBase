@@ -74,16 +74,19 @@ function getMatchTier(item: SearchItem, query: string): "exact" | "prefix" | "co
 }
 
 const PROVIDER_RANK_TOP = 3000;
+const PROVIDER_RANK_UNMATCHED_TOP = 1000;
 const PROVIDER_RANK_STEP = 50;
 
 function calculateScore(item: SearchItem, query: string, now: number): number {
   const tier = getMatchTier(item, query);
   let score = tier === "exact" ? 3000 : tier === "prefix" ? 2000 : tier === "contains" ? 1000 : 0;
-  // TMDB already handles typos, translations and alternate titles but returns only one
-  // localized title, so its own order is a graded relevance floor: position 0 ties an exact
-  // match and the 40th result ties a partial one. Local text matching can only raise it.
+  // TMDB handles alternate titles but returns only one localized title, so its own order is a
+  // graded relevance floor (position 0 ties an exact match, the 40th a partial one). A result
+  // with no local text match at all could be an alias hit or a loose one, so it is capped at
+  // partial level and never outranks a real exact title.
   if (typeof item.provider_rank === "number") {
-    score = Math.max(score, PROVIDER_RANK_TOP - item.provider_rank * PROVIDER_RANK_STEP);
+    const top = tier === "none" ? PROVIDER_RANK_UNMATCHED_TOP : PROVIDER_RANK_TOP;
+    score = Math.max(score, top - item.provider_rank * PROVIDER_RANK_STEP);
   }
   score += Math.min(Math.sqrt(item.popularity || 0) * 3, 50);
   score += Math.min((item.vote_average || 0) * 0.1, 1);
