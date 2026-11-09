@@ -15,8 +15,8 @@ export type SearchItem = {
   first_air_date?: string | null;
   first_release_date?: number | null;
   studio_names?: string[];
-  /** Provider-sourced alternate/translated titles; used for matching only and never returned. */
-  alternative_titles?: string[];
+  /** Set on TMDB's own best movie/TV hit; TMDB already matched titles/aliases. Never returned. */
+  provider_top_match?: boolean;
   tmdb_id?: number | null;
   profile_picture?: string | null;
   profile_path?: string | null;
@@ -41,7 +41,6 @@ function getSearchNames(item: SearchItem): string[] {
     item.voice_actor_name,
     item.original_title,
     item.original_name,
-    ...(item.alternative_titles ?? []),
     typeof item.product_line === "string" ? item.product_line : "",
     typeof item.manufacturer === "string" ? item.manufacturer : "",
     typeof item.brand === "string" ? item.brand : "",
@@ -52,6 +51,9 @@ function getSearchNames(item: SearchItem): string[] {
 }
 
 function getMatchTier(item: SearchItem, query: string): "exact" | "prefix" | "contains" | "none" {
+  // TMDB matches alternate/translated titles itself but returns only one localized title,
+  // so its top hit is trusted as an exact match instead of re-deriving it from that title.
+  if (item.provider_top_match) return "exact";
   const queryHasPunctuation = /[^\p{L}\p{N}\s]/u.test(query);
   const normalizedQuery = foldAccents(query).toLowerCase().replace(/\s+/g, " ").trim();
   const names = getSearchNames(item).map((name) => ({
@@ -72,34 +74,6 @@ function getMatchTier(item: SearchItem, query: string): "exact" | "prefix" | "co
   );
 
   return exact ? "exact" : prefix ? "prefix" : contains ? "contains" : "none";
-}
-
-/** Maximum movie/TV candidates whose alternate titles are fetched per search. */
-export const ALIAS_LOOKUP_LIMIT = 5;
-
-/**
- * Picks the few non-exact movie/TV candidates worth an alternate-title lookup:
- * highest popularity, then vote count, then ID, so the choice is deterministic.
- */
-export function selectAliasLookupCandidates(
-  items: SearchItem[],
-  query: string,
-  limit = ALIAS_LOOKUP_LIMIT,
-): SearchItem[] {
-  return items
-    .filter(
-      (item) =>
-        (item.media_type === "movie" || item.media_type === "tv") &&
-        typeof item.id === "number" &&
-        getMatchTier(item, query) !== "exact",
-    )
-    .sort(
-      (a, b) =>
-        (b.popularity ?? 0) - (a.popularity ?? 0) ||
-        (b.vote_count ?? 0) - (a.vote_count ?? 0) ||
-        Number(a.id) - Number(b.id),
-    )
-    .slice(0, limit);
 }
 
 function calculateScore(item: SearchItem, query: string, now: number): number {
@@ -132,9 +106,9 @@ export function rankSearchResults(
 ): SearchItem[] {
   return items
     .filter((item) => item != null)
-    .map(({ alternative_titles: _aliases, ...item }) => ({
+    .map(({ provider_top_match, ...item }) => ({
       ...item,
-      score: calculateScore({ ...item, alternative_titles: _aliases }, query, now),
+      score: calculateScore({ ...item, provider_top_match }, query, now),
     }))
     .sort(
       (a, b) =>

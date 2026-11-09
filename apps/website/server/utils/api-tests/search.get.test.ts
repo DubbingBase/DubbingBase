@@ -9,7 +9,6 @@ import {
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  tmdbAlternativeTitles: vi.fn(async (): Promise<string[]> => []),
   tmdbSearch: vi.fn(async (): Promise<{ results: Array<Record<string, unknown>> }> => ({
     results: [],
   })),
@@ -23,10 +22,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("../../utils", () => ({
-  useTmdbClient: () => ({
-    searchMulti: mocks.tmdbSearch,
-    getAlternativeTitles: mocks.tmdbAlternativeTitles,
-  }),
+  useTmdbClient: () => ({ searchMulti: mocks.tmdbSearch }),
   useIgdbClient: () => ({ searchGames: mocks.igdbSearch }),
   useOpenLibraryClient: () => ({ searchBooks: mocks.openLibrarySearch }),
   usePodcastClient: () => ({ searchPodcasts: mocks.podcastSearch }),
@@ -51,7 +47,6 @@ beforeAll(async () => {
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.tmdbSearch.mockResolvedValue({ results: [] });
-  mocks.tmdbAlternativeTitles.mockResolvedValue([]);
   mocks.igdbSearch.mockResolvedValue([]);
   mocks.openLibrarySearch.mockResolvedValue([]);
   mocks.podcastSearch.mockResolvedValue([]);
@@ -195,37 +190,17 @@ describe("global search response", () => {
     ],
   });
 
-  it("surfaces a movie through its TMDB alias alongside other exact titles", async () => {
+  it("surfaces TMDB's top hit among exact titles without extra provider calls", async () => {
     mocks.tmdbSearch.mockImplementation(async (_q: string, page: number) =>
       page === 1 ? tmdbWatchOut() : { results: [] },
-    );
-    mocks.tmdbAlternativeTitles.mockImplementation(async (_type: string, id: number) =>
-      id === 406994 ? ["Safe Neighborhood", "Watch Out"] : [],
     );
 
     const response = await request("/?query=Watch%20Out&locale=en");
     const results: Array<Record<string, unknown>> = await response.json();
 
     expect(results.slice(0, 3).map(({ id }) => id)).toEqual([406994, 1079890, 74864]);
-    expect(results.every((item) => !("alternative_titles" in item))).toBe(true);
-    // Bounded: only non-exact movie/TV candidates, never the exact-title records.
-    expect(mocks.tmdbAlternativeTitles.mock.calls.map(([, id]) => id).sort()).toEqual([
-      324234, 406994,
-    ]);
-  });
-
-  it("still ranks results when alias lookups fail or time out", async () => {
-    mocks.tmdbSearch.mockImplementation(async (_q: string, page: number) =>
-      page === 1 ? tmdbWatchOut() : { results: [] },
-    );
-    mocks.tmdbAlternativeTitles.mockRejectedValue(new Error("TMDB unavailable"));
-
-    const response = await request("/?query=Watch%20Out");
-    const results: Array<Record<string, unknown>> = await response.json();
-
-    expect(response.status).toBe(200);
-    expect(results.map(({ id }) => id).slice(0, 2)).toEqual([1079890, 74864]);
-    expect(results.map(({ id }) => id)).toContain(406994);
+    expect(results.every((item) => !("provider_top_match" in item))).toBe(true);
+    expect(mocks.tmdbSearch).toHaveBeenCalledTimes(2);
   });
 
   it("ranks Better Watch Out above exact-title books from 2024 and 2023", async () => {
