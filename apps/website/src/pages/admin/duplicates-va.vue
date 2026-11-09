@@ -100,11 +100,9 @@
             </span>
             <span>{{ $t("admin.duplicates.duplicateCandidates") }}</span>
           </h4>
-          <span
-            class="text-xs theme-text-muted theme-surface-muted px-3 py-1 rounded-full border theme-border"
-          >
-            {{ $t("admin.duplicates.matchesDetected", { count: group.actors.length }) }}</span
-          >
+          <AppChip>
+            {{ $t("admin.duplicates.matchesDetected", { count: group.actors.length }) }}
+          </AppChip>
         </div>
 
         <!-- Comparative Table -->

@@ -36,12 +36,8 @@
           {{ title }}
         </h1>
         <ul v-if="chips.length > 0" class="flex flex-wrap gap-1.5 pt-1">
-          <li
-            v-for="chip in chips"
-            :key="chip"
-            class="rounded-full border theme-border theme-surface-muted px-2.5 py-0.5 text-xs font-medium theme-text-secondary"
-          >
-            {{ chip }}
+          <li v-for="chip in chips" :key="chip">
+            <AppChip>{{ chip }}</AppChip>
           </li>
         </ul>
       </div>

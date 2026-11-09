@@ -1,8 +1,5 @@
 <template>
-  <NuxtLink
-    :to="to"
-    class="text-sm theme-primary-text theme-hover-primary-text transition-colors flex items-center gap-1.5 font-medium"
-  >
+  <DetailsActionButton :to="to" hover="primary">
     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
       <path
         stroke-linecap="round"
@@ -12,10 +9,11 @@
       />
     </svg>
     <span class="hidden sm:inline">{{ label }}</span>
-  </NuxtLink>
+  </DetailsActionButton>
 </template>
 
 <script setup lang="ts">
+import DetailsActionButton from "./DetailsActionButton.vue";
 import type { RouteLocationRaw } from "vue-router";
 
 defineProps<{ to: RouteLocationRaw; label: string }>();
