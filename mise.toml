@@ -8,8 +8,14 @@ node = "24"
 # _.file = '.env.production'
 _.file = '.env.development'
 
+[tasks.doppler-setup]
+description = "Links this checkout to the Doppler dubbingbase/dev config"
+hide = true
+run = "doppler setup --no-interactive --project dubbingbase --config dev"
+
 [tasks.install]
 description = "Installs every workspace"
+depends = ["doppler-setup"]
 run = "pnpm install"
 
 [tasks.backend]
@@ -27,10 +33,12 @@ run = "pnpm supabase stop"
 
 [tasks.format]
 description = "Formats the whole repository"
+depends = ["install"]
 run = "pnpm run format"
 
 [tasks.format-staged]
 description = "Format only staged files using lint-staged"
+depends = ["install"]
 run = "npx lint-staged"
 
 [tasks.dev]
@@ -57,15 +65,13 @@ run = "pnpm supabase migration down"
 
 [tasks.database-install]
 description = "Installs only the database workspace dependencies"
+depends = ["doppler-setup"]
 run = "pnpm install --filter @app/supabase..."
 
 [tasks.website-install]
 description = "Installs only the website workspace and its dependencies"
+depends = ["doppler-setup"]
 run = "pnpm install --filter @app/website..."
-
-[tasks.pull-production]
-description = "Alias for fetching the production reseed data"
-run = "mise run fetch-seed"
 
 [tasks.db-reset]
 description = "Resets local schema and applies migrations without the production data seed"
@@ -79,8 +85,8 @@ depends = ["database-install"]
 run = "./backup_db.sh"
 
 [tasks.website]
-description = "Runs the website"
-depends = ["website-install"]
+description = "Starts the local Supabase backend and runs the website"
+depends = ["website-install", "backend"]
 dir = "apps/website"
 run = "doppler run -- sh -c 'node ../../scripts/check-local-supabase-env.mjs && exec pnpm dev --host 0.0.0.0'"
 
@@ -91,10 +97,12 @@ run = "pnpm --filter @app/website typecheck"
 
 [tasks.changeset]
 description = "Create a new changeset to describe package changes"
+depends = ["install"]
 run = "pnpm changeset"
 
 [tasks.bump]
 description = "Consumes changesets, bumps versions, commits, tags, and pushes to remote"
+depends = ["install"]
 run = """
 if [ "$(git branch --show-current)" != "main" ]; then
   echo "❌ Error: You can only run 'mise run bump' on the 'main' branch (current: $(git branch --show-current))!"
@@ -114,23 +122,45 @@ depends = ["database-install", "backend"]
 dir = "packages/database"
 run = "npx supabase gen types --lang=typescript --local > src/database.types.ts && node scripts/normalize-nullable-rpc-args.mjs"
 
-[tasks.fetch-seed]
-description = "Dumps production application data for a local reseed"
+[tasks.supabase-link]
+description = "Links the local Supabase CLI to the production project (read-only use)"
+hide = true
 depends = ["database-install"]
 dir = "packages/database"
-run = "npx supabase db dump --data-only --file supabase/seed.sql --linked"
+run = "doppler run --project dubbingbase --config prd -- npx supabase link --project-ref rrjgbneefiwoqvsjwzrz"
+
+[tasks.fetch-seed]
+description = "Dumps production application data for a local reseed"
+depends = ["supabase-link"]
+dir = "packages/database"
+run = "doppler run --project dubbingbase --config prd -- npx supabase db dump --data-only -x storage.buckets --file supabase/seed.sql --linked"
 
 [tasks.sync-storage]
 description = "Refreshes local Storage bucket files from the linked production project"
-depends = ["database-install"]
+depends = ["supabase-link"]
 dir = "packages/database"
-run = "./sync-storage.sh"
+run = "doppler run --project dubbingbase --config prd -- ./sync-storage.sh"
 
 [tasks.reseed]
 description = "Fetches production data and uses the normal local Supabase reset flow"
-depends = ["fetch-seed"]
+depends = ["fetch-seed", "backend"]
 dir = "packages/database"
-run = "npx supabase db reset --local --yes"
+# The CLI loads the whole seed into memory (~2.6 GB for the 80 MB dump) and gets OOM-killed,
+# so reset without seeding and stream the seed through psql instead.
+run = """
+npx supabase db reset --local --no-seed --yes
+PGPASSWORD=postgres psql -h 127.0.0.1 -p 55322 -U postgres -d postgres -v ON_ERROR_STOP=1 -q -1 -f supabase/seed.sql
+npx supabase seed buckets --local
+"""
+
+[tasks.pull-production]
+description = "Restores local Supabase from production: database seed, then Storage files (read-only on production)"
+run = """
+mise run reseed
+# The link pins the service versions of production; restart so the running containers match.
+(cd packages/database && npx supabase stop && npx supabase start)
+mise run sync-storage
+"""
 
 [tasks.typecheck]
 description = "Type checks all workspaces"
@@ -144,4 +174,5 @@ run = "npx --yes tsx scripts/fetch_wikipedia_dubbing.ts"
 
 [tasks.check]
 description = "Builds the website to verify TypeScript, Vue templates, and Nitro server routes"
+depends = ["website-install"]
 run = "pnpm --filter=@app/website build"

@@ -28,17 +28,17 @@ packages/shared-logic/
 
 Use **Mise** for development tasks. Check `mise.toml` first; if it defines the task, run it with `mise run <task>`. Agent-safe scoped tasks include:
 
-| Command                      | Description                                                       |
-| :--------------------------- | :---------------------------------------------------------------- |
-| `mise run website`           | Runs the website with Doppler and checks local Supabase settings. |
-| `mise run website-typecheck` | Type checks only the website workspace.                           |
-| `mise run build-web`         | Builds only the website workspace.                                |
-| `mise run backend`           | Starts the local Supabase backend.                                |
-| `mise run backend-stop`      | Stops the local Supabase backend.                                 |
-| `mise run db-reset`          | Resets the local schema without seed data.                        |
-| `mise run migrate-up`        | Applies pending local migrations.                                 |
-| `mise run migrate-down`      | Rolls back the last local migration.                              |
-| `mise run gen-types`         | Regenerates local database TypeScript types.                      |
+| Command                      | Description                                                |
+| :--------------------------- | :--------------------------------------------------------- |
+| `mise run website`           | Starts local Supabase, then runs the website with Doppler. |
+| `mise run website-typecheck` | Type checks only the website workspace.                    |
+| `mise run build-web`         | Builds only the website workspace.                         |
+| `mise run backend`           | Starts the local Supabase backend.                         |
+| `mise run backend-stop`      | Stops the local Supabase backend.                          |
+| `mise run db-reset`          | Resets the local schema without seed data.                 |
+| `mise run migrate-up`        | Applies pending local migrations.                          |
+| `mise run migrate-down`      | Rolls back the last local migration.                       |
+| `mise run gen-types`         | Regenerates local database TypeScript types.               |
 
 Prefer website-scoped install, dev, formatting, build, and typecheck tasks. Check workspace filters before using a repository-wide command.
 
@@ -56,8 +56,7 @@ _(This command generates types to `packages/database/src/database.types.ts`)._
 
 When testing the website from a mobile device or other clients over Tailscale/LAN:
 
-- Ensure the Supabase backend is running (`mise run backend`).
-- Run the website dev server bound to all network interfaces with `mise run website`.
+- Run the website dev server bound to all network interfaces with `mise run website`; it also starts the Supabase backend.
 - Find your Tailscale IP on the `tailscale0` interface using `ip a` (e.g. `100.111.167.123`).
 - Connect from the client browser at `http://<tailscale-ip>:3000` (or `3001` if port 3000 is occupied).
 
@@ -67,14 +66,7 @@ Doppler is the source of truth for website environment variables. Use the unpref
 
 Configure once from the repository root with `doppler setup`, selecting project `dubbingbase` and config `dev` for local development. Never print secret values; inspect names only with `doppler secrets --only-names`.
 
-The website requires both the local Supabase backend and the website server. Start them separately:
-
-```bash
-mise run backend
-mise run website
-```
-
-The website task starts Doppler and checks the local Supabase environment; it does not start the backend. Stop the local backend with `mise run backend-stop` when finished.
+`mise run website` installs dependencies, links Doppler, starts the local Supabase backend, checks that Doppler's Supabase settings match it, and runs the website. In dev the browser reaches Supabase through the website's `/supabase` proxy, so the site works from any host (localhost, Tailscale, LAN) with `SUPABASE_URL` left at the loopback address. Stop the local backend with `mise run backend-stop` when finished.
 
 ---
 
