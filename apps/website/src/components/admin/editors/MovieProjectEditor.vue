@@ -89,108 +89,15 @@
             @character-image-error="reportCharacterImageError"
           >
             <template #detail>
-              <div
-                v-if="selectedRow"
-                :key="selectedRow.key"
-                class="grid gap-x-8 gap-y-5 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]"
-              >
-                <div class="min-w-0 space-y-5">
-                  <AdminFormField :label="$t('projectEditor.voiceActor')">
-                    <AdminAsyncAutocomplete
-                      v-model="selectedRow.voice_actor_id"
-                      :options="initialVoiceActorOptions"
-                      :search-fn="lookups.searchVoiceActors"
-                      placeholder="Search Voice Actor..."
-                      :allow-create="true"
-                      :display-fn="lookups.voiceActorLabel"
-                      @create="
-                        (q: string) =>
-                          openCreateVaDialog(q, (id: number) => (selectedRow!.voice_actor_id = id))
-                      "
-                    >
-                      <template #option="{ option }"
-                        ><span class="flex items-center gap-2"
-                          ><AdminCastAvatar :name="option.name" :src="option.image ?? null" />{{
-                            option.name
-                          }}</span
-                        ></template
-                      >
-                    </AdminAsyncAutocomplete>
-                  </AdminFormField>
-
-                  <fieldset class="space-y-1.5">
-                    <legend class="text-xs font-semibold theme-text-secondary">
-                      {{ $t("projectEditor.performanceType") }}
-                    </legend>
-                    <div class="-mx-1 flex flex-wrap gap-2 px-1" role="radiogroup">
-                      <button
-                        v-for="option in performanceOptions"
-                        :key="option.value"
-                        type="button"
-                        role="radio"
-                        :aria-checked="selectedRow.performance === option.value"
-                        class="min-h-10 rounded-full border px-4 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-focus)]"
-                        :class="
-                          selectedRow.performance === option.value
-                            ? 'theme-status-info theme-status-info-text border-[var(--app-color-focus)]'
-                            : 'theme-border theme-surface-overlay theme-text-secondary theme-hover-surface-muted'
-                        "
-                        @click="selectedRow.performance = option.value"
-                      >
-                        {{ option.label }}
-                      </button>
-                    </div>
-                  </fieldset>
-                </div>
-
-                <div class="min-w-0 space-y-5">
-                  <AdminFormField :label="$t('projectEditor.castNote')" for-id="cast-detail-note">
-                    <input
-                      id="cast-detail-note"
-                      v-model="selectedRow.note"
-                      type="text"
-                      enterkeyhint="done"
-                      class="h-11 w-full rounded-xl border theme-border theme-input px-4 text-base sm:text-sm theme-text focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)]"
-                    />
-                  </AdminFormField>
-
-                  <label
-                    class="flex min-h-12 cursor-pointer items-center justify-between gap-3 rounded-xl border theme-border theme-surface-overlay px-4 text-sm theme-text-secondary"
+              <div v-if="selectedRow" :key="selectedRow.key" class="space-y-5">
+                <div class="grid gap-5 lg:grid-cols-2">
+                  <section
+                    class="space-y-4 rounded-xl border theme-border p-4"
+                    :aria-label="$t('projectEditor.castOriginalActor')"
                   >
-                    <span class="flex items-center gap-2">
-                      <StarIcon class="h-4 w-4 text-[var(--app-color-rating)]" aria-hidden="true" />
-                      {{ $t("projectEditor.highlightCharacter") }}
-                    </span>
-                    <input
-                      v-model="selectedRow.highlight"
-                      type="checkbox"
-                      class="h-5 w-5 rounded accent-[var(--app-color-primary)]"
-                    />
-                  </label>
-                </div>
-
-                <details class="group rounded-xl border theme-border lg:col-span-2">
-                  <summary
-                    class="flex min-h-12 cursor-pointer list-none items-center justify-between gap-2 px-4 text-sm font-semibold theme-text-secondary [&::-webkit-details-marker]:hidden"
-                  >
-                    {{ $t("projectEditor.castAdvanced") }}
-                    <ChevronDownIcon
-                      class="h-4 w-4 transition-transform group-open:rotate-180"
-                      aria-hidden="true"
-                    />
-                  </summary>
-                  <div class="grid gap-5 border-t theme-border p-4 md:grid-cols-2">
-                    <AdminFormField
-                      :label="$t('projectEditor.castCharacterName')"
-                      for-id="cast-detail-character"
-                    >
-                      <input
-                        id="cast-detail-character"
-                        v-model="selectedRow.character_name"
-                        type="text"
-                        class="h-11 w-full rounded-xl border theme-border theme-input px-4 text-base sm:text-sm theme-text focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)]"
-                      />
-                    </AdminFormField>
+                    <h3 class="text-xs font-bold uppercase tracking-wider theme-text-muted">
+                      {{ $t("projectEditor.castOriginalActor") }}
+                    </h3>
                     <AdminFormField :label="$t('projectEditor.originalActorCharacter')">
                       <AdminAsyncAutocomplete
                         v-model="selectedRow.actor_id"
@@ -206,9 +113,17 @@
                         "
                         @create="(query: string) => handleActorCreate(selectedRow!, query)"
                       >
+                        <template #leading>
+                          <AdminCastAvatar
+                            size="sm"
+                            :name="castViewFor(selectedRow.key)?.originalActorName ?? ''"
+                            :src="castViewFor(selectedRow.key)?.originalActorImage ?? null"
+                          />
+                        </template>
                         <template #option="{ option }"
                           ><span class="flex items-center gap-2"
                             ><AdminCastAvatar
+                              size="sm"
                               :name="option.name"
                               :src="tmdbProfileUrl(option.profile_path)"
                             />{{ getActorName(option.id) }}</span
@@ -216,8 +131,119 @@
                         >
                       </AdminAsyncAutocomplete>
                     </AdminFormField>
-                  </div>
-                </details>
+                    <AdminFormField
+                      :label="$t('projectEditor.castCharacterName')"
+                      for-id="cast-detail-character"
+                    >
+                      <div class="relative">
+                        <div class="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2">
+                          <AdminCastAvatar
+                            size="sm"
+                            :name="characterNameFor(selectedRow)"
+                            :src="castViewFor(selectedRow.key)?.characterImage ?? null"
+                          />
+                        </div>
+                        <input
+                          id="cast-detail-character"
+                          v-model="selectedRow.character_name"
+                          type="text"
+                          :placeholder="characterNameFor(selectedRow)"
+                          class="h-11 w-full rounded-xl border theme-border theme-input pl-14 pr-4 text-base sm:text-sm theme-text focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)]"
+                        />
+                      </div>
+                    </AdminFormField>
+                  </section>
+
+                  <section
+                    class="space-y-4 rounded-xl border theme-border p-4"
+                    :aria-label="$t('projectEditor.castVoiceActor')"
+                  >
+                    <h3 class="text-xs font-bold uppercase tracking-wider theme-text-muted">
+                      {{ $t("projectEditor.castVoiceActor") }}
+                    </h3>
+                    <AdminFormField :label="$t('projectEditor.voiceActor')">
+                      <AdminAsyncAutocomplete
+                        v-model="selectedRow.voice_actor_id"
+                        :options="initialVoiceActorOptions"
+                        :search-fn="lookups.searchVoiceActors"
+                        placeholder="Search Voice Actor..."
+                        :allow-create="true"
+                        :display-fn="lookups.voiceActorLabel"
+                        @create="
+                          (q: string) =>
+                            openCreateVaDialog(
+                              q,
+                              (id: number) => (selectedRow!.voice_actor_id = id),
+                            )
+                        "
+                      >
+                        <template #leading>
+                          <AdminCastAvatar
+                            size="sm"
+                            :name="castViewFor(selectedRow.key)?.voiceActorName ?? ''"
+                            :src="castViewFor(selectedRow.key)?.voiceActorImage ?? null"
+                          />
+                        </template>
+                        <template #option="{ option }"
+                          ><span class="flex items-center gap-2"
+                            ><AdminCastAvatar
+                              size="sm"
+                              :name="option.name"
+                              :src="option.image ?? null"
+                            />{{ option.name }}</span
+                          ></template
+                        >
+                      </AdminAsyncAutocomplete>
+                    </AdminFormField>
+
+                    <fieldset class="space-y-1.5">
+                      <legend class="text-xs font-semibold theme-text-secondary">
+                        {{ $t("projectEditor.performanceType") }}
+                      </legend>
+                      <div class="-mx-1 flex flex-wrap gap-2 px-1" role="radiogroup">
+                        <button
+                          v-for="option in performanceOptions"
+                          :key="option.value"
+                          type="button"
+                          role="radio"
+                          :aria-checked="selectedRow.performance === option.value"
+                          class="min-h-10 rounded-full border px-4 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-focus)]"
+                          :class="
+                            selectedRow.performance === option.value
+                              ? 'theme-status-info theme-status-info-text border-[var(--app-color-focus)]'
+                              : 'theme-border theme-surface-overlay theme-text-secondary theme-hover-surface-muted'
+                          "
+                          @click="selectedRow.performance = option.value"
+                        >
+                          {{ option.label }}
+                        </button>
+                      </div>
+                    </fieldset>
+                  </section>
+                </div>
+
+                <div class="grid items-end gap-5 sm:grid-cols-[minmax(0,1fr)_auto]">
+                  <AdminFormField :label="$t('projectEditor.castNote')" for-id="cast-detail-note">
+                    <input
+                      id="cast-detail-note"
+                      v-model="selectedRow.note"
+                      type="text"
+                      enterkeyhint="done"
+                      class="h-11 w-full rounded-xl border theme-border theme-input px-4 text-base sm:text-sm theme-text focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)]"
+                    />
+                  </AdminFormField>
+                  <label
+                    class="flex h-11 cursor-pointer items-center gap-3 rounded-xl border theme-border theme-surface-overlay px-4 text-sm theme-text-secondary"
+                  >
+                    <StarIcon class="h-4 w-4 text-[var(--app-color-rating)]" aria-hidden="true" />
+                    {{ $t("projectEditor.highlightCharacter") }}
+                    <input
+                      v-model="selectedRow.highlight"
+                      type="checkbox"
+                      class="h-5 w-5 rounded accent-[var(--app-color-primary)]"
+                    />
+                  </label>
+                </div>
               </div>
             </template>
           </AdminProjectCastWorkspace>
@@ -375,7 +401,7 @@ import { validateDubbingLanguage } from "@app/shared-logic";
 import { useCharacterImages } from "../../../composables/useCharacterImages";
 import { ref, onMounted, computed, nextTick, watch, type Ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { ChevronDownIcon, Loader2Icon, PlusIcon, StarIcon } from "lucide-vue-next";
+import { Loader2Icon, PlusIcon, StarIcon } from "lucide-vue-next";
 import {
   createDubbingProjectSaveClient,
   getDubbingProjectSaveErrorMessage,
@@ -637,6 +663,8 @@ const castView = computed<CastWorkspaceRow[]>(() =>
     };
   }),
 );
+
+const castViewFor = (key: string) => castView.value.find((row) => row.key === key);
 
 const tmdbCast = ref<EditorTmdbCastMember[]>([]);
 const characterRequestFor = (characterName: string) => ({

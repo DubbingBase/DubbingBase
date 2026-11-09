@@ -25,7 +25,7 @@
               v-model="firstname"
               type="text"
               required
-              class="w-full px-4 py-2 theme-input border theme-border rounded-lg theme-text"
+              class="w-full h-11 px-4 theme-input border theme-border rounded-xl theme-text focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)]"
             />
           </label>
           <label class="block space-y-1">
@@ -36,7 +36,7 @@
               v-model="lastname"
               type="text"
               required
-              class="w-full px-4 py-2 theme-input border theme-border rounded-lg theme-text"
+              class="w-full h-11 px-4 theme-input border theme-border rounded-xl theme-text focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)]"
             />
           </label>
           <p v-if="errorMessage" role="alert" class="text-sm theme-status-danger-text">

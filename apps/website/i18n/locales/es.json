@@ -1280,7 +1280,6 @@
     "castFilterUnassigned": "Por asignar",
     "castFilterAssigned": "Asignados",
     "castAssignPrompt": "Asignar un actor de voz",
-    "castAdvanced": "Actor original y personaje",
     "castCharacterName": "Nombre del personaje",
     "castRemoveRole": "Eliminar este papel",
     "castEmptyFilter": "Nada que mostrar con este filtro.",
