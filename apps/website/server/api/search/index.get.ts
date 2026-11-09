@@ -450,9 +450,13 @@ export default defineEventHandler(async (event) => {
         ...(previous?.studio_names ?? []),
         ...(item.studio_names ?? []),
       ]);
+      const ranks = [previous?.provider_rank, item.provider_rank].filter(
+        (rank): rank is number => typeof rank === "number",
+      );
       uniqueResults.set(key, {
         ...previous,
         ...item,
+        ...(ranks.length > 0 ? { provider_rank: Math.min(...ranks) } : {}),
         ...(studioNames.size > 0
           ? {
               studio_names: [...studioNames].sort((a, b) => a.localeCompare(b)),

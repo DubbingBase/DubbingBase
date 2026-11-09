@@ -209,3 +209,185 @@ describe("search ranking", () => {
     expect(rankSearchResults([betterWatchOut, ratedBook], "Better Watch Out", now)[0]?.id).toBe(1);
   });
 });
+
+describe("search ranking with TMDB relevance order", () => {
+  const now = Date.parse("2026-11-08T00:00:00Z");
+  const movie = (id: number, title: string, extra: SearchItem = {}): SearchItem => ({
+    id,
+    media_type: "movie",
+    title,
+    release_date: "2010-01-01",
+    ...extra,
+  });
+  const order = (items: SearchItem[], query: string) =>
+    rankSearchResults(items, query, now).map(({ id }) => id);
+
+  it("never lets a TMDB hit without a local match outrank a real exact title, at any position", () => {
+    for (let rank = 0; rank < 40; rank += 1) {
+      const results = rankSearchResults(
+        [
+          movie(1, "The Birthday Gift", {
+            vote_count: 50_000,
+            popularity: 500,
+            provider_rank: rank,
+          }),
+          movie(2, "The Gift", { provider_rank: 39 }),
+        ],
+        "The Gift",
+        now,
+      );
+      expect(results[0]?.id).toBe(2);
+    }
+  });
+
+  it("scores a lower TMDB position at least as high as a later one for identical items", () => {
+    const scores = Array.from({ length: 40 }, (_, rank) => {
+      const [item] = rankSearchResults(
+        [movie(1, "Better Watch Out", { provider_rank: rank })],
+        "Watch Out",
+        now,
+      );
+      return item?.score ?? 0;
+    });
+    for (let n = 1; n < scores.length; n += 1) {
+      expect(scores[n - 1]).toBeGreaterThanOrEqual(scores[n] ?? 0);
+    }
+    expect(scores[39]).toBeGreaterThanOrEqual(1000);
+  });
+
+  it("does not change the order of items that carry no provider rank", () => {
+    const items = [
+      movie(3, "Example"),
+      movie(1, "Example Two"),
+      movie(2, "Example", { vote_count: 9 }),
+    ];
+    const withRank = items.map((item) => ({ ...item, provider_rank: undefined }));
+    expect(order(withRank, "Example")).toEqual(order(items, "Example"));
+  });
+
+  it("ignores invalid provider ranks instead of producing NaN scores", () => {
+    for (const provider_rank of [
+      Number.NaN,
+      Number.POSITIVE_INFINITY,
+      Number.NEGATIVE_INFINITY,
+      -5,
+    ]) {
+      const [item] = rankSearchResults(
+        [movie(1, "Better Watch Out", { provider_rank })],
+        "Watch Out",
+        now,
+      );
+      expect(Number.isFinite(item?.score)).toBe(true);
+      expect(item?.score).toBeLessThan(3050);
+    }
+  });
+
+  it("only floors movie and TV hits, not people or other providers", () => {
+    const results = rankSearchResults(
+      [
+        { id: 1, media_type: "person", name: "Yushin Okami", provider_rank: 0 },
+        { id: 2, media_type: "audiobook", title: "Okami", provider_rank: 0 },
+        movie(3, "Okami"),
+      ],
+      "Ōkami",
+      now,
+    );
+    expect(results.map(({ id }) => id)).toEqual([2, 3, 1]);
+    expect(results.find(({ id }) => id === 1)?.score).toBeLessThan(2000);
+  });
+
+  it("keeps exact titles above a TMDB-first substring hit for very short queries", () => {
+    expect(
+      order(
+        [
+          {
+            id: 1,
+            media_type: "tv",
+            name: "The IT Crowd",
+            popularity: 60,
+            vote_count: 2000,
+            provider_rank: 0,
+          },
+          movie(2, "It", { provider_rank: 1 }),
+          movie(3, "It", { release_date: "1990-01-01" }),
+        ],
+        "It",
+      ),
+    ).toEqual([2, 3, 1]);
+  });
+
+  it("is independent of candidate arrival order, including rank ties and equal scores", () => {
+    const items: SearchItem[] = [
+      movie(5, "Better Watch Out", { provider_rank: 0 }),
+      movie(4, "Watch Out", { provider_rank: 3 }),
+      movie(3, "Watch Out", { provider_rank: 3 }),
+      { id: 3, media_type: "tv", name: "Watch Out", provider_rank: 3 },
+      { id: 9, media_type: "audiobook", title: "Watch Out" },
+    ];
+    const permutations = (list: SearchItem[]): SearchItem[][] =>
+      list.length <= 1
+        ? [list]
+        : list.flatMap((item, index) =>
+            permutations([...list.slice(0, index), ...list.slice(index + 1)]).map((rest) => [
+              item,
+              ...rest,
+            ]),
+          );
+    const expected = rankSearchResults(items, "Watch Out", now).map(
+      ({ media_type, id }) => `${media_type}:${id}`,
+    );
+    for (const candidate of permutations(items)) {
+      expect(
+        rankSearchResults(candidate, "Watch Out", now).map(
+          ({ media_type, id }) => `${media_type}:${id}`,
+        ),
+      ).toEqual(expected);
+    }
+  });
+
+  it("does not mutate inputs and never returns the internal rank", () => {
+    const input = movie(1, "Better Watch Out", { provider_rank: 0 });
+    const snapshot = structuredClone(input);
+    const [result] = rankSearchResults([input], "Watch Out", now);
+    expect(input).toEqual(snapshot);
+    expect(result).not.toHaveProperty("provider_rank");
+    expect(result).toHaveProperty("score");
+  });
+
+  it.each([
+    [
+      "千と千尋の神隠し",
+      { id: 1, media_type: "movie", title: "Spirited Away", original_title: "千と千尋の神隠し" },
+    ],
+    [
+      "Что? Где? Когда?",
+      { id: 1, media_type: "tv", name: "What? Where? When?", original_name: "Что? Где? Когда?" },
+    ],
+    ["M*A*S*H", { id: 1, media_type: "tv", name: "M*A*S*H" }],
+    ["WALL·E", { id: 1, media_type: "movie", title: "WALL·E" }],
+    ["올드보이", { id: 1, media_type: "movie", title: "Oldboy", original_title: "올드보이" }],
+    [
+      "Léon",
+      { id: 1, media_type: "movie", title: "Leon: The Professional", original_title: "Léon" },
+    ],
+  ])("matches exotic title %s through original or punctuated names", (query, item) => {
+    const results = rankSearchResults(
+      [
+        { id: 2, media_type: "audiobook", title: "Unrelated" },
+        { ...item, provider_rank: 0 },
+      ],
+      query,
+      now,
+    );
+    expect(results[0]?.id).toBe(1);
+    expect(results[0]?.score).toBeGreaterThanOrEqual(3000);
+  });
+
+  it("survives empty, emoji and very long queries without throwing", () => {
+    const items = [movie(1, "Example", { provider_rank: 0 })];
+    for (const query of ["", " ", "🎬", "a".repeat(100), "()[]*+?\\^$|"]) {
+      expect(() => rankSearchResults(items, query, now)).not.toThrow();
+      expect(Number.isFinite(rankSearchResults(items, query, now)[0]?.score)).toBe(true);
+    }
+  });
+});

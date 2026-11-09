@@ -232,4 +232,64 @@ describe("global search response", () => {
     ]);
     expect(results[0]?.score).toBeGreaterThan(Number(results[1]?.score) + 8);
   });
+
+  it("floors only TMDB movie/TV by position across both pages and strips the internal rank", async () => {
+    mocks.tmdbSearch.mockImplementation(async (_q: string, page: number) =>
+      page === 1
+        ? { results: [{ id: 1, media_type: "person", name: "Okami Person" }] }
+        : {
+            results: [
+              {
+                id: 406994,
+                media_type: "movie",
+                title: "Better Watch Out",
+                release_date: "2017-10-06",
+                vote_count: 1725,
+              },
+            ],
+          },
+    );
+    mocks.openLibrarySearch.mockResolvedValue([
+      { id: 7, title: "Okami", name: "Okami", release_date: "2020-01-01" },
+    ]);
+
+    for (const path of ["/?query=Watch%20Out", "/?query=Watch%20Out&projection=search-page"]) {
+      const results: Array<Record<string, unknown>> = await (await request(path)).json();
+      expect(results.every((item) => !("provider_rank" in item))).toBe(true);
+      expect(results.map(({ id }) => id)).toContain(406994);
+    }
+  });
+
+  it("keeps the best TMDB position when the same movie is returned on both pages", async () => {
+    const hit = {
+      id: 406994,
+      media_type: "movie",
+      title: "Better Watch Out",
+      release_date: "2017-10-06",
+    };
+    const filler = { id: 2, media_type: "movie", title: "Watch Out", release_date: "2010-01-01" };
+    mocks.tmdbSearch.mockImplementation(async (_q: string, page: number) =>
+      page === 1 ? { results: [{ ...hit }, { ...filler }] } : { results: [{ ...hit }] },
+    );
+
+    const results: Array<Record<string, unknown>> = await (
+      await request("/?query=Watch%20Out")
+    ).json();
+
+    // Page-1 position 0 survives deduplication, so the movie ties the exact tier and wins on quality order.
+    expect(Number(results.find(({ id }) => id === 406994)?.score)).toBeGreaterThanOrEqual(2999);
+  });
+
+  it("still ranks other providers when TMDB fails, with no rank floor involved", async () => {
+    mocks.tmdbSearch.mockRejectedValue(new Error("TMDB unavailable"));
+    mocks.openLibrarySearch.mockResolvedValue([
+      { id: 7, title: "Better Watch Out", name: "Better Watch Out", release_date: "2024-01-01" },
+    ]);
+
+    const response = await request("/?query=Better%20Watch%20Out");
+    const results: Array<Record<string, unknown>> = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(results).toEqual([expect.objectContaining({ id: 7, media_type: "audiobook" })]);
+  });
 });

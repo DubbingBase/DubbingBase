@@ -75,18 +75,30 @@ function getMatchTier(item: SearchItem, query: string): "exact" | "prefix" | "co
 
 const PROVIDER_RANK_TOP = 3000;
 const PROVIDER_RANK_UNMATCHED_TOP = 1000;
+const PROVIDER_RANK_SHORT_QUERY_TOP = 2000;
+const PROVIDER_RANK_MIN_QUERY_LENGTH = 5;
 const PROVIDER_RANK_STEP = 50;
 
 function calculateScore(item: SearchItem, query: string, now: number): number {
   const tier = getMatchTier(item, query);
   let score = tier === "exact" ? 3000 : tier === "prefix" ? 2000 : tier === "contains" ? 1000 : 0;
   // TMDB handles alternate titles but returns only one localized title, so its own order is a
-  // graded relevance floor (position 0 ties an exact match, the 40th a partial one). A result
-  // with no local text match at all could be an alias hit or a loose one, so it is capped at
-  // partial level and never outranks a real exact title.
-  if (typeof item.provider_rank === "number") {
-    const top = tier === "none" ? PROVIDER_RANK_UNMATCHED_TOP : PROVIDER_RANK_TOP;
-    score = Math.max(score, top - item.provider_rank * PROVIDER_RANK_STEP);
+  // graded relevance floor (position 0 ties an exact match, the 40th a partial one). Only movie
+  // and TV hits are floored. A hit with no local text match could be an alias hit or a loose one,
+  // so it is capped at partial level; for very short queries a substring match is not evidence
+  // either, so those are capped at prefix level. Neither can outrank a real exact title.
+  if (
+    (item.media_type === "movie" || item.media_type === "tv") &&
+    typeof item.provider_rank === "number" &&
+    Number.isFinite(item.provider_rank)
+  ) {
+    const top =
+      tier === "none"
+        ? PROVIDER_RANK_UNMATCHED_TOP
+        : normalizeSearchText(query).length < PROVIDER_RANK_MIN_QUERY_LENGTH
+          ? PROVIDER_RANK_SHORT_QUERY_TOP
+          : PROVIDER_RANK_TOP;
+    score = Math.max(score, top - Math.max(0, item.provider_rank) * PROVIDER_RANK_STEP);
   }
   score += Math.min(Math.sqrt(item.popularity || 0) * 3, 50);
   score += Math.min((item.vote_average || 0) * 0.1, 1);
