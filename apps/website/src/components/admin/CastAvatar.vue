@@ -26,10 +26,7 @@ import { UserIcon } from "lucide-vue-next";
 import { computed, ref, watch } from "vue";
 import { getInitials } from "~/utils/cast-workspace";
 
-/**
- * `portrait` is a character (tall, rounded rectangle); `md` and the default `sm` are
- * people (round), so the identity type is readable without a label.
- */
+/** All identities are rounded squares; only the size differs (portrait = character, md/sm = people). */
 const props = defineProps<{ name: string; src: string | null; size?: "sm" | "md" | "portrait" }>();
 const emit = defineEmits<{ error: [] }>();
 const failed = ref(false);
@@ -44,9 +41,9 @@ const onError = () => {
 const initials = computed(() => getInitials(props.name));
 
 const SIZES = {
-  portrait: { classes: "h-20 w-16 rounded-xl text-base", width: 64, height: 80 },
-  md: { classes: "h-11 w-11 rounded-full text-sm", width: 44, height: 44 },
-  sm: { classes: "h-10 w-10 rounded-full text-xs", width: 40, height: 40 },
+  portrait: { classes: "h-[4.5rem] w-[4.5rem] rounded-xl text-base", width: 72, height: 72 },
+  md: { classes: "h-11 w-11 rounded-xl text-sm", width: 44, height: 44 },
+  sm: { classes: "h-10 w-10 rounded-xl text-xs", width: 40, height: 40 },
 } as const;
 const dimensions = computed(() => SIZES[props.size ?? "sm"]);
 const sizeClass = computed(() => dimensions.value.classes);
