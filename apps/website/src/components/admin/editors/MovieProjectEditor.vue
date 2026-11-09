@@ -143,13 +143,11 @@
                             :src="castViewFor(selectedRow.key)?.characterImage ?? null"
                           />
                         </div>
-                        <input
+                        <output
                           id="cast-detail-character"
-                          v-model="selectedRow.character_name"
-                          type="text"
-                          :placeholder="characterNameFor(selectedRow)"
-                          class="h-11 w-full rounded-xl border theme-border theme-input pl-12 pr-4 text-base sm:text-sm theme-text focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)]"
-                        />
+                          class="flex h-11 w-full items-center truncate rounded-xl border theme-border theme-surface-muted pl-12 pr-4 text-base sm:text-sm theme-text"
+                          >{{ characterNameFor(selectedRow) }}</output
+                        >
                       </div>
                     </AdminFormField>
                   </section>
