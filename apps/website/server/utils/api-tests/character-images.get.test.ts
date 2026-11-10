@@ -26,7 +26,7 @@ vi.mock("../services/media", () => ({
   },
 }));
 vi.mock("../services/wikimedia-character-image", () => ({
-  getWikimediaCharacterImage: mocks.getWikimediaCharacterImage,
+  createWikimediaCharacterImageResolver: () => mocks.getWikimediaCharacterImage,
 }));
 
 let handler: typeof import("../../api/character-images.get").default;

@@ -1,15 +1,10 @@
 import { isRecord, readPath, readProperty } from "@app/shared-logic";
-import { createCacheNamespace } from "../cache";
-import { CHARACTER_IMAGE_POSITIVE_TTL } from "../character-images";
-import { buildCacheKey } from "../cache/constants";
-import { useCache } from "../index";
 import { withTimeout } from "../with-timeout";
 
 const USER_AGENT = "DubbingBase/1.0 (https://dubbingbase.com; contact@dubbingbase.com)";
 const WIKIDATA_API = "https://www.wikidata.org/w/api.php";
 const COMMONS_API = "https://commons.wikimedia.org/w/api.php";
 const REQUEST_TIMEOUT_MS = 2500;
-const CHARACTER_IMAGE_NEGATIVE_TTL = 24 * 60 * 60;
 // Wikidata properties: characters (of a work), present in work, image.
 const CHARACTERS = "P674";
 const PRESENT_IN_WORK = "P1441";
@@ -31,12 +26,6 @@ type CharacterImageLookup = {
 };
 
 type ProductionCharacter = { names: string[]; fileName: string };
-const PRODUCTION_CHARACTERS_NAMESPACE = createCacheNamespace<ProductionCharacter[]>();
-
-export const WIKIMEDIA_CHARACTER_IMAGE_NAMESPACE = createCacheNamespace<
-  WikimediaCharacterImage | { miss: true }
->();
-
 function normalizedName(value: string): string {
   return value.normalize("NFKC").trim().toLocaleLowerCase();
 }
@@ -161,74 +150,39 @@ async function loadProductionCharacters(
   });
 }
 
-/** Share the bounded production roster across role names, aliases, and batches. */
-async function getProductionCharacters(
+/** Create once per API request; share provider work only for that request's cards. */
+export function createWikimediaCharacterImageResolver(): (
   input: CharacterImageLookup,
-): Promise<ProductionCharacter[]> {
-  const cache = useCache();
-  const key = buildCacheKey({
-    provider: "wikimedia",
-    resource: "production-character-candidates",
-    id: input.contentId,
-    language: input.language,
-    params: { contentType: input.contentType, wikidataId: input.wikidataId },
-  });
-  return cache.getOrFetch(
-    PRODUCTION_CHARACTERS_NAMESPACE,
-    key,
-    async () => {
-      const characters = await loadProductionCharacters(input.wikidataId, input.language);
-      await cache.set(
-        key,
-        characters,
-        characters.length ? CHARACTER_IMAGE_POSITIVE_TTL : CHARACTER_IMAGE_NEGATIVE_TTL,
-      );
-      return characters;
-    },
-    { cachePolicy: "read-only" },
-  );
-}
+) => Promise<WikimediaCharacterImage | null> {
+  const productions = new Map<string, Promise<ProductionCharacter[]>>();
+  const files = new Map<string, Promise<WikimediaCharacterImage | null>>();
 
-async function lookupWikimediaCharacterImage(
-  input: CharacterImageLookup,
-): Promise<WikimediaCharacterImage | null> {
-  const wanted = normalizedName(input.characterName);
-  const matches = (await getProductionCharacters(input))
-    .filter((character) => character.names.includes(wanted))
-    .map((character) => character.fileName);
-  // Several same-name candidates are ambiguous.
-  const [fileName] = matches;
-  if (matches.length !== 1 || !fileName) return null;
-  return loadLicensedCommonsImage(fileName);
-}
+  return async (input) => {
+    if (!/^Q\d+$/.test(input.wikidataId) || !input.characterName.trim()) return null;
+    const key = JSON.stringify([
+      input.contentType,
+      input.contentId,
+      input.wikidataId,
+      input.language,
+    ]);
+    let characters = productions.get(key);
+    if (!characters) {
+      characters = loadProductionCharacters(input.wikidataId, input.language);
+      productions.set(key, characters);
+    }
+    const wanted = normalizedName(input.characterName);
+    const matches = (await characters)
+      .filter((character) => character.names.includes(wanted))
+      .map((character) => character.fileName);
+    // Several same-name candidates are ambiguous.
+    const [fileName] = matches;
+    if (matches.length !== 1 || !fileName) return null;
 
-export async function getWikimediaCharacterImage(
-  input: CharacterImageLookup,
-): Promise<WikimediaCharacterImage | null> {
-  if (!/^Q\d+$/.test(input.wikidataId) || !input.characterName.trim()) return null;
-  // Verified misses are cached too so films without an image are not re-queried;
-  // provider failures throw and stay uncached.
-  const cache = useCache();
-  const key = buildCacheKey({
-    provider: "wikimedia",
-    resource: "production-character-image",
-    id: input.contentId,
-    language: input.language,
-    params: { contentType: input.contentType, character: normalizedName(input.characterName) },
-  });
-  const cached = await cache.getOrFetch(
-    WIKIMEDIA_CHARACTER_IMAGE_NAMESPACE,
-    key,
-    async () => {
-      const value = (await lookupWikimediaCharacterImage(input)) ?? { miss: true };
-      await cache.set(
-        key,
-        value,
-        "miss" in value ? CHARACTER_IMAGE_NEGATIVE_TTL : CHARACTER_IMAGE_POSITIVE_TTL,
-      );
-      return value;
-    },
-    { cachePolicy: "read-only" },
-  );
-  return "miss" in cached ? null : cached;
+    let image = files.get(fileName);
+    if (!image) {
+      image = loadLicensedCommonsImage(fileName);
+      files.set(fileName, image);
+    }
+    return image;
+  };
 }
