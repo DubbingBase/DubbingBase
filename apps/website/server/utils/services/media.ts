@@ -35,14 +35,6 @@ interface CharacterProfilePicture {
   seriesId?: number;
 }
 
-interface TvdbSearchResult {
-  id: string;
-  type?: string;
-  name?: string;
-  tvdb_id?: string | number;
-  translations?: { eng?: string };
-}
-
 interface TvdbCharacter {
   id: number | string;
   name: string;
@@ -94,21 +86,6 @@ function projectSeasonForMediaPage(media: unknown): unknown {
       };
     }),
   };
-}
-
-function isTvdbSearchResult(value: unknown): value is TvdbSearchResult {
-  return (
-    isRecord(value) &&
-    typeof value.id === "string" &&
-    (value.type === undefined || typeof value.type === "string") &&
-    (value.name === undefined || typeof value.name === "string") &&
-    (value.tvdb_id === undefined ||
-      typeof value.tvdb_id === "number" ||
-      typeof value.tvdb_id === "string") &&
-    (value.translations === undefined ||
-      (isRecord(value.translations) &&
-        (value.translations.eng === undefined || typeof value.translations.eng === "string")))
-  );
 }
 
 function isTvdbCharacter(value: unknown): value is TvdbCharacter {
@@ -944,9 +921,10 @@ export class MediaService {
     const normalizedLanguage = this.acceptLanguage
       ? (this.acceptLanguage.split(",")[0] || "en").trim()
       : "default";
+    // Legacy entries may contain IDs inferred from title search, not explicit mappings.
     const cacheKey = buildCacheKey({
       provider: "tvdb",
-      resource: "characters-extended-by-tmdb-id",
+      resource: "characters-mapped-by-tmdb-id",
       id: contentId,
       language: normalizedLanguage,
       params: { contentType },
@@ -959,91 +937,56 @@ export class MediaService {
         async (): Promise<TvdbCharactersResult> => {
           const tmdbMedia = await loadTmdbMedia();
           const tmdbData = isRecord(tmdbMedia) ? tmdbMedia : {};
-          const tvdbClient = new TVDBClient(cache);
           let tvdbId: number | null = null;
-          let wikidataFailed = false;
           const externalIds = isRecord(tmdbData.external_ids) ? tmdbData.external_ids : {};
-          if (typeof externalIds.tvdb_id === "number") {
-            tvdbId = externalIds.tvdb_id;
+          const providedId = externalIds.tvdb_id;
+          if (providedId !== undefined && providedId !== null) {
+            if (typeof providedId !== "number" && typeof providedId !== "string") {
+              throw new Error("Invalid TMDB-provided TVDB ID");
+            }
+            const parsedId = Number(providedId);
+            if (!Number.isSafeInteger(parsedId) || parsedId < 1) {
+              throw new Error("Invalid TMDB-provided TVDB ID");
+            }
+            tvdbId = parsedId;
           }
 
           if (!tvdbId && typeof externalIds.wikidata_id === "string") {
             const wikidataId = externalIds.wikidata_id;
-            try {
-              const url = `https://www.wikidata.org/w/api.php?action=wbgetclaims&entity=${wikidataId}&format=json`;
-              const response = await fetch(url, {
-                headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
-                signal: AbortSignal.timeout(2500),
-              });
-              if (!response.ok) throw new Error(`Wikidata request failed with ${response.status}`);
-              const data: unknown = await response.json();
-              if (!isRecord(readProperty(data, "claims"))) {
-                throw new Error("Invalid Wikidata claims response");
-              }
-              const property = contentType === "movie" ? "P12196" : "P4835";
-              const claimValue = readPath(
-                data,
-                "claims",
-                property,
-                "0",
-                "mainsnak",
-                "datavalue",
-                "value",
-              );
-              if (typeof claimValue === "string" || typeof claimValue === "number") {
-                const parsedId = Number(claimValue);
-                if (Number.isSafeInteger(parsedId) && parsedId > 0) tvdbId = parsedId;
-              }
-            } catch (e) {
-              wikidataFailed = true;
-              console.error(`Failed to fetch Wikidata for ${wikidataId}`, e);
+            const url = `https://www.wikidata.org/w/api.php?action=wbgetclaims&entity=${wikidataId}&format=json`;
+            const response = await fetch(url, {
+              headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
+              signal: AbortSignal.timeout(2500),
+            });
+            if (!response.ok) throw new Error(`Wikidata request failed with ${response.status}`);
+            const data: unknown = await response.json();
+            if (!isRecord(readProperty(data, "claims"))) {
+              throw new Error("Invalid Wikidata claims response");
             }
-          }
-
-          if (!tvdbId) {
-            const searchQuery = [
-              tmdbData.title,
-              tmdbData.name,
-              tmdbData.original_title,
-              tmdbData.original_name,
-            ].find((value): value is string => typeof value === "string");
-
-            if (!searchQuery) throw new Error("Missing title for TVDB lookup");
-            const searchResponse: unknown = await tvdbClient.get(
-              "/search",
-              { query: searchQuery, type: contentType === "movie" ? "movie" : "series" },
-              this.acceptLanguage,
+            const property = contentType === "movie" ? "P12196" : "P4835";
+            const claimValue = readPath(
+              data,
+              "claims",
+              property,
+              "0",
+              "mainsnak",
+              "datavalue",
+              "value",
             );
-
-            if (!isRecord(searchResponse) || !Array.isArray(searchResponse.data)) {
-              throw new Error("Invalid TVDB search response");
-            }
-            const searchResults = searchResponse.data.filter(isTvdbSearchResult);
-            const typeMatchedResults = searchResults.filter(
-              (item) =>
-                item.type === contentType ||
-                (contentType === "tv" && item.type === "series") ||
-                (contentType === "movie" && item.id.startsWith("movie-")) ||
-                (contentType === "tv" && item.id.startsWith("series-")),
-            );
-
-            const bestMatch =
-              typeMatchedResults.find(
-                (item) =>
-                  item.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                  item.translations?.eng?.toLowerCase().includes(searchQuery.toLowerCase()),
-              ) || typeMatchedResults[0];
-
-            const id =
-              contentType === "movie" ? (bestMatch?.tvdb_id ?? bestMatch?.id) : bestMatch?.id;
-            if (typeof id === "number") tvdbId = id;
-            else if (typeof id === "string") {
-              const parsedId = Number(id.replace(/^(movie|series)-/, ""));
-              if (Number.isSafeInteger(parsedId) && parsedId > 0) tvdbId = parsedId;
+            if (claimValue !== undefined) {
+              if (typeof claimValue !== "string" && typeof claimValue !== "number") {
+                throw new Error("Invalid Wikidata TVDB ID");
+              }
+              const parsedId = Number(claimValue);
+              if (!Number.isSafeInteger(parsedId) || parsedId < 1) {
+                throw new Error("Invalid Wikidata TVDB ID");
+              }
+              tvdbId = parsedId;
             }
           }
 
           if (tvdbId) {
+            const tvdbClient = new TVDBClient(cache);
             let characters: unknown[] = [];
             if (contentType === "movie") {
               const res = await tvdbClient.getMovieById(
@@ -1087,9 +1030,6 @@ export class MediaService {
               }));
 
             const result: TvdbCharactersResult = { characters: characterProfilePictures, tvdbId };
-            // A fallback after a failed mapping is useful to the caller, but is not
-            // a verified resolution and must not be persisted or edge-cached.
-            if (wikidataFailed) return { ...result, degraded: true };
             await cache.set(
               cacheKey,
               result,
@@ -1100,8 +1040,6 @@ export class MediaService {
             return result;
           }
 
-          if (wikidataFailed)
-            throw new Error("Wikidata lookup failed before TVDB could be resolved");
           const value: TvdbCharactersResult = { characters: [], tvdbId: null };
           await cache.set(cacheKey, value, TVDB_CHARACTER_NEGATIVE_TTL);
           return value;
