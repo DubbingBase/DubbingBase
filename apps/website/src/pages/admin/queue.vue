@@ -624,6 +624,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
+import { refDebounced } from "@vueuse/core";
 import type { Database } from "@app/supabase";
 import type { QueueItem } from "~/utils/queue-item";
 import { isRecord } from "@app/shared-logic";
@@ -667,6 +668,7 @@ const filterQueue = ref("all");
 const filterStatus = ref<"all" | "pending" | "processing" | "completed" | "failed">("all");
 const filterType = ref("all");
 const filterSearch = ref("");
+const debouncedFilterSearch = refDebounced(filterSearch, 150);
 const archiveFilter = ref<"active" | "archived" | "all">("active");
 
 const activeCount = ref(0);
@@ -683,7 +685,10 @@ const filteredItems = computed(() => {
     if (filterType.value !== "all" && item.media_type !== filterType.value) {
       return false;
     }
-    if (filterSearch.value && !String(item.tmdb_id).includes(filterSearch.value)) {
+    if (
+      debouncedFilterSearch.value &&
+      !String(item.tmdb_id).includes(debouncedFilterSearch.value)
+    ) {
       return false;
     }
     return true;

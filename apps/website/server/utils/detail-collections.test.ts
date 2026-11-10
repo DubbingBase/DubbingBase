@@ -507,6 +507,11 @@ describe("GET /api/detail-collections", () => {
 
     expect(cards.map(({ work_id }) => work_id)).toEqual([401, 402, 403]);
     expect(cards.slice(0, 2).map(({ name }) => name)).toEqual(["Alex", "Alex"]);
+    expect(cards.map(({ game_character_id }) => game_character_id)).toEqual([
+      "11111111-1111-4111-8111-111111111111",
+      "22222222-2222-4222-8222-222222222222",
+      undefined,
+    ]);
   });
 
   it("treats a local game character UUID as authoritative over its stale IGDB ID", () => {

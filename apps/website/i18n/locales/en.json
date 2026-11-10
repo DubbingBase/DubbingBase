@@ -56,6 +56,8 @@
     "loading": "Loading...",
     "loadMore": "Load more",
     "pagination": "Pagination",
+    "paginationTop": "Top pagination controls",
+    "paginationBottom": "Bottom pagination controls",
     "error": "Error",
     "subscribe": "Subscribe",
     "unsubscribe": "Unsubscribe",

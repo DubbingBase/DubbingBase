@@ -93,16 +93,27 @@ export function paginateVoiceActorWorks<T extends VoiceActorWorkLike>(
   };
 } {
   const items = view === "grouped" ? groupVoiceActorWorks(works) : works;
+  return paginateVoiceActorWorkItems<VoiceActorWorksPageItem<T>>(items, page, pageSize);
+}
+
+/** Paginate an already prepared collection without rebuilding actor groups. */
+export function paginateVoiceActorWorkItems<T>(
+  items: readonly T[],
+  page: number,
+  pageSize: number,
+) {
+  const safePageSize = Number.isInteger(pageSize) && pageSize > 0 ? pageSize : 12;
+  const safePage = Number.isInteger(page) && page > 0 ? page : 1;
   const totalItems = items.length;
-  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
-  const currentPage = Math.min(Math.max(1, page), totalPages);
-  const start = (currentPage - 1) * pageSize;
+  const totalPages = Math.max(1, Math.ceil(totalItems / safePageSize));
+  const currentPage = Math.min(safePage, totalPages);
+  const start = (currentPage - 1) * safePageSize;
 
   return {
-    data: items.slice(start, start + pageSize),
+    data: items.slice(start, start + safePageSize),
     pagination: {
       page: currentPage,
-      pageSize,
+      pageSize: safePageSize,
       totalItems,
       totalPages,
     },

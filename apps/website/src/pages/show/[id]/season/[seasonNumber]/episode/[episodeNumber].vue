@@ -173,9 +173,9 @@
                       class="w-16 sm:w-full relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
                     >
                       <CharacterPhoto
-                        :image="imageFor(characterRequest(actor))"
+                        :image="imageFor(actor.characterImageRequest)"
                         :alt="actor.character || actor.workCharacterName || ''"
-                        @error="reportImageError(characterRequest(actor))"
+                        @error="reportImageError(actor.characterImageRequest)"
                       />
                     </div>
                     <div class="flex flex-col min-w-0 flex-1 w-full overflow-hidden">
@@ -187,10 +187,10 @@
                       </div>
                       <div
                         class="font-bold text-sm theme-text truncate block w-full"
-                        :title="actor.roleNames.join(', ') || actor.workCharacterName || ''"
+                        :title="actor.roleLabel || actor.workCharacterName || ''"
                       >
                         {{
-                          actor.roleNames.join(", ") ||
+                          actor.roleLabel ||
                           actor.workCharacterName ||
                           $t("details.unknownCharacter")
                         }}
@@ -392,7 +392,10 @@ import {
   type MediaProjectView,
 } from "../../../../../../utils/media-cast";
 import CharacterPhoto from "../../../../../../components/CharacterPhoto.vue";
-import { useCharacterImages } from "../../../../../../composables/useCharacterImages";
+import {
+  useCharacterImages,
+  type CharacterImageRequest,
+} from "../../../../../../composables/useCharacterImages";
 
 const isReportModalOpen = ref(false);
 const { page: castPage, setPage: setCastPage } = useUrlPagination("castPage");
@@ -612,7 +615,8 @@ watch([debouncedSearch, activeDubId], () => {
 
 type EpisodeDisplayCastActor = DisplayCastActor & {
   actorPath?: string;
-  roleNames: string[];
+  roleLabel: string;
+  characterImageRequest: CharacterImageRequest;
   voiceActorPath: string;
 };
 
@@ -698,7 +702,8 @@ const castItems = computed<EpisodeDisplayCastActor[]>(() => {
     return {
       ...actor,
       actorPath: actor.actorId ? localePath(`/actor/${actor.actorId}`) : undefined,
-      roleNames: (actor.roles || []).map((role) => role.character),
+      roleLabel: (actor.roles || []).map((role) => role.character).join(", "),
+      characterImageRequest: characterRequest(actor),
       voiceActorPath: actor.voiceActor ? localePath(`/voice-actor/${actor.voiceActor.id}`) : "",
     };
   });
@@ -717,7 +722,7 @@ function characterRequest(actor: {
   };
 }
 const { imageFor, reportImageError } = useCharacterImages(
-  computed(() => castItems.value.map(characterRequest)),
+  computed(() => castItems.value.map((actor) => actor.characterImageRequest)),
 );
 
 useHead({

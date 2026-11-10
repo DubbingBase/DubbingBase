@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   groupVoiceActorWorks,
   paginateVoiceActorWorks,
+  paginateVoiceActorWorkItems,
   type VoiceActorWorkLike,
 } from "@app/shared-logic";
 
@@ -173,5 +174,48 @@ describe("groupVoiceActorWorks", () => {
     expect(result.data[0]).toBe(works[0]);
     expect(result.pagination.totalItems).toBe(13);
     expect(result.pagination.totalPages).toBe(2);
+  });
+});
+
+describe("prepared voice actor collections", () => {
+  it("paginates existing groups without regrouping or changing their identities", () => {
+    const works = Array.from({ length: 30 }, (_, index) =>
+      work(`role-${index}`, index + 1, `Actor ${index}`, index + 1),
+    );
+    const groups = groupVoiceActorWorks(works);
+    const first = paginateVoiceActorWorkItems(groups, 1, 12);
+    const second = paginateVoiceActorWorkItems(groups, 2, 12);
+    expect(first.data).toEqual(groups.slice(0, 12));
+    expect(second.data[0]).toBe(groups[12]);
+    expect(second.pagination).toEqual({ page: 2, pageSize: 12, totalItems: 30, totalPages: 3 });
+  });
+
+  it("bounds a large actor group and keeps all works reachable", () => {
+    const works = Array.from({ length: 200 }, (_, index) => work(`role-${index}`, 42, "Actor", 42));
+    const group = groupVoiceActorWorks(works)[0];
+    expect(group).toBeDefined();
+    if (!group) throw new Error("Missing actor group");
+    const first = paginateVoiceActorWorkItems(group.works, 1, 8);
+    const next = paginateVoiceActorWorkItems(group.works, 2, 8);
+    const last = paginateVoiceActorWorkItems(group.works, 25, 8);
+    expect(first.data).toHaveLength(8);
+    expect(next.data[0]).toBe(works[8]);
+    expect(last.data[7]).toBe(works[199]);
+    expect(first.pagination.totalItems).toBe(200);
+    expect(first.pagination.totalPages).toBe(25);
+  });
+
+  it("falls back to the first page and a valid size for unusable page inputs", () => {
+    const items = Array.from({ length: 30 }, (_, index) => index);
+    for (const page of [Number.NaN, 0, -2, 1.5]) {
+      const result = paginateVoiceActorWorkItems(items, page, 12);
+      expect(result.pagination.page).toBe(1);
+      expect(result.data).toEqual(items.slice(0, 12));
+    }
+    for (const pageSize of [0, -1, Number.NaN, 2.5]) {
+      const result = paginateVoiceActorWorkItems(items, 99, pageSize);
+      expect(result.pagination).toEqual({ page: 3, pageSize: 12, totalItems: 30, totalPages: 3 });
+      expect(result.data).toEqual(items.slice(24));
+    }
   });
 });

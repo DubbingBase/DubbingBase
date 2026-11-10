@@ -112,6 +112,7 @@
           <div v-if="voiceActorsTotal > 0" @click="navigateActorCard">
             <PaginatedResponsiveGrid
               :items="voiceActorItems"
+              :pagination-label="$t('actor.voices')"
               :page="voicesPage"
               :page-size="12"
               grid-class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
@@ -180,6 +181,7 @@
           <div v-else @click="navigateActorCard">
             <PaginatedResponsiveGrid
               :items="filmographyItems"
+              :pagination-label="$t('voiceActor.filmography')"
               :total-items="filmographyTotal"
               :page="filmographyPage"
               :page-size="12"

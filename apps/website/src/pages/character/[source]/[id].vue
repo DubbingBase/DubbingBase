@@ -87,90 +87,90 @@
           <DetailsEmptyState v-if="character.appearances.length === 0">
             {{ $t("character.noCredits") }}
           </DetailsEmptyState>
-          <ul v-else class="grid gap-4">
-            <li
-              v-for="appearance in visibleAppearances"
-              :key="appearance.project.id"
-              class="grid gap-4 rounded-xl border theme-border theme-input p-4 sm:p-5 md:grid-cols-[minmax(12rem,0.8fr)_minmax(0,1.2fr)] md:gap-6"
-            >
-              <div class="min-w-0">
-                <NuxtLink
-                  v-if="
-                    appearance.project.content_type === 'movie' ||
-                    appearance.project.content_type === 'tv'
-                  "
-                  :to="
-                    localePath(
-                      `/${appearance.project.content_type === 'tv' ? 'show' : 'movie'}/${appearance.project.content_id}`,
-                    )
-                  "
-                  class="font-semibold theme-text hover:underline"
-                >
-                  {{
-                    appearance.project.title ||
-                    (appearance.project.content_type === "tv"
-                      ? $t("character.showAppearance")
-                      : $t("character.movieAppearance"))
-                  }}
-                  <span v-if="!appearance.project.title">#{{ appearance.project.content_id }}</span>
-                </NuxtLink>
-                <NuxtLink
-                  v-else-if="appearance.project.content_type === 'video_game'"
-                  :to="localePath(`/game/${appearance.project.content_id}`)"
-                  class="font-semibold theme-text hover:underline"
-                >
-                  {{ $t("character.gameAppearance") }} #{{ appearance.project.content_id }}
-                </NuxtLink>
-              </div>
-              <ul
-                v-if="appearance.originalPerformers.length || appearance.credits.length"
-                class="min-w-0 space-y-3 md:border-l md:theme-border-subtle md:pl-6"
-              >
-                <li
-                  v-for="performer in appearance.originalPerformers"
-                  :key="`original-${performer.id}`"
-                >
-                  <NuxtLink
-                    :to="localePath(`/actor/${performer.id}`)"
-                    class="text-sm theme-primary-text hover:underline"
-                  >
-                    <span class="theme-text-muted">{{ $t("character.originalPerformer") }}:</span>
-                    {{ performer.name || $t("character.originalPerformer") }}
-                  </NuxtLink>
-                </li>
-                <li
-                  v-for="credit in appearance.credits"
-                  :key="credit.id"
-                  class="border-t theme-border-subtle pt-3"
-                >
-                  <div class="text-sm theme-text-muted">
-                    {{ credit.language }}<span v-if="credit.studio"> · {{ credit.studio }}</span>
-                  </div>
-                  <NuxtLink
-                    v-if="credit.voiceActor?.id"
-                    :to="localePath(`/voice-actor/${credit.voiceActor.id}`)"
-                    class="mt-1 inline-block text-sm theme-primary-text hover:underline"
-                  >
-                    {{ credit.voiceActor.firstname }} {{ credit.voiceActor.lastname }}
-                  </NuxtLink>
-                  <p v-if="credit.performance" class="mt-1 text-sm theme-text">
-                    {{ credit.performance }}
-                  </p>
-                  <p v-if="credit.note" class="mt-1 text-sm theme-text-muted">
-                    {{ credit.note }}
-                  </p>
-                </li>
-              </ul>
-            </li>
-          </ul>
-          <button
-            v-if="visibleAppearances.length < character.appearances.length"
-            type="button"
-            class="mt-4 rounded-lg border theme-border px-4 py-2 text-sm theme-text hover:theme-border-strong"
-            @click="visibleAppearanceCount += 12"
+          <PaginatedResponsiveGrid
+            v-else
+            :items="appearances"
+            :item-key="(appearance) => appearance.project.id"
+            grid-class="grid gap-4"
           >
-            {{ $t("character.showMore") }}
-          </button>
+            <template #default="{ item: appearance }">
+              <article
+                :key="appearance.project.id"
+                class="grid gap-4 rounded-xl border theme-border theme-input p-4 sm:p-5 md:grid-cols-[minmax(12rem,0.8fr)_minmax(0,1.2fr)] md:gap-6"
+              >
+                <div class="min-w-0">
+                  <NuxtLink
+                    v-if="
+                      appearance.project.content_type === 'movie' ||
+                      appearance.project.content_type === 'tv'
+                    "
+                    :to="
+                      localePath(
+                        `/${appearance.project.content_type === 'tv' ? 'show' : 'movie'}/${appearance.project.content_id}`,
+                      )
+                    "
+                    class="font-semibold theme-text hover:underline"
+                  >
+                    {{
+                      appearance.project.title ||
+                      (appearance.project.content_type === "tv"
+                        ? $t("character.showAppearance")
+                        : $t("character.movieAppearance"))
+                    }}
+                    <span v-if="!appearance.project.title"
+                      >#{{ appearance.project.content_id }}</span
+                    >
+                  </NuxtLink>
+                  <NuxtLink
+                    v-else-if="appearance.project.content_type === 'video_game'"
+                    :to="localePath(`/game/${appearance.project.content_id}`)"
+                    class="font-semibold theme-text hover:underline"
+                  >
+                    {{ $t("character.gameAppearance") }} #{{ appearance.project.content_id }}
+                  </NuxtLink>
+                </div>
+                <ul
+                  v-if="appearance.originalPerformers.length || appearance.credits.length"
+                  class="min-w-0 space-y-3 md:border-l md:theme-border-subtle md:pl-6"
+                >
+                  <li
+                    v-for="performer in appearance.originalPerformers"
+                    :key="`original-${performer.id}`"
+                  >
+                    <NuxtLink
+                      :to="localePath(`/actor/${performer.id}`)"
+                      class="text-sm theme-primary-text hover:underline"
+                    >
+                      <span class="theme-text-muted">{{ $t("character.originalPerformer") }}:</span>
+                      {{ performer.name || $t("character.originalPerformer") }}
+                    </NuxtLink>
+                  </li>
+                  <li
+                    v-for="credit in appearance.credits"
+                    :key="credit.id"
+                    class="border-t theme-border-subtle pt-3"
+                  >
+                    <div class="text-sm theme-text-muted">
+                      {{ credit.language }}<span v-if="credit.studio"> · {{ credit.studio }}</span>
+                    </div>
+                    <NuxtLink
+                      v-if="credit.voiceActor?.id"
+                      :to="localePath(`/voice-actor/${credit.voiceActor.id}`)"
+                      class="mt-1 inline-block text-sm theme-primary-text hover:underline"
+                    >
+                      {{ credit.voiceActor.firstname }} {{ credit.voiceActor.lastname }}
+                    </NuxtLink>
+                    <p v-if="credit.performance" class="mt-1 text-sm theme-text">
+                      {{ credit.performance }}
+                    </p>
+                    <p v-if="credit.note" class="mt-1 text-sm theme-text-muted">
+                      {{ credit.note }}
+                    </p>
+                  </li>
+                </ul>
+              </article>
+            </template>
+          </PaginatedResponsiveGrid>
         </section>
       </div>
     </DetailsPage>
@@ -198,7 +198,6 @@ function queryText(value: unknown): string | undefined {
 const localePath = useLocalePath();
 const source = computed(() => String(route.params.source));
 const id = computed(() => String(route.params.id));
-const visibleAppearanceCount = ref(12);
 const {
   data: character,
   pending,
@@ -209,7 +208,8 @@ const {
       ? { mediaType: route.query.mediaType, mediaId: route.query.mediaId }
       : undefined,
 });
-const visibleAppearances = computed(
-  () => character.value?.appearances.slice(0, visibleAppearanceCount.value) ?? [],
+type CharacterAppearance = NonNullable<typeof character.value>["appearances"][number];
+const appearances = computed<readonly CharacterAppearance[]>(
+  () => character.value?.appearances ?? [],
 );
 </script>

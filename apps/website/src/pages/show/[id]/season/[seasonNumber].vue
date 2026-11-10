@@ -93,16 +93,7 @@
             <template #default="{ item: episode }">
               <NuxtLink
                 :key="episode.episode_number"
-                :to="{
-                  path: localePath(
-                    `/show/${showId}/season/${seasonNumber}/episode/${episode.episode_number}`,
-                  ),
-                  query: isOriginalVersion
-                    ? { dub: 'original' }
-                    : activeDubId
-                      ? { dub: activeDubId }
-                      : {},
-                }"
+                :to="episode.detailLocation"
                 class="group cursor-pointer block theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-primary-border hover:shadow-md"
               >
                 <div
@@ -112,11 +103,7 @@
                     format="webp"
                     loading="lazy"
                     v-if="episode.still_path"
-                    :src="
-                      episode.still_path.startsWith('http')
-                        ? episode.still_path
-                        : 'https://image.tmdb.org/t/p/w342' + episode.still_path
-                    "
+                    :src="episode.stillUrl"
                     decoding="async"
                     class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                     alt="Episode"
@@ -142,7 +129,7 @@
                 </h3>
                 <div class="flex items-center gap-2 text-xs theme-text-muted">
                   <span v-if="episode.air_date">
-                    {{ formatDate(episode.air_date) }}
+                    {{ episode.airDateLabel }}
                   </span>
                   <span v-if="episode.vote_average">
                     <StarIcon class="w-3 h-3 theme-rating fill-current" />
@@ -388,7 +375,25 @@ const seasonEpisodes = computed<SeasonEpisode[]>(() =>
 const episodeTotal = computed(() => seasonEpisodes.value.length);
 const episodeItems = computed(() => {
   const start = (episodesPage.value - 1) * 12;
-  return seasonEpisodes.value.slice(start, start + 12);
+  return seasonEpisodes.value.slice(start, start + 12).map((episode) => ({
+    ...episode,
+    detailLocation: {
+      path: localePath(
+        `/show/${showId.value}/season/${seasonNumber.value}/episode/${episode.episode_number}`,
+      ),
+      query: isOriginalVersion.value
+        ? { dub: "original" }
+        : activeDubId.value
+          ? { dub: activeDubId.value }
+          : {},
+    },
+    stillUrl: episode.still_path?.startsWith("http")
+      ? episode.still_path
+      : episode.still_path
+        ? `https://image.tmdb.org/t/p/w342${episode.still_path}`
+        : undefined,
+    airDateLabel: episode.air_date ? formatDate(episode.air_date) : "",
+  }));
 });
 
 const backdropUrl = computed(() => {

@@ -55,6 +55,8 @@
     "loading": "Chargement...",
     "loadMore": "Charger plus",
     "pagination": "Pagination",
+    "paginationTop": "Commandes de pagination en haut",
+    "paginationBottom": "Commandes de pagination en bas",
     "error": "Erreur",
     "subscribe": "S'abonner",
     "unsubscribe": "Se désabonner",

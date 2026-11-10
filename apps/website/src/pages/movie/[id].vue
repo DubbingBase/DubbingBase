@@ -95,10 +95,10 @@
 
           <PaginatedResponsiveGrid
             :key="searchQuery"
-            :items="castItems"
+            :items="castCards"
             :total-items="castTotal"
             :page="castPage"
-            :page-size="12"
+            :page-size="MEDIA_CAST_PAGE_SIZE"
             grid-class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
             :item-key="(actor) => actor.id"
             @update:page="setCastPage"
@@ -155,9 +155,9 @@
                       class="w-16 sm:w-full relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
                     >
                       <CharacterPhoto
-                        :image="imageFor(characterRequest(actor))"
+                        :image="imageFor(actor.characterImageRequest)"
                         :alt="actor.character || actor.workCharacterName || ''"
-                        @error="reportImageError(characterRequest(actor))"
+                        @error="reportImageError(actor.characterImageRequest)"
                       >
                         <div
                           class="w-full h-full flex items-center justify-center theme-text-muted"
@@ -174,8 +174,8 @@
                         <span class="truncate block w-full">{{ $t("details.character") }}</span>
                       </div>
                       <NuxtLink
-                        v-if="characterDetailPath(actor)"
-                        :to="characterDetailPath(actor)"
+                        v-if="actor.characterDetailPath"
+                        :to="actor.characterDetailPath"
                         class="font-bold text-sm theme-text truncate block w-full hover:underline"
                         :title="actor.character || actor.workCharacterName || ''"
                       >
@@ -344,11 +344,15 @@ import { refDebounced } from "@vueuse/core";
 import { ArrowLeftIcon, ClapperboardIcon, UserIcon, MicIcon, StarIcon } from "lucide-vue-next";
 import ReportModal from "../../components/ReportModal.vue";
 import CharacterPhoto from "../../components/CharacterPhoto.vue";
-import { useCharacterImages } from "../../composables/useCharacterImages";
+import {
+  useCharacterImages,
+  type CharacterImageRequest,
+} from "../../composables/useCharacterImages";
 import {
   hasOriginalVersion,
   isOriginalVersionQuery,
   matchCastWorks,
+  MEDIA_CAST_PAGE_SIZE,
   originalVersionCast,
   type DisplayCastActor,
   type MediaProjectView,
@@ -571,10 +575,11 @@ const filteredCast = computed(() => {
 });
 const castTotal = computed(() => filteredCast.value.length);
 const castItems = computed(() => {
-  const start = (castPage.value - 1) * 12;
-  return filteredCast.value.slice(start, start + 12).map((actor) => {
+  const start = (castPage.value - 1) * MEDIA_CAST_PAGE_SIZE;
+  return filteredCast.value.slice(start, start + MEDIA_CAST_PAGE_SIZE).map((actor) => {
     return {
       ...actor,
+      characterImageRequest: characterRequest(actor),
       actorProfilePath: actor.actorId ? localePath(`/actor/${actor.actorId}`) : undefined,
       voiceActorProfilePath: actor.voiceActor
         ? localePath(`/voice-actor/${actor.voiceActor.id}`)
@@ -591,14 +596,13 @@ function characterRequest(actor: { character?: string | null; workCharacterName?
   };
 }
 const { imageFor, characterIdFor, reportImageError, tvdbIds } = useCharacterImages(
-  computed(() => castItems.value.map(characterRequest)),
+  computed(() => castItems.value.map((actor) => actor.characterImageRequest)),
 );
 const tvdbId = computed(() => tvdbIds.value[`movie:${route.params.id}`]);
 function characterDetailPath(actor: {
-  character?: string | null;
-  workCharacterName?: string | null;
+  characterImageRequest: CharacterImageRequest;
 }): string | undefined {
-  const characterId = characterIdFor(characterRequest(actor));
+  const characterId = characterIdFor(actor.characterImageRequest);
   return characterId
     ? localePath({
         path: `/character/tvdb/${characterId}`,
@@ -606,6 +610,14 @@ function characterDetailPath(actor: {
       })
     : undefined;
 }
+
+// Resolve asynchronous character links once per visible card, not in each binding.
+const castCards = computed(() =>
+  castItems.value.map((actor) => ({
+    ...actor,
+    characterDetailPath: characterDetailPath(actor),
+  })),
+);
 
 useHead({
   title: computed(() => {

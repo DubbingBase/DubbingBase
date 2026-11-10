@@ -49,7 +49,18 @@
     </div>
 
     <!-- Reports Table Card -->
-    <div class="theme-surface-overlay border theme-border rounded-2xl overflow-hidden">
+    <div
+      id="admin-reports-results"
+      class="theme-surface-overlay border theme-border rounded-2xl overflow-hidden scroll-mt-36 lg:scroll-mt-20"
+    >
+      <PaginationControls
+        v-if="!loading && reports.length > 0"
+        position="top"
+        v-model:page="page"
+        :total-items="totalReports"
+        scroll-target-id="admin-reports-results"
+        :page-size="ADMIN_REPORTS_PAGE_SIZE"
+      />
       <!-- Loading indicator -->
       <div v-if="loading" class="flex flex-col items-center justify-center py-20 space-y-3">
         <div class="animate-spin rounded-full h-9 w-9 border-b-2 border-blue-500"></div>
@@ -150,6 +161,7 @@
         v-if="!loading && reports.length > 0"
         v-model:page="page"
         :total-items="totalReports"
+        scroll-target-id="admin-reports-results"
         :page-size="ADMIN_REPORTS_PAGE_SIZE"
       />
     </div>

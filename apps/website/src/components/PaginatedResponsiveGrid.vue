@@ -8,6 +8,7 @@ const props = withDefaults(
     totalItems?: number;
     page?: number;
     gridClass?: string;
+    paginationLabel?: string;
     itemKey?: (item: T, index: number) => string | number;
   }>(),
   {
@@ -16,6 +17,7 @@ const props = withDefaults(
     page: undefined,
     gridClass: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4",
     itemKey: undefined,
+    paginationLabel: undefined,
   },
 );
 
@@ -29,6 +31,7 @@ defineSlots<{
 }>();
 
 const localPage = ref(1);
+const paginationTargetId = useId();
 const isServerPaginated = computed(() => props.totalItems !== undefined);
 const currentPage = computed(() => props.page ?? localPage.value);
 const totalItems = computed(() => props.totalItems ?? props.items.length);
@@ -60,7 +63,17 @@ const setPage = (page: number) => {
 </script>
 
 <template>
-  <div>
+  <div :id="paginationTargetId" class="scroll-mt-20">
+    <PaginationControls
+      position="top"
+      :page="currentPage"
+      :total-items="totalItems"
+      :scroll-target-id="paginationTargetId"
+      :label="paginationLabel"
+      :page-size="pageSize"
+      @update:page="setPage"
+    />
+
     <div :class="gridClass">
       <template v-for="(item, index) in visibleItems" :key="itemKey?.(item, index) ?? index">
         <slot :item="item" :index="(currentPage - 1) * pageSize + index" />
@@ -70,6 +83,8 @@ const setPage = (page: number) => {
     <PaginationControls
       :page="currentPage"
       :total-items="totalItems"
+      :scroll-target-id="paginationTargetId"
+      :label="paginationLabel"
       :page-size="pageSize"
       @update:page="setPage"
     />

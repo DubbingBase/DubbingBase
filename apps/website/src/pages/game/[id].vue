@@ -115,7 +115,7 @@
             :items="castItems"
             :total-items="castTotal"
             :page="castPage"
-            :page-size="12"
+            :page-size="MEDIA_CAST_PAGE_SIZE"
             grid-class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
             :item-key="(character) => character.id"
             @update:page="setCastPage"
@@ -181,7 +181,7 @@
                   >
                     <template v-if="char.voiceActor">
                       <NuxtLink
-                        :to="localePath(`/voice-actor/${char.voiceActor.id}`)"
+                        :to="char.voiceActorProfilePath"
                         class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
                       >
                         <NuxtImg
@@ -208,7 +208,7 @@
                           <span class="truncate block w-full">{{ $t("details.voiceActor") }}</span>
                         </div>
                         <NuxtLink
-                          :to="localePath(`/voice-actor/${char.voiceActor.id}`)"
+                          :to="char.voiceActorProfilePath"
                           class="font-bold text-sm theme-text truncate hover:underline block w-full"
                           :title="char.voiceActor.firstname + ' ' + char.voiceActor.lastname"
                         >
@@ -359,6 +359,7 @@ import {
 } from "@app/shared-logic";
 import type { IgdbGame } from "@app/shared-logic";
 import { buildPrepareGameRequest } from "./prepare-game-request";
+import { MEDIA_CAST_PAGE_SIZE } from "../../utils/media-cast";
 
 interface GameDubbingWork {
   voice_actor?: { id?: number | null } | null;
@@ -505,26 +506,25 @@ watch([searchQuery, activeDubId], ([search, dub], [previousSearch, previousDub])
 });
 
 const completeCastItems = computed(() =>
-  formatGameDetailCastCards(data.value?.characters || [], activeDubProject.value).map((card) => {
-    const localCharacter = data.value?.characters.find((character) => {
-      if (!character.game_character_id) return false;
-      const key = String(character.id ?? character.stable_id ?? character.game_character_id);
-      return String(card.id) === key || String(card.id).startsWith(`${key}-`);
-    });
-    return {
-      ...card,
-      characterDetailPath: localCharacter?.game_character_id
-        ? localePath(`/character/game/${localCharacter.game_character_id}`)
-        : undefined,
-    };
-  }),
+  formatGameDetailCastCards(data.value?.characters || [], activeDubProject.value),
 );
-const filteredCastItems = computed(() =>
-  filterDetailCollectionItems(completeCastItems.value, searchQuery.value),
-);
+const filteredCastItems = computed(() => {
+  if (!searchQuery.value.trim()) return completeCastItems.value;
+  return filterDetailCollectionItems(completeCastItems.value, searchQuery.value);
+});
 const castTotal = computed(() => filteredCastItems.value.length);
 const castItems = computed(() =>
-  paginateDetailCollection(filteredCastItems.value, castPage.value, 12),
+  paginateDetailCollection(filteredCastItems.value, castPage.value, MEDIA_CAST_PAGE_SIZE).map(
+    (card) => ({
+      ...card,
+      characterDetailPath: card.game_character_id
+        ? localePath(`/character/game/${card.game_character_id}`)
+        : undefined,
+      voiceActorProfilePath: card.voiceActor
+        ? localePath(`/voice-actor/${card.voiceActor.id}`)
+        : undefined,
+    }),
+  ),
 );
 
 async function triggerPrepareGame() {

@@ -103,6 +103,7 @@
         </div>
         <PaginatedResponsiveGrid
           :items="projectItems"
+          :pagination-label="$t('studio.dubbingProjectsCount', { count: projectTotal })"
           :total-items="projectTotal"
           :page="projectsPage"
           :page-size="12"
@@ -200,6 +201,7 @@
         </div>
         <PaginatedResponsiveGrid
           :items="rosterItems"
+          :pagination-label="$t('search.voiceActor')"
           :total-items="rosterTotal"
           :page="rosterPage"
           :page-size="12"

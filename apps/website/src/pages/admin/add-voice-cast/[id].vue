@@ -471,7 +471,7 @@ definePageMeta({
   middleware: "admin",
 });
 
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import type { Tables } from "@app/supabase/types";
 import { readErrorMessage } from "~/utils/error-message";
 
@@ -940,16 +940,12 @@ const saveManualEntry = async () => {
   }
 };
 
-const setupDropdownCloser = () => {
-  document.addEventListener("click", (e) => {
-    const target = e.target;
-    if (target instanceof HTMLElement && !target.closest(".relative")) {
-      activeSearchDropdown.value = null;
-    }
-  });
+const closeDropdown = (event: MouseEvent): void => {
+  const target = event.target;
+  if (target instanceof HTMLElement && !target.closest(".relative")) {
+    activeSearchDropdown.value = null;
+  }
 };
-
-onMounted(() => {
-  setupDropdownCloser();
-});
+onMounted(() => document.addEventListener("click", closeDropdown));
+onUnmounted(() => document.removeEventListener("click", closeDropdown));
 </script>
