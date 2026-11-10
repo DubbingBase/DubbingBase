@@ -34,7 +34,7 @@ function setPage(page: number) {
 <template>
   <nav
     v-if="totalPages > 1"
-    class="flex items-center justify-between gap-2 rounded-2xl border theme-border-subtle theme-surface-overlay p-2.5 shadow-sm sm:gap-3 sm:p-3"
+    class="flex flex-wrap items-center justify-between gap-2 rounded-2xl border theme-border-subtle theme-surface-overlay p-2.5 shadow-sm sm:gap-3 sm:p-3"
     :class="position === 'top' ? 'mb-4' : 'mt-4'"
     :aria-label="
       [label, $t(position === 'top' ? 'common.paginationTop' : 'common.paginationBottom')]
@@ -42,6 +42,9 @@ function setPage(page: number) {
         .join(': ')
     "
   >
+    <span v-if="label" class="w-full text-xs font-semibold theme-text-secondary sm:w-auto">
+      {{ label }}
+    </span>
     <button
       type="button"
       class="inline-flex min-h-10 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border theme-border theme-surface-muted px-2.5 text-xs font-semibold theme-text-secondary transition theme-hover-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-focus)] disabled:cursor-not-allowed disabled:opacity-40 sm:flex-none sm:px-4 sm:text-sm"
