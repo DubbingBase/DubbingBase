@@ -3,7 +3,7 @@
     class="sticky top-0 z-50 flex items-center justify-between h-[68px] px-4 md:px-6 border-b theme-border-subtle theme-header backdrop-blur-xl transition-colors"
   >
     <!-- Left Section: Logo & Nav -->
-    <div class="flex items-center gap-6 w-full sm:w-auto sm:flex-none">
+    <div class="flex items-center gap-2 sm:gap-6 w-full sm:w-auto sm:flex-none">
       <NuxtLink :to="localePath('/')" class="flex items-center gap-3 group shrink-0">
         <div
           class="w-9 h-9 rounded-xl overflow-hidden shadow-sm ring-1 theme-ring-subtle group-hover:shadow-md transition-all"
@@ -15,20 +15,22 @@
         </span>
       </NuxtLink>
 
-      <nav class="flex items-center gap-1 ml-2" :aria-label="t('nav.main')">
+      <nav class="flex items-center gap-0 sm:gap-1 sm:ml-2" :aria-label="t('nav.main')">
         <NuxtLink
           v-if="!isHomePage"
           :to="localePath('/')"
-          class="px-3 py-1.5 text-sm font-medium theme-text-secondary theme-hover-text rounded-lg theme-hover-surface-muted transition-all"
+          class="flex items-center justify-center p-2 sm:px-3 sm:py-1.5 text-sm font-medium theme-text-secondary theme-hover-text rounded-lg theme-hover-surface-muted transition-all"
         >
-          {{ t("nav.home") }}
+          <HomeIcon :size="20" class="sm:hidden" aria-hidden="true" />
+          <span class="sr-only sm:not-sr-only">{{ t("nav.home") }}</span>
         </NuxtLink>
         <NuxtLink
           v-if="user && isAdmin"
           :to="localePath('/admin')"
-          class="px-3 py-1.5 text-sm font-medium theme-text-secondary theme-hover-text rounded-lg theme-hover-surface-muted transition-all"
+          class="flex items-center justify-center p-2 sm:px-3 sm:py-1.5 text-sm font-medium theme-text-secondary theme-hover-text rounded-lg theme-hover-surface-muted transition-all"
         >
-          {{ t("nav.admin") }}
+          <ShieldIcon :size="20" class="sm:hidden" aria-hidden="true" />
+          <span class="sr-only sm:not-sr-only">{{ t("nav.admin") }}</span>
         </NuxtLink>
       </nav>
     </div>
@@ -178,7 +180,7 @@
 <script setup lang="ts">
 import { nextTick, onMounted, onUnmounted, ref, computed } from "vue";
 import { useRoute } from "vue-router";
-import { UserIcon, SearchIcon } from "lucide-vue-next";
+import { UserIcon, SearchIcon, HomeIcon, ShieldIcon } from "lucide-vue-next";
 const { t, locale } = useI18n();
 const localePath = useLocalePathPrefix();
 const { user, isAdmin } = useClientUser();
