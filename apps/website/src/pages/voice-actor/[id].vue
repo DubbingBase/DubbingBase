@@ -262,18 +262,19 @@
             <PaginatedResponsiveGrid
               :key="`${searchQuery}|${activeTab}|${sortMode}`"
               :items="worksItems"
-              :pagination-label="$t('voiceActor.filmography')"
+              :pagination-label="$t('voiceActor.credits')"
+              :show-top-pagination="false"
               :total-items="worksTotal"
               :page="currentWorksPage"
-              :page-size="12"
-              grid-class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
+              :page-size="worksPageSize"
+              grid-class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3"
               :item-key="(item) => item.work.id"
               @update:page="setWorksPage"
             >
               <template #default="{ item }">
                 <div
                   :key="item.work.id"
-                  class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-border block group"
+                  class="theme-input border theme-border-subtle theme-border rounded-xl p-3 shadow-sm transition-colors theme-hover-border block group"
                 >
                   <div class="flex flex-col sm:grid sm:grid-cols-3 gap-4 h-full">
                     <!-- Column 1: Media -->
@@ -439,15 +440,6 @@
             </PaginatedResponsiveGrid>
           </template>
           <template v-else>
-            <PaginationControls
-              position="top"
-              :page="currentWorksPage"
-              :total-items="worksTotal"
-              scroll-target-id="voice-actor-works-results"
-              :label="$t('voiceActor.filmography')"
-              :page-size="12"
-              @update:page="setWorksPage"
-            />
             <div class="space-y-10">
               <div
                 v-for="group in groupedWorks"
@@ -516,18 +508,23 @@
                 <PaginatedResponsiveGrid
                   class="scroll-mt-48!"
                   :items="group.pageData.data"
-                  :pagination-label="group.actor.name || $t('voiceActor.unknownActor')"
+                  :pagination-label="
+                    $t('voiceActor.actorCredits', {
+                      name: group.actor.name || $t('voiceActor.unknownActor'),
+                    })
+                  "
                   :total-items="group.worksCount"
                   :page="group.pageData.pagination.page"
-                  :page-size="8"
+                  :page-size="12"
                   :item-key="(item) => item.work.id"
-                  grid-class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
+                  :show-top-pagination="false"
+                  grid-class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3"
                   @update:page="groupPages[group.key] = $event"
                 >
                   <template #default="{ item }">
                     <div
                       :key="item.work.id"
-                      class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-border block group"
+                      class="theme-input border theme-border-subtle theme-border rounded-xl p-3 shadow-sm transition-colors theme-hover-border block group"
                     >
                       <div class="flex flex-col sm:grid sm:grid-cols-2 gap-4 h-full">
                         <!-- Column 1: Media -->
@@ -636,8 +633,8 @@
               :page="currentWorksPage"
               :total-items="worksTotal"
               scroll-target-id="voice-actor-works-results"
-              :label="$t('voiceActor.filmography')"
-              :page-size="12"
+              :label="$t('voiceActor.actorGroups')"
+              :page-size="worksPageSize"
               @update:page="setWorksPage"
             />
           </template>
@@ -946,8 +943,9 @@ function isVoiceActorWorkGroup(
 const workCollection = computed<VoiceActorCollectionItem[]>(() =>
   displayMode.value === "grouped" ? groupVoiceActorWorks(filteredWorks.value) : filteredWorks.value,
 );
+const worksPageSize = computed(() => (displayMode.value === "grouped" ? 12 : 20));
 const worksPageData = computed(() =>
-  paginateVoiceActorWorkItems(workCollection.value, worksPage.value, 12),
+  paginateVoiceActorWorkItems(workCollection.value, worksPage.value, worksPageSize.value),
 );
 const worksItems = computed(() =>
   worksPageData.value.data.filter(
@@ -958,7 +956,7 @@ const groupPages = ref<Record<string, number>>({});
 const groupedWorks = computed(() =>
   worksPageData.value.data.filter(isVoiceActorWorkGroup).map((group) => ({
     ...group,
-    pageData: paginateVoiceActorWorkItems(group.works, groupPages.value[group.key] ?? 1, 8),
+    pageData: paginateVoiceActorWorkItems(group.works, groupPages.value[group.key] ?? 1, 12),
   })),
 );
 // Only visible work cards are looked up, lazily after hydration.

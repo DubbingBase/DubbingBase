@@ -9,6 +9,7 @@ const props = withDefaults(
     page?: number;
     gridClass?: string;
     paginationLabel?: string;
+    showTopPagination?: boolean;
     itemKey?: (item: T, index: number) => string | number;
   }>(),
   {
@@ -18,6 +19,7 @@ const props = withDefaults(
     gridClass: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4",
     itemKey: undefined,
     paginationLabel: undefined,
+    showTopPagination: true,
   },
 );
 
@@ -65,6 +67,7 @@ const setPage = (page: number) => {
 <template>
   <div :id="paginationTargetId" class="scroll-mt-20">
     <PaginationControls
+      v-if="showTopPagination"
       position="top"
       :page="currentPage"
       :total-items="totalItems"

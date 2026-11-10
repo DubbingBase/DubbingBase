@@ -28,6 +28,25 @@ describe("PaginatedResponsiveGrid", () => {
     );
   });
 
+  it("can keep only the bottom pager for a locally scoped collection", () => {
+    const wrapper = mount(PaginatedResponsiveGrid, {
+      props: {
+        items: Array.from({ length: 13 }, (_, index) => ({ id: index + 1 })),
+        pageSize: 12,
+        paginationLabel: "Actor credits",
+        showTopPagination: false,
+      },
+      slots: { default: ({ item }) => `item-${item.id}` },
+      global: { mocks: { $t: (key: string) => key } },
+    });
+
+    expect(wrapper.findAll("nav")).toHaveLength(1);
+    expect(wrapper.get("nav").attributes("aria-label")).toBe(
+      "Actor credits: common.paginationBottom",
+    );
+    expect(wrapper.text()).toContain("Actor credits");
+  });
+
   it("pages locally from either control, scrolls to its own results and clamps shrinking data", async () => {
     const scrollIntoView = vi.fn();
     const original = Element.prototype.scrollIntoView;
