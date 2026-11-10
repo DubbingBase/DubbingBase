@@ -149,7 +149,7 @@
         </div>
 
         <!-- Filmography -->
-        <section>
+        <section id="voice-actor-works-results" class="scroll-mt-20">
           <div class="flex flex-col mb-6 gap-4">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
               <div>
@@ -262,6 +262,7 @@
             <PaginatedResponsiveGrid
               :key="`${searchQuery}|${activeTab}|${sortMode}`"
               :items="worksItems"
+              :pagination-label="$t('voiceActor.filmography')"
               :total-items="worksTotal"
               :page="currentWorksPage"
               :page-size="12"
@@ -438,6 +439,15 @@
             </PaginatedResponsiveGrid>
           </template>
           <template v-else>
+            <PaginationControls
+              position="top"
+              :page="currentWorksPage"
+              :total-items="worksTotal"
+              scroll-target-id="voice-actor-works-results"
+              :label="$t('voiceActor.filmography')"
+              :page-size="12"
+              @update:page="setWorksPage"
+            />
             <div class="space-y-10">
               <div
                 v-for="group in groupedWorks"
@@ -503,119 +513,130 @@
                 </div>
 
                 <!-- Actor Works Grid -->
-                <div
-                  class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
+                <PaginatedResponsiveGrid
+                  class="scroll-mt-48!"
+                  :items="group.pageData.data"
+                  :pagination-label="group.actor.name || $t('voiceActor.unknownActor')"
+                  :total-items="group.worksCount"
+                  :page="group.pageData.pagination.page"
+                  :page-size="8"
+                  :item-key="(item) => item.work.id"
+                  grid-class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
+                  @update:page="groupPages[group.key] = $event"
                 >
-                  <div
-                    v-for="item in group.works"
-                    :key="item.work.id"
-                    class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-border block group"
-                  >
-                    <div class="flex flex-col sm:grid sm:grid-cols-2 gap-4 h-full">
-                      <!-- Column 1: Media -->
-                      <NuxtLink
-                        :to="
-                          localePath(
-                            getMediaLink(item.work.dubbing_projects?.content_type, item.media.id),
-                          )
-                        "
-                        class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start cursor-pointer"
-                      >
-                        <div
-                          class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden theme-surface-raised theme-surface-muted sm:mb-3 flex-shrink-0"
+                  <template #default="{ item }">
+                    <div
+                      :key="item.work.id"
+                      class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-border block group"
+                    >
+                      <div class="flex flex-col sm:grid sm:grid-cols-2 gap-4 h-full">
+                        <!-- Column 1: Media -->
+                        <NuxtLink
+                          :to="
+                            localePath(
+                              getMediaLink(item.work.dubbing_projects?.content_type, item.media.id),
+                            )
+                          "
+                          class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start cursor-pointer"
                         >
-                          <NuxtImg
-                            format="webp"
-                            decoding="async"
-                            loading="lazy"
-                            v-if="item.media.poster_path"
-                            :src="resolveImageUrl(item.media.poster_path)"
-                            :alt="getMediaTitle(item.media)"
-                            class="w-full h-full object-cover transition-transform duration-300"
-                          />
                           <div
-                            v-else
-                            class="w-full h-full flex items-center justify-center theme-text-muted"
+                            class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden theme-surface-raised theme-surface-muted sm:mb-3 flex-shrink-0"
                           >
-                            <ClapperboardIcon class="w-6 h-6 opacity-20" />
-                          </div>
-                        </div>
-                        <div class="flex flex-col min-w-0 flex-1">
-                          <span
-                            class="text-[10px] theme-text-muted font-semibold uppercase tracking-wider mb-0.5"
-                            >{{ item.sortDate ? item.sortDate.split("-")[0] : "" }}</span
-                          >
-                          <span
-                            class="font-bold text-sm theme-text leading-tight line-clamp-2"
-                            :title="getMediaTitle(item.media)"
-                            >{{ getMediaTitle(item.media) }}</span
-                          >
-                          <div
-                            v-if="item.work.dubbing_projects?.studios"
-                            class="mt-1 flex min-w-0 overflow-hidden"
-                          >
-                            <span
-                              class="text-[9px] px-1.5 py-0.5 theme-surface-raised theme-surface-muted theme-text-secondary rounded-md font-medium border theme-border-subtle theme-border truncate min-w-0"
-                              :title="item.work.dubbing_projects.studios.name"
-                            >
-                              {{ item.work.dubbing_projects.studios.name }}
-                            </span>
-                          </div>
-                        </div>
-                      </NuxtLink>
-
-                      <!-- Column 2: Original Actor / Character -->
-                      <div
-                        class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t theme-border-subtle theme-border sm:border-t-0 pt-3 sm:pt-0"
-                      >
-                        <div
-                          class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden theme-surface-raised theme-surface-muted sm:mb-3 relative flex-shrink-0"
-                        >
-                          <CharacterPhoto
-                            :image="imageFor(characterRequest(item))"
-                            :alt="item.data.character || ''"
-                            @error="reportImageError(characterRequest(item))"
-                          >
+                            <NuxtImg
+                              format="webp"
+                              decoding="async"
+                              loading="lazy"
+                              v-if="item.media.poster_path"
+                              :src="resolveImageUrl(item.media.poster_path)"
+                              :alt="getMediaTitle(item.media)"
+                              class="w-full h-full object-cover transition-transform duration-300"
+                            />
                             <div
+                              v-else
                               class="w-full h-full flex items-center justify-center theme-text-muted"
                             >
-                              <UserIcon class="w-6 h-6 opacity-20" />
+                              <ClapperboardIcon class="w-6 h-6 opacity-20" />
                             </div>
-                          </CharacterPhoto>
-                          <div
-                            v-if="item.work.performance"
-                            class="absolute bottom-1 left-1 right-1 flex justify-center"
-                          >
-                            <span
-                              class="bg-black/70 backdrop-blur text-white text-[9px] px-2 py-0.5 rounded-full truncate max-w-full font-medium inline-block min-w-0"
-                            >
-                              {{
-                                $te(`performance.${item.work.performance}`)
-                                  ? $t(`performance.${item.work.performance}`)
-                                  : item.work.performance
-                              }}
-                            </span>
                           </div>
-                        </div>
-                        <div class="flex flex-col min-w-0 flex-1">
-                          <span
-                            class="text-[10px] theme-text-muted font-semibold uppercase tracking-wider mb-0.5"
-                            >{{ $t("details.as") }}</span
+                          <div class="flex flex-col min-w-0 flex-1">
+                            <span
+                              class="text-[10px] theme-text-muted font-semibold uppercase tracking-wider mb-0.5"
+                              >{{ item.sortDate ? item.sortDate.split("-")[0] : "" }}</span
+                            >
+                            <span
+                              class="font-bold text-sm theme-text leading-tight line-clamp-2"
+                              :title="getMediaTitle(item.media)"
+                              >{{ getMediaTitle(item.media) }}</span
+                            >
+                            <div
+                              v-if="item.work.dubbing_projects?.studios"
+                              class="mt-1 flex min-w-0 overflow-hidden"
+                            >
+                              <span
+                                class="text-[9px] px-1.5 py-0.5 theme-surface-raised theme-surface-muted theme-text-secondary rounded-md font-medium border theme-border-subtle theme-border truncate min-w-0"
+                                :title="item.work.dubbing_projects.studios.name"
+                              >
+                                {{ item.work.dubbing_projects.studios.name }}
+                              </span>
+                            </div>
+                          </div>
+                        </NuxtLink>
+
+                        <!-- Column 2: Original Actor / Character -->
+                        <div
+                          class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t theme-border-subtle theme-border sm:border-t-0 pt-3 sm:pt-0"
+                        >
+                          <div
+                            class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden theme-surface-raised theme-surface-muted sm:mb-3 relative flex-shrink-0"
                           >
-                          <span
-                            class="font-medium text-sm theme-text-secondary leading-tight line-clamp-2"
-                            >{{ item.data.character || $t("details.unknownCharacter") }}</span
-                          >
+                            <CharacterPhoto
+                              :image="imageFor(characterRequest(item))"
+                              :alt="item.data.character || ''"
+                              @error="reportImageError(characterRequest(item))"
+                            >
+                              <div
+                                class="w-full h-full flex items-center justify-center theme-text-muted"
+                              >
+                                <UserIcon class="w-6 h-6 opacity-20" />
+                              </div>
+                            </CharacterPhoto>
+                            <div
+                              v-if="item.work.performance"
+                              class="absolute bottom-1 left-1 right-1 flex justify-center"
+                            >
+                              <span
+                                class="bg-black/70 backdrop-blur text-white text-[9px] px-2 py-0.5 rounded-full truncate max-w-full font-medium inline-block min-w-0"
+                              >
+                                {{
+                                  $te(`performance.${item.work.performance}`)
+                                    ? $t(`performance.${item.work.performance}`)
+                                    : item.work.performance
+                                }}
+                              </span>
+                            </div>
+                          </div>
+                          <div class="flex flex-col min-w-0 flex-1">
+                            <span
+                              class="text-[10px] theme-text-muted font-semibold uppercase tracking-wider mb-0.5"
+                              >{{ $t("details.as") }}</span
+                            >
+                            <span
+                              class="font-medium text-sm theme-text-secondary leading-tight line-clamp-2"
+                              >{{ item.data.character || $t("details.unknownCharacter") }}</span
+                            >
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </div>
+                  </template>
+                </PaginatedResponsiveGrid>
               </div>
             </div>
             <PaginationControls
               :page="currentWorksPage"
               :total-items="worksTotal"
+              scroll-target-id="voice-actor-works-results"
+              :label="$t('voiceActor.filmography')"
               :page-size="12"
               @update:page="setWorksPage"
             />
@@ -640,7 +661,8 @@ import {
 } from "../../utils/voice-actor-og-image";
 import {
   useVoiceActorData,
-  paginateVoiceActorWorks,
+  groupVoiceActorWorks,
+  paginateVoiceActorWorkItems,
   type VoiceActorWorkGroup,
   APP_LOCALES,
 } from "@app/shared-logic";
@@ -921,16 +943,25 @@ function isVoiceActorWorkGroup(
   return "works" in item;
 }
 
+const workCollection = computed<VoiceActorCollectionItem[]>(() =>
+  displayMode.value === "grouped" ? groupVoiceActorWorks(filteredWorks.value) : filteredWorks.value,
+);
 const worksPageData = computed(() =>
-  paginateVoiceActorWorks(filteredWorks.value, displayMode.value, worksPage.value, 12),
+  paginateVoiceActorWorkItems(workCollection.value, worksPage.value, 12),
 );
 const worksItems = computed(() =>
   worksPageData.value.data.filter(
     (item): item is VoiceActorWorkItem => !isVoiceActorWorkGroup(item),
   ),
 );
-const groupedWorks = computed(() => worksPageData.value.data.filter(isVoiceActorWorkGroup));
-// Only the 12 works of the current page are looked up, lazily after hydration.
+const groupPages = ref<Record<string, number>>({});
+const groupedWorks = computed(() =>
+  worksPageData.value.data.filter(isVoiceActorWorkGroup).map((group) => ({
+    ...group,
+    pageData: paginateVoiceActorWorkItems(group.works, groupPages.value[group.key] ?? 1, 8),
+  })),
+);
+// Only visible work cards are looked up, lazily after hydration.
 function characterRequest(item: VoiceActorWorkItem) {
   const contentType = item.work.dubbing_projects?.content_type;
   const contentId = item.work.dubbing_projects?.content_id;
@@ -943,7 +974,7 @@ function characterRequest(item: VoiceActorWorkItem) {
 }
 const { imageFor, reportImageError } = useCharacterImages(
   computed(() =>
-    [...worksItems.value, ...groupedWorks.value.flatMap((group) => group.works)].map(
+    [...worksItems.value, ...groupedWorks.value.flatMap((group) => group.pageData.data)].map(
       characterRequest,
     ),
   ),
@@ -1056,6 +1087,7 @@ const resolveImageUrl = (path: string | undefined | null) => {
 };
 
 watch([searchQuery, activeTab, sortMode, displayMode], () => {
+  groupPages.value = {};
   void setWorksPage(1);
 });
 </script>

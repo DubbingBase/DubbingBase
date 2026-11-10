@@ -87,6 +87,7 @@
           </h2>
           <PaginatedResponsiveGrid
             :items="seasonItems"
+            :pagination-label="$t('details.seasons')"
             :total-items="seasonTotal"
             :page="seasonsPage"
             :page-size="12"
@@ -97,14 +98,7 @@
             <template #default="{ item: season }">
               <NuxtLink
                 :key="season.season_number"
-                :to="{
-                  path: localePath(`/show/${serie.id}/season/${season.season_number}`),
-                  query: isOriginalVersion
-                    ? { dub: 'original' }
-                    : activeDubId
-                      ? { dub: activeDubId }
-                      : {},
-                }"
+                :to="season.detailLocation"
                 class="group cursor-pointer block theme-input border theme-border-subtle theme-border rounded-2xl p-3 shadow-sm transition-colors theme-hover-border hover:shadow-md"
               >
                 <div
@@ -160,10 +154,11 @@
 
           <PaginatedResponsiveGrid
             :key="searchQuery"
-            :items="castItems"
+            :items="castCards"
+            :pagination-label="$t('details.castAndCrew')"
             :total-items="castTotal"
             :page="castPage"
-            :page-size="12"
+            :page-size="MEDIA_CAST_PAGE_SIZE"
             grid-class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
             :item-key="(actor) => actor.id"
             @update:page="setCastPage"
@@ -219,9 +214,9 @@
                       class="w-16 sm:w-full relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
                     >
                       <CharacterPhoto
-                        :image="imageFor(characterRequest(actor))"
+                        :image="imageFor(actor.characterImageRequest)"
                         :alt="actor.character || actor.workCharacterName || ''"
-                        @error="reportImageError(characterRequest(actor))"
+                        @error="reportImageError(actor.characterImageRequest)"
                       />
                     </div>
                     <div class="flex flex-col min-w-0 flex-1 w-full overflow-hidden">
@@ -232,13 +227,13 @@
                         <span class="truncate block w-full">{{ $t("details.character") }}</span>
                       </div>
                       <NuxtLink
-                        v-if="characterDetailPath(actor)"
-                        :to="characterDetailPath(actor)"
+                        v-if="actor.characterDetailPath"
+                        :to="actor.characterDetailPath"
                         class="font-bold text-sm theme-text truncate block w-full hover:underline"
-                        :title="actor.roleLabels.join(', ') || actor.workCharacterName || ''"
+                        :title="actor.roleLabel || actor.workCharacterName || ''"
                       >
                         {{
-                          actor.roleLabels.join(", ") ||
+                          actor.roleLabel ||
                           actor.workCharacterName ||
                           $t("details.unknownCharacter")
                         }}
@@ -246,10 +241,10 @@
                       <div
                         v-else
                         class="font-bold text-sm theme-text truncate block w-full"
-                        :title="actor.roleLabels.join(', ') || actor.workCharacterName || ''"
+                        :title="actor.roleLabel || actor.workCharacterName || ''"
                       >
                         {{
-                          actor.roleLabels.join(", ") ||
+                          actor.roleLabel ||
                           actor.workCharacterName ||
                           $t("details.unknownCharacter")
                         }}
@@ -385,7 +380,10 @@ import DetailsExternalLink from "../../components/layout/details/DetailsExternal
 import DetailsSynopsis from "../../components/layout/details/DetailsSynopsis.vue";
 import DetailsCastHeader from "../../components/layout/details/DetailsCastHeader.vue";
 import CharacterPhoto from "../../components/CharacterPhoto.vue";
-import { useCharacterImages } from "../../composables/useCharacterImages";
+import {
+  useCharacterImages,
+  type CharacterImageRequest,
+} from "../../composables/useCharacterImages";
 import { useRoute, useRouter } from "vue-router";
 import type { Link as HeadLink } from "@unhead/vue";
 import { NuxtLink } from "#components";
@@ -399,6 +397,7 @@ import {
   hasOriginalVersion,
   isOriginalVersionQuery,
   matchCastWorks,
+  MEDIA_CAST_PAGE_SIZE,
   originalVersionCast,
   type DisplayCastActor,
   type MediaProjectView,
@@ -442,7 +441,17 @@ const { page: seasonsPage, setPage: setSeasonsPage } = useUrlPagination("seasons
 const seasonTotal = computed(() => seasons.value.length);
 const seasonItems = computed(() => {
   const start = (seasonsPage.value - 1) * 12;
-  return seasons.value.slice(start, start + 12);
+  return seasons.value.slice(start, start + 12).map((season) => ({
+    ...season,
+    detailLocation: {
+      path: localePath(`/show/${showId.value}/season/${season.season_number}`),
+      query: isOriginalVersion.value
+        ? { dub: "original" }
+        : activeDubId.value
+          ? { dub: activeDubId.value }
+          : {},
+    },
+  }));
 });
 const projectVoiceActorMetrics = computed(() => {
   const visibleProjects: MediaDetailDubbingProject[] = [];
@@ -549,7 +558,8 @@ const getDisplayLanguage = useDubbingLanguageLabel();
 // Format cast and attach voice actors
 type ShowDisplayCastActor = DisplayCastActor & {
   actorLinkPath?: string;
-  roleLabels: string[];
+  roleLabel: string;
+  characterImageRequest: CharacterImageRequest;
   voiceActorLinkPath: string;
 };
 
@@ -645,22 +655,24 @@ const castTotal = computed(() => filteredCast.value.length);
 // Keep pending or smaller result sets from handing an invalid page to the grid,
 // which would otherwise replace the active route while clamping it.
 const castPage = computed(() => {
-  const totalPages = Math.max(1, Math.ceil(castTotal.value / 12));
+  const totalPages = Math.max(1, Math.ceil(castTotal.value / MEDIA_CAST_PAGE_SIZE));
   return requestedCastPage.value <= totalPages ? requestedCastPage.value : 1;
 });
 const castItems = computed<ShowDisplayCastActor[]>(() => {
-  const start = (castPage.value - 1) * 12;
-  return filteredCast.value.slice(start, start + 12).map((actor) => {
+  const start = (castPage.value - 1) * MEDIA_CAST_PAGE_SIZE;
+  return filteredCast.value.slice(start, start + MEDIA_CAST_PAGE_SIZE).map((actor) => {
     const roles = actor.roles || [];
-    const roleNames = roles.map((role) => role.character);
-    const roleLabel = roleNames.join(", ");
+    const roleLabel = roles
+      .map((role) =>
+        role.episode_count ? `${role.character} (${role.episode_count} eps)` : role.character,
+      )
+      .join(", ");
     return {
       ...actor,
+      characterImageRequest: characterRequest(actor),
       actorLinkPath: actor.actorId ? localePath(`/actor/${actor.actorId}`) : undefined,
       voiceActorLinkPath: actor.voiceActor ? localePath(`/voice-actor/${actor.voiceActor.id}`) : "",
-      roleLabels: roles.map((role) =>
-        role.episode_count ? `${role.character} (${role.episode_count} eps)` : role.character,
-      ),
+      roleLabel,
     };
   });
 });
@@ -677,11 +689,13 @@ function characterRequest(actor: CardRole) {
   };
 }
 const { imageFor, characterIdFor, reportImageError, tvdbIds } = useCharacterImages(
-  computed(() => castItems.value.map(characterRequest)),
+  computed(() => castItems.value.map((actor) => actor.characterImageRequest)),
 );
 const tvdbId = computed(() => tvdbIds.value[`tv:${route.params.id}`]);
-function characterDetailPath(actor: CardRole): string | undefined {
-  const characterId = characterIdFor(characterRequest(actor));
+function characterDetailPath(actor: {
+  characterImageRequest: CharacterImageRequest;
+}): string | undefined {
+  const characterId = characterIdFor(actor.characterImageRequest);
   return characterId
     ? localePath({
         path: `/character/tvdb/${characterId}`,
@@ -689,6 +703,14 @@ function characterDetailPath(actor: CardRole): string | undefined {
       })
     : undefined;
 }
+
+// Resolve asynchronous character links once per visible card, not in each binding.
+const castCards = computed(() =>
+  castItems.value.map((actor) => ({
+    ...actor,
+    characterDetailPath: characterDetailPath(actor),
+  })),
+);
 
 useHead({
   title: computed(() => {

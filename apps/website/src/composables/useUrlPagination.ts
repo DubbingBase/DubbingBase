@@ -13,6 +13,8 @@ export function useUrlPagination(queryKey: string) {
   const page = computed(() => readUrlPage(route.query[queryKey]));
 
   const setPage = async (nextPage: number): Promise<void> => {
+    const nextValue = nextPage <= 1 ? undefined : String(Math.floor(nextPage));
+    if (route.query[queryKey] === nextValue) return;
     const query = { ...route.query };
     if (nextPage <= 1) {
       delete query[queryKey];

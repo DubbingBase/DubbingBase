@@ -54,7 +54,19 @@
     </div>
 
     <!-- Users Table Card -->
-    <div class="theme-surface-overlay border theme-border rounded-2xl overflow-hidden">
+    <div
+      id="admin-users-results"
+      class="theme-surface-overlay border theme-border rounded-2xl overflow-hidden scroll-mt-36 lg:scroll-mt-20"
+    >
+      <PaginationControls
+        v-if="!loading"
+        position="top"
+        :page="currentUsersPage"
+        :total-items="filteredUsers.length"
+        :page-size="24"
+        scroll-target-id="admin-users-results"
+        @update:page="setUsersPage"
+      />
       <!-- Loading indicator -->
       <div v-if="loading" class="flex flex-col items-center justify-center py-20 space-y-3">
         <div class="animate-spin rounded-full h-9 w-9 border-b-2 border-blue-500"></div>
@@ -88,7 +100,7 @@
           </thead>
           <tbody class="divide-y theme-divide">
             <tr
-              v-for="user in filteredUsers"
+              v-for="user in visibleUsers"
               :key="user.id"
               class="theme-hover-surface-muted transition-colors"
             >
@@ -128,6 +140,14 @@
           </tbody>
         </table>
       </div>
+      <PaginationControls
+        v-if="!loading"
+        :page="currentUsersPage"
+        :total-items="filteredUsers.length"
+        :page-size="24"
+        scroll-target-id="admin-users-results"
+        @update:page="setUsersPage"
+      />
     </div>
 
     <!-- Confirm Delete Dialog (Modal) -->
@@ -202,6 +222,8 @@ definePageMeta({
 });
 
 import { ref, onMounted, computed } from "vue";
+import { refDebounced } from "@vueuse/core";
+import { paginateDetailCollection } from "@app/shared-logic";
 import { readErrorMessage } from "~/utils/error-message";
 
 interface User {
@@ -278,11 +300,21 @@ if (fetchError.value) {
   error.value = fetchError.value.message;
 }
 
+const debouncedSearchQuery = refDebounced(searchQuery, 150);
+const { page: requestedUsersPage, setPage: setUsersPage } = useUrlPagination("usersPage");
+watch(debouncedSearchQuery, () => void setUsersPage(1));
 const filteredUsers = computed(() => {
-  if (!searchQuery.value.trim()) return users.value;
-  const q = searchQuery.value.toLowerCase().trim();
+  if (!debouncedSearchQuery.value.trim()) return users.value;
+  const q = debouncedSearchQuery.value.toLowerCase().trim();
   return users.value.filter((u) => u.email?.toLowerCase().includes(q));
 });
+
+const currentUsersPage = computed(() =>
+  Math.min(requestedUsersPage.value, Math.max(1, Math.ceil(filteredUsers.value.length / 24))),
+);
+const visibleUsers = computed(() =>
+  paginateDetailCollection(filteredUsers.value, currentUsersPage.value, 24),
+);
 
 const updateRole = async (userObj: User) => {
   const role = userRole.value[userObj.id];

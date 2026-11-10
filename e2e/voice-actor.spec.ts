@@ -224,13 +224,16 @@ test.describe("Voice Actor Profile & Filmography", () => {
     expect(serverRenderedMarkup).toContain("Film 2012");
     await expect(harrisonGroup).toHaveCount(1);
     await expect(harrisonGroup.locator("p")).toContainText("15");
-    await expect(harrisonGroup.locator("a[href*='/movie/']")).toHaveCount(15);
+    await expect(harrisonGroup.locator("a[href*='/movie/']")).toHaveCount(8);
     await expect(harrisonGroup.locator("a[href*='/actor/3']")).toHaveCount(1);
     await expect(groups).toHaveCount(12);
 
     const harrisonWorkLinks = harrisonGroup.locator("a[href*='/movie/']");
     await expect(harrisonWorkLinks.first()).toHaveAttribute("href", /\/movie\/2012$/);
+    await harrisonGroup.locator("nav button").last().click();
+    await expect(harrisonWorkLinks).toHaveCount(7);
     await expect(harrisonWorkLinks.last()).toHaveAttribute("href", /\/movie\/85$/);
+    await expect(page).not.toHaveURL(/worksPage=2/);
 
     const sortSelect = filmography.locator("select");
     await sortSelect.selectOption("oldest");

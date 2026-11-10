@@ -60,15 +60,26 @@
           v-if="isUserDropdownOpen && filteredUsers.length > 0"
           class="absolute z-40 left-0 right-0 mt-1.5 max-h-60 overflow-y-auto theme-surface-overlay border theme-border rounded-xl shadow-2xl divide-y theme-divide"
         >
-          <div
-            v-for="u in filteredUsers"
-            :key="u.id"
-            @click="selectUser(u)"
-            class="px-4 py-3 theme-hover-surface-muted cursor-pointer flex flex-col transition-colors"
+          <PaginatedResponsiveGrid
+            :items="filteredUsers"
+            :pagination-label="$t('admin.userVaProfiles.selectUserAccount')"
+            :page="userSearchPage"
+            :page-size="8"
+            :item-key="(u) => u.id"
+            grid-class="divide-y theme-divide"
+            @update:page="userSearchPage = $event"
           >
-            <span class="text-sm font-semibold theme-text">{{ u.email }}</span>
-            <span class="text-xs theme-text-muted font-mono mt-0.5">{{ u.id }}</span>
-          </div>
+            <template #default="{ item: u }">
+              <div
+                :key="u.id"
+                @click="selectUser(u)"
+                class="px-4 py-3 theme-hover-surface-muted cursor-pointer flex flex-col transition-colors"
+              >
+                <span class="text-sm font-semibold theme-text">{{ u.email }}</span>
+                <span class="text-xs theme-text-muted font-mono mt-0.5">{{ u.id }}</span>
+              </div>
+            </template>
+          </PaginatedResponsiveGrid>
         </div>
         <!-- Loader / Empty feedback in dropdown -->
         <div
@@ -243,52 +254,61 @@
       <div v-else-if="existingLinks.length === 0" class="theme-text-muted text-sm py-4 text-center">
         {{ $t("admin.userVaProfiles.noProfilesLinked") }}
       </div>
-      <div v-else class="space-y-3">
-        <div
-          v-for="link in existingLinks"
-          :key="link.id"
-          class="flex items-center justify-between p-4 theme-input border theme-border rounded-xl"
-        >
-          <div class="flex flex-col gap-1">
-            <span class="text-sm font-bold theme-text">{{ link.userEmail }}</span>
-            <span class="text-xs theme-text-muted font-mono">{{ link.user_id }}</span>
-          </div>
-          <svg
-            class="h-4 w-4 theme-text-secondary mx-4 shrink-0"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+      <PaginatedResponsiveGrid
+        v-else
+        :items="existingLinks"
+        :pagination-label="$t('admin.userVaProfiles.existingLinks')"
+        :item-key="(link) => link.id"
+        grid-class="space-y-3"
+      >
+        <template #default="{ item: link }">
+          <div
+            :key="link.id"
+            class="flex items-center justify-between p-4 theme-input border theme-border rounded-xl"
           >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M14 5l7 7m0 0l-7 7m7-7H3"
-            />
-          </svg>
-          <div class="flex items-center space-x-3 text-right">
-            <span class="text-sm font-bold theme-status-info-text">{{ link.voiceActorName }}</span>
-            <div
-              class="h-8 w-8 rounded-full overflow-hidden border theme-border theme-input shrink-0 flex items-center justify-center theme-text-muted"
+            <div class="flex flex-col gap-1">
+              <span class="text-sm font-bold theme-text">{{ link.userEmail }}</span>
+              <span class="text-xs theme-text-muted font-mono">{{ link.user_id }}</span>
+            </div>
+            <svg
+              class="h-4 w-4 theme-text-secondary mx-4 shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
             >
-              <NuxtImg
-                format="webp"
-                v-if="link.voiceActorImage"
-                :src="getProfilePictureUrl(link.voiceActorImage) || undefined"
-                class="h-full w-full object-cover"
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M14 5l7 7m0 0l-7 7m7-7H3"
               />
-              <svg v-else class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+            </svg>
+            <div class="flex items-center space-x-3 text-right">
+              <span class="text-sm font-bold theme-status-info-text">{{
+                link.voiceActorName
+              }}</span>
+              <div
+                class="h-8 w-8 rounded-full overflow-hidden border theme-border theme-input shrink-0 flex items-center justify-center theme-text-muted"
+              >
+                <NuxtImg
+                  format="webp"
+                  v-if="link.voiceActorImage"
+                  :src="getProfilePictureUrl(link.voiceActorImage) || undefined"
+                  class="h-full w-full object-cover"
                 />
-              </svg>
+                <svg v-else class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
+                </svg>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        </template>
+      </PaginatedResponsiveGrid>
     </div>
 
     <!-- Toast Notifications -->
@@ -314,7 +334,8 @@ definePageMeta({
   middleware: "admin",
 });
 
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
+import { refDebounced } from "@vueuse/core";
 import type { Tables } from "@app/supabase/types";
 import { readErrorMessage } from "~/utils/error-message";
 const supabase = useSupabaseClient();
@@ -417,10 +438,11 @@ watch(
       allUsers.value = data.users;
       usersFetched.value = true;
 
+      const userEmails = new Map(data.users.map((user) => [user.id, user.email]));
       existingLinks.value = data.links.map((link) => ({
         id: link.id,
         user_id: link.user_id,
-        userEmail: data.users.find((user) => user.id === link.user_id)?.email || "Unknown User",
+        userEmail: userEmails.get(link.user_id) || "Unknown User",
         voiceActorName: link.voice_actors
           ? `${link.voice_actors.firstname} ${link.voice_actors.lastname}`
           : "Unknown Actor",
@@ -445,9 +467,14 @@ const handleUserInput = () => {
 };
 
 // Filter users list based on input
+const debouncedUserQuery = refDebounced(userQuery, 150);
+const userSearchPage = ref(1);
+watch(debouncedUserQuery, () => {
+  userSearchPage.value = 1;
+});
 const filteredUsers = computed(() => {
-  if (!userQuery.value.trim()) return allUsers.value;
-  const q = userQuery.value.toLowerCase().trim();
+  if (!debouncedUserQuery.value.trim()) return allUsers.value;
+  const q = debouncedUserQuery.value.toLowerCase().trim();
   return allUsers.value.filter((u) => u.email?.toLowerCase().includes(q));
 });
 
@@ -548,18 +575,13 @@ const linkUserVoiceActor = async () => {
 };
 
 // Global click handler to close dropdowns
-const setupClickListeners = () => {
-  document.addEventListener("click", (e) => {
-    if (!(e.target instanceof Element)) return;
-    const target = e.target;
-    if (!target.closest(".relative")) {
-      isUserDropdownOpen.value = false;
-      isVoiceActorDropdownOpen.value = false;
-    }
-  });
+const closeDropdowns = (event: MouseEvent): void => {
+  if (!(event.target instanceof Element)) return;
+  if (!event.target.closest(".relative")) {
+    isUserDropdownOpen.value = false;
+    isVoiceActorDropdownOpen.value = false;
+  }
 };
-
-onMounted(() => {
-  setupClickListeners();
-});
+onMounted(() => document.addEventListener("click", closeDropdowns));
+onUnmounted(() => document.removeEventListener("click", closeDropdowns));
 </script>

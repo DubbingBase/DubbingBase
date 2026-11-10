@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   groupVoiceActorWorks,
   paginateVoiceActorWorks,
+  paginateVoiceActorWorkItems,
   type VoiceActorWorkLike,
 } from "@app/shared-logic";
 
@@ -173,5 +174,34 @@ describe("groupVoiceActorWorks", () => {
     expect(result.data[0]).toBe(works[0]);
     expect(result.pagination.totalItems).toBe(13);
     expect(result.pagination.totalPages).toBe(2);
+  });
+});
+
+describe("prepared voice actor collections", () => {
+  it("paginates existing groups without regrouping or changing their identities", () => {
+    const works = Array.from({ length: 30 }, (_, index) =>
+      work(`role-${index}`, index + 1, `Actor ${index}`, index + 1),
+    );
+    const groups = groupVoiceActorWorks(works);
+    const first = paginateVoiceActorWorkItems(groups, 1, 12);
+    const second = paginateVoiceActorWorkItems(groups, 2, 12);
+    expect(first.data).toEqual(groups.slice(0, 12));
+    expect(second.data[0]).toBe(groups[12]);
+    expect(second.pagination).toEqual({ page: 2, pageSize: 12, totalItems: 30, totalPages: 3 });
+  });
+
+  it("bounds a large actor group and keeps all works reachable", () => {
+    const works = Array.from({ length: 200 }, (_, index) => work(`role-${index}`, 42, "Actor", 42));
+    const group = groupVoiceActorWorks(works)[0];
+    expect(group).toBeDefined();
+    if (!group) throw new Error("Missing actor group");
+    const first = paginateVoiceActorWorkItems(group.works, 1, 8);
+    const next = paginateVoiceActorWorkItems(group.works, 2, 8);
+    const last = paginateVoiceActorWorkItems(group.works, 25, 8);
+    expect(first.data).toHaveLength(8);
+    expect(next.data[0]).toBe(works[8]);
+    expect(last.data[7]).toBe(works[199]);
+    expect(first.pagination.totalItems).toBe(200);
+    expect(first.pagination.totalPages).toBe(25);
   });
 });

@@ -93,6 +93,15 @@ export function paginateVoiceActorWorks<T extends VoiceActorWorkLike>(
   };
 } {
   const items = view === "grouped" ? groupVoiceActorWorks(works) : works;
+  return paginateVoiceActorWorkItems<VoiceActorWorksPageItem<T>>(items, page, pageSize);
+}
+
+/** Paginate an already prepared collection without rebuilding actor groups. */
+export function paginateVoiceActorWorkItems<T>(
+  items: readonly T[],
+  page: number,
+  pageSize: number,
+) {
   const totalItems = items.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const currentPage = Math.min(Math.max(1, page), totalPages);
