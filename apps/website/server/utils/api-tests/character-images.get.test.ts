@@ -51,12 +51,21 @@ beforeEach(() => {
   mocks.getMediaWithVoiceActors.mockImplementation(async (_type: string, id: number) => ({
     media: { id, external_ids: { wikidata_id: `Q${id}` } },
   }));
-  mocks.getCharacterProfilePictures.mockImplementation(async (_t: string, id: number) => ({
-    characters: [
-      { id: id + 1000, name: "Ron Weasley", image: `https://artworks.thetvdb.com/ron-${id}.jpg` },
-    ],
-    tvdbId: id + 5000,
-  }));
+  mocks.getCharacterProfilePictures.mockImplementation(
+    async (_t: string, id: number, loadMedia: () => Promise<unknown>) => {
+      await loadMedia();
+      return {
+        characters: [
+          {
+            id: id + 1000,
+            name: "Ron Weasley",
+            image: `https://artworks.thetvdb.com/ron-${id}.jpg`,
+          },
+        ],
+        tvdbId: id + 5000,
+      };
+    },
+  );
   mocks.getWikimediaCharacterImage.mockResolvedValue(null);
 });
 

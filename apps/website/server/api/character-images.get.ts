@@ -70,7 +70,7 @@ export default defineEventHandler(async (event) => {
   const tvdbIds: Record<string, number> = {};
   let degraded = false;
 
-  // One TMDB lookup, and at most one TVDB lookup, per production; the TVDB one is
+  // At most one TMDB lookup, and one TVDB lookup, per production; the TVDB one is
   // skipped entirely when every card of that production already skipped TVDB.
   const medias = new Map<string, Promise<unknown>>();
   const tvdbLookups = new Map<string, ReturnType<typeof loadTvdb>>();
@@ -94,10 +94,8 @@ export default defineEventHandler(async (event) => {
     return loaded;
   }
   async function loadTvdb(mediaType: "movie" | "tv", mediaId: number) {
-    const tvdb = await mediaService.getCharacterProfilePictures(
-      mediaType,
-      mediaId,
-      await media(mediaType, mediaId),
+    const tvdb = await mediaService.getCharacterProfilePictures(mediaType, mediaId, () =>
+      media(mediaType, mediaId),
     );
     if (tvdb.degraded) degraded = true;
     if (tvdb.tvdbId) tvdbIds[`${mediaType}:${mediaId}`] = tvdb.tvdbId;

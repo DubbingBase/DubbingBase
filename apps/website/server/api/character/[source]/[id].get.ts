@@ -42,7 +42,7 @@ export default defineEventHandler(async (event) => {
     const { characters } = await mediaService.getCharacterProfilePictures(
       mediaType,
       mediaId,
-      media,
+      async () => media,
     );
     const character = characters.find((candidate) => String(candidate.id) === id);
     if (!character) throw createError({ statusCode: 404, statusMessage: "Character not found" });

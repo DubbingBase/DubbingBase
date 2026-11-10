@@ -1,3 +1,4 @@
+import { createApp, defineEventHandler, toWebHandler } from "h3";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getCloudflareKv, useCache } from "../index";
 import { TMDBClient } from "../api/tmdb";
@@ -84,10 +85,11 @@ describe("character image persistent cache and failures", () => {
   it("resolves the Worker event binding and reuses a persisted value across service instances", async () => {
     expect(getCloudflareKv(event)).toBe(kv);
     expect(useCache(event)).toBeInstanceOf(SimpleCache);
-    await service().getCharacterProfilePictures("movie", 1, media);
-    await service().getCharacterProfilePictures("movie", 1, media);
+    await service().getCharacterProfilePictures("movie", 1, async () => media);
+    await service().getCharacterProfilePictures("movie", 1, async () => media);
     // Ten equivalent requests used to repeat both mapping and search ten times.
-    for (let i = 0; i < 8; i++) await service().getCharacterProfilePictures("movie", 1, media);
+    for (let i = 0; i < 8; i++)
+      await service().getCharacterProfilePictures("movie", 1, async () => media);
     expect(count("www.wikidata.org")).toBe(1);
     expect(count("api4.thetvdb.com", "/v4/search")).toBe(1);
     expect(requests.find((url) => url.pathname === "/v4/search")?.searchParams.get("type")).toBe(
@@ -99,22 +101,64 @@ describe("character image persistent cache and failures", () => {
     expect([...values.values()]).toContainEqual({ characters: [], tvdbId: null });
   });
 
+  it("serves ten warm TVDB image requests without metadata loads during a TMDB outage", async () => {
+    characters = [portrait];
+    await service().getCharacterProfilePictures("movie", 30, async () => ({
+      external_ids: { tvdb_id: 123 },
+    }));
+    const metadata = vi
+      .spyOn(MediaService.prototype, "getMediaWithVoiceActors")
+      .mockRejectedValue(new Error("TMDB unavailable"));
+    vi.stubGlobal("defineEventHandler", defineEventHandler);
+    vi.stubGlobal("getQuery", () => ({ item: "movie:30:Role" }));
+    const handler = (await import("../../api/character-images.get")).default;
+    const app = createApp();
+    app.use("/", handler);
+    for (let index = 0; index < 10; index++) {
+      const response = await toWebHandler(app)(new Request("http://localhost/"));
+      const body: unknown = await response.json();
+      expect(body).toMatchObject({
+        images: { "movie:30:Role": { source: "tvdb", src: portrait.image } },
+      });
+    }
+    expect(metadata).not.toHaveBeenCalled();
+  });
+
+  it("does not persist a failed metadata load and recovers on the next request", async () => {
+    characters = [portrait];
+    const loader = vi
+      .fn<() => Promise<unknown>>()
+      .mockRejectedValueOnce(new Error("TMDB unavailable"))
+      .mockResolvedValue({ external_ids: { tvdb_id: 123 } });
+    expect(await service().getCharacterProfilePictures("movie", 31, loader)).toMatchObject({
+      degraded: true,
+    });
+    expect(writes).toHaveLength(0);
+    expect(await service().getCharacterProfilePictures("movie", 31, loader)).toMatchObject({
+      tvdbId: 123,
+      characters: [expect.objectContaining(portrait)],
+    });
+    expect(loader).toHaveBeenCalledTimes(2);
+  });
+
   it("refreshes a verified negative after its 24-hour lifetime", async () => {
-    await service().getCharacterProfilePictures("movie", 10, media);
+    await service().getCharacterProfilePictures("movie", 10, async () => media);
     now = 86399;
-    await service().getCharacterProfilePictures("movie", 10, media);
+    await service().getCharacterProfilePictures("movie", 10, async () => media);
     expect(count("www.wikidata.org")).toBe(1);
     now = 86401;
-    await service().getCharacterProfilePictures("movie", 10, media);
+    await service().getCharacterProfilePictures("movie", 10, async () => media);
     expect(count("www.wikidata.org")).toBe(2);
   });
 
   it("separates media type and locale and coalesces simultaneous lookups", async () => {
     await Promise.all(
-      Array.from({ length: 4 }, () => service().getCharacterProfilePictures("movie", 2, media)),
+      Array.from({ length: 4 }, () =>
+        service().getCharacterProfilePictures("movie", 2, async () => media),
+      ),
     );
-    await service("fr-FR").getCharacterProfilePictures("movie", 2, media);
-    await service().getCharacterProfilePictures("tv", 2, media);
+    await service("fr-FR").getCharacterProfilePictures("movie", 2, async () => media);
+    await service().getCharacterProfilePictures("tv", 2, async () => media);
     expect(count("www.wikidata.org")).toBe(3);
     expect(count("api4.thetvdb.com", "/v4/search")).toBe(3);
     expect(writes.filter(({ key }) => key.includes("characters-extended"))).toHaveLength(3);
@@ -130,10 +174,10 @@ describe("character image persistent cache and failures", () => {
     async (hasPortrait) => {
       characters = hasPortrait ? [portrait] : [];
       const tmdb = { external_ids: { tvdb_id: 123 } };
-      const result = await service().getCharacterProfilePictures("movie", 3, tmdb);
+      const result = await service().getCharacterProfilePictures("movie", 3, async () => tmdb);
       expect(result.tvdbId).toBe(123);
       expect(result.characters).toHaveLength(hasPortrait ? 1 : 0);
-      await service().getCharacterProfilePictures("movie", 3, tmdb);
+      await service().getCharacterProfilePictures("movie", 3, async () => tmdb);
       expect(count("api4.thetvdb.com", "/v4/movies/123/extended")).toBe(1);
       expect(writes.find(({ key }) => key.includes("characters-extended"))?.ttl).toBe(
         hasPortrait ? CACHE_TTL.STABLE : 86400,
@@ -144,11 +188,13 @@ describe("character image persistent cache and failures", () => {
   it("resolves and caches documented string TVDB search IDs", async () => {
     searchData = [{ id: "movie-123", tvdb_id: "123", type: "movie", name: "Fixture" }];
     characters = [portrait];
-    expect(await service().getCharacterProfilePictures("movie", 11, media)).toMatchObject({
+    expect(
+      await service().getCharacterProfilePictures("movie", 11, async () => media),
+    ).toMatchObject({
       tvdbId: 123,
       characters: [expect.objectContaining(portrait)],
     });
-    await service().getCharacterProfilePictures("movie", 11, media);
+    await service().getCharacterProfilePictures("movie", 11, async () => media);
     expect(count("www.wikidata.org")).toBe(1);
     expect(count("api4.thetvdb.com", "/v4/search")).toBe(1);
     expect(writes.find(({ key }) => key.includes("characters-extended"))?.ttl).toBe(
@@ -159,7 +205,7 @@ describe("character image persistent cache and failures", () => {
   it("recognizes series search results with documented string IDs", async () => {
     searchData = [{ id: "123", tvdb_id: "123", type: "series", name: "Fixture" }];
     characters = [portrait];
-    expect(await service().getCharacterProfilePictures("tv", 12, media)).toMatchObject({
+    expect(await service().getCharacterProfilePictures("tv", 12, async () => media)).toMatchObject({
       tvdbId: 123,
       characters: [expect.objectContaining(portrait)],
     });
@@ -169,13 +215,13 @@ describe("character image persistent cache and failures", () => {
     wikidataStatus = 429;
     searchData = [{ id: "movie-123", tvdb_id: "123", type: "movie", name: "Fixture" }];
     characters = [portrait];
-    const result = await service().getCharacterProfilePictures("movie", 4, media);
+    const result = await service().getCharacterProfilePictures("movie", 4, async () => media);
     expect(result).toMatchObject({
       tvdbId: 123,
       degraded: true,
       characters: [expect.objectContaining(portrait)],
     });
-    await service().getCharacterProfilePictures("movie", 4, media);
+    await service().getCharacterProfilePictures("movie", 4, async () => media);
     expect(count("www.wikidata.org")).toBe(2);
     expect(writes.some(({ key }) => key.includes("characters-extended"))).toBe(false);
   });
@@ -192,7 +238,9 @@ describe("character image persistent cache and failures", () => {
           vi.fn().mockRejectedValue(new DOMException("Timed out", "TimeoutError")),
         );
       for (let i = 0; i < 2; i++) {
-        expect(await service().getCharacterProfilePictures("movie", 5, media)).toMatchObject({
+        expect(
+          await service().getCharacterProfilePictures("movie", 5, async () => media),
+        ).toMatchObject({
           characters: [],
           degraded: true,
         });

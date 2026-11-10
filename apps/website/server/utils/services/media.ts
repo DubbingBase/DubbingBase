@@ -937,11 +937,9 @@ export class MediaService {
   async getCharacterProfilePictures(
     contentType: "movie" | "tv",
     contentId: number,
-    tmdbMedia: unknown,
+    loadTmdbMedia: () => Promise<unknown>,
   ): Promise<{ characters: CharacterProfilePicture[]; tvdbId: number | null; degraded?: boolean }> {
-    const tmdbData = isRecord(tmdbMedia) ? tmdbMedia : {};
     const cache = useCache();
-    const tvdbClient = new TVDBClient(cache);
     const normalizedLanguage = this.acceptLanguage
       ? (this.acceptLanguage.split(",")[0] || "en").trim()
       : "default";
@@ -958,6 +956,9 @@ export class MediaService {
         MEDIA_TVDB_CHARACTERS_NAMESPACE,
         cacheKey,
         async (): Promise<TvdbCharactersResult> => {
+          const tmdbMedia = await loadTmdbMedia();
+          const tmdbData = isRecord(tmdbMedia) ? tmdbMedia : {};
+          const tvdbClient = new TVDBClient(cache);
           let tvdbId: number | null = null;
           let wikidataFailed = false;
           const externalIds = isRecord(tmdbData.external_ids) ? tmdbData.external_ids : {};

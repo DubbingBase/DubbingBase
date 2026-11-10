@@ -102,7 +102,7 @@ describe("GET /api/character/:source/:id", () => {
     expect(routeMocks.getCharacterProfilePictures).toHaveBeenCalledWith(
       "movie",
       456,
-      expect.objectContaining({ title: "Batman" }),
+      expect.any(Function),
     );
     expect(routeMocks.getDubbingProjects).toHaveBeenCalledWith(456, "movie");
     expect(body).toMatchObject({
