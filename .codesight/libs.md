@@ -73,7 +73,7 @@
   - type CharacterImageSource
   - type CharacterImage
   - type CharacterImageResolver
-  - _...1 more_
+  - _...2 more_
 - `apps/website/server/utils/contribution/task-submission-validation.ts`
   - function isTaskClaimId: (value) => value is string
   - function authorizeTaskContribution: (input) => void
@@ -210,10 +210,7 @@
   - function getValidatedExtractionSections: (options) => Promise<ValidatedExtractionSections>
   - interface ScanSectionMetadata
   - type ValidatedExtractionSections
-- `apps/website/server/utils/services/wikimedia-character-image.ts`
-  - function getWikimediaCharacterImage: (input) => Promise<WikimediaCharacterImage | null>
-  - type WikimediaCharacterImage
-  - const WIKIMEDIA_CHARACTER_IMAGE_NAMESPACE
+- `apps/website/server/utils/services/wikimedia-character-image.ts` — function createWikimediaCharacterImageResolver: () => (, type WikimediaCharacterImage
 - `apps/website/server/utils/sitemap-data.ts` — function listSitemapChunks: (event) => Promise<, function loadSitemapChunk: (event, name, chunk) => Promise<SitemapRecord[]>
 - `apps/website/server/utils/sitemap-response.ts` — function getSitemapOrigin: (event) => string, function sendSitemapXml: (event, xml) => string
 - `apps/website/server/utils/sitemap.ts`

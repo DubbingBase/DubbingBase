@@ -4,8 +4,8 @@
 > **Monorepo:** @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
 > 93 routes | 28 models | 147 components | 132 lib files | 65 env vars | 15 middleware | 52% test coverage
-> **Token savings:** this file is ~19,300 tokens. Without it, AI exploration would cost ~162,800 tokens. **Saves ~143,600 tokens per conversation.**
-> **Last scanned:** 2026-11-10 14:59 — re-run after significant changes
+> **Token savings:** this file is ~19,200 tokens. Without it, AI exploration would cost ~162,800 tokens. **Saves ~143,600 tokens per conversation.**
+> **Last scanned:** 2026-11-10 17:59 — re-run after significant changes
 
 ---
 
@@ -538,7 +538,7 @@
   - type CharacterImageSource
   - type CharacterImage
   - type CharacterImageResolver
-  - _...1 more_
+  - _...2 more_
 - `apps/website/server/utils/contribution/task-submission-validation.ts`
   - function isTaskClaimId: (value) => value is string
   - function authorizeTaskContribution: (input) => void
@@ -675,10 +675,7 @@
   - function getValidatedExtractionSections: (options) => Promise<ValidatedExtractionSections>
   - interface ScanSectionMetadata
   - type ValidatedExtractionSections
-- `apps/website/server/utils/services/wikimedia-character-image.ts`
-  - function getWikimediaCharacterImage: (input) => Promise<WikimediaCharacterImage | null>
-  - type WikimediaCharacterImage
-  - const WIKIMEDIA_CHARACTER_IMAGE_NAMESPACE
+- `apps/website/server/utils/services/wikimedia-character-image.ts` — function createWikimediaCharacterImageResolver: () => (, type WikimediaCharacterImage
 - `apps/website/server/utils/sitemap-data.ts` — function listSitemapChunks: (event) => Promise<, function loadSitemapChunk: (event, name, chunk) => Promise<SitemapRecord[]>
 - `apps/website/server/utils/sitemap-response.ts` — function getSitemapOrigin: (event) => string, function sendSitemapXml: (event, xml) => string
 - `apps/website/server/utils/sitemap.ts`
@@ -1052,8 +1049,8 @@
 - `apps/website/server/utils/media-request.ts` — imported by **10** files
 - `apps/website/server/utils/dubbing-language.ts` — imported by **10** files
 - `apps/website/server/utils/narrow.ts` — imported by **10** files
+- `apps/website/server/utils/services/media.ts` — imported by **10** files
 - `apps/website/server/utils/urls/tmdb.ts` — imported by **9** files
-- `apps/website/server/utils/services/media.ts` — imported by **9** files
 - `e2e/helpers/mock-api.ts` — imported by **8** files
 - `apps/website/server/utils/cache/constants.ts` — imported by **7** files
 - `apps/website/server/utils/background.ts` — imported by **6** files
@@ -1077,7 +1074,7 @@
 # Test Coverage
 
 > **52%** of routes and models are covered by tests
-> 164 test files found
+> 165 test files found
 
 ## Covered Routes
 
