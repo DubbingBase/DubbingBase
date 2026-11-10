@@ -1,5 +1,6 @@
 import { isRecord, readPath, readProperty } from "@app/shared-logic";
 import { createCacheNamespace } from "../cache";
+import { CHARACTER_IMAGE_POSITIVE_TTL } from "../character-images";
 import { buildCacheKey } from "../cache/constants";
 import { useCache } from "../index";
 import { withTimeout } from "../with-timeout";
@@ -177,7 +178,11 @@ async function getProductionCharacters(
     key,
     async () => {
       const characters = await loadProductionCharacters(input.wikidataId, input.language);
-      await cache.set(key, characters, characters.length ? "STABLE" : CHARACTER_IMAGE_NEGATIVE_TTL);
+      await cache.set(
+        key,
+        characters,
+        characters.length ? CHARACTER_IMAGE_POSITIVE_TTL : CHARACTER_IMAGE_NEGATIVE_TTL,
+      );
       return characters;
     },
     { cachePolicy: "read-only" },
@@ -216,7 +221,11 @@ export async function getWikimediaCharacterImage(
     key,
     async () => {
       const value = (await lookupWikimediaCharacterImage(input)) ?? { miss: true };
-      await cache.set(key, value, "miss" in value ? CHARACTER_IMAGE_NEGATIVE_TTL : "STABLE");
+      await cache.set(
+        key,
+        value,
+        "miss" in value ? CHARACTER_IMAGE_NEGATIVE_TTL : CHARACTER_IMAGE_POSITIVE_TTL,
+      );
       return value;
     },
     { cachePolicy: "read-only" },

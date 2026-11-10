@@ -2,7 +2,7 @@ import { createApp, defineEventHandler, toWebHandler } from "h3";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getCloudflareKv, useCache } from "../index";
 import { TMDBClient } from "../api/tmdb";
-import { CACHE_TTL, SimpleCache } from "../cache";
+import { SimpleCache } from "../cache";
 import { MediaService } from "./media";
 import { getWikimediaCharacterImage } from "./wikimedia-character-image";
 
@@ -170,7 +170,7 @@ describe("character image persistent cache and failures", () => {
   });
 
   it.each([false, true])(
-    "persists verified empty records for a day and portraits for STABLE (portrait=%s)",
+    "persists verified empty records for a day and portraits for 30 days (portrait=%s)",
     async (hasPortrait) => {
       characters = hasPortrait ? [portrait] : [];
       const tmdb = { external_ids: { tvdb_id: 123 } };
@@ -180,10 +180,24 @@ describe("character image persistent cache and failures", () => {
       await service().getCharacterProfilePictures("movie", 3, async () => tmdb);
       expect(count("api4.thetvdb.com", "/v4/movies/123/extended")).toBe(1);
       expect(writes.find(({ key }) => key.includes("characters-extended"))?.ttl).toBe(
-        hasPortrait ? CACHE_TTL.STABLE : 86400,
+        hasPortrait ? 2_592_000 : 86400,
       );
     },
   );
+
+  it("keeps successful TVDB portraits past seven days and refreshes after thirty", async () => {
+    characters = [portrait];
+    const loader = vi.fn(async () => ({ external_ids: { tvdb_id: 123 } }));
+    await service().getCharacterProfilePictures("movie", 32, loader);
+    now = 29 * 86400;
+    await service().getCharacterProfilePictures("movie", 32, loader);
+    expect(loader).toHaveBeenCalledTimes(1);
+    expect(count("api4.thetvdb.com", "/v4/movies/123/extended")).toBe(1);
+    now = 31 * 86400;
+    await service().getCharacterProfilePictures("movie", 32, loader);
+    expect(loader).toHaveBeenCalledTimes(2);
+    expect(count("api4.thetvdb.com", "/v4/movies/123/extended")).toBe(2);
+  });
 
   it("resolves and caches documented string TVDB search IDs", async () => {
     searchData = [{ id: "movie-123", tvdb_id: "123", type: "movie", name: "Fixture" }];
@@ -197,9 +211,7 @@ describe("character image persistent cache and failures", () => {
     await service().getCharacterProfilePictures("movie", 11, async () => media);
     expect(count("www.wikidata.org")).toBe(1);
     expect(count("api4.thetvdb.com", "/v4/search")).toBe(1);
-    expect(writes.find(({ key }) => key.includes("characters-extended"))?.ttl).toBe(
-      CACHE_TTL.STABLE,
-    );
+    expect(writes.find(({ key }) => key.includes("characters-extended"))?.ttl).toBe(2_592_000);
   });
 
   it("recognizes series search results with documented string IDs", async () => {
@@ -396,8 +408,13 @@ describe("character image persistent cache and failures", () => {
     expect(count("www.wikidata.org")).toBe(2);
     expect(count("commons.wikimedia.org")).toBe(2);
     expect(writes.filter(({ key }) => key.includes("production-character-candidates"))).toEqual([
-      expect.objectContaining({ ttl: CACHE_TTL.STABLE }),
+      expect.objectContaining({ ttl: 2_592_000 }),
     ]);
+    expect(
+      writes.filter(
+        ({ key }) => key.includes("production-character-image") && key.includes(":wikimedia:"),
+      ),
+    ).toContainEqual(expect.objectContaining({ ttl: 2_592_000 }));
   });
 
   it("expires the shared negative roster and separates Wikidata identities", async () => {

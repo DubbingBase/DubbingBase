@@ -7,6 +7,7 @@ import { mediaPageAggregateCredits, mediaPageMovieCredits } from "../media-page-
 import { useCache, useIgdbClient, useOpenLibraryClient } from "../index";
 import { buildIgdbImageUrl } from "../api/igdb";
 import { createCacheNamespace } from "../cache";
+import { CHARACTER_IMAGE_POSITIVE_TTL } from "../character-images";
 import { buildCacheKey, hashCacheValue } from "../cache/constants";
 import { isRecord, readPath, readProperty } from "@app/shared-logic";
 
@@ -1092,7 +1093,9 @@ export class MediaService {
             await cache.set(
               cacheKey,
               result,
-              characterProfilePictures.length ? "STABLE" : TVDB_CHARACTER_NEGATIVE_TTL,
+              characterProfilePictures.length
+                ? CHARACTER_IMAGE_POSITIVE_TTL
+                : TVDB_CHARACTER_NEGATIVE_TTL,
             );
             return result;
           }
