@@ -6,6 +6,7 @@ import {
   waitForVueHydration,
 } from "./helpers/mock-api";
 import { MOCK_EPISODE, MOCK_MOVIE, MOCK_SEASON, MOCK_SHOW } from "./fixtures/mock-data";
+import { MEDIA_CAST_PAGE_SIZE as CAST_PAGE_SIZE } from "../apps/website/src/utils/media-cast";
 
 declare global {
   interface HTMLElement {
@@ -233,7 +234,7 @@ test.describe("Media Detail Pages", () => {
     englishProject.id = 10897802;
     englishProject.content_id = 108978;
     englishProject.language = "en-US";
-    englishProject.works = Array.from({ length: 13 }, (_, index) => ({
+    englishProject.works = Array.from({ length: CAST_PAGE_SIZE + 1 }, (_, index) => ({
       id: 1396100 + index,
       actor_id: null,
       voice_actor_id: 500 + index,
@@ -290,7 +291,9 @@ test.describe("Media Detail Pages", () => {
     await navigateClientSide(page, "/show/108978");
     await expect(page.getByRole("heading", { name: "Default Dub Show" })).toBeVisible();
     await navigateClientSide(page, "/show/108978?castPage=2");
-    await expect(page.getByText("English default role 13", { exact: true }).first()).toBeVisible();
+    await expect(
+      page.getByText(`English default role ${CAST_PAGE_SIZE + 1}`, { exact: true }).first(),
+    ).toBeVisible();
 
     await page.locator('button[aria-label="Toggle language"]').click();
     await page.getByText("Français", { exact: true }).click();
@@ -304,8 +307,83 @@ test.describe("Media Detail Pages", () => {
     await expect(page).toHaveURL(/\/fr\/show\/108978\?castPage=2$/);
     await expect(page.getByRole("heading", { name: "Default Dub Show en français" })).toBeVisible();
     await expect(page.getByText("Jean-Louis Faure").first()).toBeVisible();
-    await expect(page.getByText("English default role 13", { exact: true })).toHaveCount(0);
-    await expect(page.locator('nav[aria-label="Pagination"]')).toHaveCount(0);
+    await expect(
+      page.getByText(`English default role ${CAST_PAGE_SIZE + 1}`, { exact: true }),
+    ).toHaveCount(0);
+    await expect(page.locator('nav[aria-label*="agination"]')).toHaveCount(0);
+  });
+
+  test("pages a large cast with matching top and bottom controls and returns to the cast", async ({
+    page,
+  }) => {
+    const show = structuredClone(MOCK_SHOW);
+    show.serie.id = 108978;
+    show.serie.name = "Large Cast Show";
+    show.serie.title = "Large Cast Show";
+    // Only the generated roles count toward the page size.
+    show.aggregateCredits.cast = [];
+    const project = structuredClone(show.dubbingProjects[0]);
+    project.id = 10897803;
+    project.content_id = 108978;
+    project.language = "en-US";
+    project.works = Array.from({ length: CAST_PAGE_SIZE + 1 }, (_, index) => ({
+      id: 1396300 + index,
+      actor_id: null,
+      voice_actor_id: 700 + index,
+      character_name: `Large cast role ${index + 1}`,
+      performance: "dialogues",
+      voice_actor: {
+        id: 700 + index,
+        firstname: "Large",
+        lastname: `Cast ${index + 1}`,
+        profile_picture: null,
+      },
+      voice_actors: {
+        id: 700 + index,
+        firstname: "Large",
+        lastname: `Cast ${index + 1}`,
+        profile_picture: null,
+      },
+    }));
+    show.dubbingProjects = [project];
+
+    await page.goto("/show/1396", { waitUntil: "domcontentloaded" });
+    await waitForVueHydration(page);
+    await page.route("**/api/show/**", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(show),
+      }),
+    );
+    await navigateClientSide(page, "/show/108978");
+    await expect(page.getByRole("heading", { name: "Large Cast Show" })).toBeVisible();
+
+    // A card repeats its role name (label and title text), so count distinct names.
+    const roles = page.getByText(/^Large cast role \d+$/);
+    const distinctRoles = async () => new Set(await roles.allTextContents()).size;
+    await expect.poll(distinctRoles).toBe(CAST_PAGE_SIZE);
+    const topNav = page.getByRole("navigation", { name: /Top pagination controls/ });
+    const bottomNav = page.getByRole("navigation", { name: /Bottom pagination controls/ });
+    await expect(topNav).toHaveCount(1);
+    await expect(bottomNav).toHaveCount(1);
+
+    await bottomNav.scrollIntoViewIfNeeded();
+    await bottomNav.getByRole("button", { name: "Next" }).click();
+    await expect(page).toHaveURL(/\/show\/108978\?castPage=2$/);
+    await expect.poll(distinctRoles).toBe(1);
+    await expect(page.getByText(`Large cast role ${CAST_PAGE_SIZE + 1}`).first()).toBeVisible();
+    await expect(topNav).toContainText("2");
+
+    // The shared target is the cast block; its top edge must be on screen, not left at the bottom.
+    await expect
+      .poll(async () => (await topNav.locator("xpath=..").boundingBox())?.y ?? Number.NaN)
+      .toBeLessThan(120);
+    expect((await topNav.locator("xpath=..").boundingBox())?.y).toBeGreaterThanOrEqual(0);
+
+    await topNav.getByRole("button", { name: "Previous" }).click();
+    await expect(page).toHaveURL(/\/show\/108978$/);
+    await expect.poll(distinctRoles).toBe(CAST_PAGE_SIZE);
   });
 
   test("shows the first cast page for an out-of-range castPage query", async ({ page }) => {

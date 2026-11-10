@@ -204,4 +204,18 @@ describe("prepared voice actor collections", () => {
     expect(first.pagination.totalItems).toBe(200);
     expect(first.pagination.totalPages).toBe(25);
   });
+
+  it("falls back to the first page and a valid size for unusable page inputs", () => {
+    const items = Array.from({ length: 30 }, (_, index) => index);
+    for (const page of [Number.NaN, 0, -2, 1.5]) {
+      const result = paginateVoiceActorWorkItems(items, page, 12);
+      expect(result.pagination.page).toBe(1);
+      expect(result.data).toEqual(items.slice(0, 12));
+    }
+    for (const pageSize of [0, -1, Number.NaN, 2.5]) {
+      const result = paginateVoiceActorWorkItems(items, 99, pageSize);
+      expect(result.pagination).toEqual({ page: 3, pageSize: 12, totalItems: 30, totalPages: 3 });
+      expect(result.data).toEqual(items.slice(24));
+    }
+  });
 });
