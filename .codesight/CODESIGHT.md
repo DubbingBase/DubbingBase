@@ -5,7 +5,7 @@
 
 > 93 routes | 28 models | 147 components | 132 lib files | 65 env vars | 15 middleware | 52% test coverage
 > **Token savings:** this file is ~19,300 tokens. Without it, AI exploration would cost ~162,800 tokens. **Saves ~143,600 tokens per conversation.**
-> **Last scanned:** 2026-11-10 13:41 — re-run after significant changes
+> **Last scanned:** 2026-11-10 14:59 — re-run after significant changes
 
 ---
 
@@ -326,7 +326,7 @@
 - **LanguageBanner** [client] — `apps/website/src/components/LanguageBanner.vue`
 - **MediaCatalogPage** [client] — props: type — `apps/website/src/components/MediaCatalogPage.vue`
 - **MediaSkeleton** [client] — `apps/website/src/components/MediaSkeleton.vue`
-- **PaginatedResponsiveGrid** [client] — props: items, pageSize, totalItems, page, gridClass, paginationLabel, itemKey — `apps/website/src/components/PaginatedResponsiveGrid.vue`
+- **PaginatedResponsiveGrid** [client] — props: items, pageSize, totalItems, page, gridClass, paginationLabel, showTopPagination, itemKey — `apps/website/src/components/PaginatedResponsiveGrid.vue`
 - **PaginationControls** [client] — props: page, totalItems, scrollTargetId, label, position, pageSize — `apps/website/src/components/PaginationControls.vue`
 - **PersonSkeleton** [client] — `apps/website/src/components/PersonSkeleton.vue`
 - **PwaLifecycleBanner** [client] — `apps/website/src/components/PwaLifecycleBanner.vue`
