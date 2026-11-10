@@ -1,0 +1,235 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { getCloudflareKv, useCache } from "../index";
+import { TMDBClient } from "../api/tmdb";
+import { CACHE_TTL, SimpleCache } from "../cache";
+import { MediaService } from "./media";
+import { getWikimediaCharacterImage } from "./wikimedia-character-image";
+
+const values = new Map<string, unknown>();
+let now = 0;
+const expirations = new Map<string, number>();
+const writes: Array<{ key: string; ttl: number }> = [];
+const kv = {
+  get: vi.fn(async (key: string) =>
+    (expirations.get(key) ?? Infinity) <= now ? null : (values.get(key) ?? null),
+  ),
+  put: vi.fn(async (key: string, value: string, options: { expirationTtl: number }) => {
+    const parsed: unknown = JSON.parse(value);
+    values.set(key, parsed);
+    expirations.set(key, now + options.expirationTtl);
+    writes.push({ key, ttl: options.expirationTtl });
+  }),
+};
+const event = { context: { cloudflare: { env: { CACHE_KV: kv } } } };
+const media = { title: "Fixture", external_ids: { wikidata_id: "Q42" } };
+const portrait = { id: 77, name: "Role", image: "https://artworks.thetvdb.com/role.jpg" };
+let wikidataStatus = 200;
+let tvdbStatus = 200;
+let searchData: unknown[] = [];
+let characters: unknown[] = [];
+let malformed = false;
+const requests: URL[] = [];
+
+beforeEach(() => {
+  values.clear();
+  expirations.clear();
+  now = 0;
+  writes.length = 0;
+  requests.length = 0;
+  vi.clearAllMocks();
+  wikidataStatus = 200;
+  tvdbStatus = 200;
+  searchData = [];
+  characters = [];
+  malformed = false;
+  vi.stubGlobal("useEvent", () => event);
+  vi.stubGlobal("useRuntimeConfig", () => ({ tvdbApiKey: "fixture", tmdbApiKey: "fixture" }));
+  vi.spyOn(console, "error").mockImplementation(() => undefined);
+  vi.spyOn(console, "log").mockImplementation(() => undefined);
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (input: RequestInfo | URL) => {
+      const url = new URL(String(input));
+      requests.push(url);
+      const wikidata = url.hostname === "www.wikidata.org";
+      const status = wikidata ? wikidataStatus : tvdbStatus;
+      const body = malformed
+        ? { error: { code: "maxlag" } }
+        : wikidata
+          ? url.searchParams.get("action") === "wbgetclaims"
+            ? { claims: {} }
+            : { entities: { Q42: { claims: {} } } }
+          : url.pathname.endsWith("/login")
+            ? { data: { token: "fixture-token" } }
+            : url.pathname.endsWith("/search")
+              ? { data: searchData }
+              : { data: { characters } };
+      return new Response(JSON.stringify(body), { status });
+    }),
+  );
+});
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+});
+
+function service(language = "en-US") {
+  return new MediaService(new TMDBClient(), language);
+}
+function count(host: string, path?: string): number {
+  return requests.filter((url) => url.hostname === host && (!path || url.pathname === path)).length;
+}
+
+describe("character image persistent cache and failures", () => {
+  it("resolves the Worker event binding and reuses a persisted value across service instances", async () => {
+    expect(getCloudflareKv(event)).toBe(kv);
+    expect(useCache(event)).toBeInstanceOf(SimpleCache);
+    await service().getCharacterProfilePictures("movie", 1, media);
+    await service().getCharacterProfilePictures("movie", 1, media);
+    // Ten equivalent requests used to repeat both mapping and search ten times.
+    for (let i = 0; i < 8; i++) await service().getCharacterProfilePictures("movie", 1, media);
+    expect(count("www.wikidata.org")).toBe(1);
+    expect(count("api4.thetvdb.com", "/v4/search")).toBe(1);
+    expect(requests.find((url) => url.pathname === "/v4/search")?.searchParams.get("type")).toBe(
+      "movie",
+    );
+    expect(writes.filter(({ key }) => key.includes("characters-extended"))).toEqual([
+      expect.objectContaining({ ttl: 86400 }),
+    ]);
+    expect([...values.values()]).toContainEqual({ characters: [], tvdbId: null });
+  });
+
+  it("refreshes a verified negative after its 24-hour lifetime", async () => {
+    await service().getCharacterProfilePictures("movie", 10, media);
+    now = 86399;
+    await service().getCharacterProfilePictures("movie", 10, media);
+    expect(count("www.wikidata.org")).toBe(1);
+    now = 86401;
+    await service().getCharacterProfilePictures("movie", 10, media);
+    expect(count("www.wikidata.org")).toBe(2);
+  });
+
+  it("separates media type and locale and coalesces simultaneous lookups", async () => {
+    await Promise.all(
+      Array.from({ length: 4 }, () => service().getCharacterProfilePictures("movie", 2, media)),
+    );
+    await service("fr-FR").getCharacterProfilePictures("movie", 2, media);
+    await service().getCharacterProfilePictures("tv", 2, media);
+    expect(count("www.wikidata.org")).toBe(3);
+    expect(count("api4.thetvdb.com", "/v4/search")).toBe(3);
+    expect(writes.filter(({ key }) => key.includes("characters-extended"))).toHaveLength(3);
+    expect(
+      requests
+        .filter((url) => url.pathname === "/v4/search")
+        .map((url) => url.searchParams.get("type")),
+    ).toEqual(["movie", "movie", "series"]);
+  });
+
+  it.each([false, true])(
+    "persists verified empty records for a day and portraits for STABLE (portrait=%s)",
+    async (hasPortrait) => {
+      characters = hasPortrait ? [portrait] : [];
+      const tmdb = { external_ids: { tvdb_id: 123 } };
+      const result = await service().getCharacterProfilePictures("movie", 3, tmdb);
+      expect(result.tvdbId).toBe(123);
+      expect(result.characters).toHaveLength(hasPortrait ? 1 : 0);
+      await service().getCharacterProfilePictures("movie", 3, tmdb);
+      expect(count("api4.thetvdb.com", "/v4/movies/123/extended")).toBe(1);
+      expect(writes.find(({ key }) => key.includes("characters-extended"))?.ttl).toBe(
+        hasPortrait ? CACHE_TTL.STABLE : 86400,
+      );
+    },
+  );
+
+  it("resolves and caches documented string TVDB search IDs", async () => {
+    searchData = [{ id: "movie-123", tvdb_id: "123", type: "movie", name: "Fixture" }];
+    characters = [portrait];
+    expect(await service().getCharacterProfilePictures("movie", 11, media)).toMatchObject({
+      tvdbId: 123,
+      characters: [expect.objectContaining(portrait)],
+    });
+    await service().getCharacterProfilePictures("movie", 11, media);
+    expect(count("www.wikidata.org")).toBe(1);
+    expect(count("api4.thetvdb.com", "/v4/search")).toBe(1);
+    expect(writes.find(({ key }) => key.includes("characters-extended"))?.ttl).toBe(
+      CACHE_TTL.STABLE,
+    );
+  });
+
+  it("recognizes series search results with documented string IDs", async () => {
+    searchData = [{ id: "123", tvdb_id: "123", type: "series", name: "Fixture" }];
+    characters = [portrait];
+    expect(await service().getCharacterProfilePictures("tv", 12, media)).toMatchObject({
+      tvdbId: 123,
+      characters: [expect.objectContaining(portrait)],
+    });
+  });
+
+  it("returns TVDB fallback after Wikidata 429 without persisting a degraded mapping", async () => {
+    wikidataStatus = 429;
+    searchData = [{ id: "movie-123", tvdb_id: "123", type: "movie", name: "Fixture" }];
+    characters = [portrait];
+    const result = await service().getCharacterProfilePictures("movie", 4, media);
+    expect(result).toMatchObject({
+      tvdbId: 123,
+      degraded: true,
+      characters: [expect.objectContaining(portrait)],
+    });
+    await service().getCharacterProfilePictures("movie", 4, media);
+    expect(count("www.wikidata.org")).toBe(2);
+    expect(writes.some(({ key }) => key.includes("characters-extended"))).toBe(false);
+  });
+
+  it.each(["wikidata", "tvdb", "malformed", "timeout"])(
+    "does not persist %s failures as negatives",
+    async (failure) => {
+      if (failure === "wikidata") wikidataStatus = 429;
+      if (failure === "tvdb") tvdbStatus = 503;
+      if (failure === "malformed") malformed = true;
+      if (failure === "timeout")
+        vi.stubGlobal(
+          "fetch",
+          vi.fn().mockRejectedValue(new DOMException("Timed out", "TimeoutError")),
+        );
+      for (let i = 0; i < 2; i++) {
+        expect(await service().getCharacterProfilePictures("movie", 5, media)).toMatchObject({
+          characters: [],
+          degraded: true,
+        });
+      }
+      expect(writes.some(({ key }) => key.includes("characters-extended"))).toBe(false);
+      if (failure !== "timeout") expect(count("www.wikidata.org")).toBe(2);
+    },
+  );
+
+  it("reuses a verified Wikimedia miss and separates production/locale", async () => {
+    const input = {
+      contentType: "movie",
+      contentId: 6,
+      wikidataId: "Q42",
+      characterName: "Role",
+      language: "en-US",
+    } satisfies Parameters<typeof getWikimediaCharacterImage>[0];
+    for (let i = 0; i < 10; i++) expect(await getWikimediaCharacterImage(input)).toBeNull();
+    expect(count("www.wikidata.org")).toBe(1);
+    expect(writes[0]?.ttl).toBe(86400);
+    await getWikimediaCharacterImage({ ...input, contentType: "tv" });
+    await getWikimediaCharacterImage({ ...input, language: "fr-FR" });
+    expect(count("www.wikidata.org")).toBe(3);
+  });
+
+  it.each([429, 503])("keeps Wikimedia %s failures retryable and uncached", async (status) => {
+    wikidataStatus = status;
+    const input = {
+      contentType: "movie",
+      contentId: 7,
+      wikidataId: "Q42",
+      characterName: "Role",
+      language: "en-US",
+    } satisfies Parameters<typeof getWikimediaCharacterImage>[0];
+    await expect(getWikimediaCharacterImage(input)).rejects.toThrow();
+    await expect(getWikimediaCharacterImage(input)).rejects.toThrow();
+    expect(count("www.wikidata.org")).toBe(2);
+    expect(writes).toHaveLength(0);
+  });
+});

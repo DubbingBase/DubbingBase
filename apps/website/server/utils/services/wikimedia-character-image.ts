@@ -8,6 +8,7 @@ const USER_AGENT = "DubbingBase/1.0 (https://dubbingbase.com; contact@dubbingbas
 const WIKIDATA_API = "https://www.wikidata.org/w/api.php";
 const COMMONS_API = "https://commons.wikimedia.org/w/api.php";
 const REQUEST_TIMEOUT_MS = 2500;
+const CHARACTER_IMAGE_NEGATIVE_TTL = 24 * 60 * 60;
 // Wikidata properties: characters (of a work), present in work, image.
 const CHARACTERS = "P674";
 const PRESENT_IN_WORK = "P1441";
@@ -54,6 +55,7 @@ async function getJson(url: string): Promise<unknown> {
   );
   if (!response.ok) throw new Error(`Wikimedia request failed with ${response.status}`);
   const body: unknown = await response.json();
+  if (readProperty(body, "error")) throw new Error("Wikimedia API error");
   return body;
 }
 
@@ -89,7 +91,8 @@ async function loadLicensedCommonsImage(fileName: string): Promise<WikimediaChar
   });
   const data = await getJson(`${COMMONS_API}?${params}`);
   const pages = readPath(data, "query", "pages");
-  const page = isRecord(pages) ? Object.values(pages)[0] : undefined;
+  if (!isRecord(pages)) throw new Error("Invalid Commons response");
+  const page = Object.values(pages)[0];
   const info = readProperty(readProperty(page, "imageinfo"), "0");
   if (!isRecord(info)) return null;
 
@@ -119,6 +122,7 @@ async function lookupWikimediaCharacterImage(
   language: string,
 ): Promise<WikimediaCharacterImage | null> {
   const film = readPath(await wikidataEntities([wikidataId], "claims"), "entities", wikidataId);
+  if (!isRecord(film)) throw new Error("Invalid Wikidata work response");
   const characterIds = [...new Set(claimEntityIds(film, CHARACTERS))].slice(0, 40);
   if (characterIds.length === 0) return null;
 
@@ -127,7 +131,9 @@ async function lookupWikimediaCharacterImage(
     await wikidataEntities(characterIds, "claims|labels", languages),
     "entities",
   );
-  if (!isRecord(entities)) return null;
+  if (!isRecord(entities) || characterIds.some((id) => !isRecord(entities[id]))) {
+    throw new Error("Invalid Wikidata character response");
+  }
 
   const wanted = normalizedName(characterName);
   const matches = characterIds.flatMap((id) => {
@@ -157,28 +163,29 @@ export async function getWikimediaCharacterImage(input: {
   language: string;
 }): Promise<WikimediaCharacterImage | null> {
   if (!/^Q\d+$/.test(input.wikidataId) || !input.characterName.trim()) return null;
-  try {
-    // Verified misses are cached too so films without an image are not re-queried;
-    // provider failures throw and stay uncached.
-    const cached = await useCache().getOrFetch(
-      WIKIMEDIA_CHARACTER_IMAGE_NAMESPACE,
-      buildCacheKey({
-        provider: "wikimedia",
-        resource: "production-character-image",
-        id: input.contentId,
-        language: input.language,
-        params: { contentType: input.contentType, character: normalizedName(input.characterName) },
-      }),
-      async () =>
-        (await lookupWikimediaCharacterImage(
-          input.wikidataId,
-          input.characterName,
-          input.language,
-        )) ?? { miss: true },
-      { cachePolicy: "persistent", ttl: "STABLE" },
-    );
-    return "miss" in cached ? null : cached;
-  } catch {
-    return null;
-  }
+  // Verified misses are cached too so films without an image are not re-queried;
+  // provider failures throw and stay uncached.
+  const cache = useCache();
+  const key = buildCacheKey({
+    provider: "wikimedia",
+    resource: "production-character-image",
+    id: input.contentId,
+    language: input.language,
+    params: { contentType: input.contentType, character: normalizedName(input.characterName) },
+  });
+  const cached = await cache.getOrFetch(
+    WIKIMEDIA_CHARACTER_IMAGE_NAMESPACE,
+    key,
+    async () => {
+      const value = (await lookupWikimediaCharacterImage(
+        input.wikidataId,
+        input.characterName,
+        input.language,
+      )) ?? { miss: true };
+      await cache.set(key, value, "miss" in value ? CHARACTER_IMAGE_NEGATIVE_TTL : "STABLE");
+      return value;
+    },
+    { cachePolicy: "read-only" },
+  );
+  return "miss" in cached ? null : cached;
 }

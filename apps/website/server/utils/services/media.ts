@@ -12,17 +12,6 @@ import { isRecord, readPath, readProperty } from "@app/shared-logic";
 
 const WIKIPEDIA_USER_AGENT = "DubbingBase/1.0 (https://dubbingbase.com; contact@dubbingbase.com)";
 
-interface WikidataClaimsResponse {
-  claims?: Record<
-    string,
-    Array<{
-      mainsnak?: {
-        datavalue?: { value?: string | number };
-      };
-    }>
-  >;
-}
-
 interface TmdbCredit {
   id: number;
   backdrop_path?: string | null;
@@ -49,7 +38,7 @@ interface TvdbSearchResult {
   id: string;
   type?: string;
   name?: string;
-  tvdb_id?: number;
+  tvdb_id?: string | number;
   translations?: { eng?: string };
 }
 
@@ -112,7 +101,9 @@ function isTvdbSearchResult(value: unknown): value is TvdbSearchResult {
     typeof value.id === "string" &&
     (value.type === undefined || typeof value.type === "string") &&
     (value.name === undefined || typeof value.name === "string") &&
-    (value.tvdb_id === undefined || typeof value.tvdb_id === "number") &&
+    (value.tvdb_id === undefined ||
+      typeof value.tvdb_id === "number" ||
+      typeof value.tvdb_id === "string") &&
     (value.translations === undefined ||
       (isRecord(value.translations) &&
         (value.translations.eng === undefined || typeof value.translations.eng === "string")))
@@ -312,9 +303,13 @@ function indexTmdbCastByActorId(media: unknown): Map<number, TmdbCastMember> {
 }
 
 export const WIKIPEDIA_ACTOR_URL_NAMESPACE = createCacheNamespace<string | null>();
-export const MEDIA_TVDB_CHARACTERS_NAMESPACE = createCacheNamespace<Awaited<
-  ReturnType<MediaService["getCharacterProfilePictures"]>
-> | null>();
+type TvdbCharactersResult = {
+  characters: CharacterProfilePicture[];
+  tvdbId: number | null;
+  degraded?: boolean;
+};
+const TVDB_CHARACTER_NEGATIVE_TTL = 24 * 60 * 60;
+export const MEDIA_TVDB_CHARACTERS_NAMESPACE = createCacheNamespace<TvdbCharactersResult>();
 
 async function fetchPotentialWikipediaUrl(
   firstname: string,
@@ -943,7 +938,7 @@ export class MediaService {
     contentType: "movie" | "tv",
     contentId: number,
     tmdbMedia: unknown,
-  ): Promise<{ characters: CharacterProfilePicture[]; tvdbId: number | null }> {
+  ): Promise<{ characters: CharacterProfilePicture[]; tvdbId: number | null; degraded?: boolean }> {
     const tmdbData = isRecord(tmdbMedia) ? tmdbMedia : {};
     const cache = useCache();
     const tvdbClient = new TVDBClient(cache);
@@ -962,8 +957,9 @@ export class MediaService {
       const result = await cache.getOrFetch(
         MEDIA_TVDB_CHARACTERS_NAMESPACE,
         cacheKey,
-        async () => {
+        async (): Promise<TvdbCharactersResult> => {
           let tvdbId: number | null = null;
+          let wikidataFailed = false;
           const externalIds = isRecord(tmdbData.external_ids) ? tmdbData.external_ids : {};
           if (typeof externalIds.tvdb_id === "number") {
             tvdbId = externalIds.tvdb_id;
@@ -975,18 +971,29 @@ export class MediaService {
               const url = `https://www.wikidata.org/w/api.php?action=wbgetclaims&entity=${wikidataId}&format=json`;
               const response = await fetch(url, {
                 headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
+                signal: AbortSignal.timeout(2500),
               });
-              const data: WikidataClaimsResponse | null = response.ok
-                ? await response.json()
-                : null;
-
+              if (!response.ok) throw new Error(`Wikidata request failed with ${response.status}`);
+              const data: unknown = await response.json();
+              if (!isRecord(readProperty(data, "claims"))) {
+                throw new Error("Invalid Wikidata claims response");
+              }
               const property = contentType === "movie" ? "P12196" : "P4835";
-              const claim = data?.claims?.[property]?.[0];
-              const claimValue = claim?.mainsnak?.datavalue?.value;
-              if (claimValue !== undefined) {
-                tvdbId = parseInt(String(claimValue), 10);
+              const claimValue = readPath(
+                data,
+                "claims",
+                property,
+                "0",
+                "mainsnak",
+                "datavalue",
+                "value",
+              );
+              if (typeof claimValue === "string" || typeof claimValue === "number") {
+                const parsedId = Number(claimValue);
+                if (Number.isSafeInteger(parsedId) && parsedId > 0) tvdbId = parsedId;
               }
             } catch (e) {
+              wikidataFailed = true;
               console.error(`Failed to fetch Wikidata for ${wikidataId}`, e);
             }
           }
@@ -999,35 +1006,38 @@ export class MediaService {
               tmdbData.original_name,
             ].find((value): value is string => typeof value === "string");
 
-            if (!searchQuery) return null;
-            const searchResponse: unknown = await tvdbClient.searchSeries(
-              searchQuery,
+            if (!searchQuery) throw new Error("Missing title for TVDB lookup");
+            const searchResponse: unknown = await tvdbClient.get(
+              "/search",
+              { query: searchQuery, type: contentType === "movie" ? "movie" : "series" },
               this.acceptLanguage,
             );
 
-            if (isRecord(searchResponse) && Array.isArray(searchResponse.data)) {
-              const searchResults = searchResponse.data.filter(isTvdbSearchResult);
-              const typeMatchedResults = searchResults.filter(
+            if (!isRecord(searchResponse) || !Array.isArray(searchResponse.data)) {
+              throw new Error("Invalid TVDB search response");
+            }
+            const searchResults = searchResponse.data.filter(isTvdbSearchResult);
+            const typeMatchedResults = searchResults.filter(
+              (item) =>
+                item.type === contentType ||
+                (contentType === "tv" && item.type === "series") ||
+                (contentType === "movie" && item.id.startsWith("movie-")) ||
+                (contentType === "tv" && item.id.startsWith("series-")),
+            );
+
+            const bestMatch =
+              typeMatchedResults.find(
                 (item) =>
-                  item.type === contentType ||
-                  (contentType === "movie" && item.id.startsWith("movie-")) ||
-                  (contentType === "tv" && item.id.startsWith("series-")),
-              );
+                  item.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                  item.translations?.eng?.toLowerCase().includes(searchQuery.toLowerCase()),
+              ) || typeMatchedResults[0];
 
-              const bestMatch =
-                typeMatchedResults.find(
-                  (item) =>
-                    item.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    item.translations?.eng?.toLowerCase().includes(searchQuery.toLowerCase()),
-                ) || typeMatchedResults[0];
-
-              const id =
-                contentType === "movie" ? (bestMatch?.tvdb_id ?? bestMatch?.id) : bestMatch?.id;
-              if (typeof id === "number") tvdbId = id;
-              else if (typeof id === "string") {
-                const parsedId = Number(id.replace(/^(movie|series)-/, ""));
-                if (Number.isInteger(parsedId)) tvdbId = parsedId;
-              }
+            const id =
+              contentType === "movie" ? (bestMatch?.tvdb_id ?? bestMatch?.id) : bestMatch?.id;
+            if (typeof id === "number") tvdbId = id;
+            else if (typeof id === "string") {
+              const parsedId = Number(id.replace(/^(movie|series)-/, ""));
+              if (Number.isSafeInteger(parsedId) && parsedId > 0) tvdbId = parsedId;
             }
           }
 
@@ -1040,6 +1050,12 @@ export class MediaService {
                 this.acceptLanguage,
               );
               const rawCharacters = readPath(res, "data", "characters");
+              if (
+                !isRecord(readProperty(res, "data")) ||
+                (rawCharacters != null && !Array.isArray(rawCharacters))
+              ) {
+                throw new Error("Invalid TVDB character response");
+              }
               characters = Array.isArray(rawCharacters) ? rawCharacters : [];
             } else {
               const res = await tvdbClient.getSeriesById(
@@ -1048,6 +1064,12 @@ export class MediaService {
                 this.acceptLanguage,
               );
               const rawCharacters = readPath(res, "data", "characters");
+              if (
+                !isRecord(readProperty(res, "data")) ||
+                (rawCharacters != null && !Array.isArray(rawCharacters))
+              ) {
+                throw new Error("Invalid TVDB character response");
+              }
               characters = Array.isArray(rawCharacters) ? rawCharacters : [];
             }
 
@@ -1062,14 +1084,29 @@ export class MediaService {
                 seriesId: contentType === "tv" ? contentId : undefined,
               }));
 
-            return { characters: characterProfilePictures, tvdbId };
+            const result: TvdbCharactersResult = { characters: characterProfilePictures, tvdbId };
+            // A fallback after a failed mapping is useful to the caller, but is not
+            // a verified resolution and must not be persisted or edge-cached.
+            if (wikidataFailed) return { ...result, degraded: true };
+            await cache.set(
+              cacheKey,
+              result,
+              characterProfilePictures.length ? "STABLE" : TVDB_CHARACTER_NEGATIVE_TTL,
+            );
+            return result;
           }
 
-          return null;
+          if (wikidataFailed)
+            throw new Error("Wikidata lookup failed before TVDB could be resolved");
+          const value: TvdbCharactersResult = { characters: [], tvdbId: null };
+          await cache.set(cacheKey, value, TVDB_CHARACTER_NEGATIVE_TTL);
+          return value;
         },
-        { cachePolicy: "persistent", ttl: "STABLE" },
+        // Coalesce and read here; persist only verified outcomes above, with a
+        // shorter lifetime for no-match/empty records than successful portraits.
+        { cachePolicy: "read-only" },
       );
-      if (result) return result;
+      return result;
     } catch (e) {
       console.error(
         `Error fetching character profile pictures for ${contentType} ${contentId}:`,
@@ -1077,7 +1114,7 @@ export class MediaService {
       );
     }
 
-    return { characters: [], tvdbId: null };
+    return { characters: [], tvdbId: null, degraded: true };
   }
 
   async getMediaWithVoiceActors(

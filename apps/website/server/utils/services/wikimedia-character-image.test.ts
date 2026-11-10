@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../index", () => ({
   useCache: () => ({
+    set: async () => true,
     getOrFetch: (_n: unknown, _k: string, fetcher: () => Promise<unknown>) => fetcher(),
   }),
 }));
@@ -97,12 +98,12 @@ describe("getWikimediaCharacterImage", () => {
     await expect(getWikimediaCharacterImage(input)).resolves.toBeNull();
   });
 
-  it("returns null on provider outage", async () => {
+  it("throws on provider outage so the route can mark degradation", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => ({ ok: false, status: 503 })),
     );
-    await expect(getWikimediaCharacterImage(input)).resolves.toBeNull();
+    await expect(getWikimediaCharacterImage(input)).rejects.toThrow();
   });
 });
 

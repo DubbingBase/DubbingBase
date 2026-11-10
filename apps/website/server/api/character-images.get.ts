@@ -99,6 +99,7 @@ export default defineEventHandler(async (event) => {
       mediaId,
       await media(mediaType, mediaId),
     );
+    if (tvdb.degraded) degraded = true;
     if (tvdb.tvdbId) tvdbIds[`${mediaType}:${mediaId}`] = tvdb.tvdbId;
     return tvdb.characters;
   }

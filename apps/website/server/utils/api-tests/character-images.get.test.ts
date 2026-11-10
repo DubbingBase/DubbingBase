@@ -174,6 +174,38 @@ describe("GET /api/character-images", () => {
     expect(mocks.cache).toHaveBeenLastCalledWith("no-store");
   });
 
+  it("keeps a TVDB fallback after mapping failure visible but no-store", async () => {
+    mocks.getCharacterProfilePictures.mockResolvedValue({
+      characters: [{ id: 7, name: "Ron Weasley", image: "https://artworks.thetvdb.com/ron.jpg" }],
+      tvdbId: 123,
+      degraded: true,
+    });
+    expect(await call()).toMatchObject({ images: { [RON_1]: { source: "tvdb" } } });
+    expect(mocks.cache).toHaveBeenLastCalledWith("no-store");
+    expect(mocks.getWikimediaCharacterImage).not.toHaveBeenCalled();
+  });
+
+  it("keeps Wikimedia outages no-store while preserving placeholders", async () => {
+    mocks.getCharacterProfilePictures.mockResolvedValue({ characters: [], tvdbId: null });
+    mocks.getWikimediaCharacterImage.mockRejectedValue(new Error("Wikidata 429"));
+    expect(await call()).toMatchObject({ images: { [RON_1]: null, [RON_2]: null } });
+    expect(mocks.cache).toHaveBeenLastCalledWith("no-store");
+  });
+
+  it("limits simultaneous production lookups to four", async () => {
+    mocks.query = { item: Array.from({ length: 12 }, (_, index) => `movie:${index + 1}:Role`) };
+    let active = 0;
+    let peak = 0;
+    mocks.getCharacterProfilePictures.mockImplementation(async () => {
+      peak = Math.max(peak, ++active);
+      await new Promise((resolve) => setTimeout(resolve, 2));
+      active--;
+      return { characters: [], tvdbId: null };
+    });
+    await call();
+    expect(peak).toBe(4);
+  });
+
   it("bounds, validates and deduplicates requested items", async () => {
     mocks.query = {
       item: [
