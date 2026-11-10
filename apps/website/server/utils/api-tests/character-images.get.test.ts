@@ -26,7 +26,7 @@ vi.mock("../services/media", () => ({
   },
 }));
 vi.mock("../services/wikimedia-character-image", () => ({
-  getWikimediaCharacterImage: mocks.getWikimediaCharacterImage,
+  createWikimediaCharacterImageResolver: () => mocks.getWikimediaCharacterImage,
 }));
 
 let handler: typeof import("../../api/character-images.get").default;
@@ -51,12 +51,21 @@ beforeEach(() => {
   mocks.getMediaWithVoiceActors.mockImplementation(async (_type: string, id: number) => ({
     media: { id, external_ids: { wikidata_id: `Q${id}` } },
   }));
-  mocks.getCharacterProfilePictures.mockImplementation(async (_t: string, id: number) => ({
-    characters: [
-      { id: id + 1000, name: "Ron Weasley", image: `https://artworks.thetvdb.com/ron-${id}.jpg` },
-    ],
-    tvdbId: id + 5000,
-  }));
+  mocks.getCharacterProfilePictures.mockImplementation(
+    async (_t: string, id: number, loadMedia: () => Promise<unknown>) => {
+      await loadMedia();
+      return {
+        characters: [
+          {
+            id: id + 1000,
+            name: "Ron Weasley",
+            image: `https://artworks.thetvdb.com/ron-${id}.jpg`,
+          },
+        ],
+        tvdbId: id + 5000,
+      };
+    },
+  );
   mocks.getWikimediaCharacterImage.mockResolvedValue(null);
 });
 
@@ -172,6 +181,38 @@ describe("GET /api/character-images", () => {
     mocks.getCharacterProfilePictures.mockRejectedValue(new Error("TVDB down"));
     await call();
     expect(mocks.cache).toHaveBeenLastCalledWith("no-store");
+  });
+
+  it("keeps a TVDB fallback after mapping failure visible but no-store", async () => {
+    mocks.getCharacterProfilePictures.mockResolvedValue({
+      characters: [{ id: 7, name: "Ron Weasley", image: "https://artworks.thetvdb.com/ron.jpg" }],
+      tvdbId: 123,
+      degraded: true,
+    });
+    expect(await call()).toMatchObject({ images: { [RON_1]: { source: "tvdb" } } });
+    expect(mocks.cache).toHaveBeenLastCalledWith("no-store");
+    expect(mocks.getWikimediaCharacterImage).not.toHaveBeenCalled();
+  });
+
+  it("keeps Wikimedia outages no-store while preserving placeholders", async () => {
+    mocks.getCharacterProfilePictures.mockResolvedValue({ characters: [], tvdbId: null });
+    mocks.getWikimediaCharacterImage.mockRejectedValue(new Error("Wikidata 429"));
+    expect(await call()).toMatchObject({ images: { [RON_1]: null, [RON_2]: null } });
+    expect(mocks.cache).toHaveBeenLastCalledWith("no-store");
+  });
+
+  it("limits simultaneous production lookups to four", async () => {
+    mocks.query = { item: Array.from({ length: 12 }, (_, index) => `movie:${index + 1}:Role`) };
+    let active = 0;
+    let peak = 0;
+    mocks.getCharacterProfilePictures.mockImplementation(async () => {
+      peak = Math.max(peak, ++active);
+      await new Promise((resolve) => setTimeout(resolve, 2));
+      active--;
+      return { characters: [], tvdbId: null };
+    });
+    await call();
+    expect(peak).toBe(4);
   });
 
   it("bounds, validates and deduplicates requested items", async () => {

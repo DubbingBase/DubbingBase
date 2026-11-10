@@ -1,5 +1,8 @@
 import { createCharacterMatcher } from "@app/shared-logic";
 
+// Character-image positives outlive the general STABLE TTL (Plane 56365-145).
+export const CHARACTER_IMAGE_POSITIVE_TTL = 30 * 24 * 60 * 60;
+
 export const CHARACTER_IMAGE_SOURCES = ["tvdb", "wikimedia", "dubbingbase"] as const;
 export type CharacterImageSource = (typeof CHARACTER_IMAGE_SOURCES)[number];
 

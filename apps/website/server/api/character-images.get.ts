@@ -1,6 +1,6 @@
 import { useTmdbClient } from "../utils";
 import { MediaService } from "../utils/services/media";
-import { getWikimediaCharacterImage } from "../utils/services/wikimedia-character-image";
+import { createWikimediaCharacterImageResolver } from "../utils/services/wikimedia-character-image";
 import {
   isCharacterImageSource,
   resolveCharacterImage,
@@ -65,12 +65,13 @@ export default defineEventHandler(async (event) => {
   }
 
   const mediaService = new MediaService(useTmdbClient(), language);
+  const getWikimediaCharacterImage = createWikimediaCharacterImageResolver();
   const images: Record<string, CharacterImage | null> = {};
   const characterIds: Record<string, string> = {};
   const tvdbIds: Record<string, number> = {};
   let degraded = false;
 
-  // One TMDB lookup, and at most one TVDB lookup, per production; the TVDB one is
+  // At most one TMDB lookup, and one TVDB lookup, per production; the TVDB one is
   // skipped entirely when every card of that production already skipped TVDB.
   const medias = new Map<string, Promise<unknown>>();
   const tvdbLookups = new Map<string, ReturnType<typeof loadTvdb>>();
@@ -94,11 +95,10 @@ export default defineEventHandler(async (event) => {
     return loaded;
   }
   async function loadTvdb(mediaType: "movie" | "tv", mediaId: number) {
-    const tvdb = await mediaService.getCharacterProfilePictures(
-      mediaType,
-      mediaId,
-      await media(mediaType, mediaId),
+    const tvdb = await mediaService.getCharacterProfilePictures(mediaType, mediaId, () =>
+      media(mediaType, mediaId),
     );
+    if (tvdb.degraded) degraded = true;
     if (tvdb.tvdbId) tvdbIds[`${mediaType}:${mediaId}`] = tvdb.tvdbId;
     return tvdb.characters;
   }

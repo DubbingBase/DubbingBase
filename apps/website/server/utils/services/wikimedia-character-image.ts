@@ -1,7 +1,4 @@
 import { isRecord, readPath, readProperty } from "@app/shared-logic";
-import { createCacheNamespace } from "../cache";
-import { buildCacheKey } from "../cache/constants";
-import { useCache } from "../index";
 import { withTimeout } from "../with-timeout";
 
 const USER_AGENT = "DubbingBase/1.0 (https://dubbingbase.com; contact@dubbingbase.com)";
@@ -20,10 +17,15 @@ export type WikimediaCharacterImage = {
   sourceUrl: string;
 };
 
-export const WIKIMEDIA_CHARACTER_IMAGE_NAMESPACE = createCacheNamespace<
-  WikimediaCharacterImage | { miss: true }
->();
+type CharacterImageLookup = {
+  contentType: "movie" | "tv";
+  contentId: number;
+  wikidataId: string;
+  characterName: string;
+  language: string;
+};
 
+type ProductionCharacter = { names: string[]; fileName: string };
 function normalizedName(value: string): string {
   return value.normalize("NFKC").trim().toLocaleLowerCase();
 }
@@ -54,6 +56,7 @@ async function getJson(url: string): Promise<unknown> {
   );
   if (!response.ok) throw new Error(`Wikimedia request failed with ${response.status}`);
   const body: unknown = await response.json();
+  if (readProperty(body, "error")) throw new Error("Wikimedia API error");
   return body;
 }
 
@@ -89,7 +92,8 @@ async function loadLicensedCommonsImage(fileName: string): Promise<WikimediaChar
   });
   const data = await getJson(`${COMMONS_API}?${params}`);
   const pages = readPath(data, "query", "pages");
-  const page = isRecord(pages) ? Object.values(pages)[0] : undefined;
+  if (!isRecord(pages)) throw new Error("Invalid Commons response");
+  const page = Object.values(pages)[0];
   const info = readProperty(readProperty(page, "imageinfo"), "0");
   if (!isRecord(info)) return null;
 
@@ -113,72 +117,72 @@ async function loadLicensedCommonsImage(fileName: string): Promise<WikimediaChar
  * this film, i.e. an incarnation specific to this production. Generic characters
  * shared across films (e.g. Ron Weasley) are rejected rather than guessed.
  */
-async function lookupWikimediaCharacterImage(
+async function loadProductionCharacters(
   wikidataId: string,
-  characterName: string,
   language: string,
-): Promise<WikimediaCharacterImage | null> {
+): Promise<ProductionCharacter[]> {
   const film = readPath(await wikidataEntities([wikidataId], "claims"), "entities", wikidataId);
+  if (!isRecord(film)) throw new Error("Invalid Wikidata work response");
   const characterIds = [...new Set(claimEntityIds(film, CHARACTERS))].slice(0, 40);
-  if (characterIds.length === 0) return null;
+  if (characterIds.length === 0) return [];
 
   const languages = [...new Set([language, "en"])].join("|");
   const entities = readProperty(
     await wikidataEntities(characterIds, "claims|labels", languages),
     "entities",
   );
-  if (!isRecord(entities)) return null;
+  if (!isRecord(entities) || characterIds.some((id) => !isRecord(entities[id]))) {
+    throw new Error("Invalid Wikidata character response");
+  }
 
-  const wanted = normalizedName(characterName);
-  const matches = characterIds.flatMap((id) => {
+  return characterIds.flatMap((id) => {
     const entity = entities[id];
     const labels = readProperty(entity, "labels");
-    const nameMatches =
-      isRecord(labels) &&
-      Object.values(labels).some((label) => {
-        const value = readProperty(label, "value");
-        return typeof value === "string" && normalizedName(value) === wanted;
-      });
+    const names = isRecord(labels)
+      ? Object.values(labels).flatMap((label) => {
+          const value = readProperty(label, "value");
+          return typeof value === "string" ? [normalizedName(value)] : [];
+        })
+      : [];
     const scopedToFilm = claimEntityIds(entity, PRESENT_IN_WORK).join() === wikidataId;
     const fileName = claimStrings(entity, IMAGE)[0];
-    return nameMatches && scopedToFilm && fileName ? [fileName] : [];
+    return scopedToFilm && fileName && names.length ? [{ names, fileName }] : [];
   });
-  // Several same-name candidates are ambiguous.
-  const [fileName] = matches;
-  if (matches.length !== 1 || !fileName) return null;
-  return loadLicensedCommonsImage(fileName);
 }
 
-export async function getWikimediaCharacterImage(input: {
-  contentType: "movie" | "tv";
-  contentId: number;
-  wikidataId: string;
-  characterName: string;
-  language: string;
-}): Promise<WikimediaCharacterImage | null> {
-  if (!/^Q\d+$/.test(input.wikidataId) || !input.characterName.trim()) return null;
-  try {
-    // Verified misses are cached too so films without an image are not re-queried;
-    // provider failures throw and stay uncached.
-    const cached = await useCache().getOrFetch(
-      WIKIMEDIA_CHARACTER_IMAGE_NAMESPACE,
-      buildCacheKey({
-        provider: "wikimedia",
-        resource: "production-character-image",
-        id: input.contentId,
-        language: input.language,
-        params: { contentType: input.contentType, character: normalizedName(input.characterName) },
-      }),
-      async () =>
-        (await lookupWikimediaCharacterImage(
-          input.wikidataId,
-          input.characterName,
-          input.language,
-        )) ?? { miss: true },
-      { cachePolicy: "persistent", ttl: "STABLE" },
-    );
-    return "miss" in cached ? null : cached;
-  } catch {
-    return null;
-  }
+/** Create once per API request; share provider work only for that request's cards. */
+export function createWikimediaCharacterImageResolver(): (
+  input: CharacterImageLookup,
+) => Promise<WikimediaCharacterImage | null> {
+  const productions = new Map<string, Promise<ProductionCharacter[]>>();
+  const files = new Map<string, Promise<WikimediaCharacterImage | null>>();
+
+  return async (input) => {
+    if (!/^Q\d+$/.test(input.wikidataId) || !input.characterName.trim()) return null;
+    const key = JSON.stringify([
+      input.contentType,
+      input.contentId,
+      input.wikidataId,
+      input.language,
+    ]);
+    let characters = productions.get(key);
+    if (!characters) {
+      characters = loadProductionCharacters(input.wikidataId, input.language);
+      productions.set(key, characters);
+    }
+    const wanted = normalizedName(input.characterName);
+    const matches = (await characters)
+      .filter((character) => character.names.includes(wanted))
+      .map((character) => character.fileName);
+    // Several same-name candidates are ambiguous.
+    const [fileName] = matches;
+    if (matches.length !== 1 || !fileName) return null;
+
+    let image = files.get(fileName);
+    if (!image) {
+      image = loadLicensedCommonsImage(fileName);
+      files.set(fileName, image);
+    }
+    return image;
+  };
 }
