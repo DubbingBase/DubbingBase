@@ -341,7 +341,7 @@
   - function sameMediaId: (left, right) => boolean
   - function matchCastWorks: (actors, works) => CastWorkMatchResult<Actor, Work>
   - interface CastActorReference
-  - _...5 more_
+  - _...6 more_
 - `apps/website/src/utils/posthog-prefetch-manifest.ts` — function deferPosthogPrefetch: (manifest, ClientManifestEntry>) => void, interface ClientManifestEntry
 - `apps/website/src/utils/route-param.ts` — function firstRouteParam: (value) => string | undefined
 - `apps/website/src/utils/search-routes.ts` — function getSearchResultRoute: (result, "id" | "media_type">) => string, type SearchFilter
@@ -460,6 +460,7 @@
 - `packages/shared-logic/src/utils/voice-actor-work-groups.ts`
   - function groupVoiceActorWorks: (works) => VoiceActorWorkGroup<T>[]
   - function paginateVoiceActorWorks: (works, view, page, pageSize) => void
+  - function paginateVoiceActorWorkItems: (items, page, pageSize) => void
   - type VoiceActorWorkLike
   - type VoiceActorWorkGroup
   - type VoiceActorWorksPageItem

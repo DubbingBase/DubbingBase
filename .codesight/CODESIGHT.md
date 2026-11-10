@@ -4,8 +4,8 @@
 > **Monorepo:** @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
 > 93 routes | 28 models | 147 components | 132 lib files | 65 env vars | 15 middleware | 52% test coverage
-> **Token savings:** this file is ~19,200 tokens. Without it, AI exploration would cost ~162,800 tokens. **Saves ~143,600 tokens per conversation.**
-> **Last scanned:** 2026-11-10 08:41 — re-run after significant changes
+> **Token savings:** this file is ~19,300 tokens. Without it, AI exploration would cost ~162,800 tokens. **Saves ~143,600 tokens per conversation.**
+> **Last scanned:** 2026-11-10 13:41 — re-run after significant changes
 
 ---
 
@@ -326,8 +326,8 @@
 - **LanguageBanner** [client] — `apps/website/src/components/LanguageBanner.vue`
 - **MediaCatalogPage** [client] — props: type — `apps/website/src/components/MediaCatalogPage.vue`
 - **MediaSkeleton** [client] — `apps/website/src/components/MediaSkeleton.vue`
-- **PaginatedResponsiveGrid** [client] — props: items, pageSize, totalItems, page, gridClass, itemKey — `apps/website/src/components/PaginatedResponsiveGrid.vue`
-- **PaginationControls** [client] — props: page, totalItems, pageSize — `apps/website/src/components/PaginationControls.vue`
+- **PaginatedResponsiveGrid** [client] — props: items, pageSize, totalItems, page, gridClass, paginationLabel, itemKey — `apps/website/src/components/PaginatedResponsiveGrid.vue`
+- **PaginationControls** [client] — props: page, totalItems, scrollTargetId, label, position, pageSize — `apps/website/src/components/PaginationControls.vue`
 - **PersonSkeleton** [client] — `apps/website/src/components/PersonSkeleton.vue`
 - **PwaLifecycleBanner** [client] — `apps/website/src/components/PwaLifecycleBanner.vue`
 - **ReportModal** [client] — props: open, targetUrl — `apps/website/src/components/ReportModal.vue`
@@ -806,7 +806,7 @@
   - function sameMediaId: (left, right) => boolean
   - function matchCastWorks: (actors, works) => CastWorkMatchResult<Actor, Work>
   - interface CastActorReference
-  - _...5 more_
+  - _...6 more_
 - `apps/website/src/utils/posthog-prefetch-manifest.ts` — function deferPosthogPrefetch: (manifest, ClientManifestEntry>) => void, interface ClientManifestEntry
 - `apps/website/src/utils/route-param.ts` — function firstRouteParam: (value) => string | undefined
 - `apps/website/src/utils/search-routes.ts` — function getSearchResultRoute: (result, "id" | "media_type">) => string, type SearchFilter
@@ -925,6 +925,7 @@
 - `packages/shared-logic/src/utils/voice-actor-work-groups.ts`
   - function groupVoiceActorWorks: (works) => VoiceActorWorkGroup<T>[]
   - function paginateVoiceActorWorks: (works, view, page, pageSize) => void
+  - function paginateVoiceActorWorkItems: (items, page, pageSize) => void
   - type VoiceActorWorkLike
   - type VoiceActorWorkGroup
   - type VoiceActorWorksPageItem
@@ -1076,7 +1077,7 @@
 # Test Coverage
 
 > **52%** of routes and models are covered by tests
-> 163 test files found
+> 164 test files found
 
 ## Covered Routes
 

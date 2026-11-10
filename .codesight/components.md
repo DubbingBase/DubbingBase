@@ -13,8 +13,8 @@
 - **LanguageBanner** [client] — `apps/website/src/components/LanguageBanner.vue`
 - **MediaCatalogPage** [client] — props: type — `apps/website/src/components/MediaCatalogPage.vue`
 - **MediaSkeleton** [client] — `apps/website/src/components/MediaSkeleton.vue`
-- **PaginatedResponsiveGrid** [client] — props: items, pageSize, totalItems, page, gridClass, itemKey — `apps/website/src/components/PaginatedResponsiveGrid.vue`
-- **PaginationControls** [client] — props: page, totalItems, pageSize — `apps/website/src/components/PaginationControls.vue`
+- **PaginatedResponsiveGrid** [client] — props: items, pageSize, totalItems, page, gridClass, paginationLabel, itemKey — `apps/website/src/components/PaginatedResponsiveGrid.vue`
+- **PaginationControls** [client] — props: page, totalItems, scrollTargetId, label, position, pageSize — `apps/website/src/components/PaginationControls.vue`
 - **PersonSkeleton** [client] — `apps/website/src/components/PersonSkeleton.vue`
 - **PwaLifecycleBanner** [client] — `apps/website/src/components/PwaLifecycleBanner.vue`
 - **ReportModal** [client] — props: open, targetUrl — `apps/website/src/components/ReportModal.vue`

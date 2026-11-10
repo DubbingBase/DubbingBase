@@ -19,8 +19,8 @@
 - **LanguageBanner** — `apps/website/src/components/LanguageBanner.vue`
 - **MediaCatalogPage** — props: type — `apps/website/src/components/MediaCatalogPage.vue`
 - **MediaSkeleton** — `apps/website/src/components/MediaSkeleton.vue`
-- **PaginatedResponsiveGrid** — props: items, pageSize, totalItems, page, gridClass, itemKey — `apps/website/src/components/PaginatedResponsiveGrid.vue`
-- **PaginationControls** — props: page, totalItems, pageSize — `apps/website/src/components/PaginationControls.vue`
+- **PaginatedResponsiveGrid** — props: items, pageSize, totalItems, page, gridClass, paginationLabel, itemKey — `apps/website/src/components/PaginatedResponsiveGrid.vue`
+- **PaginationControls** — props: page, totalItems, scrollTargetId, label, position, pageSize — `apps/website/src/components/PaginationControls.vue`
 - **PersonSkeleton** — `apps/website/src/components/PersonSkeleton.vue`
 - **PwaLifecycleBanner** — `apps/website/src/components/PwaLifecycleBanner.vue`
 - **ReportModal** — props: open, targetUrl — `apps/website/src/components/ReportModal.vue`
