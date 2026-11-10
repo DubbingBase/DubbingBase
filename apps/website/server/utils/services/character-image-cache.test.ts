@@ -218,6 +218,164 @@ describe("character image persistent cache and failures", () => {
     expect(count("www.wikidata.org")).toBe(3);
   });
 
+  it("measures a cold 24-role batch for a work without characters", async () => {
+    for (let index = 0; index < 24; index++) {
+      await getWikimediaCharacterImage({
+        contentType: "movie",
+        contentId: 20,
+        wikidataId: "Q42",
+        characterName: `Role ${index}`,
+        language: "en-US",
+      });
+    }
+    expect(count("www.wikidata.org")).toBe(1);
+    // One final-image read and one shared-roster read per cold role; only one
+    // extra roster write for the whole production, in addition to final misses.
+    expect(kv.get).toHaveBeenCalledTimes(48);
+    expect(writes).toHaveLength(25);
+  });
+
+  it("measures a cold 24-role batch for a work with only generic characters", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = new URL(String(input));
+        requests.push(url);
+        const body =
+          url.searchParams.get("ids") === "Q42"
+            ? {
+                entities: {
+                  Q42: { claims: { P674: [{ mainsnak: { datavalue: { value: { id: "Q1" } } } }] } },
+                },
+              }
+            : {
+                entities: {
+                  Q1: {
+                    labels: { en: { value: "Role" } },
+                    claims: {
+                      P1441: ["Q42", "Q99"].map((id) => ({
+                        mainsnak: { datavalue: { value: { id } } },
+                      })),
+                      P18: [{ mainsnak: { datavalue: { value: "Role.jpg" } } }],
+                    },
+                  },
+                },
+              };
+        return new Response(JSON.stringify(body));
+      }),
+    );
+    for (let index = 0; index < 24; index++) {
+      await getWikimediaCharacterImage({
+        contentType: "movie",
+        contentId: 21,
+        wikidataId: "Q42",
+        characterName: `Role ${index}`,
+        language: "en-US",
+      });
+    }
+    expect(count("www.wikidata.org")).toBe(2);
+  });
+
+  it("shares candidates concurrently, retains licensed image selection, and retries Commons failures", async () => {
+    let commonsFails = true;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = new URL(String(input));
+        requests.push(url);
+        if (url.hostname === "commons.wikimedia.org") {
+          return new Response(
+            JSON.stringify({
+              query: {
+                pages: {
+                  "1": {
+                    imageinfo: [
+                      {
+                        thumburl: "https://upload.wikimedia.org/role.jpg",
+                        descriptionurl: "https://commons.wikimedia.org/wiki/File:Role.jpg",
+                        extmetadata: {
+                          LicenseShortName: { value: "CC BY 4.0" },
+                          Artist: { value: "Artist" },
+                        },
+                      },
+                    ],
+                  },
+                },
+              },
+            }),
+            { status: commonsFails ? 503 : 200 },
+          );
+        }
+        const body =
+          url.searchParams.get("ids") === "Q42"
+            ? {
+                entities: {
+                  Q42: { claims: { P674: [{ mainsnak: { datavalue: { value: { id: "Q1" } } } }] } },
+                },
+              }
+            : {
+                entities: {
+                  Q1: {
+                    labels: { en: { value: "Role" } },
+                    claims: {
+                      P1441: [{ mainsnak: { datavalue: { value: { id: "Q42" } } } }],
+                      P18: [{ mainsnak: { datavalue: { value: "Role.jpg" } } }],
+                    },
+                  },
+                },
+              };
+        return new Response(JSON.stringify(body));
+      }),
+    );
+    const input = {
+      contentType: "movie",
+      contentId: 22,
+      wikidataId: "Q42",
+      characterName: "Role",
+      language: "en-US",
+    } satisfies Parameters<typeof getWikimediaCharacterImage>[0];
+    const results = await Promise.allSettled([
+      getWikimediaCharacterImage(input),
+      getWikimediaCharacterImage({ ...input, characterName: "Other role" }),
+    ]);
+    expect(results.map((result) => result.status)).toEqual(["rejected", "fulfilled"]);
+    expect(count("www.wikidata.org")).toBe(2);
+    // Valid candidate metadata can be reused; the failed image itself is not cached.
+    commonsFails = false;
+    expect(await getWikimediaCharacterImage(input)).toMatchObject({
+      src: "https://upload.wikimedia.org/role.jpg",
+    });
+    expect(count("www.wikidata.org")).toBe(2);
+    expect(count("commons.wikimedia.org")).toBe(2);
+    expect(writes.filter(({ key }) => key.includes("production-character-candidates"))).toEqual([
+      expect.objectContaining({ ttl: CACHE_TTL.STABLE }),
+    ]);
+  });
+
+  it("expires the shared negative roster and separates Wikidata identities", async () => {
+    const input = {
+      contentType: "movie",
+      contentId: 23,
+      wikidataId: "Q42",
+      characterName: "Role",
+      language: "en-US",
+    } satisfies Parameters<typeof getWikimediaCharacterImage>[0];
+    await getWikimediaCharacterImage(input);
+    now = 86399;
+    await getWikimediaCharacterImage({ ...input, characterName: "Another role" });
+    expect(count("www.wikidata.org")).toBe(1);
+    now = 86401;
+    await getWikimediaCharacterImage({ ...input, characterName: "New role" });
+    expect(count("www.wikidata.org")).toBe(2);
+    await expect(
+      getWikimediaCharacterImage({ ...input, wikidataId: "Q99", characterName: "Changed work" }),
+    ).rejects.toThrow("Invalid Wikidata work response");
+    expect(count("www.wikidata.org")).toBe(3);
+    expect(
+      writes.filter(({ key }) => key.includes("production-character-candidates")),
+    ).toHaveLength(2);
+  });
+
   it.each([429, 503])("keeps Wikimedia %s failures retryable and uncached", async (status) => {
     wikidataStatus = status;
     const input = {

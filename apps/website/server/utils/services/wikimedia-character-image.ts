@@ -21,6 +21,17 @@ export type WikimediaCharacterImage = {
   sourceUrl: string;
 };
 
+type CharacterImageLookup = {
+  contentType: "movie" | "tv";
+  contentId: number;
+  wikidataId: string;
+  characterName: string;
+  language: string;
+};
+
+type ProductionCharacter = { names: string[]; fileName: string };
+const PRODUCTION_CHARACTERS_NAMESPACE = createCacheNamespace<ProductionCharacter[]>();
+
 export const WIKIMEDIA_CHARACTER_IMAGE_NAMESPACE = createCacheNamespace<
   WikimediaCharacterImage | { miss: true }
 >();
@@ -116,15 +127,14 @@ async function loadLicensedCommonsImage(fileName: string): Promise<WikimediaChar
  * this film, i.e. an incarnation specific to this production. Generic characters
  * shared across films (e.g. Ron Weasley) are rejected rather than guessed.
  */
-async function lookupWikimediaCharacterImage(
+async function loadProductionCharacters(
   wikidataId: string,
-  characterName: string,
   language: string,
-): Promise<WikimediaCharacterImage | null> {
+): Promise<ProductionCharacter[]> {
   const film = readPath(await wikidataEntities([wikidataId], "claims"), "entities", wikidataId);
   if (!isRecord(film)) throw new Error("Invalid Wikidata work response");
   const characterIds = [...new Set(claimEntityIds(film, CHARACTERS))].slice(0, 40);
-  if (characterIds.length === 0) return null;
+  if (characterIds.length === 0) return [];
 
   const languages = [...new Set([language, "en"])].join("|");
   const entities = readProperty(
@@ -135,33 +145,61 @@ async function lookupWikimediaCharacterImage(
     throw new Error("Invalid Wikidata character response");
   }
 
-  const wanted = normalizedName(characterName);
-  const matches = characterIds.flatMap((id) => {
+  return characterIds.flatMap((id) => {
     const entity = entities[id];
     const labels = readProperty(entity, "labels");
-    const nameMatches =
-      isRecord(labels) &&
-      Object.values(labels).some((label) => {
-        const value = readProperty(label, "value");
-        return typeof value === "string" && normalizedName(value) === wanted;
-      });
+    const names = isRecord(labels)
+      ? Object.values(labels).flatMap((label) => {
+          const value = readProperty(label, "value");
+          return typeof value === "string" ? [normalizedName(value)] : [];
+        })
+      : [];
     const scopedToFilm = claimEntityIds(entity, PRESENT_IN_WORK).join() === wikidataId;
     const fileName = claimStrings(entity, IMAGE)[0];
-    return nameMatches && scopedToFilm && fileName ? [fileName] : [];
+    return scopedToFilm && fileName && names.length ? [{ names, fileName }] : [];
   });
+}
+
+/** Share the bounded production roster across role names, aliases, and batches. */
+async function getProductionCharacters(
+  input: CharacterImageLookup,
+): Promise<ProductionCharacter[]> {
+  const cache = useCache();
+  const key = buildCacheKey({
+    provider: "wikimedia",
+    resource: "production-character-candidates",
+    id: input.contentId,
+    language: input.language,
+    params: { contentType: input.contentType, wikidataId: input.wikidataId },
+  });
+  return cache.getOrFetch(
+    PRODUCTION_CHARACTERS_NAMESPACE,
+    key,
+    async () => {
+      const characters = await loadProductionCharacters(input.wikidataId, input.language);
+      await cache.set(key, characters, characters.length ? "STABLE" : CHARACTER_IMAGE_NEGATIVE_TTL);
+      return characters;
+    },
+    { cachePolicy: "read-only" },
+  );
+}
+
+async function lookupWikimediaCharacterImage(
+  input: CharacterImageLookup,
+): Promise<WikimediaCharacterImage | null> {
+  const wanted = normalizedName(input.characterName);
+  const matches = (await getProductionCharacters(input))
+    .filter((character) => character.names.includes(wanted))
+    .map((character) => character.fileName);
   // Several same-name candidates are ambiguous.
   const [fileName] = matches;
   if (matches.length !== 1 || !fileName) return null;
   return loadLicensedCommonsImage(fileName);
 }
 
-export async function getWikimediaCharacterImage(input: {
-  contentType: "movie" | "tv";
-  contentId: number;
-  wikidataId: string;
-  characterName: string;
-  language: string;
-}): Promise<WikimediaCharacterImage | null> {
+export async function getWikimediaCharacterImage(
+  input: CharacterImageLookup,
+): Promise<WikimediaCharacterImage | null> {
   if (!/^Q\d+$/.test(input.wikidataId) || !input.characterName.trim()) return null;
   // Verified misses are cached too so films without an image are not re-queried;
   // provider failures throw and stay uncached.
@@ -177,11 +215,7 @@ export async function getWikimediaCharacterImage(input: {
     WIKIMEDIA_CHARACTER_IMAGE_NAMESPACE,
     key,
     async () => {
-      const value = (await lookupWikimediaCharacterImage(
-        input.wikidataId,
-        input.characterName,
-        input.language,
-      )) ?? { miss: true };
+      const value = (await lookupWikimediaCharacterImage(input)) ?? { miss: true };
       await cache.set(key, value, "miss" in value ? CHARACTER_IMAGE_NEGATIVE_TTL : "STABLE");
       return value;
     },
