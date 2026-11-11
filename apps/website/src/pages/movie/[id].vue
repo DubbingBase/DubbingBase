@@ -358,6 +358,7 @@ import {
   type MediaProjectView,
 } from "../../utils/media-cast";
 
+const STRUCTURED_DATA_CAST_LIMIT = 20;
 const isReportModalOpen = ref(false);
 
 const route = useRoute();
@@ -770,14 +771,17 @@ useHead({
             movie.value?.overview ||
             (title ? t("seo.movieDescription", { title }) : t("seo.movieDescriptionFallback")),
           datePublished: movie.value?.release_date || undefined,
-          actor: formattedCast.value.map((actor) => ({
-            "@type": "PerformanceRole",
-            actor: {
-              "@type": "Person",
-              name: actor.name,
-            },
-            characterName: actor.character,
-          })),
+          // Bounded: structured data needs a representative cast, not hundreds of entries.
+          actor: (movie.value?.credits?.cast ?? [])
+            .slice(0, STRUCTURED_DATA_CAST_LIMIT)
+            .map((actor) => ({
+              "@type": "PerformanceRole",
+              actor: {
+                "@type": "Person",
+                name: actor.name,
+              },
+              characterName: actor.character,
+            })),
         });
         return json.replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026");
       }),

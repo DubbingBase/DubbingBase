@@ -148,7 +148,7 @@
           </h2>
           <ul class="space-y-3 text-sm">
             <li>
-              <NuxtLink :to="localePath('/about')" class="theme-hover-text transition">{{
+              <NuxtLink :to="localePath('/about/')" class="theme-hover-text transition">{{
                 t("footer.about")
               }}</NuxtLink>
             </li>

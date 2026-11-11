@@ -19,13 +19,15 @@ describe("HTTP cache headers", () => {
       "public, max-age=600, stale-while-revalidate=3600",
     );
     expect(getPublicCacheControl("detail-json")).toBe("public, max-age=0, must-revalidate");
-    expect(getCloudflareCacheControl("detail-json")).toBe("public, max-age=300");
+    expect(getCloudflareCacheControl("detail-json")).toBe(
+      "public, max-age=3600, stale-while-revalidate=86400",
+    );
     expect(getPublicCacheControl("static")).toBe(
       "public, max-age=86400, stale-while-revalidate=2592000",
     );
     expect(getPublicCacheControl("page")).toBe("public, max-age=60, stale-while-revalidate=300");
     expect(getCloudflareCacheControl("page")).toBe(
-      "public, max-age=1800, stale-while-revalidate=3600",
+      "public, max-age=21600, stale-while-revalidate=86400",
     );
     expect(getCloudflareCacheControl("static")).toBe(
       "public, max-age=604800, stale-while-revalidate=2592000",

@@ -23,8 +23,8 @@ const PUBLIC_CACHE_CONTROL: Record<CacheProfile, string> = {
 
 const CLOUDFLARE_CACHE_CONTROL: Record<CacheProfile, string> = {
   discovery: "public, max-age=600, stale-while-revalidate=3600",
-  page: "public, max-age=1800, stale-while-revalidate=3600",
-  "detail-json": "public, max-age=300",
+  page: "public, max-age=21600, stale-while-revalidate=86400",
+  "detail-json": "public, max-age=3600, stale-while-revalidate=86400",
   static: "public, max-age=604800, stale-while-revalidate=2592000",
   "og-image": "public, max-age=86400",
   "og-image-redirect": "public, max-age=60",
