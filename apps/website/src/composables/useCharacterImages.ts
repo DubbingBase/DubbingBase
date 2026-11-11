@@ -59,6 +59,9 @@ export function useCharacterImages(requests: Ref<readonly CharacterImageRequest[
 
   async function load(keys: string[], skip: CharacterImageSource[] = []): Promise<void> {
     if (keys.length === 0) return;
+    // A stable order keeps the URL, and so the edge cache key, identical for the same cards.
+    keys = [...keys].sort();
+    skip = [...skip].sort();
     const started = new Map(keys.map((key) => [key, (generations.get(key) ?? 0) + 1]));
     for (const [key, generation] of started) generations.set(key, generation);
     const isCurrent = (key: string) => generations.get(key) === started.get(key);
