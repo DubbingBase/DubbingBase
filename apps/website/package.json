@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "nuxt dev",
-    "build": "nuxt build && node scripts/patch-wasm.mjs",
+    "build": "NODE_OPTIONS=--max-old-space-size=4096 nuxt build && node scripts/patch-wasm.mjs",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "typecheck": "nuxt typecheck",
@@ -32,7 +32,7 @@
     "lucide-vue-next": "^1.0.0",
     "posthog-js": "^1.447.12",
     "reka-ui": "latest",
-    "satori": "^0.29.1",
+    "satori": "~0.29.1",
     "sitemap": "^10.0.0",
     "vue": "^3.5.42",
     "vue-chartjs": "^5.3.4",
