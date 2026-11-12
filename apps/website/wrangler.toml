@@ -8,6 +8,11 @@ compatibility_date = "2026-09-08"
 [cache]
 enabled = true
 
+# Run the Worker near its backends (Supabase, TMDB) so invocations concentrate in
+# fewer isolates; young isolates pay a large first-render cost (about 100-150 ms).
+[placement]
+mode = "smart"
+
 [assets]
 directory = ".output/public"
 binding = "ASSETS"
