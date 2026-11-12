@@ -62,3 +62,7 @@
 
 /ja/about.light
   Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+
+# Content-hashed Workbox runtime (workbox-<hash>.js); a new build gets a new URL.
+/workbox-*
+  Cache-Control: public, max-age=31536000, immutable
