@@ -15,17 +15,12 @@
     </h2>
     <ul class="list-none space-y-2 mb-6">
       <li>
-        <strong>{{ $t("legal.legal.entityName") }}</strong
-        >{{ $t("legal.legal.publisherName") }}
+        <strong>{{ $t("legal.legal.entityName") }}</strong>{{ $t("legal.legal.publisherName") }}
       </li>
       <li>
-        <strong>{{ $t("legal.legal.legalFormLabel") }}</strong
-        >{{ $t("legal.legal.legalForm") }}
+        <strong>{{ $t("legal.legal.legalFormLabel") }}</strong>{{ $t("legal.legal.legalForm") }}
       </li>
-      <li>
-        <strong>{{ $t("legal.legal.siretLabel") }}</strong
-        >{{ $t("legal.legal.siret") }}
-      </li>
+      <li><strong>{{ $t("legal.legal.siretLabel") }}</strong>{{ $t("legal.legal.siret") }}</li>
       <li>
         <strong>{{ $t("legal.legal.registeredAddress") }}</strong
         >{{ $t("legal.legal.registeredAddressBody") }}
@@ -42,10 +37,7 @@
       {{ $t("legal.legal.section2") }}
     </h2>
     <ul class="list-none space-y-2 mb-6">
-      <li>
-        <strong>{{ $t("legal.legal.name") }}</strong
-        >{{ $t("legal.legal.publisherName") }}
-      </li>
+      <li><strong>{{ $t("legal.legal.name") }}</strong>{{ $t("legal.legal.publisherName") }}</li>
       <li>
         <strong>{{ $t("legal.legal.contact") }}</strong>
         <a href="mailto:contact@dubbingbase.com" class="theme-primary-text hover:underline"
@@ -64,12 +56,10 @@
     </h3>
     <ul class="list-none space-y-2 mb-6">
       <li>
-        <strong>{{ $t("legal.legal.hostName") }}</strong
-        >{{ $t("legal.legal.cloudflareName") }}
+        <strong>{{ $t("legal.legal.hostName") }}</strong>{{ $t("legal.legal.cloudflareName") }}
       </li>
       <li>
-        <strong>{{ $t("legal.legal.address") }}</strong
-        >{{ $t("legal.legal.cloudflareAddress") }}
+        <strong>{{ $t("legal.legal.address") }}</strong>{{ $t("legal.legal.cloudflareAddress") }}
       </li>
       <li>
         <strong>{{ $t("legal.legal.website") }}</strong>
@@ -87,13 +77,9 @@
       {{ $t("legal.legal.backendDatabase") }}
     </h3>
     <ul class="list-none space-y-2 mb-12">
+      <li><strong>{{ $t("legal.legal.hostName") }}</strong>{{ $t("legal.legal.supabaseName") }}</li>
       <li>
-        <strong>{{ $t("legal.legal.hostName") }}</strong
-        >{{ $t("legal.legal.supabaseName") }}
-      </li>
-      <li>
-        <strong>{{ $t("legal.legal.address") }}</strong
-        >{{ $t("legal.legal.supabaseAddress") }}
+        <strong>{{ $t("legal.legal.address") }}</strong>{{ $t("legal.legal.supabaseAddress") }}
       </li>
       <li>
         <strong>{{ $t("legal.legal.website") }}</strong>

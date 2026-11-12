@@ -210,7 +210,7 @@ One Edge Function can call another using the admin client. The called function u
 
 ```toml
 [functions.process-order]
-verify_jwt = false  # called with secret key, not a user JWT
+verify_jwt = false # called with secret key, not a user JWT
 ```
 
 **Called function** (`supabase/functions/process-order/index.ts`):

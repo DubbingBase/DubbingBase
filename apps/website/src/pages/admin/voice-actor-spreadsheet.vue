@@ -89,8 +89,7 @@
     >
       <div class="text-sm theme-text-muted">
         {{ $t("admin.spreadsheet.showing")
-        }}<span class="font-bold theme-text">{{ (page - 1) * limit + 1 }}</span
-        >{{ $t("common.to")
+        }}<span class="font-bold theme-text">{{ (page - 1) * limit + 1 }}</span>{{ $t("common.to")
         }}<span class="font-bold theme-text">{{ Math.min(page * limit, total) }}</span
         >{{ $t("common.of") }}<span class="font-bold theme-text">{{ total }}</span
         >{{ $t("admin.spreadsheet.results") }}

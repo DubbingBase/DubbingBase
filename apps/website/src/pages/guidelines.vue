@@ -15,8 +15,7 @@
     </h2>
     <ul class="list-disc pl-6 mb-6 space-y-2">
       <li>
-        <strong>{{ $t("legal.guidelines.verify") }}</strong
-        >{{ $t("legal.guidelines.verifyBody") }}
+        <strong>{{ $t("legal.guidelines.verify") }}</strong>{{ $t("legal.guidelines.verifyBody") }}
       </li>
       <li>
         <strong>{{ $t("legal.guidelines.citeOfficialSources") }}</strong

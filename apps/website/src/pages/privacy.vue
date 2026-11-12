@@ -50,8 +50,7 @@
             >{{ $t("legal.privacy.technicalLogsBody") }}
           </li>
           <li>
-            <strong>{{ $t("legal.privacy.backups") }}</strong
-            >{{ $t("legal.privacy.backupsBody") }}
+            <strong>{{ $t("legal.privacy.backups") }}</strong>{{ $t("legal.privacy.backupsBody") }}
           </li>
         </ul>
       </li>
