@@ -119,8 +119,7 @@
                       class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
                       :aria-label="actor.name"
                     >
-                      <NuxtImg
-                        format="webp"
+                      <img
                         decoding="async"
                         loading="lazy"
                         v-if="actor.profile_path"
@@ -134,7 +133,7 @@
                         class="flex items-center gap-1.5 text-[10px] theme-text-muted uppercase tracking-widest font-semibold mb-1"
                       >
                         <ClapperboardIcon class="w-3 h-3 flex-shrink-0" />
-                        <span class="truncate block w-full">{{ $t("details.actor") }}</span>
+                        <span class="truncate block w-full">{{ cardLabels.actor }}</span>
                       </div>
                       <component
                         :is="actor.actorProfilePath ? NuxtLink : 'div'"
@@ -171,7 +170,7 @@
                         class="flex items-center gap-1.5 text-[10px] theme-text-muted uppercase tracking-widest font-semibold mb-1"
                       >
                         <UserIcon class="w-3 h-3 flex-shrink-0" />
-                        <span class="truncate block w-full">{{ $t("details.character") }}</span>
+                        <span class="truncate block w-full">{{ cardLabels.character }}</span>
                       </div>
                       <NuxtLink
                         v-if="actor.characterDetailPath"
@@ -180,9 +179,7 @@
                         :title="actor.character || actor.workCharacterName || ''"
                       >
                         {{
-                          actor.character ||
-                          actor.workCharacterName ||
-                          $t("details.unknownCharacter")
+                          actor.character || actor.workCharacterName || cardLabels.unknownCharacter
                         }}
                       </NuxtLink>
                       <div
@@ -191,9 +188,7 @@
                         :title="actor.character || actor.workCharacterName || ''"
                       >
                         {{
-                          actor.character ||
-                          actor.workCharacterName ||
-                          $t("details.unknownCharacter")
+                          actor.character || actor.workCharacterName || cardLabels.unknownCharacter
                         }}
                       </div>
                     </div>
@@ -209,8 +204,7 @@
                         class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
                         :aria-label="`${actor.voiceActor.firstname} ${actor.voiceActor.lastname}`"
                       >
-                        <NuxtImg
-                          format="webp"
+                        <img
                           decoding="async"
                           loading="lazy"
                           v-if="actor.voiceActor.profile_picture"
@@ -230,7 +224,7 @@
                           class="flex items-center gap-1.5 text-[10px] theme-text-muted uppercase tracking-widest font-semibold mb-1"
                         >
                           <MicIcon class="w-3 h-3 flex-shrink-0" />
-                          <span class="truncate block w-full">{{ $t("details.voiceActor") }}</span>
+                          <span class="truncate block w-full">{{ cardLabels.voiceActor }}</span>
                         </div>
                         <NuxtLink
                           :to="actor.voiceActorProfilePath"
@@ -252,8 +246,7 @@
                         class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
                         :aria-label="actor.name"
                       >
-                        <NuxtImg
-                          format="webp"
+                        <img
                           decoding="async"
                           loading="lazy"
                           v-if="actor.profile_path"
@@ -267,7 +260,7 @@
                           class="flex items-center gap-1.5 text-[10px] theme-text-muted uppercase tracking-widest font-semibold mb-1"
                         >
                           <ClapperboardIcon class="w-3 h-3 flex-shrink-0" />
-                          <span class="truncate block w-full">{{ $t("details.actor") }}</span>
+                          <span class="truncate block w-full">{{ cardLabels.actor }}</span>
                         </div>
                         <component
                           :is="actor.actorProfilePath ? NuxtLink : 'div'"
@@ -294,10 +287,10 @@
                           class="flex items-center gap-1.5 text-[10px] theme-text-muted uppercase tracking-widest font-semibold mb-1"
                         >
                           <MicIcon class="w-3 h-3 opacity-50 flex-shrink-0" />
-                          <span class="truncate block w-full">{{ $t("details.voiceActor") }}</span>
+                          <span class="truncate block w-full">{{ cardLabels.voiceActor }}</span>
                         </div>
                         <div class="text-sm theme-text-muted italic truncate block w-full">
-                          {{ $t("details.notSpecified") }}
+                          {{ cardLabels.notSpecified }}
                         </div>
                       </div>
                     </template>
@@ -372,6 +365,15 @@ const { isAdmin } = useClientUser();
 
 const { locale, t } = useI18n();
 const localePath = useLocalePath();
+const localePrefix = useLocalePathPrefix();
+// Labels are resolved once per render, not once per card.
+const cardLabels = computed(() => ({
+  actor: t("details.actor"),
+  character: t("details.character"),
+  voiceActor: t("details.voiceActor"),
+  unknownCharacter: t("details.unknownCharacter"),
+  notSpecified: t("details.notSpecified"),
+}));
 const pageUrl = computed(() => new URL(localePath(`/movie/${movieId}`), siteUrl).href);
 const cacheKey = `movie-${movieId}-${locale.value}`;
 
@@ -581,9 +583,9 @@ const castItems = computed(() => {
     return {
       ...actor,
       characterImageRequest: characterRequest(actor),
-      actorProfilePath: actor.actorId ? localePath(`/actor/${actor.actorId}`) : undefined,
+      actorProfilePath: actor.actorId ? localePrefix(`/actor/${actor.actorId}`) : undefined,
       voiceActorProfilePath: actor.voiceActor
-        ? localePath(`/voice-actor/${actor.voiceActor.id}`)
+        ? localePrefix(`/voice-actor/${actor.voiceActor.id}`)
         : undefined,
     };
   });

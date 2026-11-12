@@ -99,8 +99,7 @@
                 <div
                   class="relative w-full aspect-video mb-3 rounded-lg overflow-hidden theme-surface-muted"
                 >
-                  <NuxtImg
-                    format="webp"
+                  <img
                     loading="lazy"
                     v-if="episode.still_path"
                     :src="episode.stillUrl"

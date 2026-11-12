@@ -1,4 +1,4 @@
-export const MEDIA_CAST_PAGE_SIZE = 48;
+export const MEDIA_CAST_PAGE_SIZE = 24;
 
 export interface CastActorReference {
   id: number;

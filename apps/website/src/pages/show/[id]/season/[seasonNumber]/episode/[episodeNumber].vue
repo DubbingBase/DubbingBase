@@ -137,8 +137,7 @@
                       :to="actor.actorPath"
                       class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
                     >
-                      <NuxtImg
-                        format="webp"
+                      <img
                         v-if="actor.profile_path"
                         :src="actor.profile_path"
                         decoding="async"
@@ -207,8 +206,7 @@
                         :to="actor.voiceActorPath"
                         class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
                       >
-                        <NuxtImg
-                          format="webp"
+                        <img
                           v-if="actor.voiceActor.profile_picture"
                           :src="actor.voiceActor.profile_picture"
                           decoding="async"
@@ -250,8 +248,7 @@
                         class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
                         :aria-label="actor.name"
                       >
-                        <NuxtImg
-                          format="webp"
+                        <img
                           decoding="async"
                           loading="lazy"
                           v-if="actor.profile_path"
