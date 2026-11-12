@@ -81,7 +81,6 @@ function getGroqClient() {
   return createOpenAI({
     baseURL: "https://api.groq.com/openai/v1",
     apiKey,
-    compatibility: "compatible",
   });
 }
 
@@ -304,7 +303,7 @@ export async function llmGenerate(
     name: `Groq (${groqModel})`,
     fn: () =>
       generateText({
-        model: getGroqClient()(groqModel),
+        model: getGroqClient().chat(groqModel),
         prompt,
         system,
         temperature,
@@ -372,13 +371,13 @@ export async function llmGenerateObject<T extends z.ZodType>(
     name: `Groq (${groqModel})`,
     fn: () =>
       generateObject({
-        model: getGroqClient()(groqModel),
+        model: getGroqClient().chat(groqModel),
         prompt,
         schema,
         system,
         temperature,
       }).then((r) => ({
-        data: r.object,
+        data: schema.parse(r.object),
         usage: r.usage,
         headers: r.response?.headers,
       })),
@@ -394,7 +393,7 @@ export async function llmGenerateObject<T extends z.ZodType>(
         system,
         temperature,
       }).then((r) => ({
-        data: r.object,
+        data: schema.parse(r.object),
         usage: r.usage,
         headers: r.response?.headers,
       })),
@@ -450,7 +449,7 @@ export async function llmVision(
     name: `Groq (${groqModel})`,
     fn: () =>
       generateText({
-        model: getGroqClient()(groqModel),
+        model: getGroqClient().chat(groqModel),
         messages: [
           {
             role: "user",
@@ -536,7 +535,7 @@ export async function llmVisionObject<T extends z.ZodType>(
     name: `Groq (${groqModel})`,
     fn: () =>
       generateObject({
-        model: getGroqClient()(groqModel),
+        model: getGroqClient().chat(groqModel),
         messages: [
           {
             role: "user",
@@ -547,7 +546,7 @@ export async function llmVisionObject<T extends z.ZodType>(
         system,
         temperature,
       }).then((r) => ({
-        data: r.object,
+        data: schema.parse(r.object),
         usage: r.usage,
         headers: r.response?.headers,
       })),
@@ -568,7 +567,7 @@ export async function llmVisionObject<T extends z.ZodType>(
         system,
         temperature,
       }).then((r) => ({
-        data: r.object,
+        data: schema.parse(r.object),
         usage: r.usage,
         headers: r.response?.headers,
       })),
