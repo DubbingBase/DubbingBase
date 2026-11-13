@@ -118,8 +118,6 @@ export default defineNuxtConfig({
     googleAiKey: env("GOOGLE_AI_KEY"),
     geminiModel: env("GEMINI_MODEL") || "gemini-3.5-flash-lite",
     geminiModels: env("GEMINI_MODELS"),
-    groqApiKey: env("GROQ_API_KEY"),
-    groqModel: env("GROQ_MODEL") || "openai/gpt-oss-120b",
     llmProvider: env("LLM_PROVIDER") || "gemini",
     onesignalAppId: env("ONESIGNAL_APP_ID"),
     onesignalRestApiKey: env("ONESIGNAL_REST_API_KEY"),

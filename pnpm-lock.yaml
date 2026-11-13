@@ -227,9 +227,6 @@ importers:
       '@ai-sdk/google':
         specifier: ^4.0.118
         version: 4.0.118(zod@4.6.7)
-      '@ai-sdk/openai-compatible':
-        specifier: ^3.0.90
-        version: 3.0.90(zod@4.6.7)
       '@app/locales':
         specifier: workspace:*
         version: link:../../packages/locales
@@ -407,12 +404,6 @@ packages:
 
   '@ai-sdk/google@4.0.118':
     resolution: {integrity: sha512-14xqdtOLF6afcK5BDp3yTIxvyfcgVyvSbaA2aXRZZRhJQWVBwmQozZ/D0mstc/1SNmRwyY9dCxcqsK1cE0nhaw==}
-    engines: {node: '>=22'}
-    peerDependencies:
-      zod: ^3.25.76 || ^4.1.8
-
-  '@ai-sdk/openai-compatible@3.0.90':
-    resolution: {integrity: sha512-XIPiZ483cAnELGJ4xjYIqqnQWE/qRmL5YWx+1fFrVbA2yg1ioJAvv2Qs26bg21XwaxT3GSGIviBejKFqeZR/JQ==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -6909,12 +6900,6 @@ snapshots:
       zod: 4.6.7
 
   '@ai-sdk/google@4.0.118(zod@4.6.7)':
-    dependencies:
-      '@ai-sdk/provider': 4.0.37
-      '@ai-sdk/provider-utils': 5.0.79(zod@4.6.7)
-      zod: 4.6.7
-
-  '@ai-sdk/openai-compatible@3.0.90(zod@4.6.7)':
     dependencies:
       '@ai-sdk/provider': 4.0.37
       '@ai-sdk/provider-utils': 5.0.79(zod@4.6.7)
