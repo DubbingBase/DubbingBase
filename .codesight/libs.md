@@ -330,6 +330,7 @@
   - interface DuplicateWorkPage
   - _...4 more_
 - `apps/website/src/utils/error-message.ts` — function readErrorMessage: (err) => string | undefined
+- `apps/website/src/utils/legal-date.ts` — function formatLegalDate: (date) => void
 - `apps/website/src/utils/locale-preference.ts` — function resolvePreferredLocale: (savedChoice, browserLanguages) => SupportedLocale | null, const LOCALE_PREFERENCE_COOKIE
 - `apps/website/src/utils/media-cast.ts`
   - function hasOriginalVersion: (language, cast) => language is string

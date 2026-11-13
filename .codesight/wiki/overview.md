@@ -8,7 +8,7 @@
 
 ## Scale
 
-93 API routes · 28 database models · 147 UI components · 132 library files · 15 middleware layers · 65 environment variables
+93 API routes · 28 database models · 147 UI components · 133 library files · 15 middleware layers · 59 environment variables
 
 ## Subsystems
 
@@ -89,7 +89,7 @@
 
 **UI:** 147 components (vue) — see [ui.md](./ui.md)
 
-**Libraries:** 132 files — see [libraries.md](./libraries.md)
+**Libraries:** 133 files — see [libraries.md](./libraries.md)
 
 ## High-Impact Files
 
@@ -116,7 +116,7 @@ Changes to these files have the widest blast radius across the codebase:
 - `DISCORD_WEBHOOK_URL` — `apps/website/server/utils/notifications/discord.ts`
 - `DISCORD_WEBHOOK_URL_1` — `apps/website/server/utils/notifications/discord.ts`
 - `DISCORD_WEBHOOK_URL_2` — `apps/website/server/utils/notifications/discord.ts`
-- _...30 more_
+- _...28 more_
 
 ---
 _Back to [index.md](./index.md) · Generated 2026-11-13_

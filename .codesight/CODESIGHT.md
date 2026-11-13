@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 93 routes | 28 models | 147 components | 132 lib files | 65 env vars | 15 middleware | 52% test coverage
-> **Token savings:** this file is ~19,200 tokens. Without it, AI exploration would cost ~162,800 tokens. **Saves ~143,600 tokens per conversation.**
-> **Last scanned:** 2026-11-13 14:49 — re-run after significant changes
+> 93 routes | 28 models | 147 components | 133 lib files | 59 env vars | 15 middleware | 52% test coverage
+> **Token savings:** this file is ~19,200 tokens. Without it, AI exploration would cost ~162,300 tokens. **Saves ~143,100 tokens per conversation.**
+> **Last scanned:** 2026-11-13 21:01 — re-run after significant changes
 
 ---
 
@@ -795,6 +795,7 @@
   - interface DuplicateWorkPage
   - _...4 more_
 - `apps/website/src/utils/error-message.ts` — function readErrorMessage: (err) => string | undefined
+- `apps/website/src/utils/legal-date.ts` — function formatLegalDate: (date) => void
 - `apps/website/src/utils/locale-preference.ts` — function resolvePreferredLocale: (savedChoice, browserLanguages) => SupportedLocale | null, const LOCALE_PREFERENCE_COOKIE
 - `apps/website/src/utils/media-cast.ts`
   - function hasOriginalVersion: (language, cast) => language is string
@@ -953,12 +954,9 @@
 - `GEMINI_API_KEY` (has default) — apps/website/server/utils/llm.ts
 - `GEMINI_MODELS` **required** — apps/website/server/utils/llm.ts
 - `GOOGLE_AI_KEY` **required** — .env.example
-- `GROQ_API_KEY` **required** — .env.example
-- `GROQ_MODEL` (has default) — apps/website/server/utils/llm.ts
 - `IGDB_CLIENT_ID` **required** — .env.example
 - `IGDB_CLIENT_SECRET` **required** — .env.example
 - `JWT_SECRET` (has default) — .env.example
-- `LLM_PROVIDER` (has default) — apps/website/server/utils/llm.ts
 - `NITRO_PRESET` (has default) — apps/website/nuxt.config.ts
 - `NODE_ENV` (has default) — .env.example
 - `NUXT_DISCORD_WEBHOOK_CHECK_URL` **required** — apps/website/server/utils/notifications/discord.ts
@@ -970,9 +968,6 @@
 - `NUXT_DISCORD_WEBHOOK_URL_3` **required** — apps/website/server/utils/notifications/discord.ts
 - `NUXT_GEMINI_MODELS` (has default) — apps/website/server/utils/llm.ts
 - `NUXT_GOOGLE_AI_KEY` **required** — .env.example
-- `NUXT_GROQ_API_KEY` **required** — .env.example
-- `NUXT_GROQ_MODEL` (has default) — apps/website/server/utils/llm.ts
-- `NUXT_LLM_PROVIDER` (has default) — apps/website/server/utils/llm.ts
 - `NUXT_PUBLIC_SUPABASE_URL` (has default) — apps/website/server/api/og-image/index.get.ts
 - `NUXT_SUPABASE_SECRET_KEY` (has default) — apps/website/server/api/prepare-trending-media.post.ts
 - `NUXT_SUPABASE_URL` (has default) — apps/website/server/api/og-image/index.get.ts
@@ -1074,7 +1069,7 @@
 # Test Coverage
 
 > **52%** of routes and models are covered by tests
-> 165 test files found
+> 166 test files found
 
 ## Covered Routes
 
