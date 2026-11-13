@@ -1,4 +1,5 @@
-import { sendRedirect } from "h3";
+import { getRequestURL, sendRedirect, type H3Event } from "h3";
+import { isRecord, readPath } from "@app/shared-logic";
 import { setNoCacheHeaders, setPublicCacheHeaders } from "../../utils/cache/http";
 import { isVoiceActorOgImagesEnabled } from "../../../src/utils/voice-actor-og-image";
 
@@ -13,22 +14,12 @@ let _Resvg: ResvgLike | null = null;
 
 async function getOgDependencies() {
   if (!_satori || !_Resvg) {
-    try {
-      const [satoriMod, resvgMod] = await Promise.all([
-        import("@cf-wasm/satori/workerd"),
-        import("@cf-wasm/resvg/workerd"),
-      ]);
-      _satori = satoriMod.default || satoriMod;
-      _Resvg = resvgMod.Resvg;
-    } catch {
-      const satoriMod = await import("satori");
-      _satori = satoriMod.default || satoriMod;
-      _Resvg = {
-        async: async () => ({
-          render: () => ({ asPng: () => new Uint8Array([]) }),
-        }),
-      };
-    }
+    const [satoriMod, resvgMod] = await Promise.all([
+      import("@cf-wasm/satori/workerd"),
+      import("@cf-wasm/resvg/workerd"),
+    ]);
+    _satori = satoriMod.default || satoriMod;
+    _Resvg = resvgMod.Resvg;
   }
   return { satori: _satori, Resvg: _Resvg };
 }
@@ -36,44 +27,28 @@ async function getOgDependencies() {
 let fontDataRegular: ArrayBuffer | null = null;
 let fontDataBold: ArrayBuffer | null = null;
 
-// Nitro bundles files under server/assets/ and exposes them via storage.
-// Try common namespace + path conventions across Nitro versions.
-async function loadAsset(path: string): Promise<Uint8Array> {
-  const normalizedColon = path.replace(/\//g, ":");
-  const namespaces = ["assets:server", "assets"];
-  const variants = [
-    path,
-    normalizedColon,
-    `server/${path}`,
-    `server:${normalizedColon}`,
-    `assets/${path}`,
-    `assets:${normalizedColon}`,
-    `server/assets/${path}`,
-    `server:assets:${normalizedColon}`,
-  ];
-  let lastErr: unknown;
-  for (const ns of namespaces) {
-    for (const v of variants) {
-      try {
-        const data: unknown = await useStorage(ns).getItemRaw(v);
-        if (data instanceof Uint8Array) return data;
-        if (data instanceof ArrayBuffer) return new Uint8Array(data);
-      } catch (e) {
-        lastErr = e;
-      }
-    }
+interface AssetFetcher {
+  fetch(request: Request): Promise<Response>;
+}
+function isAssetFetcher(value: unknown): value is AssetFetcher {
+  return isRecord(value) && typeof value.fetch === "function";
+}
+
+// The fonts are static files under public/og-image. Embedding them in the server bundle
+// added about 800 KB of JavaScript to every isolate, so Workers read them through the
+// ASSETS binding and node/dev/test read them from disk.
+async function loadFont(event: H3Event, file: string): Promise<Uint8Array> {
+  const assets = readPath(event.context, "cloudflare", "env", "ASSETS");
+  if (isAssetFetcher(assets)) {
+    const response = await assets.fetch(
+      new Request(new URL(`/og-image/${file}`, getRequestURL(event))),
+    );
+    if (!response.ok) throw new Error(`OG font not found: ${file} (${response.status})`);
+    return new Uint8Array(await response.arrayBuffer());
   }
-  // Filesystem fallback for node / dev / test environments
-  try {
-    const fs = await import("node:fs/promises");
-    const pathMod = await import("node:path");
-    const filePath = pathMod.resolve(process.cwd(), "server/assets", path);
-    const data = await fs.readFile(filePath);
-    if (data) return new Uint8Array(data);
-  } catch {
-    // Ignore fallback failure
-  }
-  throw new Error(`OG asset not found: ${path} (${String(lastErr)})`);
+  const fs = await import("node:fs/promises");
+  const pathMod = await import("node:path");
+  return new Uint8Array(await fs.readFile(pathMod.resolve(process.cwd(), "public/og-image", file)));
 }
 
 function toArrayBuffer(data: Uint8Array): ArrayBuffer {
@@ -82,13 +57,13 @@ function toArrayBuffer(data: Uint8Array): ArrayBuffer {
   return copy;
 }
 
-async function initialize() {
+async function initialize(event: H3Event) {
   if (!fontDataRegular) {
-    fontDataRegular = toArrayBuffer(await loadAsset("og-image/Inter-Regular.ttf"));
+    fontDataRegular = toArrayBuffer(await loadFont(event, "Inter-Regular.ttf"));
   }
 
   if (!fontDataBold) {
-    fontDataBold = toArrayBuffer(await loadAsset("og-image/Inter-Bold.ttf"));
+    fontDataBold = toArrayBuffer(await loadFont(event, "Inter-Bold.ttf"));
   }
 }
 
@@ -331,7 +306,7 @@ export default defineEventHandler(async (event) => {
       return sendRedirect(event, STATIC_OG_IMAGE_PATH, 302);
     }
 
-    await initialize();
+    await initialize(event);
     const { satori, Resvg } = await getOgDependencies();
 
     let template;

@@ -205,6 +205,12 @@ export default defineNuxtConfig({
     },
   },
 
+  build: {
+    // Inline the ESM build so unused icons are tree-shaken from the server bundle;
+    // resolved externally, Nitro would bundle the 575 KB CommonJS build with every icon.
+    transpile: ["lucide-vue-next"],
+  },
+
   vite: {
     plugins: [tailwindcss()],
     // Dev server only: accept any Host (Tailscale/MagicDNS names, LAN hostnames) so the site is

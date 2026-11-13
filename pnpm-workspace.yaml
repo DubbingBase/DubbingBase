@@ -12,6 +12,9 @@ allowBuilds:
   workerd: true
 
 overrides:
+  # One copy only: the app and @supabase/ssr could resolve different versions and the server
+  # bundle shipped both (about 800 KB of duplicated client code).
+  "@supabase/supabase-js": "2.119.0"
   vue: "3.5.45"
   "@intlify/shared": "11.4.18"
   "@vue/runtime-core": "3.5.45"

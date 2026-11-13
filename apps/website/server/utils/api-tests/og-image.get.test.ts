@@ -16,19 +16,13 @@ import {
 } from "../cache/http";
 
 const routeMocks = vi.hoisted(() => ({
-  useStorage: vi.fn(),
   useSupabaseAdmin: vi.fn(),
   fetch: vi.fn(),
   satori: vi.fn<(...args: unknown[]) => Promise<string>>(),
   satoriModuleLoads: vi.fn(),
-  fallbackSatoriModuleLoads: vi.fn(),
   resvgModuleLoads: vi.fn(),
   resvgAsync: vi.fn<(...args: unknown[]) => Promise<unknown>>(),
   render: vi.fn(),
-}));
-
-vi.mock("nitropack/runtime/internal/storage", () => ({
-  useStorage: routeMocks.useStorage,
 }));
 
 vi.mock("../db/client", () => ({
@@ -40,11 +34,6 @@ vi.mock("@cf-wasm/satori/workerd", () => {
   return { default: routeMocks.satori };
 });
 
-vi.mock("satori", () => {
-  routeMocks.fallbackSatoriModuleLoads();
-  return { default: routeMocks.satori };
-});
-
 let handler: EventHandler;
 let runtimeConfig: ReturnType<typeof useNuxtApp>["$config"];
 
@@ -52,7 +41,6 @@ beforeAll(() => {
   vi.stubGlobal("createError", createError);
   vi.stubGlobal("defineEventHandler", defineEventHandler);
   vi.stubGlobal("getQuery", getQuery);
-  vi.stubGlobal("useStorage", routeMocks.useStorage);
   vi.stubGlobal("useSupabaseAdmin", routeMocks.useSupabaseAdmin);
   vi.stubGlobal("fetch", routeMocks.fetch);
 });
@@ -67,9 +55,6 @@ beforeEach(async () => {
     return { Resvg: { async: routeMocks.resvgAsync } };
   });
 
-  routeMocks.useStorage.mockReturnValue({
-    getItemRaw: vi.fn().mockResolvedValue(new Uint8Array([1])),
-  });
   routeMocks.satori.mockResolvedValue("<svg />");
   routeMocks.render.mockReturnValue({
     asPng: vi.fn(() => new Uint8Array([137, 80, 78, 71])),
@@ -86,7 +71,10 @@ beforeEach(async () => {
 
 afterAll(() => vi.unstubAllGlobals());
 
-async function request(path: string): Promise<Response> {
+async function request(
+  path: string,
+  assets?: { fetch: (request: Request) => Promise<Response> },
+): Promise<Response> {
   const app = createApp({
     onRequest: applyDefaultCachePolicy,
     onBeforeResponse: (event) => applyCachePolicy(event, { isDev: false }),
@@ -95,6 +83,7 @@ async function request(path: string): Promise<Response> {
     "/",
     defineEventHandler((event) => {
       event.context.nitro = { runtimeConfig };
+      if (assets) event.context.cloudflare = { env: { ASSETS: assets } };
       return handler(event);
     }),
   );
@@ -153,9 +142,7 @@ describe("GET /api/og-image", () => {
     expect(response.status).toBe(302);
     expect(response.headers.get("location")).toBe("/android-chrome-512x512.png");
     expectPublic(response, "og-image-redirect");
-    expect(routeMocks.useStorage).not.toHaveBeenCalled();
     expect(routeMocks.satoriModuleLoads).not.toHaveBeenCalled();
-    expect(routeMocks.fallbackSatoriModuleLoads).not.toHaveBeenCalled();
     expect(routeMocks.resvgModuleLoads).not.toHaveBeenCalled();
     expect(routeMocks.useSupabaseAdmin).not.toHaveBeenCalled();
     expect(routeMocks.fetch).not.toHaveBeenCalled();
@@ -174,7 +161,6 @@ describe("GET /api/og-image", () => {
 
     expect(response.status).toBe(400);
     expectNoStore(response);
-    expect(routeMocks.useStorage).not.toHaveBeenCalled();
     expect(routeMocks.useSupabaseAdmin).not.toHaveBeenCalled();
   });
 
@@ -190,6 +176,32 @@ describe("GET /api/og-image", () => {
     expect(Array.from(new Uint8Array(await response.arrayBuffer()))).toEqual([137, 80, 78, 71]);
     expect(routeMocks.satori).toHaveBeenCalledTimes(1);
     expect(routeMocks.resvgAsync).toHaveBeenCalledTimes(1);
+  });
+
+  it("reads the fonts through the ASSETS binding instead of the server bundle", async () => {
+    enableOgImages();
+    configureActor();
+    const assets = { fetch: vi.fn(async () => new Response(new Uint8Array([1, 2, 3]))) };
+
+    const response = await request("/api/og-image?type=voice-actor&id=42", assets);
+
+    expect(response.status).toBe(200);
+    const requested = assets.fetch.mock.calls.map(([asset]) => new URL(asset.url).pathname);
+    expect(requested.toSorted()).toEqual([
+      "/og-image/Inter-Bold.ttf",
+      "/og-image/Inter-Regular.ttf",
+    ]);
+  });
+
+  it("fails without a cacheable response when a font is missing from the assets", async () => {
+    enableOgImages();
+    configureActor();
+    const assets = { fetch: vi.fn(async () => new Response("missing", { status: 404 })) };
+
+    const response = await request("/api/og-image?type=voice-actor&id=42", assets);
+
+    expect(response.status).toBe(500);
+    expectNoStore(response);
   });
 
   it("keeps unknown actors no-store", async () => {
@@ -256,6 +268,5 @@ describe("GET /api/og-image", () => {
       expect(response.status).toBe(500);
       expectNoStore(response);
     }
-    expect(routeMocks.fallbackSatoriModuleLoads).toHaveBeenCalledTimes(1);
   });
 });
