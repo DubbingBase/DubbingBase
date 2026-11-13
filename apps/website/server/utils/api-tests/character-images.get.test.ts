@@ -12,7 +12,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("../index", () => ({ useTmdbClient: () => ({}), useCache: () => ({}) }));
 vi.mock("../cache/http", () => ({
-  setPublicCacheHeaders: () => mocks.cache("public"),
+  setPublicCacheHeaders: (_event: unknown, profile: string) => mocks.cache(`public:${profile}`),
   setNoCacheHeaders: () => mocks.cache("no-store"),
 }));
 vi.mock("../services/media", () => ({
@@ -177,10 +177,16 @@ describe("GET /api/character-images", () => {
 
   it("is publicly cacheable only when no provider failed", async () => {
     await call();
-    expect(mocks.cache).toHaveBeenLastCalledWith("public");
+    expect(mocks.cache).toHaveBeenLastCalledWith("public:character-images");
     mocks.getCharacterProfilePictures.mockRejectedValue(new Error("TVDB down"));
     await call();
     expect(mocks.cache).toHaveBeenLastCalledWith("no-store");
+  });
+
+  it("uses the shorter public profile when some cards have no image", async () => {
+    mocks.getCharacterProfilePictures.mockResolvedValue({ characters: [], tvdbId: null });
+    await call();
+    expect(mocks.cache).toHaveBeenLastCalledWith("public:character-images-negative");
   });
 
   it("keeps a TVDB fallback after mapping failure visible but no-store", async () => {

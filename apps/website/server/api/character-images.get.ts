@@ -168,6 +168,10 @@ export default defineEventHandler(async (event) => {
 
   // Provider failures look like "no image"; never let a CDN keep those results.
   if (degraded) setNoCacheHeaders(event);
-  else setPublicCacheHeaders(event, "character-images");
+  else {
+    // "No image" is only cached for 24h upstream, so do not pin it for a week here.
+    const hasMiss = Object.values(images).some((image) => image === null);
+    setPublicCacheHeaders(event, hasMiss ? "character-images-negative" : "character-images");
+  }
   return { images, characterIds, tvdbIds };
 });
