@@ -48,7 +48,24 @@ async function loadFont(event: H3Event, file: string): Promise<Uint8Array> {
   }
   const fs = await import("node:fs/promises");
   const pathMod = await import("node:path");
-  return new Uint8Array(await fs.readFile(pathMod.resolve(process.cwd(), "public/og-image", file)));
+  const { fileURLToPath } = await import("node:url");
+  // `nuxt dev` and tests run from the app directory (public/); a built node-server writes the
+  // files to .output/public, which is a sibling of the server directory when started elsewhere.
+  const serverDir = pathMod.dirname(fileURLToPath(import.meta.url));
+  const candidates = [
+    pathMod.resolve(process.cwd(), "public/og-image", file),
+    pathMod.resolve(process.cwd(), ".output/public/og-image", file),
+    pathMod.resolve(serverDir, "../../public/og-image", file),
+    pathMod.resolve(serverDir, "../public/og-image", file),
+  ];
+  for (const candidate of candidates) {
+    try {
+      return new Uint8Array(await fs.readFile(candidate));
+    } catch {
+      // Try the next location.
+    }
+  }
+  throw new Error(`OG font not found: ${file}`);
 }
 
 function toArrayBuffer(data: Uint8Array): ArrayBuffer {
