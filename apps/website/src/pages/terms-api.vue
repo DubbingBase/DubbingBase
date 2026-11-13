@@ -5,7 +5,7 @@
     </h1>
     <p class="text-sm theme-text-muted mb-8">
       <strong>{{ $t("legal.termsApi.lastUpdated") }}</strong>
-      {{ new Date().toLocaleDateString() }}
+      {{ formatLegalDate() }}
     </p>
 
     <p class="mb-6">{{ $t("legal.termsApi.intro") }}</p>
@@ -58,6 +58,8 @@
 </template>
 
 <script setup lang="ts">
+import { formatLegalDate } from "~/utils/legal-date";
+
 const { t } = useI18n();
 
 useHead({
