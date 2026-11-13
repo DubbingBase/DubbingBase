@@ -2,7 +2,7 @@ import { getGlobalEnv } from "./global-env";
 import { asString } from "./narrow";
 import { generateText, generateObject } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { createOpenAI } from "@ai-sdk/openai";
+import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { z } from "zod";
 import { getErrorMessage } from "./error-message";
 
@@ -78,7 +78,10 @@ function getGroqClient() {
     process.env.GROQ_API_KEY ||
     "";
   if (!apiKey) throw new Error("Groq API key is not configured (NUXT_GROQ_API_KEY)");
-  return createOpenAI({
+  // Groq speaks the OpenAI chat completions protocol; the compatible provider is a fraction
+  // of the size of the full OpenAI provider (which also bundles image, speech and responses models).
+  return createOpenAICompatible({
+    name: "groq",
     baseURL: "https://api.groq.com/openai/v1",
     apiKey,
   });
@@ -303,7 +306,7 @@ export async function llmGenerate(
     name: `Groq (${groqModel})`,
     fn: () =>
       generateText({
-        model: getGroqClient().chat(groqModel),
+        model: getGroqClient().chatModel(groqModel),
         prompt,
         system,
         temperature,
@@ -371,7 +374,7 @@ export async function llmGenerateObject<T extends z.ZodType>(
     name: `Groq (${groqModel})`,
     fn: () =>
       generateObject({
-        model: getGroqClient().chat(groqModel),
+        model: getGroqClient().chatModel(groqModel),
         prompt,
         schema,
         system,
@@ -449,7 +452,7 @@ export async function llmVision(
     name: `Groq (${groqModel})`,
     fn: () =>
       generateText({
-        model: getGroqClient().chat(groqModel),
+        model: getGroqClient().chatModel(groqModel),
         messages: [
           {
             role: "user",
@@ -535,7 +538,7 @@ export async function llmVisionObject<T extends z.ZodType>(
     name: `Groq (${groqModel})`,
     fn: () =>
       generateObject({
-        model: getGroqClient().chat(groqModel),
+        model: getGroqClient().chatModel(groqModel),
         messages: [
           {
             role: "user",
