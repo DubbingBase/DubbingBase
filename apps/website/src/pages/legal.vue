@@ -5,7 +5,7 @@
     </h1>
     <p class="text-sm theme-text-muted mb-8">
       <strong>{{ $t("legal.lastUpdated") }}</strong>
-      {{ new Date().toLocaleDateString() }}
+      {{ formatLegalDate() }}
     </p>
 
     <p class="mb-8">{{ $t("legal.legal.intro") }}</p>
@@ -96,6 +96,8 @@
 </template>
 
 <script setup lang="ts">
+import { formatLegalDate } from "~/utils/legal-date";
+
 useHead({
   title: "Legal Notice",
   meta: [
