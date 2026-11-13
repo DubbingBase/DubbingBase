@@ -436,7 +436,6 @@ jobs:
           NUXT_IGDB_CLIENT_ID: ${{ secrets.IGDB_CLIENT_ID }}
           NUXT_IGDB_CLIENT_SECRET: ${{ secrets.IGDB_CLIENT_SECRET }}
           NUXT_GOOGLE_AI_KEY: ${{ secrets.GOOGLE_AI_KEY || secrets.NUXT_GOOGLE_AI_KEY || secrets.GEMINI_API_KEY }}
-          NUXT_GROQ_API_KEY: ${{ secrets.GROQ_API_KEY || secrets.NUXT_GROQ_API_KEY }}
           NUXT_ONESIGNAL_APP_ID: ${{ secrets.ONESIGNAL_APP_ID }}
           NUXT_ONESIGNAL_REST_API_KEY: ${{ secrets.ONESIGNAL_REST_API_KEY }}
           NUXT_DISCORD_WEBHOOK_DISCOVERY_URL: ${{ secrets.DISCORD_WEBHOOK_DISCOVERY_URL || secrets.NUXT_DISCORD_WEBHOOK_DISCOVERY_URL || secrets.DISCORD_DISCOVERY_WEBHOOK_URL }}
@@ -463,7 +462,6 @@ jobs:
           NUXT_IGDB_CLIENT_ID: mock-igdb-client-id
           NUXT_IGDB_CLIENT_SECRET: mock-igdb-client-secret
           NUXT_GOOGLE_AI_KEY: mock-google-ai-key
-          NUXT_GROQ_API_KEY: mock-groq-api-key
           NUXT_ONESIGNAL_APP_ID: mock-onesignal-app-id
           NUXT_ONESIGNAL_REST_API_KEY: mock-onesignal-rest-api-key
           NUXT_DISCORD_WEBHOOK_DISCOVERY_URL: https://example.invalid/discovery
