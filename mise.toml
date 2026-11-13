@@ -121,7 +121,7 @@ git push && git push origin --tags
 description = "Generates database types from Supabase"
 depends = ["database-install", "backend"]
 dir = "packages/database"
-run = "npx supabase gen types --lang=typescript --local > src/database.types.ts && node scripts/normalize-nullable-rpc-args.mjs"
+run = "npx supabase gen types --lang=typescript --local > src/database.types.ts && pnpm exec oxfmt src/database.types.ts && node scripts/normalize-nullable-rpc-args.mjs"
 
 [tasks.supabase-link]
 description = "Links the local Supabase CLI to the production project (read-only use)"
