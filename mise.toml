@@ -11,7 +11,8 @@ _.file = '.env.development'
 [tasks.doppler-setup]
 description = "Links this checkout to the Doppler dubbingbase/dev config"
 hide = true
-run = "doppler setup --no-interactive --project dubbingbase --config dev"
+# CI runners have no Doppler binary; only link when it is installed.
+run = "if command -v doppler >/dev/null 2>&1; then doppler setup --no-interactive --project dubbingbase --config dev; else echo 'doppler not installed, skipping setup'; fi"
 
 [tasks.install]
 description = "Installs every workspace"
