@@ -11,7 +11,8 @@ _.file = '.env.development'
 [tasks.doppler-setup]
 description = "Links this checkout to the Doppler dubbingbase/dev config"
 hide = true
-run = "doppler setup --no-interactive --project dubbingbase --config dev"
+# CI runners have no Doppler binary; only link when it is installed.
+run = "if command -v doppler >/dev/null 2>&1; then doppler setup --no-interactive --project dubbingbase --config dev; else echo 'doppler not installed, skipping setup'; fi"
 
 [tasks.install]
 description = "Installs every workspace"
@@ -120,7 +121,7 @@ git push && git push origin --tags
 description = "Generates database types from Supabase"
 depends = ["database-install", "backend"]
 dir = "packages/database"
-run = "npx supabase gen types --lang=typescript --local > src/database.types.ts && node scripts/normalize-nullable-rpc-args.mjs"
+run = "npx supabase gen types --lang=typescript --local > src/database.types.ts && pnpm exec oxfmt src/database.types.ts && node scripts/normalize-nullable-rpc-args.mjs"
 
 [tasks.supabase-link]
 description = "Links the local Supabase CLI to the production project (read-only use)"

@@ -118,8 +118,6 @@ export default defineNuxtConfig({
     googleAiKey: env("GOOGLE_AI_KEY"),
     geminiModel: env("GEMINI_MODEL") || "gemini-3.5-flash-lite",
     geminiModels: env("GEMINI_MODELS"),
-    groqApiKey: env("GROQ_API_KEY"),
-    groqModel: env("GROQ_MODEL") || "openai/gpt-oss-120b",
     llmProvider: env("LLM_PROVIDER") || "gemini",
     onesignalAppId: env("ONESIGNAL_APP_ID"),
     onesignalRestApiKey: env("ONESIGNAL_REST_API_KEY"),
@@ -203,6 +201,12 @@ export default defineNuxtConfig({
       navigateFallback: null,
       globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2,webmanifest}"],
     },
+  },
+
+  build: {
+    // Inline the ESM build so unused icons are tree-shaken from the server bundle;
+    // resolved externally, Nitro would bundle the 575 KB CommonJS build with every icon.
+    transpile: ["lucide-vue-next"],
   },
 
   vite: {
