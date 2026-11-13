@@ -134,8 +134,7 @@
                     <div
                       class="w-16 sm:w-full relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
                     >
-                      <NuxtImg
-                        format="webp"
+                      <img
                         decoding="async"
                         loading="lazy"
                         v-if="char.mug_shot?.url"
@@ -184,8 +183,7 @@
                         :to="char.voiceActorProfilePath"
                         class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
                       >
-                        <NuxtImg
-                          format="webp"
+                        <img
                           decoding="async"
                           loading="lazy"
                           v-if="char.voiceActor.profile_picture"

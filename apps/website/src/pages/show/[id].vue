@@ -104,14 +104,13 @@
                 <div
                   class="relative w-full aspect-[2/3] rounded-xl overflow-hidden mb-3 theme-surface-muted"
                 >
-                  <NuxtImg
-                    format="webp"
+                  <img
                     decoding="async"
                     loading="lazy"
                     v-if="season.poster_path"
                     :src="season.poster_path"
                     class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    :alt="season.name"
+                    :alt="season.name ?? ''"
                   />
                   <div
                     v-else
@@ -178,8 +177,7 @@
                       :to="actor.actorLinkPath"
                       class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
                     >
-                      <NuxtImg
-                        format="webp"
+                      <img
                         decoding="async"
                         loading="lazy"
                         v-if="actor.profile_path"
@@ -261,8 +259,7 @@
                         :to="actor.voiceActorLinkPath"
                         class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
                       >
-                        <NuxtImg
-                          format="webp"
+                        <img
                           decoding="async"
                           loading="lazy"
                           v-if="actor.voiceActor.profile_picture"
@@ -304,8 +301,7 @@
                         class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
                         :aria-label="actor.name"
                       >
-                        <NuxtImg
-                          format="webp"
+                        <img
                           decoding="async"
                           loading="lazy"
                           v-if="actor.profile_path"
@@ -419,6 +415,14 @@ const { isAdmin } = useClientUser();
 
 const { locale, t } = useI18n();
 const localePath = useLocalePath();
+const localePrefix = useLocalePathPrefix();
+// Labels are resolved once per render, not once per card.
+const cardLabels = computed(() => ({
+  actor: t("details.actor"),
+  character: t("details.character"),
+  voiceActor: t("details.voiceActor"),
+  unknownCharacter: t("details.unknownCharacter"),
+}));
 const pageUrl = computed(() => new URL(localePath(`/show/${showId.value}`), siteUrl).href);
 
 const showPageRequest = useShowPageData(showId, locale);
@@ -670,8 +674,10 @@ const castItems = computed<ShowDisplayCastActor[]>(() => {
     return {
       ...actor,
       characterImageRequest: characterRequest(actor),
-      actorLinkPath: actor.actorId ? localePath(`/actor/${actor.actorId}`) : undefined,
-      voiceActorLinkPath: actor.voiceActor ? localePath(`/voice-actor/${actor.voiceActor.id}`) : "",
+      actorLinkPath: actor.actorId ? localePrefix(`/actor/${actor.actorId}`) : undefined,
+      voiceActorLinkPath: actor.voiceActor
+        ? localePrefix(`/voice-actor/${actor.voiceActor.id}`)
+        : "",
       roleLabel,
     };
   });

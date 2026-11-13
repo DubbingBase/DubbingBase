@@ -6,12 +6,11 @@
       :to="profilePath"
       class="relative w-14 h-14 rounded-full overflow-hidden theme-surface-muted shrink-0 border theme-border-subtle theme-border transition-colors flex items-center justify-center"
     >
-      <NuxtImg
+      <img
         v-if="item.profile_picture"
         :src="item.profile_picture"
         :alt="`${item.firstname} ${item.lastname}`"
         class="w-full h-full object-cover"
-        format="webp"
         loading="lazy"
         decoding="async"
       />
