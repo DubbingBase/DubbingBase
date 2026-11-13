@@ -351,7 +351,7 @@ importers:
   packages/database:
     devDependencies:
       supabase:
-        specifier: ^2.122.1
+        specifier: ^2.117.0
         version: 2.122.1
       typescript:
         specifier: ^5.9.3
