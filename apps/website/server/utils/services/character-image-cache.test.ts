@@ -123,7 +123,7 @@ describe("character image persistent cache and failures", () => {
   });
 
   it.each([1, 4])(
-    "writes only one TVDB miss for 24 cold roles with %s name(s) each",
+    "writes one TVDB miss and one Wikimedia production miss for 24 cold roles with %s name(s) each",
     async (nameCount) => {
       const metadata = vi
         .spyOn(MediaService.prototype, "getMediaWithVoiceActors")
@@ -144,10 +144,16 @@ describe("character image persistent cache and failures", () => {
       expect(metadata).toHaveBeenCalledTimes(1);
       expect(count("www.wikidata.org")).toBe(2); // One TVDB mapping, one Wikimedia work.
       expect(count("api4.thetvdb.com")).toBe(0);
-      expect(kv.get).toHaveBeenCalledTimes(1);
+      // One read and one write each for the TVDB mapping and the Wikimedia
+      // production's character list, independent of the number of roles/names.
+      expect(kv.get).toHaveBeenCalledTimes(2);
       expect(writes).toEqual([
         expect.objectContaining({
           key: expect.stringContaining("characters-mapped-by-tmdb-id"),
+          ttl: 86400,
+        }),
+        expect.objectContaining({
+          key: expect.stringContaining("production-characters"),
           ttl: 86400,
         }),
       ]);
