@@ -1,4 +1,4 @@
-import { useTmdbClient } from "../utils";
+import { useCache, useTmdbClient } from "../utils";
 import { MediaService } from "../utils/services/media";
 import { createWikimediaCharacterImageResolver } from "../utils/services/wikimedia-character-image";
 import {
@@ -60,12 +60,12 @@ export default defineEventHandler(async (event) => {
     : "en-US";
 
   if (items.length === 0) {
-    setPublicCacheHeaders(event, "detail-json");
+    setPublicCacheHeaders(event, "character-images");
     return { images: {}, characterIds: {}, tvdbIds: {} };
   }
 
   const mediaService = new MediaService(useTmdbClient(), language);
-  const getWikimediaCharacterImage = createWikimediaCharacterImageResolver();
+  const getWikimediaCharacterImage = createWikimediaCharacterImageResolver(useCache(event));
   const images: Record<string, CharacterImage | null> = {};
   const characterIds: Record<string, string> = {};
   const tvdbIds: Record<string, number> = {};
@@ -168,6 +168,6 @@ export default defineEventHandler(async (event) => {
 
   // Provider failures look like "no image"; never let a CDN keep those results.
   if (degraded) setNoCacheHeaders(event);
-  else setPublicCacheHeaders(event, "detail-json");
+  else setPublicCacheHeaders(event, "character-images");
   return { images, characterIds, tvdbIds };
 });

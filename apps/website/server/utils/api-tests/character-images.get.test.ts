@@ -10,7 +10,7 @@ const mocks = vi.hoisted(() => ({
   cache: vi.fn(),
 }));
 
-vi.mock("../index", () => ({ useTmdbClient: () => ({}) }));
+vi.mock("../index", () => ({ useTmdbClient: () => ({}), useCache: () => ({}) }));
 vi.mock("../cache/http", () => ({
   setPublicCacheHeaders: () => mocks.cache("public"),
   setNoCacheHeaders: () => mocks.cache("no-store"),

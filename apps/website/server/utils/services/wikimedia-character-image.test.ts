@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../with-timeout", () => ({ withTimeout: <T>(promise: Promise<T>) => promise }));
 
+const { SimpleCache } = await import("../cache");
 const { createWikimediaCharacterImageResolver } = await import("./wikimedia-character-image");
 
 const FILM = "Q102235";
@@ -90,6 +91,31 @@ describe("getWikimediaCharacterImage", () => {
       NonFree: { value: "true" },
     });
     await expect(createWikimediaCharacterImageResolver()(input)).resolves.toBeNull();
+  });
+
+  it("ignores a merged or deleted character item instead of failing", async () => {
+    mockWikimedia({ missing: "" });
+    await expect(createWikimediaCharacterImageResolver()(input)).resolves.toBeNull();
+  });
+
+  it("persists the verified lookups so later requests skip the providers", async () => {
+    mockWikimedia(entity("Ron Weasley", [FILM], "Ron.jpg"));
+    const store = new Map<string, string>();
+    const cache = new SimpleCache(() => ({
+      get: async (key: string) => {
+        const raw = store.get(key);
+        return raw === undefined ? null : JSON.parse(raw);
+      },
+      put: async (key: string, value: string) => void store.set(key, value),
+    }));
+    vi.stubEnv("NODE_ENV", "production");
+    const first = await createWikimediaCharacterImageResolver(cache)(input);
+    const fetchMock = vi.fn(async () => ({ ok: false, status: 503 }));
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(createWikimediaCharacterImageResolver(cache)(input)).resolves.toEqual(first);
+    expect(first).not.toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
+    vi.unstubAllEnvs();
   });
 
   it("throws on provider outage so the route can mark degradation", async () => {
