@@ -41,8 +41,7 @@
     </h3>
     <p class="mb-6">
       {{ $t("legal.terms.warranty") }}<br /><br />
-      <strong>{{ $t("legal.terms.imageRights") }}</strong
-      >{{ $t("legal.terms.imageRightsBody") }}
+      <strong>{{ $t("legal.terms.imageRights") }}</strong>{{ $t("legal.terms.imageRightsBody") }}
     </p>
 
     <h2 class="text-2xl font-bold mt-8 mb-4 theme-text">
@@ -60,8 +59,7 @@
     </h3>
     <p class="mb-6">
       {{ $t("legal.terms.withdrawalRights") }}<br /><br />
-      <strong>{{ $t("legal.terms.however") }}</strong
-      >{{ $t("legal.terms.withdrawalFactualTail") }}
+      <strong>{{ $t("legal.terms.however") }}</strong>{{ $t("legal.terms.withdrawalFactualTail") }}
     </p>
 
     <h2 class="text-2xl font-bold mt-8 mb-4 theme-text">
@@ -69,8 +67,7 @@
     </h2>
     <p class="mb-4">
       {{ $t("legal.terms.postModerationIntro")
-      }}<strong>{{ $t("legal.terms.postModeration") }}</strong
-      >{{ $t("legal.terms.principleTail") }}
+      }}<strong>{{ $t("legal.terms.postModeration") }}</strong>{{ $t("legal.terms.principleTail") }}
     </p>
 
     <h3 class="text-xl font-semibold mt-6 mb-2 theme-text">

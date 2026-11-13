@@ -1227,9 +1227,8 @@ describe("POST /api/process-media-queue requester propagation", () => {
         ],
       },
     });
-    routeMocks.getPageSectionAsWikitext.mockImplementation(
-      async (_pageId: number, index: string) =>
-        index === "2" ? { parse: { wikitext: "VF : Jean Dupont." } } : {},
+    routeMocks.getPageSectionAsWikitext.mockImplementation(async (_pageId: number, index: string) =>
+      index === "2" ? { parse: { wikitext: "VF : Jean Dupont." } } : {},
     );
 
     const response = await processQueue("check");
