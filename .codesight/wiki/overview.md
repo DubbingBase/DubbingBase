@@ -98,7 +98,7 @@ Changes to these files have the widest blast radius across the codebase:
 - `apps/website/server/utils/db/client.ts` — imported by **72** files
 - `apps/website/server/utils/auth-handlers.ts` — imported by **37** files
 - `apps/website/server/utils/index.ts` — imported by **30** files
-- `apps/website/server/utils/cache/index.ts` — imported by **18** files
+- `apps/website/server/utils/cache/index.ts` — imported by **20** files
 - `apps/website/server/utils/auth.ts` — imported by **16** files
 - `apps/website/server/utils/api/igdb.ts` — imported by **14** files
 

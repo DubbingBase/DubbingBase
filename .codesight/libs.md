@@ -210,7 +210,7 @@
   - function getValidatedExtractionSections: (options) => Promise<ValidatedExtractionSections>
   - interface ScanSectionMetadata
   - type ValidatedExtractionSections
-- `apps/website/server/utils/services/wikimedia-character-image.ts` — function createWikimediaCharacterImageResolver: () => (, type WikimediaCharacterImage
+- `apps/website/server/utils/services/wikimedia-character-image.ts` — function createWikimediaCharacterImageResolver: (cache?) => (input: CharacterImageLookup) => Promise<WikimediaCharacterImage | null>, type WikimediaCharacterImage
 - `apps/website/server/utils/sitemap-data.ts` — function listSitemapChunks: (event) => Promise<, function loadSitemapChunk: (event, name, chunk) => Promise<SitemapRecord[]>
 - `apps/website/server/utils/sitemap-response.ts` — function getSitemapOrigin: (event) => string, function sendSitemapXml: (event, xml) => string
 - `apps/website/server/utils/sitemap.ts`
