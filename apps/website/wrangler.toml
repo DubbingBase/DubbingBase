@@ -15,6 +15,9 @@ mode = "smart"
 
 [assets]
 directory = ".output/public"
+# Nuxt links to /about (no trailing slash): serve the prerendered about/index.html
+# directly instead of answering with an uncacheable 307 to /about/.
+html_handling = "drop-trailing-slash"
 binding = "ASSETS"
 
 [[kv_namespaces]]

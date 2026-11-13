@@ -99,8 +99,19 @@ export function useCharacterImages(requests: Ref<readonly CharacterImageRequest[
     if (!mounted) return;
     const keys = currentKeys().filter((key) => !requested.has(key));
     for (const key of keys) requested.add(key);
-    for (let index = 0; index < keys.length; index += MAX_BATCH) {
-      void load(keys.slice(index, index + MAX_BATCH));
+    // One request per production: the URL then depends only on that production's
+    // cards (not on which other cards share the page), so the same card hits the
+    // same edge-cache entry from every page, and a provider failure for one
+    // production no longer makes the whole page's responses uncacheable.
+    const groups = new Map<string, string[]>();
+    for (const key of keys) {
+      const production = key.split(":", 2).join(":");
+      groups.set(production, [...(groups.get(production) ?? []), key]);
+    }
+    for (const group of groups.values()) {
+      for (let index = 0; index < group.length; index += MAX_BATCH) {
+        void load(group.slice(index, index + MAX_BATCH));
+      }
     }
   }
 

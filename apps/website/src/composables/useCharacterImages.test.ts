@@ -80,6 +80,14 @@ describe("useCharacterImages", () => {
     expect(queries[1]).toMatchObject({ item: key(672) });
   });
 
+  it("sends one request per production so the URL does not depend on neighbours", async () => {
+    reply({});
+    reply({});
+    setup([ron(671), ron(672)]);
+    await flushPromises();
+    expect(queries.map((query) => query.item)).toEqual([key(671), key(672)]);
+  });
+
   it("re-requests with the failed source skipped and ends on the placeholder", async () => {
     reply({ [key(671)]: tvdb("https://t/broken.jpg") });
     reply({ [key(671)]: { src: "https://upload.wikimedia.org/a.jpg", source: "wikimedia" } });

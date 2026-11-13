@@ -39,25 +39,25 @@
   Cache-Control: public, max-age=31536000, immutable
 
 # Prerendered About pages and their light-theme variants change only on deploy.
-/about/
+/about
   Cache-Control: public, max-age=3600, stale-while-revalidate=86400
 
 /about.light
   Cache-Control: public, max-age=3600, stale-while-revalidate=86400
 
-/fr/about/
+/fr/about
   Cache-Control: public, max-age=3600, stale-while-revalidate=86400
 
 /fr/about.light
   Cache-Control: public, max-age=3600, stale-while-revalidate=86400
 
-/es/about/
+/es/about
   Cache-Control: public, max-age=3600, stale-while-revalidate=86400
 
 /es/about.light
   Cache-Control: public, max-age=3600, stale-while-revalidate=86400
 
-/ja/about/
+/ja/about
   Cache-Control: public, max-age=3600, stale-while-revalidate=86400
 
 /ja/about.light

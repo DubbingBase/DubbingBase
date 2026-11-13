@@ -1,5 +1,15 @@
 import { isRecord, readPath, readProperty } from "@app/shared-logic";
 import { withTimeout } from "../with-timeout";
+import { buildCacheKey } from "../cache/constants";
+import { createCacheNamespace, type SimpleCache } from "../cache";
+import { CHARACTER_IMAGE_POSITIVE_TTL } from "../character-images";
+
+// Provider answers are slow-moving; empty/negative outcomes expire sooner so
+// new Wikidata or Commons data is picked up within a day.
+const NEGATIVE_TTL = 24 * 60 * 60;
+const productionsNamespace = createCacheNamespace<ProductionCharacter[]>();
+// KV does not store `null`, so a "no free image" outcome is wrapped.
+const filesNamespace = createCacheNamespace<{ image: WikimediaCharacterImage | null }>();
 
 const USER_AGENT = "DubbingBase/1.0 (https://dubbingbase.com; contact@dubbingbase.com)";
 const WIKIDATA_API = "https://www.wikidata.org/w/api.php";
@@ -131,12 +141,13 @@ async function loadProductionCharacters(
     await wikidataEntities(characterIds, "claims|labels", languages),
     "entities",
   );
-  if (!isRecord(entities) || characterIds.some((id) => !isRecord(entities[id]))) {
-    throw new Error("Invalid Wikidata character response");
-  }
+  if (!isRecord(entities)) throw new Error("Invalid Wikidata character response");
 
+  // A merged or deleted character item comes back as `{ missing: "" }`; that is
+  // a permanent property of the data, not a provider failure, so skip it.
   return characterIds.flatMap((id) => {
     const entity = entities[id];
+    if (!isRecord(entity) || "missing" in entity) return [];
     const labels = readProperty(entity, "labels");
     const names = isRecord(labels)
       ? Object.values(labels).flatMap((label) => {
@@ -151,9 +162,9 @@ async function loadProductionCharacters(
 }
 
 /** Create once per API request; share provider work only for that request's cards. */
-export function createWikimediaCharacterImageResolver(): (
-  input: CharacterImageLookup,
-) => Promise<WikimediaCharacterImage | null> {
+export function createWikimediaCharacterImageResolver(
+  cache?: SimpleCache,
+): (input: CharacterImageLookup) => Promise<WikimediaCharacterImage | null> {
   const productions = new Map<string, Promise<ProductionCharacter[]>>();
   const files = new Map<string, Promise<WikimediaCharacterImage | null>>();
 
@@ -167,7 +178,32 @@ export function createWikimediaCharacterImageResolver(): (
     ]);
     let characters = productions.get(key);
     if (!characters) {
-      characters = loadProductionCharacters(input.wikidataId, input.language);
+      const load = () => loadProductionCharacters(input.wikidataId, input.language);
+      if (cache) {
+        const productionKey = buildCacheKey({
+          provider: "wikimedia",
+          resource: "production-characters",
+          id: input.wikidataId,
+          language: input.language,
+        });
+        // Only verified provider answers are persisted (failures throw past the set).
+        characters = cache.getOrFetch(
+          productionsNamespace,
+          productionKey,
+          async () => {
+            const value = await load();
+            await cache.set(
+              productionKey,
+              value,
+              value.length ? CHARACTER_IMAGE_POSITIVE_TTL : NEGATIVE_TTL,
+            );
+            return value;
+          },
+          { cachePolicy: "read-only" },
+        );
+      } else {
+        characters = load();
+      }
       productions.set(key, characters);
     }
     const wanted = normalizedName(input.characterName);
@@ -180,7 +216,32 @@ export function createWikimediaCharacterImageResolver(): (
 
     let image = files.get(fileName);
     if (!image) {
-      image = loadLicensedCommonsImage(fileName);
+      const load = () => loadLicensedCommonsImage(fileName);
+      if (cache) {
+        const fileKey = buildCacheKey({
+          provider: "wikimedia",
+          resource: "commons-image",
+          query: fileName,
+        });
+        image = cache
+          .getOrFetch(
+            filesNamespace,
+            fileKey,
+            async () => {
+              const value = { image: await load() };
+              await cache.set(
+                fileKey,
+                value,
+                value.image ? CHARACTER_IMAGE_POSITIVE_TTL : NEGATIVE_TTL,
+              );
+              return value;
+            },
+            { cachePolicy: "read-only" },
+          )
+          .then((value) => value.image);
+      } else {
+        image = load();
+      }
       files.set(fileName, image);
     }
     return image;
