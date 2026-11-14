@@ -817,7 +817,6 @@
       "createPodcastProject": "+ Créer un projet Podcast",
       "createAdvertisementProject": "+ Créer un projet Publicité",
       "createToyProject": "+ Créer un projet Jouet",
-      "createVoiceActor": "+ Créer un comédien",
       "title": "Vue d'ensemble du tableau de bord",
       "day": "Jour",
       "loadingData": "Chargement des données du tableau de bord...",
@@ -845,18 +844,8 @@
       "voiceActorProfile": "Profil comédien"
     },
     "spreadsheet": {
-      "addVoiceActor": "Ajouter un comédien",
-      "autoSaves": "Sauvegarde automatique des modifications",
-      "firstName": "Prénom",
-      "lastName": "Nom",
       "next": "Suivant",
-      "noVoiceActorsFound": "Aucun comédien trouvé.",
       "previous": "Précédent",
-      "profilePic": "Photo de profil",
-      "results": "résultats",
-      "searchDirectory": "Rechercher dans l'annuaire",
-      "showing": "Affichage",
-      "socials": "Réseaux sociaux",
       "pageOf": "Page {page} sur {total}"
     },
     "duplicatesWork": {
@@ -1437,7 +1426,7 @@
     "website": "Site Web",
     "wikidataId": "ID Wikidata",
     "workId": "ID de l'œuvre",
-    "backToSpreadsheet": "← Retour à la feuille de calcul"
+    "backToDirectory": "← Retour aux comédiens de doublage"
   },
   "advertisementEditor": {
     "advertiserStudio": "Annonceur & Studio",

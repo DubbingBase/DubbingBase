@@ -818,7 +818,6 @@
       "createPodcastProject": "+ Crear proyecto Podcast",
       "createAdvertisementProject": "+ Crear proyecto Anuncio",
       "createToyProject": "+ Crear proyecto Juguete",
-      "createVoiceActor": "+ Crear Actor de Voz",
       "title": "Vista general del panel",
       "day": "Día",
       "loadingData": "Cargando datos del panel...",
@@ -846,18 +845,8 @@
       "voiceActorProfile": "Perfil de actor de voz"
     },
     "spreadsheet": {
-      "addVoiceActor": "Agregar actor de voz",
-      "autoSaves": "Guardado automático de cambios",
-      "firstName": "Nombre",
-      "lastName": "Apellido",
       "next": "Siguiente",
-      "noVoiceActorsFound": "No se encontraron actores de voz.",
       "previous": "Anterior",
-      "profilePic": "Foto de perfil",
-      "results": "resultados",
-      "searchDirectory": "Buscar en directorio",
-      "showing": "Mostrando",
-      "socials": "Redes sociales",
       "pageOf": "Página {page} de {total}"
     },
     "duplicatesWork": {
@@ -1437,7 +1426,7 @@
     "website": "Sitio web",
     "wikidataId": "ID de Wikidata",
     "workId": "ID de obra",
-    "backToSpreadsheet": "← Volver a la hoja de cálculo"
+    "backToDirectory": "← Volver a los actores de voz"
   },
   "advertisementEditor": {
     "advertiserStudio": "Anunciante y estudio",
