@@ -86,6 +86,11 @@
             @change="onProfilePictureChange"
             class="hidden"
           />
+          <ImageCropperDialog
+            :file="cropSource"
+            @confirm="onProfilePictureCropped"
+            @cancel="cropSource = null"
+          />
           <button
             v-if="previewImage"
             type="button"
@@ -332,10 +337,18 @@ const clearImage = () => {
   previewImage.value = null;
 };
 
+const cropSource = ref<File | null>(null);
+
 const onProfilePictureChange = (event: Event) => {
-  const files = event.target instanceof HTMLInputElement ? event.target.files : null;
-  if (files && files.length > 0 && files[0]) {
-    const file = files[0];
+  const input = event.target instanceof HTMLInputElement ? event.target : null;
+  const file = input?.files?.[0];
+  if (input) input.value = "";
+  if (file) cropSource.value = file;
+};
+
+const onProfilePictureCropped = (file: File) => {
+  cropSource.value = null;
+  {
     profilePictureFile.value = file;
 
     // Create file reader object for thumbnail preview

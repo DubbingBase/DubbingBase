@@ -119,6 +119,11 @@
                   @change="onLogoChange"
                   class="hidden"
                 />
+                <ImageCropperDialog
+                  :file="cropSource"
+                  @confirm="onLogoCropped"
+                  @cancel="cropSource = null"
+                />
                 <div class="flex items-center gap-2">
                   <button
                     type="button"
@@ -227,12 +232,20 @@ const clearLogo = () => {
   form.value.logo_url = "";
 };
 
+const cropSource = ref<File | null>(null);
+
 const onLogoChange = (event: Event) => {
   if (!(event.target instanceof HTMLInputElement)) return;
-  const files = event.target.files;
-  if (files && files.length > 0 && files[0]) {
+  const input = event.target;
+  const file = input.files?.[0];
+  input.value = "";
+  if (file) cropSource.value = file;
+};
+
+const onLogoCropped = (file: File) => {
+  cropSource.value = null;
+  {
     pendingRequestId.value = null;
-    const file = files[0];
     logoFile.value = file;
     const reader = new FileReader();
     reader.onload = (loadEvent) => {

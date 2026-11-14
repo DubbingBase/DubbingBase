@@ -1533,5 +1533,18 @@
     "title": "Explorer : {type}",
     "description": "Découvrez les {type} avec leurs crédits de doublage sur DubbingBase.",
     "empty": "Aucun élément de type {type} avec des crédits de doublage n’est encore répertorié."
+  },
+  "imageCropper": {
+    "title": "Ajuster l'image",
+    "description": "Glissez pour déplacer, faites défiler ou utilisez les boutons pour zoomer, et redimensionnez le carré pour centrer le visage.",
+    "zoomIn": "Zoom avant",
+    "zoomOut": "Zoom arrière",
+    "rotateLeft": "Pivoter à gauche",
+    "rotateRight": "Pivoter à droite",
+    "reset": "Réinitialiser",
+    "cancel": "Annuler",
+    "apply": "Recadrer et utiliser",
+    "loadError": "Impossible de charger cette image.",
+    "exportError": "Impossible de recadrer l'image. Essayez un autre fichier."
   }
 }
