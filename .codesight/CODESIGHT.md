@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 93 routes | 28 models | 147 components | 133 lib files | 59 env vars | 15 middleware | 52% test coverage
-> **Token savings:** this file is ~19,200 tokens. Without it, AI exploration would cost ~162,300 tokens. **Saves ~143,100 tokens per conversation.**
-> **Last scanned:** 2026-11-13 21:26 — re-run after significant changes
+> 93 routes | 28 models | 148 components | 133 lib files | 59 env vars | 15 middleware | 52% test coverage
+> **Token savings:** this file is ~19,200 tokens. Without it, AI exploration would cost ~162,600 tokens. **Saves ~143,400 tokens per conversation.**
+> **Last scanned:** 2026-11-14 19:32 — re-run after significant changes
 
 ---
 
@@ -323,6 +323,7 @@
 - **HeaderPreferenceSelects** [client] — props: initialOpen — `apps/website/src/components/HeaderPreferenceSelects.vue`
 - **HeaderPreferences** [client] — `apps/website/src/components/HeaderPreferences.vue`
 - **HomeBelowFoldSections** [client] — `apps/website/src/components/HomeBelowFoldSections.vue`
+- **ImageCropperDialog** [client] — props: file, outputSize, title — `apps/website/src/components/ImageCropperDialog.vue`
 - **LanguageBanner** [client] — `apps/website/src/components/LanguageBanner.vue`
 - **MediaCatalogPage** [client] — props: type — `apps/website/src/components/MediaCatalogPage.vue`
 - **MediaSkeleton** [client] — `apps/website/src/components/MediaSkeleton.vue`
