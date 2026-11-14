@@ -142,7 +142,6 @@
   - interface DiscordWebhookOptions
   - type QueueName
   - type DiscordNotificationCategory
-- `apps/website/server/utils/notifications/onesignal.ts` — function sendOneSignalNotification: (title, message, options?) => void, interface OneSignalOptions
 - `apps/website/server/utils/pagination.ts`
   - function parsePagination: (options) => ParsedPagination
   - function paginateArray: (items, options) => void
@@ -154,11 +153,6 @@
   - function validatePrepareMediaPayload: (payload) => Validated<PrepareMediaInput>
   - interface PrepareGameInput
   - interface PrepareMediaInput
-- `apps/website/server/utils/profile-validation.ts`
-  - function parseOptionalText: (value, field, maxLength) => string | null | undefined
-  - function parseOptionalDate: (value) => string | null | undefined
-  - const maxBioLength
-  - const maxNationalityLength
 - `apps/website/server/utils/queue-payload.ts`
   - function queueRequester: (value) => string | null
   - function queueRequesterRpcArgs: (value) => void

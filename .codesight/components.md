@@ -76,7 +76,6 @@
 - **admin** [client] — `apps/website/src/layouts/admin.vue`
 - **about** [client] — `apps/website/src/pages/about.vue`
 - **[id]** [client] — `apps/website/src/pages/actor/[id].vue`
-- **[id]** [client] — `apps/website/src/pages/admin/add-voice-cast/[id].vue`
 - **audit-logs** [client] — `apps/website/src/pages/admin/audit-logs.vue`
 - **career-grid** [client] — `apps/website/src/pages/admin/career-grid.vue`
 - **duplicates-va** [client] — `apps/website/src/pages/admin/duplicates-va.vue`
@@ -85,11 +84,8 @@
 - **manual-merge-va** [client] — `apps/website/src/pages/admin/manual-merge-va.vue`
 - **queue** [client] — `apps/website/src/pages/admin/queue.vue`
 - **reports** [client] — `apps/website/src/pages/admin/reports.vue`
-- **[id]** [client] — `apps/website/src/pages/admin/studios/edit/[id].vue`
-- **new** [client] — `apps/website/src/pages/admin/studios/new.vue`
 - **user-va-profiles** [client] — `apps/website/src/pages/admin/user-va-profiles.vue`
 - **users** [client] — `apps/website/src/pages/admin/users.vue`
-- **voice-actor-spreadsheet** [client] — `apps/website/src/pages/admin/voice-actor-spreadsheet.vue`
 - **edit** [client] — `apps/website/src/pages/advertisement/[adId]/projects/[projectId]/edit.vue`
 - **new** [client] — `apps/website/src/pages/advertisement/[adId]/projects/new.vue`
 - **[id]** [client] — `apps/website/src/pages/advertisement/[id].vue`
@@ -146,5 +142,4 @@
 - **toys** [client] — `apps/website/src/pages/toys.vue`
 - **[id]** [client] — `apps/website/src/pages/voice-actor/[id].vue`
 - **edit** [client] — `apps/website/src/pages/voice-actor/[voiceActorId]/edit.vue`
-- **new** [client] — `apps/website/src/pages/voice-actor/new.vue`
 - **voice-actors** [client] — `apps/website/src/pages/voice-actors.vue`

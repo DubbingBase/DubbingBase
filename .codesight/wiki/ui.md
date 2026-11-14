@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Component inventory and prop signatures extracted via AST. Read the source files before adding props or modifying component logic.
 
-**148 components** (vue)
+**143 components** (vue)
 
 ## Client Components
 
@@ -82,7 +82,6 @@
 - **admin** — `apps/website/src/layouts/admin.vue`
 - **about** — `apps/website/src/pages/about.vue`
 - **[id]** — `apps/website/src/pages/actor/[id].vue`
-- **[id]** — `apps/website/src/pages/admin/add-voice-cast/[id].vue`
 - **audit-logs** — `apps/website/src/pages/admin/audit-logs.vue`
 - **career-grid** — `apps/website/src/pages/admin/career-grid.vue`
 - **duplicates-va** — `apps/website/src/pages/admin/duplicates-va.vue`
@@ -91,11 +90,8 @@
 - **manual-merge-va** — `apps/website/src/pages/admin/manual-merge-va.vue`
 - **queue** — `apps/website/src/pages/admin/queue.vue`
 - **reports** — `apps/website/src/pages/admin/reports.vue`
-- **[id]** — `apps/website/src/pages/admin/studios/edit/[id].vue`
-- **new** — `apps/website/src/pages/admin/studios/new.vue`
 - **user-va-profiles** — `apps/website/src/pages/admin/user-va-profiles.vue`
 - **users** — `apps/website/src/pages/admin/users.vue`
-- **voice-actor-spreadsheet** — `apps/website/src/pages/admin/voice-actor-spreadsheet.vue`
 - **edit** — `apps/website/src/pages/advertisement/[adId]/projects/[projectId]/edit.vue`
 - **new** — `apps/website/src/pages/advertisement/[adId]/projects/new.vue`
 - **[id]** — `apps/website/src/pages/advertisement/[id].vue`
@@ -152,7 +148,6 @@
 - **toys** — `apps/website/src/pages/toys.vue`
 - **[id]** — `apps/website/src/pages/voice-actor/[id].vue`
 - **edit** — `apps/website/src/pages/voice-actor/[voiceActorId]/edit.vue`
-- **new** — `apps/website/src/pages/voice-actor/new.vue`
 - **voice-actors** — `apps/website/src/pages/voice-actors.vue`
 
 ---

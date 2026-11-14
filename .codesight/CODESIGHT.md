@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 93 routes | 28 models | 148 components | 133 lib files | 59 env vars | 15 middleware | 52% test coverage
-> **Token savings:** this file is ~19,200 tokens. Without it, AI exploration would cost ~162,600 tokens. **Saves ~143,400 tokens per conversation.**
-> **Last scanned:** 2026-11-14 19:32 — re-run after significant changes
+> 67 routes | 28 models | 143 components | 131 lib files | 59 env vars | 14 middleware | 55% test coverage
+> **Token savings:** this file is ~18,400 tokens. Without it, AI exploration would cost ~146,700 tokens. **Saves ~128,300 tokens per conversation.**
+> **Last scanned:** 2026-11-14 20:15 — re-run after significant changes
 
 ---
 
@@ -13,68 +13,45 @@
 
 - `GET` `/api/about-preference` ✓
 - `GET` `/api/actor/:id` params(id) [auth, cache]
-- `GET` `/api/admin/dubbing-project` [auth] ✓
-- `POST` `/api/admin/dubbing-project` [auth] ✓
 - `POST` `/api/admin/queue/clear` [auth, queue]
 - `DELETE` `/api/admin/queue/item` [auth, queue]
-- `POST` `/api/admin/queue/reprocess-legacy-wiki-check-reviews` [auth] ✓
 - `GET` `/api/admin/queue` [auth, queue]
 - `POST` `/api/admin/work-duplicates/merge` [auth]
 - `GET` `/api/admin/work-duplicates` [auth, cache]
 - `GET` `/api/advertisement/:id` params(id) [queue]
 - `GET` `/api/audiobook/:id` params(id) [queue]
 - `GET` `/api/career-grid`
-- `POST` `/api/cast-vote` [auth] ✓
 - `GET` `/api/character/:source/:id` params(source, id)
 - `GET` `/api/character-images` [cache] ✓
 - `POST` `/api/count-voice-actor-works` ✓
-- `POST` `/api/create-user-profile` [auth, db]
 - `GET` `/api/dashboard-stats` [auth]
-- `POST` `/api/delete-user-voice-actor-link` [auth] ✓
-- `POST` `/api/delete-voice-actor-link` [auth] ✓
 - `POST` `/api/delete_user` [auth]
 - `GET` `/api/detail-collections` ✓
 - `GET` `/api/episode/index`
-- `POST` `/api/extract-credits-from-image` [upload]
-- `POST` `/api/extract-voice-actor-info` [auth] ✓
 - `GET` `/api/find_duplicate_voice_actors` [auth] ✓
 - `GET` `/api/game/:id` params(id)
 - `PUT` `/api/game-characters/:id` params(id) [auth]
 - `POST` `/api/game-characters` [auth] ✓
-- `POST` `/api/generate-social-content` [auth, email]
-- `GET` `/api/get-dubbing-project`
-- `GET` `/api/get-media-credits` [cache]
-- `GET` `/api/get-metadata`
 - `GET` `/api/get-random-task` ✓
 - `POST` `/api/get-random-task` [auth] ✓
 - `GET` `/api/get-studio-details` ✓
-- `GET` `/api/get-user-profile` [auth]
-- `ALL` `/api/get-user-voice-actor` [auth]
-- `GET` `/api/get-user-voice-actors` [auth]
-- `GET` `/api/get-work-votes` [auth]
 - `GET` `/api/home-stats`
 - `POST` `/api/internal-media-create` [auth] ✓
 - `GET` `/api/internal-media-credits` ✓
-- `GET` `/api/internal-media-metadata`
 - `POST` `/api/link-user-voice-actor` [auth] ✓
 - `POST` `/api/link-voice-actor` [auth] ✓
 - `GET` `/api/list-voice-actors`
 - `GET` `/api/list_users` [auth]
-- `POST` `/api/manage-subscription` [auth, db] ✓
 - `GET` `/api/media-catalog` [db]
 - `POST` `/api/media-queue` [auth, queue] ✓
 - `POST` `/api/merge_voice_actor_duplicates` [auth]
 - `GET` `/api/movie/:id` params(id) [queue]
-- `POST` `/api/notify-subscribers` [auth, webhook]
 - `GET` `/api/og-image/index` [cache]
 - `GET` `/api/podcast/:id` params(id) [queue]
 - `POST` `/api/prepare-trending-media` [auth, queue]
 - `POST` `/api/prepare_game` [auth] ✓
-- `POST` `/api/prepare_media` [auth]
-- `POST` `/api/process-credits` [auth, db]
 - `POST` `/api/process-media-queue` [auth, cache, queue] ✓
 - `GET` `/api/recent-voice-actors`
-- `POST` `/api/request-voice-actor-page` [auth, email]
 - `POST` `/api/revert-task` [auth, db]
 - `POST` `/api/save-dubbing-project` [auth] ✓
 - `POST` `/api/save-metadata` [auth] ✓
@@ -94,11 +71,8 @@
 - `GET` `/api/trending/movies` [cache] ✓
 - `GET` `/api/trending/shows` [cache]
 - `GET` `/api/trending/voice-actors`
-- `POST` `/api/update-review-status` [auth] ✓
-- `POST` `/api/update-user-profile` [auth]
 - `POST` `/api/update-voice-actor` [auth, upload] ✓
 - `POST` `/api/update_user_role` [auth]
-- `POST` `/api/update_voice_actor_link` [auth] ✓
 - `POST` `/api/upload-profile-picture` [auth, db, upload] ✓
 - `GET` `/api/voice-actor/:id` params(id)
 - `ALL` `/routes/sitemap.xml`
@@ -389,7 +363,6 @@
 - **admin** [client] — `apps/website/src/layouts/admin.vue`
 - **about** [client] — `apps/website/src/pages/about.vue`
 - **[id]** [client] — `apps/website/src/pages/actor/[id].vue`
-- **[id]** [client] — `apps/website/src/pages/admin/add-voice-cast/[id].vue`
 - **audit-logs** [client] — `apps/website/src/pages/admin/audit-logs.vue`
 - **career-grid** [client] — `apps/website/src/pages/admin/career-grid.vue`
 - **duplicates-va** [client] — `apps/website/src/pages/admin/duplicates-va.vue`
@@ -398,11 +371,8 @@
 - **manual-merge-va** [client] — `apps/website/src/pages/admin/manual-merge-va.vue`
 - **queue** [client] — `apps/website/src/pages/admin/queue.vue`
 - **reports** [client] — `apps/website/src/pages/admin/reports.vue`
-- **[id]** [client] — `apps/website/src/pages/admin/studios/edit/[id].vue`
-- **new** [client] — `apps/website/src/pages/admin/studios/new.vue`
 - **user-va-profiles** [client] — `apps/website/src/pages/admin/user-va-profiles.vue`
 - **users** [client] — `apps/website/src/pages/admin/users.vue`
-- **voice-actor-spreadsheet** [client] — `apps/website/src/pages/admin/voice-actor-spreadsheet.vue`
 - **edit** [client] — `apps/website/src/pages/advertisement/[adId]/projects/[projectId]/edit.vue`
 - **new** [client] — `apps/website/src/pages/advertisement/[adId]/projects/new.vue`
 - **[id]** [client] — `apps/website/src/pages/advertisement/[id].vue`
@@ -459,7 +429,6 @@
 - **toys** [client] — `apps/website/src/pages/toys.vue`
 - **[id]** [client] — `apps/website/src/pages/voice-actor/[id].vue`
 - **edit** [client] — `apps/website/src/pages/voice-actor/[voiceActorId]/edit.vue`
-- **new** [client] — `apps/website/src/pages/voice-actor/new.vue`
 - **voice-actors** [client] — `apps/website/src/pages/voice-actors.vue`
 
 ---
@@ -608,7 +577,6 @@
   - interface DiscordWebhookOptions
   - type QueueName
   - type DiscordNotificationCategory
-- `apps/website/server/utils/notifications/onesignal.ts` — function sendOneSignalNotification: (title, message, options?) => void, interface OneSignalOptions
 - `apps/website/server/utils/pagination.ts`
   - function parsePagination: (options) => ParsedPagination
   - function paginateArray: (items, options) => void
@@ -620,11 +588,6 @@
   - function validatePrepareMediaPayload: (payload) => Validated<PrepareMediaInput>
   - interface PrepareGameInput
   - interface PrepareMediaInput
-- `apps/website/server/utils/profile-validation.ts`
-  - function parseOptionalText: (value, field, maxLength) => string | null | undefined
-  - function parseOptionalDate: (value) => string | null | undefined
-  - const maxBioLength
-  - const maxNationalityLength
 - `apps/website/server/utils/queue-payload.ts`
   - function queueRequester: (value) => string | null
   - function queueRequesterRpcArgs: (value) => void
@@ -1004,8 +967,16 @@
 
 # Middleware
 
+## custom
+- 00-cache — `apps/website/server/middleware/00-cache.ts`
+- 00-e2e-mock — `apps/website/server/middleware/00-e2e-mock.ts`
+- admin — `apps/website/src/middleware/admin.ts`
+- 20260618000000_migrate_to_pgmq — `packages/database/supabase/migrations/20260618000000_migrate_to_pgmq.sql`
+
+## cors
+- 01-cors — `apps/website/server/middleware/01-cors.ts`
+
 ## auth
-- generate-social-content.post — `apps/website/server/api/generate-social-content.post.ts`
 - auth-handlers.test — `apps/website/server/utils/auth-handlers.test.ts`
 - auth-handlers — `apps/website/server/utils/auth-handlers.ts`
 - auth-session.test — `apps/website/server/utils/auth-session.test.ts`
@@ -1016,75 +987,59 @@
 - auth — `apps/website/src/middleware/auth.ts`
 - authenticated-fetch — `apps/website/src/plugins/authenticated-fetch.ts`
 
-## custom
-- 00-cache — `apps/website/server/middleware/00-cache.ts`
-- 00-e2e-mock — `apps/website/server/middleware/00-e2e-mock.ts`
-- admin — `apps/website/src/middleware/admin.ts`
-- 20260618000000_migrate_to_pgmq — `packages/database/supabase/migrations/20260618000000_migrate_to_pgmq.sql`
-
-## cors
-- 01-cors — `apps/website/server/middleware/01-cors.ts`
-
 ---
 
 # Dependency Graph
 
 ## Most Imported Files (change these carefully)
 
-- `apps/website/server/utils/db/client.ts` — imported by **72** files
-- `apps/website/server/utils/auth-handlers.ts` — imported by **37** files
-- `apps/website/server/utils/index.ts` — imported by **30** files
+- `apps/website/server/utils/db/client.ts` — imported by **54** files
+- `apps/website/server/utils/index.ts` — imported by **28** files
+- `apps/website/server/utils/auth-handlers.ts` — imported by **23** files
 - `apps/website/server/utils/cache/index.ts` — imported by **20** files
-- `apps/website/server/utils/auth.ts` — imported by **16** files
-- `apps/website/server/utils/api/igdb.ts` — imported by **14** files
-- `apps/website/server/utils/cache/http.ts` — imported by **12** files
+- `apps/website/server/utils/api/igdb.ts` — imported by **13** files
 - `packages/shared-logic/src/types/index.ts` — imported by **12** files
 - `apps/website/server/utils/urls/supabase.ts` — imported by **11** files
+- `apps/website/server/utils/cache/http.ts` — imported by **11** files
 - `apps/website/server/utils/notifications/discord.ts` — imported by **11** files
-- `apps/website/server/utils/db/queries.ts` — imported by **10** files
 - `apps/website/server/utils/media-request.ts` — imported by **10** files
-- `apps/website/server/utils/dubbing-language.ts` — imported by **10** files
-- `apps/website/server/utils/narrow.ts` — imported by **10** files
+- `apps/website/server/utils/auth.ts` — imported by **10** files
 - `apps/website/server/utils/services/media.ts` — imported by **10** files
-- `apps/website/server/utils/urls/tmdb.ts` — imported by **9** files
+- `apps/website/server/utils/db/queries.ts` — imported by **9** files
+- `apps/website/server/utils/urls/tmdb.ts` — imported by **8** files
 - `apps/website/server/utils/cache/constants.ts` — imported by **8** files
 - `e2e/helpers/mock-api.ts` — imported by **8** files
+- `apps/website/server/utils/dubbing-language.ts` — imported by **7** files
 - `apps/website/server/utils/background.ts` — imported by **6** files
+- `apps/website/server/utils/narrow.ts` — imported by **5** files
 - `apps/website/server/utils/with-timeout.ts` — imported by **5** files
 
 ## Import Map (who imports what)
 
-- `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/reprocess-legacy-wiki-check-reviews.post.ts` +67 more
-- `apps/website/server/utils/auth-handlers.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/reprocess-legacy-wiki-check-reviews.post.ts` +32 more
-- `apps/website/server/utils/index.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/character/[source]/[id].get.ts` +25 more
+- `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue.get.ts`, `apps/website/server/api/admin/work-duplicates/merge.post.ts`, `apps/website/server/api/admin/work-duplicates.get.ts` +49 more
+- `apps/website/server/utils/index.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/character/[source]/[id].get.ts` +23 more
+- `apps/website/server/utils/auth-handlers.ts` ← `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue.get.ts`, `apps/website/server/api/admin/work-duplicates/merge.post.ts`, `apps/website/server/api/dashboard-stats.get.ts` +18 more
 - `apps/website/server/utils/cache/index.ts` ← `apps/website/server/utils/api/igdb.test.ts`, `apps/website/server/utils/api/igdb.ts`, `apps/website/server/utils/api/openlibrary.test.ts`, `apps/website/server/utils/api/openlibrary.ts`, `apps/website/server/utils/api/podcast.test.ts` +15 more
-- `apps/website/server/utils/auth.ts` ← `apps/website/server/api/admin/work-duplicates.get.ts`, `apps/website/server/api/cast-vote.post.ts`, `apps/website/server/api/generate-social-content.post.ts`, `apps/website/server/api/get-work-votes.get.ts`, `apps/website/server/api/manage-subscription.post.ts` +11 more
-- `apps/website/server/utils/api/igdb.ts` ← `apps/website/server/api/character/[source]/[id].get.ts`, `apps/website/server/api/game/[id].get.ts`, `apps/website/server/api/internal-media-credits.get.ts`, `apps/website/server/api/internal-media-metadata.get.ts`, `apps/website/server/api/media-catalog.get.ts` +9 more
-- `apps/website/server/utils/cache/http.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/admin/work-duplicates.get.ts`, `apps/website/server/api/character-images.get.ts`, `apps/website/server/api/get-media-credits.get.ts`, `apps/website/server/api/og-image/index.get.ts` +7 more
+- `apps/website/server/utils/api/igdb.ts` ← `apps/website/server/api/character/[source]/[id].get.ts`, `apps/website/server/api/game/[id].get.ts`, `apps/website/server/api/internal-media-credits.get.ts`, `apps/website/server/api/media-catalog.get.ts`, `apps/website/server/api/search/index.get.ts` +8 more
 - `packages/shared-logic/src/types/index.ts` ← `packages/shared-logic/src/composables/useAdvertisementData.ts`, `packages/shared-logic/src/composables/useAudiobookData.ts`, `packages/shared-logic/src/composables/useDetailCollections.ts`, `packages/shared-logic/src/composables/useDetailCollections.ts`, `packages/shared-logic/src/composables/useGameData.ts` +7 more
 - `apps/website/server/utils/urls/supabase.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/dashboard-stats.get.ts`, `apps/website/server/api/find_duplicate_voice_actors.get.ts`, `apps/website/server/api/list-voice-actors.get.ts`, `apps/website/server/api/recent-voice-actors.get.ts` +6 more
+- `apps/website/server/utils/cache/http.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/admin/work-duplicates.get.ts`, `apps/website/server/api/character-images.get.ts`, `apps/website/server/api/og-image/index.get.ts`, `apps/website/server/api/trending/games.get.ts` +6 more
 - `apps/website/server/utils/notifications/discord.ts` ← `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/media-queue.post.ts`, `apps/website/server/api/movie/[id].get.ts`, `apps/website/server/api/podcast/[id].get.ts` +6 more
+- `apps/website/server/utils/media-request.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/character-images.get.ts`, `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/game/[id].get.ts` +5 more
 
 ---
 
 # Test Coverage
 
-> **52%** of routes and models are covered by tests
-> 166 test files found
+> **55%** of routes and models are covered by tests
+> 153 test files found
 
 ## Covered Routes
 
 - GET:/api/about-preference
-- GET:/api/admin/dubbing-project
-- POST:/api/admin/dubbing-project
-- POST:/api/admin/queue/reprocess-legacy-wiki-check-reviews
-- POST:/api/cast-vote
 - GET:/api/character-images
 - POST:/api/count-voice-actor-works
-- POST:/api/delete-user-voice-actor-link
-- POST:/api/delete-voice-actor-link
 - GET:/api/detail-collections
-- POST:/api/extract-voice-actor-info
 - GET:/api/find_duplicate_voice_actors
 - POST:/api/game-characters
 - GET:/api/get-random-task
@@ -1094,7 +1049,6 @@
 - GET:/api/internal-media-credits
 - POST:/api/link-user-voice-actor
 - POST:/api/link-voice-actor
-- POST:/api/manage-subscription
 - POST:/api/media-queue
 - POST:/api/prepare_game
 - POST:/api/process-media-queue
@@ -1107,9 +1061,7 @@
 - GET:/api/top-contributors
 - GET:/api/top-voice-actors
 - GET:/api/trending/movies
-- POST:/api/update-review-status
 - POST:/api/update-voice-actor
-- POST:/api/update_voice_actor_link
 - POST:/api/upload-profile-picture
 
 ## Covered Models
@@ -1124,7 +1076,6 @@
 - dubbing_project_crew
 - jobs
 - project_attachments
-- voice_actor_subscriptions
 - user_reports
 - audit_logs
 - gamification_task_locks
