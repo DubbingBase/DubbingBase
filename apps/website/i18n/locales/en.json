@@ -1533,5 +1533,18 @@
     "title": "Browse {type}",
     "description": "Explore {type} with dubbing credits in DubbingBase.",
     "empty": "No {type} with dubbing credits are listed yet."
+  },
+  "imageCropper": {
+    "title": "Adjust image",
+    "description": "Drag to move, scroll or use the buttons to zoom, and resize the square so the face is centered.",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "rotateLeft": "Rotate left",
+    "rotateRight": "Rotate right",
+    "reset": "Reset",
+    "cancel": "Cancel",
+    "apply": "Crop and use",
+    "loadError": "This image could not be loaded.",
+    "exportError": "The image could not be cropped. Try another file."
   }
 }

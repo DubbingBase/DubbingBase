@@ -1533,5 +1533,18 @@
     "title": "{type}を探す",
     "description": "DubbingBaseで{type}の吹き替え情報を探せます。",
     "empty": "吹き替え情報のある{type}はまだ登録されていません。"
+  },
+  "imageCropper": {
+    "title": "画像を調整",
+    "description": "ドラッグで移動、スクロールまたはボタンで拡大縮小し、四角を調整して顔が中央に来るようにしてください。",
+    "zoomIn": "拡大",
+    "zoomOut": "縮小",
+    "rotateLeft": "左に回転",
+    "rotateRight": "右に回転",
+    "reset": "リセット",
+    "cancel": "キャンセル",
+    "apply": "切り抜いて使用",
+    "loadError": "この画像を読み込めませんでした。",
+    "exportError": "画像を切り抜けませんでした。別のファイルをお試しください。"
   }
 }

@@ -1533,5 +1533,18 @@
     "title": "Explorar {type}",
     "description": "Descubre {type} con créditos de doblaje en DubbingBase.",
     "empty": "Aún no hay {type} con créditos de doblaje."
+  },
+  "imageCropper": {
+    "title": "Ajustar imagen",
+    "description": "Arrastra para mover, usa la rueda o los botones para hacer zoom y redimensiona el cuadrado para centrar el rostro.",
+    "zoomIn": "Acercar",
+    "zoomOut": "Alejar",
+    "rotateLeft": "Girar a la izquierda",
+    "rotateRight": "Girar a la derecha",
+    "reset": "Restablecer",
+    "cancel": "Cancelar",
+    "apply": "Recortar y usar",
+    "loadError": "No se pudo cargar esta imagen.",
+    "exportError": "No se pudo recortar la imagen. Prueba con otro archivo."
   }
 }
