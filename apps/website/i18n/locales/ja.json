@@ -818,7 +818,6 @@
       "createPodcastProject": "+ ポッドキャストプロジェクトを作成",
       "createAdvertisementProject": "+ 広告プロジェクトを作成",
       "createToyProject": "+ おもちゃプロジェクトを作成",
-      "createVoiceActor": "+ 声優を作成",
       "title": "ダッシュボード概要",
       "day": "日",
       "loadingData": "ダッシュボードデータを読み込み中...",
@@ -846,18 +845,8 @@
       "voiceActorProfile": "声優プロファイル"
     },
     "spreadsheet": {
-      "addVoiceActor": "声優を追加",
-      "autoSaves": "変更を自動保存",
-      "firstName": "名",
-      "lastName": "姓",
       "next": "次へ",
-      "noVoiceActorsFound": "声優が見つかりません。",
       "previous": "前へ",
-      "profilePic": "プロフィール画像",
-      "results": "件",
-      "searchDirectory": "ディレクトリを検索",
-      "showing": "表示中",
-      "socials": "SNS",
       "pageOf": "{page}ページ / {total}"
     },
     "duplicatesWork": {
@@ -1437,7 +1426,7 @@
     "website": "ウェブサイト",
     "wikidataId": "Wikidata ID",
     "workId": "作品ID",
-    "backToSpreadsheet": "← スプレッドシートに戻る"
+    "backToDirectory": "← 声優一覧に戻る"
   },
   "advertisementEditor": {
     "advertiserStudio": "広告主とスタジオ",

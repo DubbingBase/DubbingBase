@@ -32,7 +32,6 @@ vi.mock("../index", () => ({
 
 let trendingMoviesHandler: EventHandler;
 let trendingShowsHandler: EventHandler;
-let mediaCreditsHandler: EventHandler;
 let getTrendingGamesResponse: typeof import("../../api/trending/games.get").getTrendingGamesResponse;
 
 beforeAll(async () => {
@@ -43,7 +42,6 @@ beforeAll(async () => {
   trendingShowsHandler = (await import("../../api/trending/shows.get")).default;
   getTrendingGamesResponse = (await import("../../api/trending/games.get"))
     .getTrendingGamesResponse;
-  mediaCreditsHandler = (await import("../../api/get-media-credits.get")).default;
 });
 
 beforeEach(() => {
@@ -284,26 +282,5 @@ describe("provider-only endpoint response caching", () => {
         expect.stringContaining("/game_localizations"),
       ]),
     );
-  });
-
-  it("caches successful provider credits and keeps invalid or failed requests no-store", async () => {
-    routeMocks.fetchMediaCredits.mockResolvedValue({ cast: [] });
-
-    const success = await request(mediaCreditsHandler, "/?media_type=movie&media_id=42");
-    expectPublic(success, "static");
-
-    const invalid = await request(mediaCreditsHandler, "/?media_type=video_game&media_id=42");
-    expect(invalid.status).toBe(400);
-    expectNoStore(invalid);
-
-    routeMocks.fetchMediaCredits.mockResolvedValue({ cast: "invalid" });
-    const invalidPayload = await request(mediaCreditsHandler, "/?media_type=movie&media_id=42");
-    expect(invalidPayload.status).toBe(502);
-    expectNoStore(invalidPayload);
-
-    routeMocks.fetchMediaCredits.mockRejectedValue(new Error("provider failed"));
-    const failure = await request(mediaCreditsHandler, "/?media_type=movie&media_id=42");
-    expect(failure.status).toBe(500);
-    expectNoStore(failure);
   });
 });

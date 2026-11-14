@@ -818,7 +818,6 @@
       "createPodcastProject": "+ Create Podcast Project",
       "createAdvertisementProject": "+ Create Ad Project",
       "createToyProject": "+ Create Toy Project",
-      "createVoiceActor": "+ Create Voice Actor",
       "title": "Dashboard Overview",
       "day": "Day",
       "loadingData": "Loading dashboard data...",
@@ -846,18 +845,8 @@
       "voiceActorProfile": "Voice Actor Profile"
     },
     "spreadsheet": {
-      "addVoiceActor": "Add Voice Actor",
-      "autoSaves": "Auto-saves changes",
-      "firstName": "First Name",
-      "lastName": "Last Name",
       "next": "Next",
-      "noVoiceActorsFound": "No voice actors found.",
       "previous": "Previous",
-      "profilePic": "Profile Pic",
-      "results": "results",
-      "searchDirectory": "Search Directory",
-      "showing": "Showing",
-      "socials": "Socials",
       "pageOf": "Page {page} of {total}"
     },
     "duplicatesWork": {
@@ -1437,7 +1426,7 @@
     "website": "Website",
     "wikidataId": "Wikidata ID",
     "workId": "Work ID",
-    "backToSpreadsheet": "← Back to Spreadsheet"
+    "backToDirectory": "← Back to Voice Actors"
   },
   "advertisementEditor": {
     "advertiserStudio": "Advertiser & Studio",

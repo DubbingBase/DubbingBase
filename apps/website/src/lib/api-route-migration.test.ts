@@ -8,17 +8,6 @@ const readWebsiteSource = (relativePath: string): string =>
   readFileSync(resolve(websiteRoot, relativePath), "utf8");
 
 describe("canonical GET API consumers", () => {
-  it("uses query params for the admin voice actor spreadsheet", () => {
-    const source = readWebsiteSource("src/pages/admin/voice-actor-spreadsheet.vue");
-
-    expect(source).toMatch(
-      /['"]\/api\/list-voice-actors['"][\s\S]{0,300}query:\s*\{\s*limit:\s*limit\.value,\s*offset:/,
-    );
-    expect(source).not.toMatch(
-      /['"]\/api\/list-voice-actors['"][\s\S]{0,300}method:\s*['"]POST['"]/,
-    );
-  });
-
   it("uses query params for the admin voice actor search", () => {
     const source = readWebsiteSource("src/pages/admin/user-va-profiles.vue");
 

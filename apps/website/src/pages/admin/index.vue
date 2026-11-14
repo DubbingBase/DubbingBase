@@ -12,14 +12,6 @@
           {{ $t("admin.dashboard.description") }}
         </p>
       </div>
-      <div class="flex items-center space-x-3">
-        <NuxtLink
-          :to="localePath('/voice-actor/new')"
-          class="px-4 py-2.5 theme-surface-raised theme-hover-surface-muted theme-surface-muted theme-hover-surface-muted theme-text-secondary theme-text theme-hover-text text-xs font-semibold rounded-xl border theme-border-subtle theme-border transition-all flex items-center space-x-1.5"
-        >
-          <span>{{ $t("admin.dashboard.createVoiceActor") }}</span>
-        </NuxtLink>
-      </div>
     </div>
 
     <!-- Loading state -->
@@ -116,8 +108,6 @@
 </template>
 
 <script setup lang="ts">
-const localePath = useLocalePath();
-
 definePageMeta({
   layout: "admin",
   middleware: "admin",
