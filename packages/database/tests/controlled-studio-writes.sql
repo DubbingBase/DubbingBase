@@ -359,6 +359,16 @@ BEGIN
 
   BEGIN
     PERFORM * FROM public.controlled_save_studio(
+      '00000000-0000-0000-0000-000000563651', v_studio_id, v_updated_at,
+      '81a2b916-dbb3-4a18-b6e0-8b0267ef9f8a', '{"logo_url":"https://cdn.example/logo.png"}'::JSONB
+    );
+    RAISE EXCEPTION 'community user changed a protected logo';
+  EXCEPTION WHEN insufficient_privilege THEN
+    NULL;
+  END;
+
+  BEGIN
+    PERFORM * FROM public.controlled_save_studio(
       '00000000-0000-0000-0000-000000563651', 999999999, NULL,
       '926e615a-8f32-4c66-8ad2-232254e5fab4', '{"city":"Missing"}'::JSONB
     );

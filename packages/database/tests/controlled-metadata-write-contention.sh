@@ -14,6 +14,7 @@ scratch_dir="$(mktemp -d)"
 
 cleanup() {
   psql -X -q -v ON_ERROR_STOP=1 <<SQL
+SET session_replication_role = replica;
 DELETE FROM private.metadata_write_requests
 WHERE actor_id = '$actor_id' AND request_id = '$request_id';
 DELETE FROM public.audit_logs
@@ -27,6 +28,7 @@ SQL
 trap cleanup EXIT
 
 psql -X -q -v ON_ERROR_STOP=1 <<SQL
+SET session_replication_role = replica;
 DELETE FROM private.metadata_write_requests
 WHERE actor_id = '$actor_id' AND request_id = '$request_id';
 DELETE FROM public.audit_logs

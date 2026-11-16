@@ -1364,7 +1364,7 @@
     "technicalProduction": "技術チームと制作"
   },
   "voiceActorEdit": {
-    "adminOnlyProfilePicture": "プロフィール画像を変更できるのは管理者のみです",
+    "trustedOnlyPictureReplace": "既存のプロフィール画像を置き換えられるのは、信頼済みの投稿者と管理者のみです",
     "linkNewWork": "+ 新しい作品を関連付ける",
     "linkNewWorkDesc": "この声優を映画、シリーズ、ゲーム、オーディオブック、ポッドキャスト、广告、おもちゃに関連付けます。",
     "selectMediaType": "メディアタイプを選択",

@@ -46,6 +46,7 @@ AS $$
 DECLARE
   v_actor_metadata JSONB;
   v_is_admin BOOLEAN;
+  v_link_id UUID;
   v_before public.voice_actors%ROWTYPE;
   v_after public.voice_actors%ROWTYPE;
   v_before_json JSONB;
@@ -315,6 +316,7 @@ SET search_path = ''
 AS $$
 DECLARE
   v_actor_metadata JSONB;
+  v_can_edit_logo BOOLEAN;
   v_prior_skip_audit TEXT;
   v_key TEXT;
   v_value JSONB;
@@ -344,6 +346,7 @@ BEGIN
     RAISE EXCEPTION 'The authenticated actor does not exist' USING ERRCODE = '28000';
   END IF;
 
+  v_can_edit_logo := COALESCE(v_actor_metadata ->> 'role' IN ('admin', 'editor'), FALSE);
   PERFORM private.assert_contributor(p_actor_id);
 
   IF p_updates IS NULL OR jsonb_typeof(p_updates) <> 'object'
@@ -441,6 +444,11 @@ BEGIN
     IF NOT (p_updates ? 'name') THEN
       RAISE EXCEPTION 'name is required when creating a studio' USING ERRCODE = '22023';
     END IF;
+    IF p_updates ? 'logo_url'
+       AND p_updates -> 'logo_url' <> 'null'::JSONB
+       AND NOT v_can_edit_logo THEN
+      RAISE EXCEPTION 'Only an admin or editor can change a studio logo' USING ERRCODE = '42501';
+    END IF;
 
     v_prior_skip_audit := current_setting('app.skip_studio_audit', TRUE);
     PERFORM set_config('app.skip_studio_audit', 'true', TRUE);
@@ -491,6 +499,11 @@ BEGIN
         WHEN v_key = 'name' THEN to_jsonb(btrim(p_updates ->> v_key))
         ELSE p_updates -> v_key
       END;
+      IF v_key = 'logo_url'
+         AND v_old_value IS DISTINCT FROM v_new_value
+         AND NOT v_can_edit_logo THEN
+        RAISE EXCEPTION 'Only an admin or editor can change a studio logo' USING ERRCODE = '42501';
+      END IF;
       IF v_old_value IS DISTINCT FROM v_new_value THEN
         v_previous := v_previous || jsonb_build_object(v_key, v_old_value);
         v_new := v_new || jsonb_build_object(v_key, v_new_value);
@@ -560,4 +573,4 @@ GRANT EXECUTE ON FUNCTION public.controlled_save_studio(UUID, BIGINT, TIMESTAMP 
   TO service_role;
 
 COMMENT ON FUNCTION public.controlled_save_studio(UUID, BIGINT, TIMESTAMP WITHOUT TIME ZONE, UUID, JSONB) IS
-  'Serializes studio creation and edits by any confirmed, unblocked contributor, validates the field allowlist, and commits a typed before/after audit event atomically. Retries are keyed by user and request UUID.';
+  'Serializes studio creation and edits by any confirmed, unblocked contributor (logo changes stay admin/editor only), validates the field allowlist, and commits a typed before/after audit event atomically. Retries are keyed by user and request UUID.';

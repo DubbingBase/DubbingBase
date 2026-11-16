@@ -67,8 +67,8 @@
           <button
             type="button"
             @click="triggerFileInput"
-            :disabled="!isAdmin"
-            :title="isAdmin ? undefined : $t('voiceActorEdit.adminOnlyProfilePicture')"
+            :disabled="!canChangePicture"
+            :title="canChangePicture ? undefined : $t('voiceActorEdit.trustedOnlyPictureReplace')"
             class="disabled:cursor-not-allowed disabled:opacity-50 w-full py-2.5 px-4 theme-surface-muted theme-hover-surface-muted theme-text theme-hover-text font-semibold rounded-xl text-xs border theme-border theme-hover-border transition-all flex items-center justify-center space-x-2"
           >
             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -955,6 +955,7 @@ const user = useSupabaseUser();
 const isAdmin = computed(() => {
   return user.value?.app_metadata?.role === "admin";
 });
+const isTrusted = computed(() => user.value?.app_metadata?.trusted === true);
 
 // Form inputs
 const firstname = ref("");
@@ -974,6 +975,9 @@ const socialMedia = ref({
 const tmdbId = ref("");
 const wikidataId = ref("");
 const profilePicture = ref("");
+// Anyone may add a first picture; replacing an existing one needs a trusted account or an
+// admin. The upload route enforces the same rule against the live account flags.
+const canChangePicture = computed(() => isAdmin.value || isTrusted.value || !profilePicture.value);
 
 const resolvedProfilePicture = computed(() => {
   if (!profilePicture.value) return "";
@@ -1010,8 +1014,8 @@ const showToast = (message: string, type: "success" | "error" | "info" = "info")
 };
 
 const triggerFileInput = () => {
-  // Server rejects profile_picture changes from non-admins.
-  if (!isAdmin.value) return;
+  // Server rejects picture replacement from accounts that are neither trusted nor admin.
+  if (!canChangePicture.value) return;
   fileInput.value?.click();
 };
 

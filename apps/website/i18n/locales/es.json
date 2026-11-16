@@ -1364,7 +1364,7 @@
     "technicalProduction": "Equipo técnico y producción"
   },
   "voiceActorEdit": {
-    "adminOnlyProfilePicture": "Solo los administradores pueden cambiar la foto de perfil",
+    "trustedOnlyPictureReplace": "Solo los colaboradores de confianza y los administradores pueden reemplazar una foto de perfil existente",
     "linkNewWork": "+ Vincular nueva obra",
     "linkNewWorkDesc": "Vincula este actor de doblaje a una película, serie, juego, audiolibro, podcast, anuncio o juguete.",
     "selectMediaType": "Seleccionar tipo de medio",

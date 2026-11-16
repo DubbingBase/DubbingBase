@@ -963,6 +963,18 @@ export type Database = {
         };
         Returns: Json;
       };
+      controlled_set_voice_actor_picture: {
+        Args: {
+          p_actor_id: string;
+          p_expected_previous?: string;
+          p_new_path: string;
+          p_voice_actor_id: number;
+        };
+        Returns: {
+          audit_log_id: string;
+          previous_picture: string;
+        }[];
+      };
       controlled_update_voice_actor: {
         Args: {
           p_actor_id: string;

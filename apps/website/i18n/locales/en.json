@@ -1364,7 +1364,7 @@
     "technicalProduction": "Technical Team & Production"
   },
   "voiceActorEdit": {
-    "adminOnlyProfilePicture": "Only admins can change the profile picture",
+    "trustedOnlyPictureReplace": "Only trusted contributors and admins can replace an existing profile picture",
     "linkNewWork": "+ Link New Work",
     "linkNewWorkDesc": "Link this voice actor to a movie, series, game, audiobook, podcast, ad, or toy.",
     "selectMediaType": "Select media type",

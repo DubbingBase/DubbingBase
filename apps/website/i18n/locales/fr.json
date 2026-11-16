@@ -1364,7 +1364,7 @@
     "technicalProduction": "Équipe Technique & Production"
   },
   "voiceActorEdit": {
-    "adminOnlyProfilePicture": "Seuls les administrateurs peuvent modifier la photo de profil",
+    "trustedOnlyPictureReplace": "Seuls les contributeurs de confiance et les administrateurs peuvent remplacer une photo de profil existante",
     "linkNewWork": "+ Lier une nouvelle œuvre",
     "linkNewWorkDesc": "Liez ce comédien à un film, série, jeu, livre audio, podcast, publicité ou jouet.",
     "selectMediaType": "Sélectionner le type de média",

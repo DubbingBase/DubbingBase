@@ -4,7 +4,7 @@ set -euo pipefail
 # This test is intentionally pinned to loopback and a dedicated disposable
 # Supabase port. It opens independent psql sessions for every racing request.
 DB_HOST=127.0.0.1
-DB_PORT=${T08_TEST_DB_PORT:-56322}
+DB_PORT=${T08_TEST_DB_PORT:-55322}
 DB_NAME=postgres
 DB_USER=postgres
 DB_PASSWORD=${T08_TEST_DB_PASSWORD:-postgres}
