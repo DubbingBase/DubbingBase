@@ -25,6 +25,7 @@
       >
         {{ item.firstname }} {{ item.lastname }}
       </NuxtLink>
+      <CreditStatusBadge :status="item.reviewed_status" />
       <span class="text-xs theme-text-muted block truncate mt-0.5">
         {{ item.character_name || item.performance || fallbackRole }}
       </span>

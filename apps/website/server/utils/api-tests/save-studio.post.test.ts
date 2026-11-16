@@ -7,6 +7,7 @@ const routeMocks = vi.hoisted(() => ({
 }));
 
 vi.mock("../auth", () => ({ requireUser: routeMocks.requireUser }));
+vi.mock("../notifications/contribution", () => ({ notifyContributionEdit: vi.fn() }));
 vi.mock("../db/client", () => ({
   useSupabaseAdmin: routeMocks.useSupabaseAdmin,
 }));

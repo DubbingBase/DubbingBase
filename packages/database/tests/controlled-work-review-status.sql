@@ -33,6 +33,7 @@ INSERT INTO auth.users (id, raw_app_meta_data) VALUES
   ('00000000-0000-0000-0000-000000563692', '{"role":"user"}'::JSONB),
   ('00000000-0000-0000-0000-000000563693', '{"role":"user"}'::JSONB),
   ('00000000-0000-0000-0000-000000563694', '{"role":"user"}'::JSONB);
+UPDATE auth.users SET email_confirmed_at = now() WHERE id IN ('00000000-0000-0000-0000-000000563691', '00000000-0000-0000-0000-000000563692', '00000000-0000-0000-0000-000000563693', '00000000-0000-0000-0000-000000563694');
 
 INSERT INTO public.voice_actors (id, firstname, lastname) VALUES
   (563691001, 'Review Status', 'Actor');

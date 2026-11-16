@@ -557,6 +557,12 @@ describe("actor page work query", () => {
     queryMocks.selectedColumns.length = 0;
   });
 
+  it("selects reviewed_status for page roles", async () => {
+    queryMocks.useSupabaseAdmin.mockReturnValue(createSupabaseMock([]));
+    await getActorPageWorkByActor(31);
+    expect(queryMocks.selectedColumns[0]).toContain("reviewed_status");
+  });
+
   it("throws Supabase errors so callers can avoid caching a degraded empty result", async () => {
     const error = new Error("Database unavailable");
     queryMocks.useSupabaseAdmin.mockReturnValue(createSupabaseMock([], error));

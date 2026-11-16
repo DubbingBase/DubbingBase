@@ -963,6 +963,18 @@ export type Database = {
         };
         Returns: Json;
       };
+      controlled_set_voice_actor_picture: {
+        Args: {
+          p_actor_id: string;
+          p_expected_previous?: string;
+          p_new_path: string;
+          p_voice_actor_id: number;
+        };
+        Returns: {
+          audit_log_id: string;
+          previous_picture: string;
+        }[];
+      };
       controlled_update_voice_actor: {
         Args: {
           p_actor_id: string;
@@ -1176,6 +1188,20 @@ export type Database = {
           p_work_ids: number[];
         };
         Returns: number[];
+      };
+      get_entity_history: {
+        Args: { p_entity_id: number; p_entity_type: string; p_limit?: number };
+        Returns: {
+          action: string;
+          created_at: string;
+          entity_id: string;
+          entity_type: string;
+          id: string;
+          new_value: Json;
+          previous_value: Json;
+          reverted_at: string;
+          user_name: string;
+        }[];
       };
       get_media_queue_depth: {
         Args: { p_queue_name?: string };
@@ -1565,6 +1591,10 @@ export type Database = {
           p_game_character_id: string;
         };
         Returns: string;
+      };
+      work_contribution_privilege: {
+        Args: { p_user_id: string; p_voice_actor_id: number };
+        Returns: boolean;
       };
       work_role_identity_key: {
         Args: { p_character_id: number; p_character_name: string };

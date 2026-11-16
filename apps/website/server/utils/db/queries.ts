@@ -32,6 +32,7 @@ export async function getActorPageWorkByActor(actorId: number) {
     .select(
       `id,
       performance,
+      reviewed_status,
       voice_actors(id, firstname, lastname, profile_picture),
       dubbing_projects(language, content_id)`,
     )
@@ -88,6 +89,7 @@ const MEDIA_PAGE_DUBBING_PROJECTS_SELECT = `id,
     character_name,
     performance,
     note,
+    reviewed_status,
     voice_actor:voice_actors(id, firstname, lastname, profile_picture, voice_actor_name)
   )`;
 
@@ -99,6 +101,7 @@ const MEDIA_DETAIL_PAGE_DUBBING_PROJECTS_SELECT = `id,
     actor_id,
     character_name,
     note,
+    reviewed_status,
     voice_actor:voice_actors(id, firstname, lastname, profile_picture)
   )`;
 
@@ -199,6 +202,7 @@ export async function getMediaPageDubbingProjectData(contentId: number, contentT
         actor_id: work.actor_id,
         character_name: work.character_name,
         note: work.note,
+        reviewed_status: work.reviewed_status,
         voice_actor_id: voiceActorId,
       };
     }),
@@ -402,6 +406,7 @@ const EPISODE_PAGE_DUBBING_PROJECTS_SELECT = `id,
     actor_id,
     character_name,
     note,
+    reviewed_status,
     voice_actor:voice_actors(id, firstname, lastname, profile_picture)
   )`;
 
@@ -447,6 +452,7 @@ export async function getEpisodePageDubbingProjectData(
         actor_id: work.actor_id,
         character_name: work.character_name,
         note: work.note,
+        reviewed_status: work.reviewed_status,
         voice_actor_id: voiceActorId,
       };
     }),

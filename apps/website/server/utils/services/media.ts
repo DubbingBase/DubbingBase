@@ -360,7 +360,7 @@ export class MediaService {
     const { data: voiceActor, error: vaError } = await supabase
       .from("voice_actors")
       .select(
-        "*, work(id, actor_id, performance, note, character_name, dubbing_projects(content_id, content_type, studios(id, name, logo_url)))",
+        "*, work(id, actor_id, performance, note, character_name, reviewed_status, dubbing_projects(content_id, content_type, studios(id, name, logo_url)))",
       )
       .eq("id", voiceActorId)
       .single();
@@ -870,6 +870,7 @@ export class MediaService {
           actor_id: work.actor_id,
           performance: work.performance,
           note: work.note,
+          reviewed_status: work.reviewed_status,
           dubbing_projects: work.dubbing_projects,
         },
         media: compactMedia,

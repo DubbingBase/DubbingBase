@@ -189,6 +189,8 @@ const router = useRouter();
 const localePath = useLocalePath();
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
+// Logo uploads go to a bucket only admins and editors can write to, and the server rejects
+// logo changes from everyone else.
 const canEditStudioLogo = computed(() => {
   const role = user.value?.app_metadata?.role;
   return role === "admin" || role === "editor";

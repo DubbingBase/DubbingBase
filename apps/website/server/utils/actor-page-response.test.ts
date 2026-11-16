@@ -432,6 +432,28 @@ describe("actor page API projection", () => {
     ]);
   });
 
+  it("includes reviewed_status only for accepted and rejected page roles", async () => {
+    const row = (id: number, reviewed_status: string | null) => ({
+      id,
+      performance: "Lead",
+      reviewed_status,
+      dubbing_projects: null,
+      voice_actors: null,
+    });
+    mocks.getActorPageWorkByActor.mockResolvedValueOnce([
+      row(1, "accepted"),
+      row(2, "rejected"),
+      row(3, "waiting"),
+      row(4, null),
+    ]);
+
+    const response = await request("actor-page");
+    const body = await response.json();
+    expect(
+      body.actor.voice_roles.map((role: Record<string, unknown>) => role.reviewed_status),
+    ).toEqual(["accepted", "rejected", undefined, undefined]);
+  });
+
   it("retains the full response for unrecognized projections", async () => {
     const response = await request("other");
     expect(await response.json()).toHaveProperty("actor.movie_credits.crew.0.id", 90);

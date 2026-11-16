@@ -46,6 +46,7 @@ type VoiceActorWork = Pick<
   | "actor_id"
   | "highlight"
   | "performance"
+  | "reviewed_status"
   | "source_id"
   | "status"
   | "suggestions"

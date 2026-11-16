@@ -128,6 +128,10 @@ async function getActorPageVoiceRoles(
       roles: workData.map((row) => ({
         id: row.id,
         performance: row.performance,
+        // Compact: only non-default statuses matter to the UI, 'waiting' is omitted.
+        ...(row.reviewed_status === "accepted" || row.reviewed_status === "rejected"
+          ? { reviewed_status: row.reviewed_status }
+          : {}),
         dubbing_projects: isRecord(row.dubbing_projects)
           ? {
               language: row.dubbing_projects.language,

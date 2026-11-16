@@ -38,8 +38,14 @@
         </a>
       </template>
       <template #right>
+        <EntityHistory
+          type="studio"
+          :entity-id="studio.id"
+          :entity-name="studio.name"
+          @reverted="onHistoryReverted"
+        />
         <NuxtLink
-          v-if="isAdmin"
+          v-if="user"
           :to="localePath(`/studio/${studio.id}/edit`)"
           class="text-sm theme-primary-text theme-hover-primary-text transition-colors flex items-center gap-1.5 font-medium"
         >
@@ -273,7 +279,7 @@ import { useI18n } from "vue-i18n";
 
 const route = useRoute();
 const supabase = useSupabaseClient();
-const user = useSupabaseUser();
+const { user } = useClientUser();
 const localePath = useLocalePath();
 const { t, locale } = useI18n();
 
@@ -298,11 +304,7 @@ function getMediaTypeLabel(contentType?: string) {
   return contentType || t("search.media");
 }
 
-const isAdmin = computed(() => {
-  return user.value?.app_metadata?.role === "admin";
-});
-
-const { data: initialStudioDetails } = await useAsyncData(
+const { data: initialStudioDetails, refresh: refreshStudioDetails } = await useAsyncData(
   `studio-${route.params.id}`,
   () => fetchStudioDetails(String(route.params.id), "studio-page"),
   {
@@ -314,6 +316,15 @@ const { studio, dubbedProjects, voiceActorsRoster, loading, error } = useStudioD
   [],
   initialStudioDetails.value,
 );
+
+async function onHistoryReverted(): Promise<void> {
+  await refreshStudioDetails();
+  const fresh = initialStudioDetails.value;
+  if (!fresh) return;
+  studio.value = fresh.studio;
+  dubbedProjects.value = fresh.dubbedProjects;
+  voiceActorsRoster.value = fresh.voiceActorsRoster;
+}
 
 const searchInput = ref("");
 const { page: projectsPage, setPage: setProjectsPage } = useUrlPagination("projectsPage");

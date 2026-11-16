@@ -17,12 +17,14 @@ scratch_dir="$(mktemp -d)"
 cleanup() {
   if [[ -n "${studio_id:-}" ]]; then
     psql -X -q -v ON_ERROR_STOP=1 -v studio_id="$studio_id" <<SQL
+SET session_replication_role = replica;
 DELETE FROM public.audit_logs WHERE user_id = '$actor_id';
 DELETE FROM public.studios WHERE id = :studio_id;
 DELETE FROM auth.users WHERE id = '$actor_id';
 SQL
   else
     psql -X -q -v ON_ERROR_STOP=1 <<SQL
+SET session_replication_role = replica;
 DELETE FROM public.audit_logs WHERE user_id = '$actor_id';
 DELETE FROM public.studios WHERE name = 'Concurrent studio fixture';
 DELETE FROM auth.users WHERE id = '$actor_id';
@@ -33,11 +35,12 @@ SQL
 trap cleanup EXIT
 
 psql -X -q -v ON_ERROR_STOP=1 <<SQL
+SET session_replication_role = replica;
 DELETE FROM public.audit_logs WHERE user_id = '$actor_id';
 DELETE FROM public.studios WHERE name = 'Concurrent studio fixture';
 DELETE FROM auth.users WHERE id = '$actor_id';
-INSERT INTO auth.users (id, raw_app_meta_data)
-VALUES ('$actor_id', '{}'::JSONB);
+INSERT INTO auth.users (id, raw_app_meta_data, email_confirmed_at)
+VALUES ('$actor_id', '{}'::JSONB, now());
 SQL
 
 studio_id="$(psql -X -qAt -v ON_ERROR_STOP=1 <<SQL

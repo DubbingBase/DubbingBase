@@ -5,6 +5,7 @@ const routeMocks = vi.hoisted(() => ({
   requireUser: vi.fn(),
   useSupabaseAdmin: vi.fn(),
   fetchMediaDetails: vi.fn(),
+  notifyContributionEdit: vi.fn(),
   getGame: vi.fn(),
   getGameCharacters: vi.fn(),
   getBook: vi.fn(),
@@ -12,6 +13,9 @@ const routeMocks = vi.hoisted(() => ({
 }));
 
 vi.mock("../auth", () => ({ requireUser: routeMocks.requireUser }));
+vi.mock("../notifications/contribution", () => ({
+  notifyContributionEdit: routeMocks.notifyContributionEdit,
+}));
 vi.mock("../db/client", () => ({
   useSupabaseAdmin: routeMocks.useSupabaseAdmin,
 }));
@@ -270,8 +274,22 @@ describe("POST /api/link-voice-actor", () => {
     expect(rpc).not.toHaveBeenCalled();
   });
 
-  it("rejects unlinked users before external media-provider lookups", async () => {
+  it("lets a contributor who is not linked to the actor add a credit and notifies admins", async () => {
     const { rpc } = createSupabaseMock({ ownership: false });
+
+    const response = await post(validBody());
+
+    expect(response.status).toBe(200);
+    expect(rpc).toHaveBeenCalledOnce();
+    expect(routeMocks.notifyContributionEdit).toHaveBeenCalledOnce();
+  });
+
+  it("rejects blocked accounts before external media-provider lookups", async () => {
+    routeMocks.requireUser.mockReturnValue({
+      id: "blocked-user",
+      app_metadata: { role: "user", blocked: true },
+    });
+    const { rpc } = createSupabaseMock();
 
     const response = await post(validBody());
 

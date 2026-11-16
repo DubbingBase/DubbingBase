@@ -95,6 +95,8 @@
               <th class="py-4 px-6">{{ $t("admin.users.userDetails") }}</th>
               <th class="py-4 px-6">{{ $t("common.userId") }}</th>
               <th class="py-4 px-6">{{ $t("admin.users.role") }}</th>
+              <th class="py-4 px-6">{{ $t("admin.users.blocked") }}</th>
+              <th class="py-4 px-6">{{ $t("admin.users.trusted") }}</th>
               <th class="py-4 px-6 text-right">{{ $t("common.actions") }}</th>
             </tr>
           </thead>
@@ -127,6 +129,26 @@
                     {{ $t("admin.users.roleAdmin") }}
                   </option>
                 </select>
+              </td>
+              <td class="py-4 px-6">
+                <input
+                  type="checkbox"
+                  :checked="user.app_metadata.blocked"
+                  :disabled="updatingFlag[user.id]"
+                  :aria-label="$t('admin.users.blocked')"
+                  class="h-4 w-4 disabled:opacity-50"
+                  @change="updateFlag(user, 'blocked', !user.app_metadata.blocked)"
+                />
+              </td>
+              <td class="py-4 px-6">
+                <input
+                  type="checkbox"
+                  :checked="user.app_metadata.trusted"
+                  :disabled="updatingFlag[user.id]"
+                  :aria-label="$t('admin.users.trusted')"
+                  class="h-4 w-4 disabled:opacity-50"
+                  @change="updateFlag(user, 'trusted', !user.app_metadata.trusted)"
+                />
               </td>
               <td class="py-4 px-6 text-right">
                 <button
@@ -232,6 +254,8 @@ interface User {
   created_at: string;
   app_metadata: {
     role?: string;
+    blocked: boolean;
+    trusted: boolean;
   };
 }
 
@@ -243,6 +267,7 @@ const error = ref<string | null>(null);
 
 // Pending UI action states
 const updatingRole = ref<Record<string, boolean>>({});
+const updatingFlag = ref<Record<string, boolean>>({});
 const showConfirm = ref(false);
 const userToDelete = ref<User | null>(null);
 const deleting = ref(false);
@@ -332,6 +357,24 @@ const updateRole = async (userObj: User) => {
     showToast(readErrorMessage(err) || "Failed to update role", "error");
   } finally {
     updatingRole.value[userObj.id] = false;
+  }
+};
+
+const updateFlag = async (userObj: User, flag: "blocked" | "trusted", value: boolean) => {
+  updatingFlag.value[userObj.id] = true;
+
+  try {
+    await $fetch("/api/update_user_role", {
+      method: "POST",
+      body: { userId: userObj.id, [flag]: value },
+    });
+    userObj.app_metadata[flag] = value;
+    showToast(`${userObj.email}: ${flag} = ${value}`, "success");
+  } catch (err: unknown) {
+    console.error(`Error updating user ${flag} flag:`, err);
+    showToast(readErrorMessage(err) || `Failed to update ${flag}`, "error");
+  } finally {
+    updatingFlag.value[userObj.id] = false;
   }
 };
 

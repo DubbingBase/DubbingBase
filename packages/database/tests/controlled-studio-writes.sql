@@ -18,7 +18,10 @@ $$;
 
 INSERT INTO auth.users (id, raw_app_meta_data) VALUES
   ('00000000-0000-0000-0000-000000563651', '{}'::JSONB),
-  ('00000000-0000-0000-0000-000000563652', '{"role":"editor"}'::JSONB);
+  ('00000000-0000-0000-0000-000000563652', '{"role":"editor"}'::JSONB),
+  ('00000000-0000-0000-0000-000000563653', '{"blocked":true}'::JSONB),
+  ('00000000-0000-0000-0000-000000563654', '{}'::JSONB);
+UPDATE auth.users SET email_confirmed_at = now() WHERE id IN ('00000000-0000-0000-0000-000000563651', '00000000-0000-0000-0000-000000563652', '00000000-0000-0000-0000-000000563653');
 
 SET LOCAL ROLE anon;
 DO $$
@@ -331,6 +334,26 @@ BEGIN
     );
     RAISE EXCEPTION 'protected field was accepted';
   EXCEPTION WHEN invalid_parameter_value THEN
+    NULL;
+  END;
+
+  BEGIN
+    PERFORM * FROM public.controlled_save_studio(
+      '00000000-0000-0000-0000-000000563653', v_studio_id, v_updated_at,
+      '81a2b916-dbb3-4a18-b6e0-8b0267ef9f8a', '{"city":"Blocked edit"}'::JSONB
+    );
+    RAISE EXCEPTION 'blocked user changed a studio';
+  EXCEPTION WHEN insufficient_privilege THEN
+    NULL;
+  END;
+
+  BEGIN
+    PERFORM * FROM public.controlled_save_studio(
+      '00000000-0000-0000-0000-000000563654', v_studio_id, v_updated_at,
+      '4b0d3b0a-6d2c-4d0e-9b3f-0d5c1f4e7a10', '{"city":"Unconfirmed edit"}'::JSONB
+    );
+    RAISE EXCEPTION 'user without a confirmed email changed a studio';
+  EXCEPTION WHEN insufficient_privilege THEN
     NULL;
   END;
 

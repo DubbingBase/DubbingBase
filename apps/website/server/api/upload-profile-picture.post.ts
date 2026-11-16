@@ -1,4 +1,5 @@
-import { resolveUser } from "../utils/auth";
+import { requireUser } from "../utils/auth";
+import { notifyContributionEdit } from "../utils/notifications/contribution";
 import { getRequestHeader, getRequestIP, type H3Event } from "h3";
 import { randomUUID } from "node:crypto";
 import { useSupabaseAdmin } from "../utils/db/client";
@@ -8,6 +9,7 @@ import { readProperty } from "@app/shared-logic";
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const RATE_LIMITER_BINDING = "PROFILE_PICTURE_UPLOAD_LIMITER";
 const RATE_LIMIT_KEY_PREFIX = "voice-actor-picture-upload:";
+const USER_RATE_LIMIT_KEY_PREFIX = "voice-actor-picture-upload-user:";
 
 type ImageContentType = "image/jpeg" | "image/png" | "image/webp";
 type UploadRateLimiter = {
@@ -82,6 +84,21 @@ async function removePictureBestEffort(
   }
 }
 
+async function enforceUploadLimit(limiter: UploadRateLimiter, key: string): Promise<void> {
+  let allowed: boolean;
+  try {
+    ({ success: allowed } = await limiter.limit({ key }));
+  } catch {
+    throw createError({ statusCode: 503, message: "Upload protection is unavailable" });
+  }
+  if (!allowed) {
+    throw createError({
+      statusCode: 429,
+      message: "Too many picture uploads. Try again later.",
+    });
+  }
+}
+
 export default defineEventHandler(async (event) => {
   try {
     const rateLimiter = getUploadRateLimiter(event);
@@ -95,24 +112,18 @@ export default defineEventHandler(async (event) => {
           message: "Upload protection is unavailable",
         });
       }
+      await enforceUploadLimit(rateLimiter, `${RATE_LIMIT_KEY_PREFIX}${clientIp}`);
+    }
 
-      let allowed: boolean;
-      try {
-        ({ success: allowed } = await rateLimiter.limit({
-          key: `${RATE_LIMIT_KEY_PREFIX}${clientIp}`,
-        }));
-      } catch {
-        throw createError({
-          statusCode: 503,
-          message: "Upload protection is unavailable",
-        });
-      }
-      if (!allowed) {
-        throw createError({
-          statusCode: 429,
-          message: "Too many picture uploads. Try again later.",
-        });
-      }
+    // Open editing is for signed-in contributors only. The token claims below are an early
+    // denial; the database function re-checks the live blocked/trusted/email state.
+    const user = await requireUser(event);
+    if (user.app_metadata?.blocked === true) {
+      throw createError({ statusCode: 403, message: "Contributions are blocked for this account" });
+    }
+    // Also limit per account, so one account cannot use many IP addresses to flood storage.
+    if (rateLimiter) {
+      await enforceUploadLimit(rateLimiter, `${USER_RATE_LIMIT_KEY_PREFIX}${user.id}`);
     }
 
     const formData = await readMultipartFormData(event);
@@ -167,14 +178,14 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 404, message: "Voice actor not found" });
     }
 
-    const user = await resolveUser(event);
-    const isAdmin = user?.app_metadata?.role === "admin";
+    const isAdmin = user.app_metadata?.role === "admin";
+    const canReplace = isAdmin || user.app_metadata?.trusted === true;
     const previousPicture = voiceActor.profile_picture;
     const isFirstUpload = previousPicture === null || previousPicture === "";
-    if (!isFirstUpload && !isAdmin) {
+    if (!isFirstUpload && !canReplace) {
       throw createError({
         statusCode: 403,
-        message: "Only admins can replace a profile picture",
+        message: "Only trusted contributors and admins can replace a profile picture",
       });
     }
 
@@ -188,46 +199,62 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 502, message: "Image upload failed" });
     }
 
-    let updateQuery = supabaseAdmin
-      .from("voice_actors")
-      .update({ profile_picture: uploadedFile.path })
-      .eq("id", vaId);
-    if (previousPicture === null) {
-      updateQuery = updateQuery.is("profile_picture", null);
-    } else {
-      updateQuery = updateQuery.eq("profile_picture", previousPicture);
-    }
+    // The swap, the live permission checks and the audit row commit together in the database.
+    const { data: swapped, error: swapError } = await supabaseAdmin.rpc(
+      "controlled_set_voice_actor_picture",
+      {
+        p_actor_id: user.id,
+        p_voice_actor_id: vaId,
+        p_new_path: uploadedFile.path,
+        p_expected_previous: previousPicture ?? undefined,
+      },
+    );
 
-    const { data: updatedVoiceActor, error: updateError } = await updateQuery
-      .select("id")
-      .maybeSingle();
-
-    if (updateError || !updatedVoiceActor) {
+    if (swapError || !swapped?.[0]) {
       await removePictureBestEffort(
         supabaseAdmin,
         uploadedFile.path,
         "Failed to clean up staged voice actor profile picture",
       );
-      if (updateError) {
-        console.error("Failed to update voice actor profile picture");
+      const code = swapError?.code;
+      if (code === "42501") {
         throw createError({
-          statusCode: 500,
-          message: "Unable to save profile picture",
+          statusCode: 403,
+          message: "Only trusted contributors and admins can replace a profile picture",
         });
       }
+      if (code === "40001") {
+        throw createError({
+          statusCode: 409,
+          message: "Profile picture changed during upload. Try again.",
+        });
+      }
+      if (code === "P0002") {
+        throw createError({ statusCode: 404, message: "Voice actor not found" });
+      }
+      console.error("Failed to update voice actor profile picture");
       throw createError({
-        statusCode: 409,
-        message: "Profile picture changed during upload. Try again.",
+        statusCode: 500,
+        message: "Unable to save profile picture",
       });
     }
 
-    if (previousPicture && isActorPicturePath(previousPicture, vaId)) {
+    // Only admins delete a replaced image. Keeping it after a trusted replacement lets an
+    // admin restore the previous picture from the change history.
+    if (isAdmin && previousPicture && isActorPicturePath(previousPicture, vaId)) {
       await removePictureBestEffort(
         supabaseAdmin,
         previousPicture,
         "Failed to remove replaced voice actor profile picture",
       );
     }
+
+    notifyContributionEdit(event, user, {
+      entity: "voice actor",
+      entityId: vaId,
+      detail: "profile_picture",
+      path: `/voice-actor/${vaId}`,
+    });
 
     return {
       ok: true,

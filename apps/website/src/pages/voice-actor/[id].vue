@@ -71,8 +71,15 @@
           </div>
         </div>
 
+        <EntityHistory
+          type="voice_actor"
+          :entity-id="voiceActorId"
+          :entity-name="voiceActorDisplayName"
+          @reverted="onHistoryReverted"
+        />
+
         <NuxtLink
-          v-if="isAdmin"
+          v-if="user"
           :to="localePath(`/voice-actor/${voiceActorId}/edit`)"
           class="text-sm theme-primary-text theme-hover-primary-text transition-colors flex items-center gap-1.5 font-medium"
         >
@@ -432,6 +439,10 @@
                           class="font-medium text-sm theme-text-secondary leading-tight line-clamp-2"
                           >{{ item.data.character || "Unknown" }}</span
                         >
+                        <CreditStatusBadge
+                          class="mt-1 self-start"
+                          :status="item.work.reviewed_status"
+                        />
                       </div>
                     </div>
                   </div>
@@ -621,6 +632,10 @@
                               class="font-medium text-sm theme-text-secondary leading-tight line-clamp-2"
                               >{{ item.data.character || $t("details.unknownCharacter") }}</span
                             >
+                            <CreditStatusBadge
+                              class="mt-1 self-start"
+                              :status="item.work.reviewed_status"
+                            />
                           </div>
                         </div>
                       </div>
@@ -756,7 +771,15 @@ watch(debouncedSearch, (val) => {
   searchQuery.value = val;
 });
 
-const { user, isAdmin } = useClientUser();
+const voiceActorDisplayName = computed(() =>
+  [voiceActor.value?.firstname, voiceActor.value?.lastname].filter(Boolean).join(" "),
+);
+
+async function onHistoryReverted(): Promise<void> {
+  await voiceActorDataRequest.refresh();
+}
+
+const { user } = useClientUser();
 
 const completenessScore = computed(() => {
   if (!voiceActor.value) return 0;

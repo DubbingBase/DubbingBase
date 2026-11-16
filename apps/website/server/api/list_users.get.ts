@@ -17,7 +17,11 @@ export default defineAdminHandler(async (event) => {
         id: user.id,
         email: user.email ?? "",
         created_at: user.created_at,
-        app_metadata: { role: readProperty(user.app_metadata, "role") },
+        app_metadata: {
+          role: readProperty(user.app_metadata, "role"),
+          blocked: readProperty(user.app_metadata, "blocked") === true,
+          trusted: readProperty(user.app_metadata, "trusted") === true,
+        },
       })),
     };
   }

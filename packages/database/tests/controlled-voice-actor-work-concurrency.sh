@@ -4,7 +4,7 @@ set -euo pipefail
 # This test is intentionally pinned to loopback and a dedicated disposable
 # Supabase port. It opens independent psql sessions for every racing request.
 DB_HOST=127.0.0.1
-DB_PORT=${T08_TEST_DB_PORT:-56322}
+DB_PORT=${T08_TEST_DB_PORT:-55322}
 DB_NAME=postgres
 DB_USER=postgres
 DB_PASSWORD=${T08_TEST_DB_PASSWORD:-postgres}
@@ -53,8 +53,8 @@ $$;
 SQL
 fixtures_created=1
 psql_local >/dev/null <<'SQL'
-INSERT INTO auth.users (id, raw_app_meta_data)
-VALUES ('00000000-0000-0000-0000-000056368201', '{"role":"user"}'::JSONB);
+INSERT INTO auth.users (id, raw_app_meta_data, email_confirmed_at)
+VALUES ('00000000-0000-0000-0000-000056368201', '{"role":"user"}'::JSONB, now());
 INSERT INTO public.voice_actors (id, firstname, lastname)
 VALUES (563682001, 'Concurrent', 'Voice Actor');
 INSERT INTO public.user_voice_actor_links (user_id, voice_actor_id)
