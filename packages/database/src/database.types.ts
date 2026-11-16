@@ -1199,6 +1199,7 @@ export type Database = {
           id: string;
           new_value: Json;
           previous_value: Json;
+          reverted_at: string;
           user_name: string;
         }[];
       };

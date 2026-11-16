@@ -71,6 +71,13 @@
           </div>
         </div>
 
+        <EntityHistory
+          type="voice_actor"
+          :entity-id="voiceActorId"
+          :entity-name="voiceActorDisplayName"
+          @reverted="onHistoryReverted"
+        />
+
         <NuxtLink
           v-if="user"
           :to="localePath(`/voice-actor/${voiceActorId}/edit`)"
@@ -654,13 +661,6 @@
       {{ $t("voiceActor.notFound") }}
     </div>
 
-    <EntityHistory
-      v-if="voiceActor"
-      type="voice_actor"
-      :entity-id="voiceActorId"
-      class="container mx-auto my-8 px-4"
-    />
-
     <ReportModal v-model:open="isReportModalOpen" :target-url="currentUrl" />
   </div>
 </template>
@@ -770,6 +770,14 @@ const debouncedSearch = refDebounced(searchInput, 150);
 watch(debouncedSearch, (val) => {
   searchQuery.value = val;
 });
+
+const voiceActorDisplayName = computed(() =>
+  [voiceActor.value?.firstname, voiceActor.value?.lastname].filter(Boolean).join(" "),
+);
+
+async function onHistoryReverted(): Promise<void> {
+  await voiceActorDataRequest.refresh();
+}
 
 const { user } = useClientUser();
 

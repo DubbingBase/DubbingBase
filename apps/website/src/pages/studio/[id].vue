@@ -38,6 +38,12 @@
         </a>
       </template>
       <template #right>
+        <EntityHistory
+          type="studio"
+          :entity-id="studio.id"
+          :entity-name="studio.name"
+          @reverted="onHistoryReverted"
+        />
         <NuxtLink
           v-if="user"
           :to="localePath(`/studio/${studio.id}/edit`)"
@@ -242,8 +248,6 @@
           </template>
         </PaginatedResponsiveGrid>
       </section>
-
-      <EntityHistory type="studio" :entity-id="studio.id" class="mt-8" />
     </div>
   </DetailsPage>
 
@@ -300,7 +304,7 @@ function getMediaTypeLabel(contentType?: string) {
   return contentType || t("search.media");
 }
 
-const { data: initialStudioDetails } = await useAsyncData(
+const { data: initialStudioDetails, refresh: refreshStudioDetails } = await useAsyncData(
   `studio-${route.params.id}`,
   () => fetchStudioDetails(String(route.params.id), "studio-page"),
   {
@@ -312,6 +316,15 @@ const { studio, dubbedProjects, voiceActorsRoster, loading, error } = useStudioD
   [],
   initialStudioDetails.value,
 );
+
+async function onHistoryReverted(): Promise<void> {
+  await refreshStudioDetails();
+  const fresh = initialStudioDetails.value;
+  if (!fresh) return;
+  studio.value = fresh.studio;
+  dubbedProjects.value = fresh.dubbedProjects;
+  voiceActorsRoster.value = fresh.voiceActorsRoster;
+}
 
 const searchInput = ref("");
 const { page: projectsPage, setPage: setProjectsPage } = useUrlPagination("projectsPage");

@@ -2,7 +2,8 @@
 -- their id or email. Both historical spellings of entity_type ('voice_actor'/'voice_actors',
 -- 'studio'/'studios') are accepted, and a voice actor's history also includes edits to
 -- the cast credits attached to that voice actor.
-CREATE OR REPLACE FUNCTION public.get_entity_history(
+DROP FUNCTION IF EXISTS public.get_entity_history(TEXT, BIGINT, INTEGER);
+CREATE FUNCTION public.get_entity_history(
   p_entity_type TEXT,
   p_entity_id BIGINT,
   p_limit INTEGER DEFAULT 50
@@ -15,7 +16,8 @@ RETURNS TABLE(
   entity_id TEXT,
   user_name TEXT,
   previous_value JSONB,
-  new_value JSONB
+  new_value JSONB,
+  reverted_at TIMESTAMPTZ
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -40,7 +42,8 @@ BEGIN
       'Anonymous contributor'
     ) AS user_name,
     audit.previous_value,
-    audit.new_value
+    audit.new_value,
+    audit.reverted_at
   FROM public.audit_logs AS audit
   LEFT JOIN auth.users AS auth_user ON auth_user.id = audit.user_id
   WHERE audit.action <> 'noop'
