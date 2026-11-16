@@ -315,10 +315,6 @@
                           :title="getMediaTitle(item.media)"
                           >{{ getMediaTitle(item.media) }}</span
                         >
-                        <CreditStatusBadge
-                          class="mt-1 self-start"
-                          :status="item.work.reviewed_status"
-                        />
                         <div
                           v-if="item.work.dubbing_projects?.studios"
                           class="mt-1 flex min-w-0 overflow-hidden"
@@ -436,6 +432,10 @@
                           class="font-medium text-sm theme-text-secondary leading-tight line-clamp-2"
                           >{{ item.data.character || "Unknown" }}</span
                         >
+                        <CreditStatusBadge
+                          class="mt-1 self-start"
+                          :status="item.work.reviewed_status"
+                        />
                       </div>
                     </div>
                   </div>
@@ -569,10 +569,6 @@
                               :title="getMediaTitle(item.media)"
                               >{{ getMediaTitle(item.media) }}</span
                             >
-                            <CreditStatusBadge
-                              class="mt-1 self-start"
-                              :status="item.work.reviewed_status"
-                            />
                             <div
                               v-if="item.work.dubbing_projects?.studios"
                               class="mt-1 flex min-w-0 overflow-hidden"
@@ -629,6 +625,10 @@
                               class="font-medium text-sm theme-text-secondary leading-tight line-clamp-2"
                               >{{ item.data.character || $t("details.unknownCharacter") }}</span
                             >
+                            <CreditStatusBadge
+                              class="mt-1 self-start"
+                              :status="item.work.reviewed_status"
+                            />
                           </div>
                         </div>
                       </div>
