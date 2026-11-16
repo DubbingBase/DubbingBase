@@ -4,6 +4,8 @@
 - **AppChip** [client] — props: tone, size, dashed, uppercase — `apps/website/src/components/AppChip.vue`
 - **AppFilterChip** [client] — props: selected, to, dashed, size — `apps/website/src/components/AppFilterChip.vue`
 - **CharacterPhoto** [client] — props: image — `apps/website/src/components/CharacterPhoto.vue`
+- **CreditStatusBadge** [client] — props: status — `apps/website/src/components/CreditStatusBadge.vue`
+- **EntityHistory** [client] — props: type, entityId, entityName — `apps/website/src/components/EntityHistory.vue`
 - **Footer** [client] — `apps/website/src/components/Footer.vue`
 - **ForceEnqueueButton** [client] — props: mediaType, mediaId, seasonNumber, episodeNumber, wikipediaLanguage — `apps/website/src/components/ForceEnqueueButton.vue`
 - **Header** [client] — `apps/website/src/components/Header.vue`

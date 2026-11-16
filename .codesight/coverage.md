@@ -1,7 +1,7 @@
 # Test Coverage
 
-> **55%** of routes and models are covered by tests
-> 153 test files found
+> **56%** of routes and models are covered by tests
+> 162 test files found
 
 ## Covered Routes
 
@@ -9,6 +9,7 @@
 - GET:/api/character-images
 - POST:/api/count-voice-actor-works
 - GET:/api/detail-collections
+- GET:/api/entity-history
 - GET:/api/find_duplicate_voice_actors
 - POST:/api/game-characters
 - GET:/api/get-random-task
@@ -21,6 +22,7 @@
 - POST:/api/media-queue
 - POST:/api/prepare_game
 - POST:/api/process-media-queue
+- POST:/api/revert-history-entry
 - POST:/api/save-dubbing-project
 - POST:/api/save-metadata
 - POST:/api/save-studio

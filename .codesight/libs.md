@@ -94,6 +94,14 @@
   - _...11 more_
 - `apps/website/server/utils/dubbing-language.ts` — function requireDubbingLanguage: (value) => DubbingLanguage
 - `apps/website/server/utils/dubbing-region-detection.ts` — function detectDubbingRegionFromWikitext: ({...}, sections, }) => DubbingEvidence, type DubbingEvidence
+- `apps/website/server/utils/entity-history.ts`
+  - function isHistoryEntityType: (value) => value is HistoryEntityType
+  - function displayValue: (value) => string | null
+  - function changedFields: (kind, previous, next) => ChangedField[]
+  - function safeHttpUrl: (value) => string | null
+  - function diffSnapshots: (kind, previous, next, context) => HistoryChange[]
+  - function toHistoryEntry: (row, entityType, context) => HistoryEntry | null
+  - _...9 more_
 - `apps/website/server/utils/error-message.ts` — function getErrorMessage: (error) => string
 - `apps/website/server/utils/featureFlags.ts` — function isEnqueueOnNavigateEnabled: () => Promise<boolean>
 - `apps/website/server/utils/game-character-validation.ts`
@@ -108,6 +116,17 @@
   - function toStringRecord: (value) => Record<string, string | undefined>
   - function getGlobalEnv: () => Record<string, string | undefined>
   - function getCloudflareEnv: (event) => Record<string, string | undefined>
+- `apps/website/server/utils/history-revert.ts`
+  - function evaluateRevert: (subject, current, unknown> | null) => RevertEvaluation
+  - type RevertBlockReason
+  - type RevertPlan
+  - type RevertEvaluation
+  - type RevertSubject
+- `apps/website/server/utils/history-store.ts`
+  - function normalizeEntityType: (entityType) => "voice_actor" | "studio" | "work" | null
+  - function currentRowKey: (entityType, entityId) => string
+  - function loadCurrentRows: (supabase, rows) => Promise<CurrentRows>
+  - type CurrentRows
 - `apps/website/server/utils/index.ts`
   - function getCloudflareKv: (event?) => CacheKv | null
   - function useCache: (event?) => SimpleCache
@@ -135,6 +154,7 @@
   - function withMediaServiceTimeout: (request) => void
 - `apps/website/server/utils/narrow.ts` — function asString: (value) => string | undefined
 - `apps/website/server/utils/normalize.ts` — function normalizeString: (input) => string, function isExploitableVoiceActorName: (input) => boolean
+- `apps/website/server/utils/notifications/contribution.ts` — function notifyContributionEdit: (event, user, edit) => void, type ContributionEdit
 - `apps/website/server/utils/notifications/discord.ts`
   - function normalizeDiscordUrl: (url) => string
   - function buildDiscordEmbed: (title, message, options?) => Record<string, unknown>
@@ -275,6 +295,14 @@
   - function useEditorToast
   - interface EditorToastState
   - type EditorToastKind
+- `apps/website/src/composables/useEntityHistory.ts`
+  - function useEntityHistory: (type, id) => void
+  - type HistoryEntityType
+  - type HistoryKind
+  - type HistoryChangeType
+  - type HistoryChange
+  - type HistoryEntry
+  - _...2 more_
 - `apps/website/src/composables/useFullCrewState.ts`
   - function useFullCrewState
   - type FullCrewKey
@@ -322,6 +350,14 @@
   - function prefillDuplicateWork: (canonical, works) => void
   - interface DuplicateWorkGroup
   - interface DuplicateWorkPage
+  - _...4 more_
+- `apps/website/src/utils/entity-history-view.ts`
+  - function isSafeHref: (href) => href is string
+  - function matchesFilter: (entry, filter) => boolean
+  - function filterEntries: (entries, filter) => HistoryEntry[]
+  - function countByFilter: (entries) => Record<HistoryFilter, number>
+  - function groupByDay: (entries) => HistoryDayGroup[]
+  - function dayDifference: (date, now) => number
   - _...4 more_
 - `apps/website/src/utils/error-message.ts` — function readErrorMessage: (err) => string | undefined
 - `apps/website/src/utils/legal-date.ts` — function formatLegalDate: (date) => void

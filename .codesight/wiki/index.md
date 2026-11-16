@@ -20,6 +20,7 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 - [Dashboard-stats.get](./dashboard-stats.get.md)
 - [Delete_user.post](./delete_user.post.md)
 - [Detail-collections.get](./detail-collections.get.md)
+- [Entity-history.get](./entity-history.get.md)
 - [Find_duplicate_voice_actors.get](./find_duplicate_voice_actors.get.md)
 - [Game-characters.post](./game-characters.post.md)
 - [Games.get](./games.get.md)
@@ -42,6 +43,7 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 - [Prepare_game.post](./prepare_game.post.md)
 - [Process-media-queue.post](./process-media-queue.post.md)
 - [Recent-voice-actors.get](./recent-voice-actors.get.md)
+- [Revert-history-entry.post](./revert-history-entry.post.md)
 - [Revert-task.post](./revert-task.post.md)
 - [Save-dubbing-project.post](./save-dubbing-project.post.md)
 - [Save-metadata.post](./save-metadata.post.md)
@@ -64,9 +66,9 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 
 ## Quick Stats
 
-- Routes: **67**
+- Routes: **69**
 - Models: **28**
-- Components: **143**
+- Components: **145**
 - Env vars: **40** required, **19** with defaults
 
 ## How to Use
@@ -94,4 +96,4 @@ These exist in your codebase but are **not** reflected in wiki articles:
 When in doubt, search the source. The wiki is a starting point, not a complete inventory.
 
 ---
-_Last compiled: 2026-11-16 · 54 articles · [codesight](https://github.com/Houseofmvps/codesight)_
+_Last compiled: 2026-11-16 · 56 articles · [codesight](https://github.com/Houseofmvps/codesight)_

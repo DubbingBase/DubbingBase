@@ -3,14 +3,14 @@
 **Stack:** nuxt | none | typescript
 **Monorepo:** @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-67 routes | 28 models | 59 env vars | 516 import links
+69 routes | 28 models | 59 env vars | 543 import links
 
 **API areas:** /api/about-preference, /api/actor, /api/admin, /api/advertisement, /api/audiobook, /api/career-grid, /api/character, /api/character-images, /api/count-voice-actor-works, /api/dashboard-stats
 
 **High-impact files** (change carefully):
-- apps/website/server/utils/db/client.ts (imported by 54 files)
+- apps/website/server/utils/db/client.ts (imported by 57 files)
 - apps/website/server/utils/index.ts (imported by 28 files)
-- apps/website/server/utils/auth-handlers.ts (imported by 23 files)
+- apps/website/server/utils/auth-handlers.ts (imported by 24 files)
 - apps/website/server/utils/cache/index.ts (imported by 20 files)
 - apps/website/server/utils/api/igdb.ts (imported by 13 files)
 

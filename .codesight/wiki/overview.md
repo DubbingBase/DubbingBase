@@ -8,7 +8,7 @@
 
 ## Scale
 
-67 API routes · 28 database models · 143 UI components · 131 library files · 14 middleware layers · 59 environment variables
+69 API routes · 28 database models · 145 UI components · 137 library files · 14 middleware layers · 59 environment variables
 
 ## Subsystems
 
@@ -22,6 +22,7 @@
 - **[Dashboard-stats.get](./dashboard-stats.get.md)** — 1 routes — touches: auth
 - **[Delete_user.post](./delete_user.post.md)** — 1 routes — touches: auth
 - **[Detail-collections.get](./detail-collections.get.md)** — 1 routes
+- **[Entity-history.get](./entity-history.get.md)** — 1 routes — touches: auth
 - **[Find_duplicate_voice_actors.get](./find_duplicate_voice_actors.get.md)** — 1 routes — touches: auth
 - **[Game-characters.post](./game-characters.post.md)** — 1 routes — touches: auth
 - **[Games.get](./games.get.md)** — 1 routes — touches: cache
@@ -44,6 +45,7 @@
 - **[Prepare_game.post](./prepare_game.post.md)** — 1 routes — touches: auth
 - **[Process-media-queue.post](./process-media-queue.post.md)** — 1 routes — touches: auth, cache, queue
 - **[Recent-voice-actors.get](./recent-voice-actors.get.md)** — 1 routes
+- **[Revert-history-entry.post](./revert-history-entry.post.md)** — 1 routes — touches: auth, db
 - **[Revert-task.post](./revert-task.post.md)** — 1 routes — touches: auth, db
 - **[Save-dubbing-project.post](./save-dubbing-project.post.md)** — 1 routes — touches: auth
 - **[Save-metadata.post](./save-metadata.post.md)** — 1 routes — touches: auth
@@ -59,25 +61,25 @@
 - **[Top-voice-actors.get](./top-voice-actors.get.md)** — 1 routes
 - **[Update-voice-actor.post](./update-voice-actor.post.md)** — 1 routes — touches: auth, upload
 - **[Update_user_role.post](./update_user_role.post.md)** — 1 routes — touches: auth
-- **[Upload-profile-picture.post](./upload-profile-picture.post.md)** — 1 routes — touches: auth, db, upload
+- **[Upload-profile-picture.post](./upload-profile-picture.post.md)** — 1 routes — touches: auth, upload
 - **[Voice-actors.get](./voice-actors.get.md)** — 1 routes
 
 **Database:** unknown, 28 models — see [database.md](./database.md)
 
-**UI:** 143 components (vue) — see [ui.md](./ui.md)
+**UI:** 145 components (vue) — see [ui.md](./ui.md)
 
-**Libraries:** 131 files — see [libraries.md](./libraries.md)
+**Libraries:** 137 files — see [libraries.md](./libraries.md)
 
 ## High-Impact Files
 
 Changes to these files have the widest blast radius across the codebase:
 
-- `apps/website/server/utils/db/client.ts` — imported by **54** files
+- `apps/website/server/utils/db/client.ts` — imported by **57** files
 - `apps/website/server/utils/index.ts` — imported by **28** files
-- `apps/website/server/utils/auth-handlers.ts` — imported by **23** files
+- `apps/website/server/utils/auth-handlers.ts` — imported by **24** files
 - `apps/website/server/utils/cache/index.ts` — imported by **20** files
 - `apps/website/server/utils/api/igdb.ts` — imported by **13** files
-- `packages/shared-logic/src/types/index.ts` — imported by **12** files
+- `apps/website/server/utils/urls/supabase.ts` — imported by **12** files
 
 ## Required Environment Variables
 

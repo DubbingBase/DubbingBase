@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 67 routes | 28 models | 143 components | 131 lib files | 59 env vars | 14 middleware | 55% test coverage
-> **Token savings:** this file is ~18,400 tokens. Without it, AI exploration would cost ~146,700 tokens. **Saves ~128,300 tokens per conversation.**
-> **Last scanned:** 2026-11-16 12:01 — re-run after significant changes
+> 69 routes | 28 models | 145 components | 137 lib files | 59 env vars | 14 middleware | 56% test coverage
+> **Token savings:** this file is ~19,100 tokens. Without it, AI exploration would cost ~150,000 tokens. **Saves ~130,900 tokens per conversation.**
+> **Last scanned:** 2026-11-16 15:44 — re-run after significant changes
 
 ---
 
@@ -27,6 +27,7 @@
 - `GET` `/api/dashboard-stats` [auth]
 - `POST` `/api/delete_user` [auth]
 - `GET` `/api/detail-collections` ✓
+- `GET` `/api/entity-history` [auth] ✓
 - `GET` `/api/episode/index`
 - `GET` `/api/find_duplicate_voice_actors` [auth] ✓
 - `GET` `/api/game/:id` params(id)
@@ -52,6 +53,7 @@
 - `POST` `/api/prepare_game` [auth] ✓
 - `POST` `/api/process-media-queue` [auth, cache, queue] ✓
 - `GET` `/api/recent-voice-actors`
+- `POST` `/api/revert-history-entry` [auth, db] ✓
 - `POST` `/api/revert-task` [auth, db]
 - `POST` `/api/save-dubbing-project` [auth] ✓
 - `POST` `/api/save-metadata` [auth] ✓
@@ -73,7 +75,7 @@
 - `GET` `/api/trending/voice-actors`
 - `POST` `/api/update-voice-actor` [auth, upload] ✓
 - `POST` `/api/update_user_role` [auth]
-- `POST` `/api/upload-profile-picture` [auth, db, upload] ✓
+- `POST` `/api/upload-profile-picture` [auth, upload] ✓
 - `GET` `/api/voice-actor/:id` params(id)
 - `ALL` `/routes/sitemap.xml`
 - `GET` `/routes/sitemaps/:file` params(file)
@@ -291,6 +293,8 @@
 - **AppChip** [client] — props: tone, size, dashed, uppercase — `apps/website/src/components/AppChip.vue`
 - **AppFilterChip** [client] — props: selected, to, dashed, size — `apps/website/src/components/AppFilterChip.vue`
 - **CharacterPhoto** [client] — props: image — `apps/website/src/components/CharacterPhoto.vue`
+- **CreditStatusBadge** [client] — props: status — `apps/website/src/components/CreditStatusBadge.vue`
+- **EntityHistory** [client] — props: type, entityId, entityName — `apps/website/src/components/EntityHistory.vue`
 - **Footer** [client] — `apps/website/src/components/Footer.vue`
 - **ForceEnqueueButton** [client] — props: mediaType, mediaId, seasonNumber, episodeNumber, wikipediaLanguage — `apps/website/src/components/ForceEnqueueButton.vue`
 - **Header** [client] — `apps/website/src/components/Header.vue`
@@ -529,6 +533,14 @@
   - _...11 more_
 - `apps/website/server/utils/dubbing-language.ts` — function requireDubbingLanguage: (value) => DubbingLanguage
 - `apps/website/server/utils/dubbing-region-detection.ts` — function detectDubbingRegionFromWikitext: ({...}, sections, }) => DubbingEvidence, type DubbingEvidence
+- `apps/website/server/utils/entity-history.ts`
+  - function isHistoryEntityType: (value) => value is HistoryEntityType
+  - function displayValue: (value) => string | null
+  - function changedFields: (kind, previous, next) => ChangedField[]
+  - function safeHttpUrl: (value) => string | null
+  - function diffSnapshots: (kind, previous, next, context) => HistoryChange[]
+  - function toHistoryEntry: (row, entityType, context) => HistoryEntry | null
+  - _...9 more_
 - `apps/website/server/utils/error-message.ts` — function getErrorMessage: (error) => string
 - `apps/website/server/utils/featureFlags.ts` — function isEnqueueOnNavigateEnabled: () => Promise<boolean>
 - `apps/website/server/utils/game-character-validation.ts`
@@ -543,6 +555,17 @@
   - function toStringRecord: (value) => Record<string, string | undefined>
   - function getGlobalEnv: () => Record<string, string | undefined>
   - function getCloudflareEnv: (event) => Record<string, string | undefined>
+- `apps/website/server/utils/history-revert.ts`
+  - function evaluateRevert: (subject, current, unknown> | null) => RevertEvaluation
+  - type RevertBlockReason
+  - type RevertPlan
+  - type RevertEvaluation
+  - type RevertSubject
+- `apps/website/server/utils/history-store.ts`
+  - function normalizeEntityType: (entityType) => "voice_actor" | "studio" | "work" | null
+  - function currentRowKey: (entityType, entityId) => string
+  - function loadCurrentRows: (supabase, rows) => Promise<CurrentRows>
+  - type CurrentRows
 - `apps/website/server/utils/index.ts`
   - function getCloudflareKv: (event?) => CacheKv | null
   - function useCache: (event?) => SimpleCache
@@ -570,6 +593,7 @@
   - function withMediaServiceTimeout: (request) => void
 - `apps/website/server/utils/narrow.ts` — function asString: (value) => string | undefined
 - `apps/website/server/utils/normalize.ts` — function normalizeString: (input) => string, function isExploitableVoiceActorName: (input) => boolean
+- `apps/website/server/utils/notifications/contribution.ts` — function notifyContributionEdit: (event, user, edit) => void, type ContributionEdit
 - `apps/website/server/utils/notifications/discord.ts`
   - function normalizeDiscordUrl: (url) => string
   - function buildDiscordEmbed: (title, message, options?) => Record<string, unknown>
@@ -710,6 +734,14 @@
   - function useEditorToast
   - interface EditorToastState
   - type EditorToastKind
+- `apps/website/src/composables/useEntityHistory.ts`
+  - function useEntityHistory: (type, id) => void
+  - type HistoryEntityType
+  - type HistoryKind
+  - type HistoryChangeType
+  - type HistoryChange
+  - type HistoryEntry
+  - _...2 more_
 - `apps/website/src/composables/useFullCrewState.ts`
   - function useFullCrewState
   - type FullCrewKey
@@ -757,6 +789,14 @@
   - function prefillDuplicateWork: (canonical, works) => void
   - interface DuplicateWorkGroup
   - interface DuplicateWorkPage
+  - _...4 more_
+- `apps/website/src/utils/entity-history-view.ts`
+  - function isSafeHref: (href) => href is string
+  - function matchesFilter: (entry, filter) => boolean
+  - function filterEntries: (entries, filter) => HistoryEntry[]
+  - function countByFilter: (entries) => Record<HistoryFilter, number>
+  - function groupByDay: (entries) => HistoryDayGroup[]
+  - function dayDifference: (date, now) => number
   - _...4 more_
 - `apps/website/src/utils/error-message.ts` — function readErrorMessage: (err) => string | undefined
 - `apps/website/src/utils/legal-date.ts` — function formatLegalDate: (date) => void
@@ -993,46 +1033,46 @@
 
 ## Most Imported Files (change these carefully)
 
-- `apps/website/server/utils/db/client.ts` — imported by **54** files
+- `apps/website/server/utils/db/client.ts` — imported by **57** files
 - `apps/website/server/utils/index.ts` — imported by **28** files
-- `apps/website/server/utils/auth-handlers.ts` — imported by **23** files
+- `apps/website/server/utils/auth-handlers.ts` — imported by **24** files
 - `apps/website/server/utils/cache/index.ts` — imported by **20** files
 - `apps/website/server/utils/api/igdb.ts` — imported by **13** files
+- `apps/website/server/utils/urls/supabase.ts` — imported by **12** files
+- `apps/website/server/utils/notifications/discord.ts` — imported by **12** files
 - `packages/shared-logic/src/types/index.ts` — imported by **12** files
-- `apps/website/server/utils/urls/supabase.ts` — imported by **11** files
 - `apps/website/server/utils/cache/http.ts` — imported by **11** files
-- `apps/website/server/utils/notifications/discord.ts` — imported by **11** files
+- `apps/website/server/utils/auth.ts` — imported by **11** files
 - `apps/website/server/utils/media-request.ts` — imported by **10** files
-- `apps/website/server/utils/auth.ts` — imported by **10** files
 - `apps/website/server/utils/services/media.ts` — imported by **10** files
 - `apps/website/server/utils/db/queries.ts` — imported by **9** files
 - `apps/website/server/utils/urls/tmdb.ts` — imported by **8** files
 - `apps/website/server/utils/cache/constants.ts` — imported by **8** files
 - `e2e/helpers/mock-api.ts` — imported by **8** files
+- `apps/website/server/utils/background.ts` — imported by **7** files
 - `apps/website/server/utils/dubbing-language.ts` — imported by **7** files
-- `apps/website/server/utils/background.ts` — imported by **6** files
 - `apps/website/server/utils/narrow.ts` — imported by **5** files
 - `apps/website/server/utils/with-timeout.ts` — imported by **5** files
 
 ## Import Map (who imports what)
 
-- `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue.get.ts`, `apps/website/server/api/admin/work-duplicates/merge.post.ts`, `apps/website/server/api/admin/work-duplicates.get.ts` +49 more
+- `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue.get.ts`, `apps/website/server/api/admin/work-duplicates/merge.post.ts`, `apps/website/server/api/admin/work-duplicates.get.ts` +52 more
 - `apps/website/server/utils/index.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/character/[source]/[id].get.ts` +23 more
-- `apps/website/server/utils/auth-handlers.ts` ← `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue.get.ts`, `apps/website/server/api/admin/work-duplicates/merge.post.ts`, `apps/website/server/api/dashboard-stats.get.ts` +18 more
+- `apps/website/server/utils/auth-handlers.ts` ← `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue.get.ts`, `apps/website/server/api/admin/work-duplicates/merge.post.ts`, `apps/website/server/api/dashboard-stats.get.ts` +19 more
 - `apps/website/server/utils/cache/index.ts` ← `apps/website/server/utils/api/igdb.test.ts`, `apps/website/server/utils/api/igdb.ts`, `apps/website/server/utils/api/openlibrary.test.ts`, `apps/website/server/utils/api/openlibrary.ts`, `apps/website/server/utils/api/podcast.test.ts` +15 more
 - `apps/website/server/utils/api/igdb.ts` ← `apps/website/server/api/character/[source]/[id].get.ts`, `apps/website/server/api/game/[id].get.ts`, `apps/website/server/api/internal-media-credits.get.ts`, `apps/website/server/api/media-catalog.get.ts`, `apps/website/server/api/search/index.get.ts` +8 more
+- `apps/website/server/utils/urls/supabase.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/dashboard-stats.get.ts`, `apps/website/server/api/entity-history.get.ts`, `apps/website/server/api/find_duplicate_voice_actors.get.ts`, `apps/website/server/api/list-voice-actors.get.ts` +7 more
+- `apps/website/server/utils/notifications/discord.ts` ← `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/media-queue.post.ts`, `apps/website/server/api/movie/[id].get.ts`, `apps/website/server/api/podcast/[id].get.ts` +7 more
 - `packages/shared-logic/src/types/index.ts` ← `packages/shared-logic/src/composables/useAdvertisementData.ts`, `packages/shared-logic/src/composables/useAudiobookData.ts`, `packages/shared-logic/src/composables/useDetailCollections.ts`, `packages/shared-logic/src/composables/useDetailCollections.ts`, `packages/shared-logic/src/composables/useGameData.ts` +7 more
-- `apps/website/server/utils/urls/supabase.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/dashboard-stats.get.ts`, `apps/website/server/api/find_duplicate_voice_actors.get.ts`, `apps/website/server/api/list-voice-actors.get.ts`, `apps/website/server/api/recent-voice-actors.get.ts` +6 more
 - `apps/website/server/utils/cache/http.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/admin/work-duplicates.get.ts`, `apps/website/server/api/character-images.get.ts`, `apps/website/server/api/og-image/index.get.ts`, `apps/website/server/api/trending/games.get.ts` +6 more
-- `apps/website/server/utils/notifications/discord.ts` ← `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/media-queue.post.ts`, `apps/website/server/api/movie/[id].get.ts`, `apps/website/server/api/podcast/[id].get.ts` +6 more
-- `apps/website/server/utils/media-request.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/character-images.get.ts`, `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/game/[id].get.ts` +5 more
+- `apps/website/server/utils/auth.ts` ← `apps/website/server/api/admin/work-duplicates.get.ts`, `apps/website/server/api/entity-history.get.ts`, `apps/website/server/api/media-queue.post.ts`, `apps/website/server/api/prepare-trending-media.post.ts`, `apps/website/server/api/process-media-queue.post.ts` +6 more
 
 ---
 
 # Test Coverage
 
-> **55%** of routes and models are covered by tests
-> 153 test files found
+> **56%** of routes and models are covered by tests
+> 162 test files found
 
 ## Covered Routes
 
@@ -1040,6 +1080,7 @@
 - GET:/api/character-images
 - POST:/api/count-voice-actor-works
 - GET:/api/detail-collections
+- GET:/api/entity-history
 - GET:/api/find_duplicate_voice_actors
 - POST:/api/game-characters
 - GET:/api/get-random-task
@@ -1052,6 +1093,7 @@
 - POST:/api/media-queue
 - POST:/api/prepare_game
 - POST:/api/process-media-queue
+- POST:/api/revert-history-entry
 - POST:/api/save-dubbing-project
 - POST:/api/save-metadata
 - POST:/api/save-studio

@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Component inventory and prop signatures extracted via AST. Read the source files before adding props or modifying component logic.
 
-**143 components** (vue)
+**145 components** (vue)
 
 ## Client Components
 
@@ -10,6 +10,8 @@
 - **AppChip** — props: tone, size, dashed, uppercase — `apps/website/src/components/AppChip.vue`
 - **AppFilterChip** — props: selected, to, dashed, size — `apps/website/src/components/AppFilterChip.vue`
 - **CharacterPhoto** — props: image — `apps/website/src/components/CharacterPhoto.vue`
+- **CreditStatusBadge** — props: status — `apps/website/src/components/CreditStatusBadge.vue`
+- **EntityHistory** — props: type, entityId, entityName — `apps/website/src/components/EntityHistory.vue`
 - **Footer** — `apps/website/src/components/Footer.vue`
 - **ForceEnqueueButton** — props: mediaType, mediaId, seasonNumber, episodeNumber, wikipediaLanguage — `apps/website/src/components/ForceEnqueueButton.vue`
 - **Header** — `apps/website/src/components/Header.vue`

@@ -16,6 +16,7 @@
 - `GET` `/api/dashboard-stats` [auth]
 - `POST` `/api/delete_user` [auth]
 - `GET` `/api/detail-collections` ✓
+- `GET` `/api/entity-history` [auth] ✓
 - `GET` `/api/episode/index`
 - `GET` `/api/find_duplicate_voice_actors` [auth] ✓
 - `GET` `/api/game/:id` params(id)
@@ -41,6 +42,7 @@
 - `POST` `/api/prepare_game` [auth] ✓
 - `POST` `/api/process-media-queue` [auth, cache, queue] ✓
 - `GET` `/api/recent-voice-actors`
+- `POST` `/api/revert-history-entry` [auth, db] ✓
 - `POST` `/api/revert-task` [auth, db]
 - `POST` `/api/save-dubbing-project` [auth] ✓
 - `POST` `/api/save-metadata` [auth] ✓
@@ -62,7 +64,7 @@
 - `GET` `/api/trending/voice-actors`
 - `POST` `/api/update-voice-actor` [auth, upload] ✓
 - `POST` `/api/update_user_role` [auth]
-- `POST` `/api/upload-profile-picture` [auth, db, upload] ✓
+- `POST` `/api/upload-profile-picture` [auth, upload] ✓
 - `GET` `/api/voice-actor/:id` params(id)
 - `ALL` `/routes/sitemap.xml`
 - `GET` `/routes/sitemaps/:file` params(file)
