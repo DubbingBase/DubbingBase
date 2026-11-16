@@ -39,8 +39,21 @@ const CLOUDFLARE_CACHE_CONTROL: Record<CacheProfile, string> = {
   sitemap: "public, max-age=86400, stale-while-revalidate=86400",
 };
 
+function readMaxAge(cacheControl: string): number {
+  return Number(/(?:^|[\s,])max-age=(\d+)/.exec(cacheControl)?.[1] ?? 0);
+}
+
+/**
+ * `Cache-Control` as sent to browsers and to the Worker's own Cloudflare cache
+ * (`[cache] enabled` in wrangler.toml). That cache is driven by `Cache-Control`
+ * and does not read `Cloudflare-CDN-Cache-Control`, so without `s-maxage` it
+ * would keep a page only for the short browser `max-age`. `s-maxage` gives
+ * shared caches the longer edge lifetime while browsers keep the short one.
+ */
 export function getPublicCacheControl(profile: CacheProfile): string {
-  return PUBLIC_CACHE_CONTROL[profile];
+  const browser = PUBLIC_CACHE_CONTROL[profile];
+  const edgeMaxAge = readMaxAge(CLOUDFLARE_CACHE_CONTROL[profile]);
+  return edgeMaxAge > readMaxAge(browser) ? `${browser}, s-maxage=${edgeMaxAge}` : browser;
 }
 
 export function getCloudflareCacheControl(profile: CacheProfile): string {
