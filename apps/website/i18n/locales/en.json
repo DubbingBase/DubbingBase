@@ -65,6 +65,8 @@
     "cancel": "Cancel",
     "delete": "Delete",
     "edit": "Edit",
+    "creditVerified": "Verified credit",
+    "creditDisputed": "Disputed credit",
     "search": "Search",
     "filter": "Filter",
     "sort": "Sort",
@@ -757,6 +759,8 @@
     "users": {
       "irreversibleAction": "? Cette action est irréversible.",
       "roleAdmin": "Admin",
+      "blocked": "Blocked",
+      "trusted": "Trusted",
       "confirmDelete": "Confirm deletion",
       "confirmDeletePrompt": "Are you sure you want to permanently delete the user",
       "fetchingList": "Fetching users list...",
@@ -1360,6 +1364,7 @@
     "technicalProduction": "Technical Team & Production"
   },
   "voiceActorEdit": {
+    "adminOnlyProfilePicture": "Only admins can change the profile picture",
     "linkNewWork": "+ Link New Work",
     "linkNewWorkDesc": "Link this voice actor to a movie, series, game, audiobook, podcast, ad, or toy.",
     "selectMediaType": "Select media type",

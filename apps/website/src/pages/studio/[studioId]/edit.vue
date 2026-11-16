@@ -189,10 +189,7 @@ const router = useRouter();
 const localePath = useLocalePath();
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
-const canEditStudioLogo = computed(() => {
-  const role = user.value?.app_metadata?.role;
-  return role === "admin" || role === "editor";
-});
+const canEditStudioLogo = computed(() => Boolean(user.value));
 
 const studioRouteParam = route.params.studioId;
 const studioId = Array.isArray(studioRouteParam) ? (studioRouteParam[0] ?? "") : studioRouteParam;

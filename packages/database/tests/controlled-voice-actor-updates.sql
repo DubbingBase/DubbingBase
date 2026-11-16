@@ -7,7 +7,10 @@ INSERT INTO auth.users (id, raw_app_meta_data)
 VALUES
   ('00000000-0000-0000-0000-000000563655', '{"role":"admin"}'::JSONB),
   ('00000000-0000-0000-0000-000000563656', '{}'::JSONB),
-  ('00000000-0000-0000-0000-000000563657', '{}'::JSONB);
+  ('00000000-0000-0000-0000-000000563657', '{}'::JSONB),
+  ('00000000-0000-0000-0000-000000563658', '{"blocked":true}'::JSONB),
+  ('00000000-0000-0000-0000-000000563659', '{}'::JSONB);
+UPDATE auth.users SET email_confirmed_at = now() WHERE id IN ('00000000-0000-0000-0000-000000563655', '00000000-0000-0000-0000-000000563656', '00000000-0000-0000-0000-000000563657', '00000000-0000-0000-0000-000000563658');
 
 INSERT INTO public.voice_actors (firstname, lastname, bio)
 VALUES ('Controlled', 'Voice Actor', 'Before')
@@ -209,10 +212,20 @@ BEGIN
 
   BEGIN
     PERFORM public.controlled_update_voice_actor(
-      unlinked_user, voice_actor_id, '{"bio":"Unlinked update"}'::JSONB,
+      '00000000-0000-0000-0000-000000563658', voice_actor_id, '{"bio":"Blocked update"}'::JSONB,
       expected_updated_at, gen_random_uuid()
     );
-    RAISE EXCEPTION 'unlinked authenticated user changed a voice actor';
+    RAISE EXCEPTION 'blocked user changed a voice actor';
+  EXCEPTION WHEN insufficient_privilege THEN
+    NULL;
+  END;
+
+  BEGIN
+    PERFORM public.controlled_update_voice_actor(
+      '00000000-0000-0000-0000-000000563659', voice_actor_id, '{"bio":"Unconfirmed update"}'::JSONB,
+      expected_updated_at, gen_random_uuid()
+    );
+    RAISE EXCEPTION 'user without a confirmed email changed a voice actor';
   EXCEPTION WHEN insufficient_privilege THEN
     NULL;
   END;
@@ -239,7 +252,7 @@ BEGIN
 
   BEGIN
     PERFORM public.controlled_update_voice_actor(
-      linked_user, voice_actor_id, '{"firstname":"Protected name"}'::JSONB,
+      linked_user, voice_actor_id, '{"status":"active"}'::JSONB,
       expected_updated_at, gen_random_uuid()
     );
     RAISE EXCEPTION 'linked user changed an administrator-only field';
@@ -367,6 +380,47 @@ BEGIN
   PERFORM set_config('test.voice_actor_audit_id', first_result ->> 'audit_log_id', TRUE);
   PERFORM set_config('test.voice_actor_admin_audit_id', (current_row ->> 'id'), TRUE);
   PERFORM set_config('test.failed_request_id', failed_request::TEXT, TRUE);
+END;
+$$;
+
+-- Open editing: a confirmed, unblocked user who is not linked to the actor can edit
+-- ordinary fields (including names and external ids) but not picture or status.
+DO $$
+DECLARE
+  voice_actor_id BIGINT := current_setting('test.voice_actor_id')::BIGINT;
+  community_user UUID := '00000000-0000-0000-0000-000000563657';
+  expected_updated_at TIMESTAMPTZ;
+  audit_count BIGINT;
+BEGIN
+  SELECT actor.updated_at INTO expected_updated_at
+  FROM public.voice_actors AS actor WHERE actor.id = voice_actor_id;
+
+  BEGIN
+    PERFORM public.controlled_update_voice_actor(
+      community_user, voice_actor_id, '{"profile_picture":"test/x.png"}'::JSONB,
+      expected_updated_at, gen_random_uuid()
+    );
+    RAISE EXCEPTION 'community user changed the profile picture through the URL-fetching path';
+  EXCEPTION WHEN insufficient_privilege THEN
+    NULL;
+  END;
+
+  PERFORM public.controlled_update_voice_actor(
+    community_user, voice_actor_id,
+    '{"firstname":"Community","bio":"Community bio","wikidata_id":"Q42"}'::JSONB,
+    expected_updated_at, gen_random_uuid()
+  );
+
+  SELECT count(*) INTO audit_count
+  FROM public.audit_logs AS audit
+  WHERE audit.user_id = community_user
+    AND audit.entity_type = 'voice_actor'
+    AND audit.entity_id = voice_actor_id::TEXT
+    AND audit.new_value ->> 'firstname' = 'Community'
+    AND audit.previous_value ->> 'firstname' <> 'Community';
+  IF audit_count <> 1 THEN
+    RAISE EXCEPTION 'community edit was not applied with exactly one attributed audit row';
+  END IF;
 END;
 $$;
 RESET ROLE;

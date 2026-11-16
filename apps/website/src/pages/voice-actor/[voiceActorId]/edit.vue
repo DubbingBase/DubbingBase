@@ -67,7 +67,9 @@
           <button
             type="button"
             @click="triggerFileInput"
-            class="w-full py-2.5 px-4 theme-surface-muted theme-hover-surface-muted theme-text theme-hover-text font-semibold rounded-xl text-xs border theme-border theme-hover-border transition-all flex items-center justify-center space-x-2"
+            :disabled="!isAdmin"
+            :title="isAdmin ? undefined : $t('voiceActorEdit.adminOnlyProfilePicture')"
+            class="disabled:cursor-not-allowed disabled:opacity-50 w-full py-2.5 px-4 theme-surface-muted theme-hover-surface-muted theme-text theme-hover-text font-semibold rounded-xl text-xs border theme-border theme-hover-border transition-all flex items-center justify-center space-x-2"
           >
             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
@@ -1008,6 +1010,8 @@ const showToast = (message: string, type: "success" | "error" | "info" = "info")
 };
 
 const triggerFileInput = () => {
+  // Server rejects profile_picture changes from non-admins.
+  if (!isAdmin.value) return;
   fileInput.value?.click();
 };
 

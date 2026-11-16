@@ -227,6 +227,7 @@
                         >
                           <MicIcon class="w-3 h-3 flex-shrink-0" />
                           <span class="truncate block w-full">{{ $t("details.voiceActor") }}</span>
+                          <CreditStatusBadge :status="actor.voiceActor.reviewed_status" />
                         </div>
                         <NuxtLink
                           :to="actor.voiceActorPath"
@@ -646,7 +647,9 @@ const formattedCast = computed<DisplayCastActor[]>(() => {
         actorId: actor.id,
         id: `${actor.id}-${work.id}`,
         profile_path: profilePath,
-        voiceActor: voiceActor ? { ...voiceActor, note: work.note } : null,
+        voiceActor: voiceActor
+          ? { ...voiceActor, note: work.note, reviewed_status: work.reviewed_status }
+          : null,
         workCharacterName: work.character_name || null,
       };
     }),
@@ -664,7 +667,9 @@ const formattedCast = computed<DisplayCastActor[]>(() => {
       name: work.character_name || t("details.unknownCharacter"),
       profile_path: null,
       character: work.character_name || null,
-      voiceActor: voiceActor ? { ...voiceActor, note: work.note } : null,
+      voiceActor: voiceActor
+        ? { ...voiceActor, note: work.note, reviewed_status: work.reviewed_status }
+        : null,
       workCharacterName: work.character_name || null,
     };
   });

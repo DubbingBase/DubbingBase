@@ -64,6 +64,8 @@
     "cancel": "Annuler",
     "delete": "Supprimer",
     "edit": "Modifier",
+    "creditVerified": "Crédit vérifié",
+    "creditDisputed": "Crédit contesté",
     "search": "Rechercher",
     "filter": "Filtrer",
     "sort": "Trier",
@@ -756,6 +758,8 @@
     "users": {
       "irreversibleAction": "? Cette action est irréversible.",
       "roleAdmin": "Admin",
+      "blocked": "Bloqué",
+      "trusted": "Approuvé",
       "confirmDelete": "Confirmer la suppression",
       "confirmDeletePrompt": "Êtes-vous sûr de vouloir supprimer définitivement l'utilisateur",
       "fetchingList": "Récupération de la liste des utilisateurs...",
@@ -1360,6 +1364,7 @@
     "technicalProduction": "Équipe Technique & Production"
   },
   "voiceActorEdit": {
+    "adminOnlyProfilePicture": "Seuls les administrateurs peuvent modifier la photo de profil",
     "linkNewWork": "+ Lier une nouvelle œuvre",
     "linkNewWorkDesc": "Liez ce comédien à un film, série, jeu, livre audio, podcast, publicité ou jouet.",
     "selectMediaType": "Sélectionner le type de média",

@@ -9,6 +9,7 @@ export interface MediaDetailWork extends Record<string, unknown> {
   character_name?: string | null;
   performance?: string | null;
   note?: string | null;
+  reviewed_status?: string | null;
   voice_actor?: MediaDetailVoiceActor | null;
 }
 

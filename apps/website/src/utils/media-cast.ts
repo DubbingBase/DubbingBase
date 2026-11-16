@@ -19,12 +19,14 @@ export interface CastWorkReference {
   voice_actor_id?: number | null;
   character_name?: string | null;
   note?: string | null;
+  reviewed_status?: string | null;
   voice_actor?: {
     id: number;
     firstname?: string | null;
     lastname?: string | null;
     profile_picture?: string | null;
     note?: string | null;
+    reviewed_status?: string | null;
   } | null;
 }
 

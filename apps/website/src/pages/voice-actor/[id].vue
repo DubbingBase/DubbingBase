@@ -72,7 +72,7 @@
         </div>
 
         <NuxtLink
-          v-if="isAdmin"
+          v-if="user"
           :to="localePath(`/voice-actor/${voiceActorId}/edit`)"
           class="text-sm theme-primary-text theme-hover-primary-text transition-colors flex items-center gap-1.5 font-medium"
         >
@@ -315,6 +315,10 @@
                           :title="getMediaTitle(item.media)"
                           >{{ getMediaTitle(item.media) }}</span
                         >
+                        <CreditStatusBadge
+                          class="mt-1 self-start"
+                          :status="item.work.reviewed_status"
+                        />
                         <div
                           v-if="item.work.dubbing_projects?.studios"
                           class="mt-1 flex min-w-0 overflow-hidden"
@@ -565,6 +569,10 @@
                               :title="getMediaTitle(item.media)"
                               >{{ getMediaTitle(item.media) }}</span
                             >
+                            <CreditStatusBadge
+                              class="mt-1 self-start"
+                              :status="item.work.reviewed_status"
+                            />
                             <div
                               v-if="item.work.dubbing_projects?.studios"
                               class="mt-1 flex min-w-0 overflow-hidden"
@@ -645,6 +653,13 @@
     <div v-else class="text-center py-20 theme-text-muted min-h-screen">
       {{ $t("voiceActor.notFound") }}
     </div>
+
+    <EntityHistory
+      v-if="voiceActor"
+      type="voice_actor"
+      :entity-id="voiceActorId"
+      class="container mx-auto my-8 px-4"
+    />
 
     <ReportModal v-model:open="isReportModalOpen" :target-url="currentUrl" />
   </div>
@@ -756,7 +771,7 @@ watch(debouncedSearch, (val) => {
   searchQuery.value = val;
 });
 
-const { user, isAdmin } = useClientUser();
+const { user } = useClientUser();
 
 const completenessScore = computed(() => {
   if (!voiceActor.value) return 0;

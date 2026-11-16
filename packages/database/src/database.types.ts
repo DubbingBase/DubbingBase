@@ -1177,6 +1177,19 @@ export type Database = {
         };
         Returns: number[];
       };
+      get_entity_history: {
+        Args: { p_entity_id: number; p_entity_type: string; p_limit?: number };
+        Returns: {
+          action: string;
+          created_at: string;
+          entity_id: string;
+          entity_type: string;
+          id: string;
+          new_value: Json;
+          previous_value: Json;
+          user_name: string;
+        }[];
+      };
       get_media_queue_depth: {
         Args: { p_queue_name?: string };
         Returns: number;
@@ -1565,6 +1578,10 @@ export type Database = {
           p_game_character_id: string;
         };
         Returns: string;
+      };
+      work_contribution_privilege: {
+        Args: { p_user_id: string; p_voice_actor_id: number };
+        Returns: boolean;
       };
       work_role_identity_key: {
         Args: { p_character_id: number; p_character_name: string };

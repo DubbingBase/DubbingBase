@@ -1,6 +1,7 @@
 import type { H3Event } from "h3";
 import { defineUserHandler } from "../utils/auth-handlers";
 import { useSupabaseAdmin } from "../utils/db/client";
+import { notifyContributionEdit } from "../utils/notifications/contribution";
 import { useIgdbClient, useOpenLibraryClient, usePodcastClient, useTmdbClient } from "../utils";
 import { requireDubbingLanguage } from "../utils/dubbing-language";
 import {
@@ -278,25 +279,12 @@ export default defineUserHandler(async (event, user) => {
   const dubbingLanguage = requireDubbingLanguage(body.dubbing_language);
   const supabase = event.context.supabaseAdmin || useSupabaseAdmin(event);
 
-  // Reject unlinked users before spending external-provider quota. The RPC
-  // repeats this check under a row lock before writing, so this is an early
+  // Any confirmed, unblocked contributor may add a credit. Reject accounts already known to be
+  // blocked before spending external-provider quota; the RPC repeats this check under lock
+  // (it reads the live flag, while this token claim can be stale), so this is an early
   // denial only and never the authorization boundary for the mutation.
-  if (user.app_metadata?.role !== "admin") {
-    const { data: ownership, error: ownershipError } = await supabase
-      .from("user_voice_actor_links")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("voice_actor_id", body.voice_actor_id)
-      .maybeSingle();
-    if (ownershipError) {
-      console.error("Failed to verify voice actor link ownership", {
-        code: ownershipError.code,
-      });
-      throw linkError(500, "Voice actor ownership could not be verified");
-    }
-    if (!ownership) {
-      throw linkError(403, "Voice actor work link is not authorized");
-    }
+  if (user.app_metadata?.blocked === true) {
+    throw linkError(403, "Voice actor work link is not authorized");
   }
 
   const { data: voiceActor, error: voiceActorError } = await supabase
@@ -337,6 +325,15 @@ export default defineUserHandler(async (event, user) => {
       code: workError?.code,
     });
     throw linkError(500, "Work link was saved but could not be loaded; retry safely");
+  }
+
+  if (!mutation.replayed) {
+    notifyContributionEdit(event, user, {
+      entity: "voice actor",
+      entityId: body.voice_actor_id,
+      detail: `cast credit #${work.id} (${work.reviewed_status})`,
+      path: `/voice-actor/${body.voice_actor_id}`,
+    });
   }
 
   return {

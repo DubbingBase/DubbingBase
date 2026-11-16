@@ -59,6 +59,7 @@ export type MediaWorkCastCard = {
   character_name: string;
   performance: string;
   note: string;
+  reviewed_status?: string;
   profile_picture: string | null;
 };
 
@@ -160,6 +161,9 @@ export function formatMediaWorkCastCards(project: unknown): MediaWorkCastCard[] 
       character_name: stringValue(work.character_name) || "",
       performance: stringValue(work.performance) || "",
       note: stringValue(work.note) || "",
+      ...(stringValue(work.reviewed_status)
+        ? { reviewed_status: stringValue(work.reviewed_status) }
+        : {}),
       profile_picture: stringValue(voiceActor?.profile_picture) || null,
     };
   });

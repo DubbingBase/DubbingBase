@@ -3,6 +3,7 @@ import { isRecord } from "@app/shared-logic";
 export type ActorPageVoiceRole = {
   id: number;
   performance: string | null;
+  reviewed_status?: string | null;
   dubbing_projects: { language: string; content_id: number } | null;
   voice_actors: Array<{
     id: number;

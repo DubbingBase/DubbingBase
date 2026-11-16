@@ -65,6 +65,8 @@
     "cancel": "Cancelar",
     "delete": "Eliminar",
     "edit": "Editar",
+    "creditVerified": "Crédito verificado",
+    "creditDisputed": "Crédito en disputa",
     "search": "Buscar",
     "filter": "Filtrar",
     "sort": "Ordenar",
@@ -757,6 +759,8 @@
     "users": {
       "irreversibleAction": "? Esta acción es irreversible.",
       "roleAdmin": "Admin",
+      "blocked": "Bloqueado",
+      "trusted": "De confianza",
       "confirmDelete": "Confirmar eliminación",
       "confirmDeletePrompt": "¿Está seguro de que desea eliminar permanentemente al usuario",
       "fetchingList": "Obteniendo lista de usuarios...",
@@ -1360,6 +1364,7 @@
     "technicalProduction": "Equipo técnico y producción"
   },
   "voiceActorEdit": {
+    "adminOnlyProfilePicture": "Solo los administradores pueden cambiar la foto de perfil",
     "linkNewWork": "+ Vincular nueva obra",
     "linkNewWorkDesc": "Vincula este actor de doblaje a una película, serie, juego, audiolibro, podcast, anuncio o juguete.",
     "selectMediaType": "Seleccionar tipo de medio",

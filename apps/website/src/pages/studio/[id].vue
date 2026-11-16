@@ -39,7 +39,7 @@
       </template>
       <template #right>
         <NuxtLink
-          v-if="isAdmin"
+          v-if="user"
           :to="localePath(`/studio/${studio.id}/edit`)"
           class="text-sm theme-primary-text theme-hover-primary-text transition-colors flex items-center gap-1.5 font-medium"
         >
@@ -242,6 +242,8 @@
           </template>
         </PaginatedResponsiveGrid>
       </section>
+
+      <EntityHistory type="studio" :entity-id="studio.id" class="mt-8" />
     </div>
   </DetailsPage>
 
@@ -273,7 +275,7 @@ import { useI18n } from "vue-i18n";
 
 const route = useRoute();
 const supabase = useSupabaseClient();
-const user = useSupabaseUser();
+const { user } = useClientUser();
 const localePath = useLocalePath();
 const { t, locale } = useI18n();
 
@@ -297,10 +299,6 @@ function getMediaTypeLabel(contentType?: string) {
   if (contentType === "toy") return t("search.toy");
   return contentType || t("search.media");
 }
-
-const isAdmin = computed(() => {
-  return user.value?.app_metadata?.role === "admin";
-});
 
 const { data: initialStudioDetails } = await useAsyncData(
   `studio-${route.params.id}`,

@@ -54,9 +54,9 @@ END;
 SQL
 fixtures_created=1
 psql_local >/dev/null <<SQL
-INSERT INTO auth.users (id, raw_app_meta_data) VALUES
-  ('$admin_id', '{"role":"admin"}'::JSONB),
-  ('$owner_id', '{"role":"user"}'::JSONB);
+INSERT INTO auth.users (id, raw_app_meta_data, email_confirmed_at) VALUES
+  ('$admin_id', '{"role":"admin"}'::JSONB, now()),
+  ('$owner_id', '{"role":"user"}'::JSONB, now());
 INSERT INTO public.voice_actors (id, firstname, lastname)
 VALUES ($voice_actor_id, 'Review Race', 'Voice Actor');
 INSERT INTO public.user_voice_actor_links (user_id, voice_actor_id)

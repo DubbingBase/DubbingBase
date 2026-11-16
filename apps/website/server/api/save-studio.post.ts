@@ -1,5 +1,6 @@
 import type { Json } from "@app/supabase";
 import { defineUserHandler } from "../utils/auth-handlers";
+import { notifyContributionEdit } from "../utils/notifications/contribution";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { isRecord } from "@app/shared-logic";
 
@@ -150,6 +151,15 @@ export default defineUserHandler(async (event, user) => {
   const result = data?.[0];
   if (!result) {
     throw createError({ statusCode: 500, message: "Failed to save studio" });
+  }
+
+  if (!result.replayed) {
+    notifyContributionEdit(event, user, {
+      entity: "studio",
+      entityId: result.studio_id,
+      detail: Object.keys(updates).join(", "),
+      path: `/studio/${result.studio_id}`,
+    });
   }
 
   return {

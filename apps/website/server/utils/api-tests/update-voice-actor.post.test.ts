@@ -7,6 +7,7 @@ const routeMocks = vi.hoisted(() => ({
 }));
 
 vi.mock("../auth", () => ({ requireUser: routeMocks.requireUser }));
+vi.mock("../notifications/contribution", () => ({ notifyContributionEdit: vi.fn() }));
 vi.mock("../db/client", () => ({
   useSupabaseAdmin: routeMocks.useSupabaseAdmin,
 }));
@@ -120,10 +121,10 @@ describe("POST /api/update-voice-actor", () => {
     },
   );
 
-  it("maps an absent or incorrect voice actor link to forbidden", async () => {
+  it("maps a blocked or unconfirmed contributor rejection to forbidden", async () => {
     const { response, rpc } = await post({
       body: { voice_actor_id: 41, updates: { bio: "Updated biography" } },
-      user: { id: "unlinked-user" },
+      user: { id: "blocked-user" },
       result: { data: null, error: { code: "42501" } },
     });
     expect(response.status).toBe(403);
@@ -164,6 +165,26 @@ describe("POST /api/update-voice-actor", () => {
     });
   });
 
+  it("lets a contributor who is not linked to the actor edit names and external ids", async () => {
+    const { response, rpc } = await post({
+      body: {
+        voice_actor_id: 41,
+        updates: { firstname: "Corrected", tmdb_id: 123, wikidata_id: "Q42" },
+        expected_updated_at: "2026-10-15T12:00:00.000Z",
+        request_id: "11111111-1111-4111-8111-111111111111",
+      },
+      user: { id: "community-user" },
+    });
+    expect(response.status).toBe(200);
+    expect(rpc).toHaveBeenCalledWith(
+      "controlled_update_voice_actor",
+      expect.objectContaining({
+        p_actor_id: "community-user",
+        p_payload: { firstname: "Corrected", tmdb_id: 123, wikidata_id: "Q42" },
+      }),
+    );
+  });
+
   it("rejects protected fields, profile pictures, malformed IDs, and empty patches", async () => {
     const user = { id: "linked-user" };
     for (const { body, statusCode } of [
@@ -172,7 +193,7 @@ describe("POST /api/update-voice-actor", () => {
         statusCode: 400,
       },
       {
-        body: { voice_actor_id: 41, updates: { firstname: "Forged" } },
+        body: { voice_actor_id: 41, updates: { status: "active" } },
         statusCode: 403,
       },
       {

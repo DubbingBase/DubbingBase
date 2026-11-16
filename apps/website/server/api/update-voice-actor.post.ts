@@ -1,4 +1,5 @@
 import { defineUserHandler } from "../utils/auth-handlers";
+import { notifyContributionEdit } from "../utils/notifications/contribution";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { isJson, isRecord } from "@app/shared-logic";
 
@@ -16,14 +17,10 @@ const voiceActorFields = new Set([
   "wikidata_id",
   "status",
 ]);
-const administratorFields = new Set([
-  "firstname",
-  "lastname",
-  "profile_picture",
-  "tmdb_id",
-  "wikidata_id",
-  "status",
-]);
+// Any confirmed, unblocked contributor may edit the other fields. A picture value may be an
+// external URL that this route fetches server-side, so it stays admin-only until uploads
+// go through the validated image path. `status` is an internal outreach workflow field.
+const administratorFields = new Set(["profile_picture", "status"]);
 
 function stableJsonStringify(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(stableJsonStringify).join(",")}]`;
@@ -130,12 +127,7 @@ export default defineUserHandler(async (event, user) => {
   if (Object.keys(body.updates).some((key) => !voiceActorFields.has(key))) {
     badRequest("Voice actor update contains a protected or unknown field");
   }
-  if (
-    !isAdmin &&
-    Object.keys(body.updates).some(
-      (key) => administratorFields.has(key) || key === "profile_picture",
-    )
-  ) {
+  if (!isAdmin && Object.keys(body.updates).some((key) => administratorFields.has(key))) {
     throw createError({
       statusCode: 403,
       message: "Only admins can modify this voice actor field",
@@ -204,7 +196,7 @@ export default defineUserHandler(async (event, user) => {
     if (error.code === "42501") {
       throw createError({
         statusCode: 403,
-        message: "Unauthorized to update this voice actor",
+        message: "Not allowed to update this voice actor",
       });
     }
     if (["22023", "22007", "22008"].includes(error.code ?? "")) {
@@ -241,6 +233,15 @@ export default defineUserHandler(async (event, user) => {
     throw createError({
       statusCode: 500,
       message: "Voice actor update returned an invalid response",
+    });
+  }
+
+  if (data.changed === true) {
+    notifyContributionEdit(event, user, {
+      entity: "voice actor",
+      entityId: voiceActorId,
+      detail: Object.keys(payload).join(", "),
+      path: `/voice-actor/${voiceActorId}`,
     });
   }
 
