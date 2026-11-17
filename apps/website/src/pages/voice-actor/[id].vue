@@ -281,6 +281,7 @@
               <template #default="{ item }">
                 <div
                   :key="item.work.id"
+                  :ref="observeCharacterImages([characterRequest(item)])"
                   class="theme-input border theme-border-subtle theme-border rounded-xl p-3 shadow-sm transition-colors theme-hover-border block group"
                 >
                   <div class="flex flex-col sm:grid sm:grid-cols-3 gap-4 h-full">
@@ -456,6 +457,7 @@
                 v-for="group in groupedWorks"
                 :key="group.key"
                 data-testid="voice-actor-group"
+                :ref="observeCharacterImages(group.pageData.data.map(characterRequest))"
                 class="space-y-4"
               >
                 <!-- Actor Group Header -->
@@ -696,6 +698,7 @@ import {
 import ReportModal from "../../components/ReportModal.vue";
 import CharacterPhoto from "../../components/CharacterPhoto.vue";
 import { useCharacterImages } from "../../composables/useCharacterImages";
+import { useCharacterImageViewport } from "../../composables/useCharacterImageViewport";
 import { computed, ref, watch } from "vue";
 import { refDebounced } from "@vueuse/core";
 
@@ -993,13 +996,14 @@ function characterRequest(item: VoiceActorWorkItem) {
       (contentType === "movie" || contentType === "tv") && contentId ? [item.data.character] : [],
   };
 }
-const { imageFor, reportImageError } = useCharacterImages(
-  computed(() =>
-    [...worksItems.value, ...groupedWorks.value.flatMap((group) => group.pageData.data)].map(
-      characterRequest,
-    ),
+const characterImageRequests = computed(() =>
+  [...worksItems.value, ...groupedWorks.value.flatMap((group) => group.pageData.data)].map(
+    characterRequest,
   ),
 );
+const { activeRequests, observe: observeCharacterImages } =
+  useCharacterImageViewport(characterImageRequests);
+const { imageFor, reportImageError } = useCharacterImages(activeRequests);
 const worksTotal = computed(() => worksPageData.value.pagination.totalItems);
 const currentWorksPage = computed(() => worksPageData.value.pagination.page);
 

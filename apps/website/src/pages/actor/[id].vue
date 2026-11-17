@@ -191,6 +191,7 @@
             >
               <template #default="{ item }">
                 <div
+                  :ref="observeCharacterImages([characterRequest(item)])"
                   class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-border block group"
                 >
                   <div class="flex flex-col sm:grid sm:grid-cols-3 gap-4 h-full">
@@ -412,6 +413,7 @@ import ReportModal from "../../components/ReportModal.vue";
 import { prepareActorSsrData } from "../../utils/actor-ssr-data";
 import CharacterPhoto from "../../components/CharacterPhoto.vue";
 import { useCharacterImages } from "../../composables/useCharacterImages";
+import { useCharacterImageViewport } from "../../composables/useCharacterImageViewport";
 
 const isReportModalOpen = ref(false);
 const hasOpenedReportModal = ref(false);
@@ -514,9 +516,10 @@ const filmographyItems = enhancedFilmography;
 function characterRequest(item: { id: number; media_type: "movie" | "tv"; character: string }) {
   return { mediaType: item.media_type, mediaId: item.id, names: [item.character] };
 }
-const { imageFor, reportImageError } = useCharacterImages(
-  computed(() => filmographyItems.value.map(characterRequest)),
-);
+const characterImageRequests = computed(() => filmographyItems.value.map(characterRequest));
+const { activeRequests, observe: observeCharacterImages } =
+  useCharacterImageViewport(characterImageRequests);
+const { imageFor, reportImageError } = useCharacterImages(activeRequests);
 
 function characterImageAlt(item: {
   character: string;

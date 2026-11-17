@@ -1457,7 +1457,11 @@ export default defineEventHandler(async (event) => {
 
   // Character images are lazy and best-effort: the e2e mocks have no provider data.
   if (path === "/api/character-images") {
-    return send(event, JSON.stringify({ images: {}, tvdbIds: {} }), "application/json");
+    return send(
+      event,
+      JSON.stringify({ images: {}, characterIds: {}, tvdbIds: {} }),
+      "application/json",
+    );
   }
 
   // 2. Movie Detail
@@ -1624,6 +1628,29 @@ export default defineEventHandler(async (event) => {
 
   // 7. Original Actor Detail
   if (path.startsWith("/api/actor/")) {
+    if (path === "/api/actor/999") {
+      return send(
+        event,
+        JSON.stringify({
+          ...MOCK_ACTOR,
+          actor: {
+            ...MOCK_ACTOR.actor,
+            id: 999,
+            credits: {
+              cast: Array.from({ length: 13 }, (_, index) => ({
+                id: 9000 + index,
+                title: `Actor film ${index}`,
+                character: `Actor role ${index}`,
+                poster_path: null,
+                release_date: "2024-01-01",
+                media_type: "movie",
+              })),
+            },
+          },
+        }),
+        "application/json",
+      );
+    }
     return send(event, JSON.stringify(MOCK_ACTOR), "application/json");
   }
 

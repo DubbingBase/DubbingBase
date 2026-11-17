@@ -106,7 +106,10 @@
             {{ $t("common.retry") }}
           </button>
         </section>
-        <section v-else-if="castTotal > 0">
+        <section
+          v-else-if="castTotal > 0"
+          :ref="observeCharacterImages(castItems.map((actor) => actor.characterImageRequest))"
+        >
           <DetailsCastHeader v-model:search="searchQuery" :title="$t('details.castAndCrew')">
             <span v-if="isOriginalVersion" class="theme-text-muted text-sm">
               {{ $t("details.originalAudio") }}
@@ -394,6 +397,7 @@ import {
   useCharacterImages,
   type CharacterImageRequest,
 } from "../../../../../../composables/useCharacterImages";
+import { useCharacterImageViewport } from "../../../../../../composables/useCharacterImageViewport";
 
 const isReportModalOpen = ref(false);
 const { page: castPage, setPage: setCastPage } = useUrlPagination("castPage");
@@ -723,9 +727,12 @@ function characterRequest(actor: {
     names: actor.actorId === undefined ? [] : [actor.character, actor.workCharacterName],
   };
 }
-const { imageFor, reportImageError } = useCharacterImages(
-  computed(() => castItems.value.map((actor) => actor.characterImageRequest)),
+const characterImageRequests = computed(() =>
+  castItems.value.map((actor) => actor.characterImageRequest),
 );
+const { activeRequests, observe: observeCharacterImages } =
+  useCharacterImageViewport(characterImageRequests);
+const { imageFor, reportImageError } = useCharacterImages(activeRequests);
 
 useHead({
   title: computed(() => {

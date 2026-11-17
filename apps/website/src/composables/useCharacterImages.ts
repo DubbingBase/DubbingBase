@@ -1,4 +1,4 @@
-import { computed, onMounted, reactive, ref, watch, type Ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch, type Ref } from "vue";
 import { APP_LOCALES } from "@app/shared-logic";
 
 export type CharacterImageSource = "tvdb" | "wikimedia" | "dubbingbase";
@@ -24,6 +24,7 @@ type CharacterImagesResponse = {
 };
 
 const MAX_BATCH = 24;
+const MAX_CONCURRENT_REQUESTS = 4;
 const NAME_SEPARATOR = "|";
 
 /** Wire format and map key of one card; null when there is no usable role name. */
@@ -55,27 +56,57 @@ export function useCharacterImages(requests: Ref<readonly CharacterImageRequest[
   const skipped = new Map<string, CharacterImageSource[]>();
   // Latest request per card wins, so a slow stale response cannot restore a failed image.
   const generations = new Map<string, number>();
+  const pendingLoads: Array<{
+    keys: string[];
+    skip: CharacterImageSource[];
+    language: string;
+    localeGeneration: number;
+  }> = [];
+  const activeLoads = new Set<AbortController>();
+  let localeGeneration = 0;
   let mounted = false;
+  let active = true;
 
-  async function load(keys: string[], skip: CharacterImageSource[] = []): Promise<void> {
+  async function load(
+    keys: string[],
+    skip: CharacterImageSource[],
+    requestLanguage: string,
+    startedLocale: number,
+    signal: AbortSignal,
+  ): Promise<void> {
     if (keys.length === 0) return;
     // A stable order keeps the URL, and so the edge cache key, identical for the same cards.
     keys = [...keys].sort();
     skip = [...skip].sort();
     const started = new Map(keys.map((key) => [key, (generations.get(key) ?? 0) + 1]));
     for (const [key, generation] of started) generations.set(key, generation);
-    const isCurrent = (key: string) => generations.get(key) === started.get(key);
+    // Paging away does not invalidate a completed production/role lookup in this locale.
+    const isCurrent = (key: string) =>
+      active && localeGeneration === startedLocale && generations.get(key) === started.get(key);
     try {
       const response = await $fetch<CharacterImagesResponse>("/api/character-images", {
         query: {
           item: keys,
-          lang: language.value,
+          lang: requestLanguage,
           ...(skip.length > 0 ? { skip: skip.join(",") } : {}),
         },
+        signal,
       });
-      tvdbIds.value = { ...tvdbIds.value, ...response.tvdbIds };
-      Object.assign(characterIds, response.characterIds);
-      for (const key of keys) if (isCurrent(key)) images[key] = response.images[key] ?? null;
+      const responseKeys = keys.filter(isCurrent);
+      const currentProductions = new Set(responseKeys.map((key) => key.split(":", 2).join(":")));
+      tvdbIds.value = {
+        ...tvdbIds.value,
+        ...Object.fromEntries(
+          Object.entries(response.tvdbIds).filter(([production]) =>
+            currentProductions.has(production),
+          ),
+        ),
+      };
+      for (const key of responseKeys) {
+        const characterId = response.characterIds[key];
+        if (characterId !== undefined) characterIds[key] = characterId;
+      }
+      for (const key of responseKeys) images[key] = response.images[key] ?? null;
     } catch {
       // Provider or network failure: keep the placeholder; the card is requested again
       // the next time it is shown (page change or filter).
@@ -84,6 +115,51 @@ export function useCharacterImages(requests: Ref<readonly CharacterImageRequest[
         images[key] = null;
         requested.delete(key);
       }
+    }
+  }
+
+  function drainLoads(): void {
+    while (activeLoads.size < MAX_CONCURRENT_REQUESTS && pendingLoads.length > 0) {
+      const pending = pendingLoads.shift();
+      if (!pending) break;
+      const activeKeys = new Set(currentKeys());
+      const keys = pending.keys.filter((key) => activeKeys.has(key) && requested.has(key));
+      for (const key of pending.keys) if (!keys.includes(key)) requested.delete(key);
+      if (keys.length === 0 || pending.localeGeneration !== localeGeneration) continue;
+      const controller = new AbortController();
+      activeLoads.add(controller);
+      void load(
+        keys,
+        pending.skip,
+        pending.language,
+        pending.localeGeneration,
+        controller.signal,
+      ).finally(() => {
+        activeLoads.delete(controller);
+        drainLoads();
+      });
+    }
+  }
+
+  function enqueueLoad(keys: string[], skip: CharacterImageSource[] = []): void {
+    pendingLoads.push({
+      keys,
+      skip: [...new Set(skip)],
+      language: language.value,
+      localeGeneration,
+    });
+    drainLoads();
+  }
+
+  function discardInactiveLoads(): void {
+    const activeKeys = new Set(currentKeys());
+    for (let index = pendingLoads.length - 1; index >= 0; index -= 1) {
+      const pending = pendingLoads[index];
+      if (!pending) continue;
+      const keys = pending.keys.filter((key) => activeKeys.has(key));
+      for (const key of pending.keys) if (!keys.includes(key)) requested.delete(key);
+      if (keys.length === 0) pendingLoads.splice(index, 1);
+      else pending.keys = keys;
     }
   }
 
@@ -99,18 +175,21 @@ export function useCharacterImages(requests: Ref<readonly CharacterImageRequest[
     if (!mounted) return;
     const keys = currentKeys().filter((key) => !requested.has(key));
     for (const key of keys) requested.add(key);
-    // One request per production: the URL then depends only on that production's
-    // cards (not on which other cards share the page), so the same card hits the
-    // same edge-cache entry from every page, and a provider failure for one
-    // production no longer makes the whole page's responses uncacheable.
-    const groups = new Map<string, string[]>();
+    // One request per production and fallback history keeps cache keys stable
+    // without skipping a source for a healthy neighboring character.
+    const groups = new Map<string, { keys: string[]; skip: CharacterImageSource[] }>();
     for (const key of keys) {
       const production = key.split(":", 2).join(":");
-      groups.set(production, [...(groups.get(production) ?? []), key]);
+      const skip = [...new Set(skipped.get(key) ?? [])].sort();
+      const groupKey = `${production}|${skip.join(",")}`;
+      const group = groups.get(groupKey) ?? { keys: [], skip };
+      group.keys.push(key);
+      groups.set(groupKey, group);
     }
     for (const group of groups.values()) {
-      for (let index = 0; index < group.length; index += MAX_BATCH) {
-        void load(group.slice(index, index + MAX_BATCH));
+      for (let index = 0; index < group.keys.length; index += MAX_BATCH) {
+        const batch = group.keys.slice(index, index + MAX_BATCH);
+        enqueueLoad(batch, group.skip);
       }
     }
   }
@@ -119,10 +198,10 @@ export function useCharacterImages(requests: Ref<readonly CharacterImageRequest[
     const key = characterImageKey(request);
     const failed = key ? images[key] : null;
     if (!key || !failed) return;
-    const skip = [...(skipped.get(key) ?? []), failed.source];
+    const skip = [...new Set([...(skipped.get(key) ?? []), failed.source])];
     skipped.set(key, skip);
     images[key] = null;
-    void load([key], skip);
+    enqueueLoad([key], skip);
   }
 
   /** The loaded image for a card, or null while loading / when none exists. */
@@ -141,7 +220,31 @@ export function useCharacterImages(requests: Ref<readonly CharacterImageRequest[
     mounted = true;
     loadVisible();
   });
-  watch(() => currentKeys().join("\n"), loadVisible);
+  watch(
+    () => currentKeys().join("\n"),
+    () => {
+      discardInactiveLoads();
+      loadVisible();
+    },
+  );
+  watch(locale, () => {
+    localeGeneration += 1;
+    pendingLoads.length = 0;
+    for (const controller of activeLoads.keys()) controller.abort();
+    requested.clear();
+    skipped.clear();
+    for (const key of Object.keys(images)) delete images[key];
+    for (const key of Object.keys(characterIds)) delete characterIds[key];
+    tvdbIds.value = {};
+    loadVisible();
+  });
+  onBeforeUnmount(() => {
+    active = false;
+    localeGeneration += 1;
+    pendingLoads.length = 0;
+    for (const controller of activeLoads.keys()) controller.abort();
+    activeLoads.clear();
+  });
 
   return { imageFor, characterIdFor, reportImageError, tvdbIds };
 }
