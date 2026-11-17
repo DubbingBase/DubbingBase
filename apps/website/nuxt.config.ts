@@ -169,6 +169,12 @@ export default defineNuxtConfig({
 
   pwa: {
     registerType: "prompt",
+    integration: {
+      beforeBuildServiceWorker(options) {
+        // Vite PWA adds manifest/icons after glob transforms; keep them available via HTTP only.
+        options.workbox.additionalManifestEntries = [];
+      },
+    },
     client: {
       installPrompt: "dubbingbase:pwa-install-dismissed",
     },
@@ -199,7 +205,15 @@ export default defineNuxtConfig({
     },
     workbox: {
       navigateFallback: null,
-      globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2,webmanifest}"],
+      // Cloudflare deployments can retire hashed chunks; keep app requests on the network.
+      globPatterns: ["offline.html"],
+      // Nuxt adds payload/build JSON globs. Keep only the offline document, with its exact URL.
+      manifestTransforms: [
+        (entries) => ({
+          manifest: entries.filter((entry) => entry.url === "offline.html"),
+          warnings: [],
+        }),
+      ],
     },
   },
 
