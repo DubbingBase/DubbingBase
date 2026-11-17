@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 69 routes | 28 models | 145 components | 137 lib files | 59 env vars | 14 middleware | 56% test coverage
-> **Token savings:** this file is ~19,100 tokens. Without it, AI exploration would cost ~150,000 tokens. **Saves ~130,900 tokens per conversation.**
-> **Last scanned:** 2026-11-17 10:45 — re-run after significant changes
+> 69 routes | 28 models | 145 components | 138 lib files | 59 env vars | 14 middleware | 56% test coverage
+> **Token savings:** this file is ~19,100 tokens. Without it, AI exploration would cost ~150,200 tokens. **Saves ~131,100 tokens per conversation.**
+> **Last scanned:** 2026-11-17 10:52 — re-run after significant changes
 
 ---
 
@@ -704,6 +704,7 @@
   - function useAdminReports
   - type UserReport
   - const ADMIN_REPORTS_PAGE_SIZE
+- `apps/website/src/composables/useCharacterImageViewport.ts` — function useCharacterImageViewport: (requests) => void
 - `apps/website/src/composables/useCharacterImages.ts`
   - function characterImageKey: (request) => string | null
   - function useCharacterImages: (requests) => void
@@ -1072,7 +1073,7 @@
 # Test Coverage
 
 > **56%** of routes and models are covered by tests
-> 162 test files found
+> 164 test files found
 
 ## Covered Routes
 

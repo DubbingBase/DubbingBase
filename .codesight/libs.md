@@ -265,6 +265,7 @@
   - function useAdminReports
   - type UserReport
   - const ADMIN_REPORTS_PAGE_SIZE
+- `apps/website/src/composables/useCharacterImageViewport.ts` — function useCharacterImageViewport: (requests) => void
 - `apps/website/src/composables/useCharacterImages.ts`
   - function characterImageKey: (request) => string | null
   - function useCharacterImages: (requests) => void
