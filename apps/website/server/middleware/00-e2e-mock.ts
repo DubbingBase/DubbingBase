@@ -1140,7 +1140,7 @@ export const MOCK_STUDIO = {
     name: "Dubbing Brothers",
     country: "France",
     city: "La Plaine Saint-Denis",
-    logo_url: "https://dubbingbase.com/studios/dubbing_brothers.png",
+    logo_url: null,
     description: "L'un des plus grands studios de doublage en France et en Europe.",
   },
   dubbedProjects: [

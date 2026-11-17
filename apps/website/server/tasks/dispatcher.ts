@@ -104,7 +104,7 @@ export default defineTask({
 
     const readinessDurationMs = Math.round(performance.now() - cycleStartedAt);
     if (readyQueueNames.length === 0) {
-      console.info(
+      console.debug(
         `[Dispatcher] Empty queue tick queues_checked=${mediaQueueNames.length} queues_ready=0 db_calls=1 duration_ms=${readinessDurationMs}.`,
       );
       return { result: "success", processed: 0 };
