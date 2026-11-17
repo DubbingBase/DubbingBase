@@ -5,10 +5,6 @@ export const TVDB_AUTH_TOKEN_NAMESPACE = createCacheNamespace<string>();
 
 const AUTH_TOKEN_TTL = 23 * 60 * 60;
 
-function debugLog(message: string, data?: unknown) {
-  console.log(`[TVDB] ${message}`, data ? JSON.stringify(data, null, 2) : "");
-}
-
 export class TVDBClient {
   private apiKey: string;
   private baseUrl: string;
@@ -23,7 +19,6 @@ export class TVDBClient {
     this.apiKey = config.tvdbApiKey || "";
     this.baseUrl = "https://api4.thetvdb.com/v4";
     this.cache = cache;
-    debugLog("TVDB Client initialized", { hasApiKey: !!this.apiKey });
   }
 
   private async authenticate(): Promise<string> {

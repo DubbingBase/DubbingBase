@@ -108,10 +108,6 @@ export class IgdbClient {
     this.baseUrl = "https://api.igdb.com/v4";
     this.tokenUrl = "https://id.twitch.tv/oauth2/token";
     this.cache = cache;
-    debugLog("IGDB Client initialized", {
-      hasClientId: !!this.clientId,
-      hasClientSecret: !!this.clientSecret,
-    });
   }
 
   private async authenticate(): Promise<string> {

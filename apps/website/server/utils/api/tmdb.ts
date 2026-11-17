@@ -7,10 +7,6 @@ function isTmdbResponse(value: unknown): value is TmdbResponse {
   return cast === undefined || Array.isArray(cast);
 }
 
-function debugLog(message: string, data?: unknown) {
-  console.log(`[TMDB] ${message}`, data ? JSON.stringify(data, null, 2) : "");
-}
-
 export class TMDBClient {
   private apiKey: string;
   private baseUrl: string;
@@ -19,10 +15,6 @@ export class TMDBClient {
     const config = useRuntimeConfig();
     this.apiKey = typeof config.tmdbApiKey === "string" ? config.tmdbApiKey : "";
     this.baseUrl = "https://api.themoviedb.org/3";
-    debugLog("TMDB Client initialized", {
-      hasApiKey: !!this.apiKey,
-      baseUrl: this.baseUrl,
-    });
   }
 
   async get(

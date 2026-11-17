@@ -25,6 +25,7 @@ beforeEach(() => {
   mocks.localFetch.mockResolvedValue(
     new Response(JSON.stringify({ processed: 1 }), { status: 200 }),
   );
+  vi.spyOn(console, "debug").mockImplementation(() => undefined);
   vi.spyOn(console, "info").mockImplementation(() => undefined);
   vi.spyOn(console, "log").mockImplementation(() => undefined);
   vi.spyOn(console, "warn").mockImplementation(() => undefined);
