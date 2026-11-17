@@ -135,7 +135,9 @@
         </section>
 
         <!-- Voice Cast -->
-        <section>
+        <section
+          :ref="observeCharacterImages(castItems.map((actor) => actor.characterImageRequest))"
+        >
           <DetailsCastHeader
             v-model:search="searchInput"
             :title="$t('details.castAndCrew')"
@@ -381,6 +383,7 @@ import {
   useCharacterImages,
   type CharacterImageRequest,
 } from "../../composables/useCharacterImages";
+import { useCharacterImageViewport } from "../../composables/useCharacterImageViewport";
 import { useRoute, useRouter } from "vue-router";
 import type { Link as HeadLink } from "@unhead/vue";
 import { NuxtLink } from "#components";
@@ -699,9 +702,12 @@ function characterRequest(actor: CardRole) {
     names: [...(actor.roles ?? []).map((role) => role.character), actor.workCharacterName],
   };
 }
-const { imageFor, characterIdFor, reportImageError, tvdbIds } = useCharacterImages(
-  computed(() => castItems.value.map((actor) => actor.characterImageRequest)),
+const characterImageRequests = computed(() =>
+  castItems.value.map((actor) => actor.characterImageRequest),
 );
+const { activeRequests, observe: observeCharacterImages } =
+  useCharacterImageViewport(characterImageRequests);
+const { imageFor, characterIdFor, reportImageError, tvdbIds } = useCharacterImages(activeRequests);
 const tvdbId = computed(() => tvdbIds.value[`tv:${route.params.id}`]);
 function characterDetailPath(actor: {
   characterImageRequest: CharacterImageRequest;

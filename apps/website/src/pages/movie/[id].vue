@@ -77,7 +77,9 @@
         <DetailsSynopsis :text="movie.overview" />
 
         <!-- Voice Cast -->
-        <section>
+        <section
+          :ref="observeCharacterImages(castItems.map((actor) => actor.characterImageRequest))"
+        >
           <DetailsCastHeader
             v-model:search="searchInput"
             :title="$t('details.castAndCrew')"
@@ -342,6 +344,7 @@ import {
   useCharacterImages,
   type CharacterImageRequest,
 } from "../../composables/useCharacterImages";
+import { useCharacterImageViewport } from "../../composables/useCharacterImageViewport";
 import {
   hasOriginalVersion,
   isOriginalVersionQuery,
@@ -603,9 +606,12 @@ function characterRequest(actor: { character?: string | null; workCharacterName?
     names: [actor.character, actor.workCharacterName],
   };
 }
-const { imageFor, characterIdFor, reportImageError, tvdbIds } = useCharacterImages(
-  computed(() => castItems.value.map((actor) => actor.characterImageRequest)),
+const characterImageRequests = computed(() =>
+  castItems.value.map((actor) => actor.characterImageRequest),
 );
+const { activeRequests, observe: observeCharacterImages } =
+  useCharacterImageViewport(characterImageRequests);
+const { imageFor, characterIdFor, reportImageError, tvdbIds } = useCharacterImages(activeRequests);
 const tvdbId = computed(() => tvdbIds.value[`movie:${route.params.id}`]);
 function characterDetailPath(actor: {
   characterImageRequest: CharacterImageRequest;
