@@ -50,7 +50,7 @@
     "@vite-pwa/nuxt": "^1.1.1",
     "@vue/test-utils": "^2.5.1",
     "happy-dom": "^21.0.4",
-    "nuxt": "latest",
+    "nuxt": "^4.6.4",
     "tailwindcss": "^4.3.5",
     "typescript": "^5.9.3",
     "vitest": "^5.1.0",

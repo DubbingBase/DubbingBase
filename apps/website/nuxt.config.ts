@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 import { defineNuxtConfig } from "nuxt/config";
 import { APP_LOCALES, DEFAULT_LOCALE } from "@app/shared-logic";
 import { deferPosthogPrefetch } from "./src/utils/posthog-prefetch-manifest";
+import { version as appVersion } from "./package.json";
 
 function env(name: string): string | undefined {
   return process.env[name] ?? process.env[`NUXT_${name}`];
@@ -12,6 +13,10 @@ function env(name: string): string | undefined {
 const supabaseUrl = env("SUPABASE_URL") ?? env("PUBLIC_SUPABASE_URL");
 const supabasePublishableKey = env("SUPABASE_PUBLISHABLE_KEY");
 const siteUrl = env("SITE_URL") ?? "https://dubbingbase.com";
+const isE2E = process.env.E2E_TEST === "true";
+// Scripts/route-cpu-ssr.mjs rewrites this exact line to also disable tasks while profiling.
+const disableScheduledTasks = isE2E;
+const isProduction = process.env.NODE_ENV === "production";
 const ABOUT_PRERENDER_ROUTES = new Set(["/about", "/fr/about", "/es/about", "/ja/about"]);
 
 function stripAboutClientRuntime(html: string): string {
@@ -64,7 +69,7 @@ export default defineNuxtConfig({
     preset: process.env.NITRO_PRESET || "node-server",
     // The Playwright mock interceptor is only compiled for E2E runs so its
     // fixtures never ship in (or add a per-request check to) the production bundle.
-    ignore: ["**/*.test.ts", ...(process.env.E2E_TEST ? [] : ["**/middleware/00-e2e-mock.ts"])],
+    ignore: ["**/*.test.ts", ...(isE2E ? [] : ["**/middleware/00-e2e-mock.ts"])],
     // Dev only: the browser reaches Supabase through /supabase (see plugins/dev-supabase-proxy.client.ts),
     // so the site works from any host. ws keeps Realtime working.
     devProxy: supabaseUrl
@@ -82,29 +87,18 @@ export default defineNuxtConfig({
     experimental: {
       tasks: true,
     },
-    scheduledTasks:
-      process.env.E2E_TEST === "true"
-        ? {}
-        : {
-            "* * * * *": ["dispatcher"],
-            "0 6 * * *": ["enqueue-trending-media"],
-          },
+    scheduledTasks: disableScheduledTasks
+      ? {}
+      : {
+          "* * * * *": ["dispatcher"],
+          "0 6 * * *": ["enqueue-trending-media"],
+        },
     rollupConfig: {
       // Keep .wasm imports external so Rollup's JS plugins (e.g. inject)
       // don't try to parse them. Wrangler pre-compiles them into
       // WebAssembly.Module objects at deploy time (required on Workers,
       // which block WebAssembly.instantiate(bytes)).
       external: [/\.wasm($|\?)/],
-    },
-    cloudflare: {
-      wrangler: {
-        kv_namespaces: [
-          {
-            binding: "CACHE_KV",
-            id: "340974572b504ed2aa20c160e18f5697",
-          },
-        ],
-      },
     },
   },
 
@@ -186,8 +180,10 @@ export default defineNuxtConfig({
       start_url: "/",
       scope: "/",
       display: "standalone",
-      background_color: "#121212",
-      theme_color: "#121212",
+      // A manifest cannot vary by color scheme, so use the dark theme's --app-color-background
+      // (the default theme). app.vue overrides theme-color per scheme with meta tags.
+      background_color: "#10131a",
+      theme_color: "#10131a",
       icons: [
         {
           src: "/android-chrome-192x192.png",
@@ -199,7 +195,14 @@ export default defineNuxtConfig({
           src: "/android-chrome-512x512.png",
           sizes: "512x512",
           type: "image/png",
-          purpose: "any maskable",
+          purpose: "any",
+        },
+        {
+          // Logo scaled into the maskable safe zone; "any maskable" on one icon is discouraged.
+          src: "/android-chrome-maskable-512x512.png",
+          sizes: "512x512",
+          type: "image/png",
+          purpose: "maskable",
         },
       ],
     },
@@ -240,11 +243,20 @@ export default defineNuxtConfig({
       ],
     },
     define: {
-      __VERSION__: JSON.stringify(process.env.npm_package_version || "1.0.0"),
+      __VERSION__: JSON.stringify(appVersion),
     },
   },
 
   hooks: {
+    // Mock Supabase values keep dev, tests and typechecks working without credentials, but a
+    // production build must never silently ship them. `nuxt prepare` never builds Nitro.
+    "nitro:build:before": () => {
+      if (isProduction && !isE2E && (!supabaseUrl || !supabasePublishableKey)) {
+        throw new Error(
+          "Production builds require SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY; refusing to fall back to mock values.",
+        );
+      }
+    },
     "build:manifest": (manifest) => deferPosthogPrefetch(manifest),
     "nitro:build:public-assets": () => {
       execFileSync(
@@ -265,8 +277,8 @@ export default defineNuxtConfig({
     "@nuxtjs/robots",
     "@nuxt/image",
     "@vite-pwa/nuxt",
-    "@nuxt/test-utils/module",
-    "@nuxtjs/html-validator",
+    // Test and validation tooling is not needed in the production bundle.
+    ...(isProduction ? [] : ["@nuxt/test-utils/module", "@nuxtjs/html-validator"]),
   ],
 
   fonts: {
