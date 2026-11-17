@@ -248,6 +248,39 @@ describe("IgdbClient token cache expiry", () => {
     });
   });
 
+  it("keeps localized names when a localization row has no name", async () => {
+    const values = new Map<string, unknown>([
+      ["igdb:auth_token", { accessToken: "cached-token", expiresAt: Date.now() + 60_000 }],
+    ]);
+    vi.stubGlobal("fetch", async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith("/popularity_primitives")) {
+        return new Response(JSON.stringify([{ game_id: 7, popularity_type: 1, value: 80 }]));
+      }
+      if (url.endsWith("/games")) return new Response(JSON.stringify([{ id: 7, name: "Seven" }]));
+      if (url.endsWith("/game_localizations")) {
+        return new Response(
+          JSON.stringify([
+            { game: 7, region: { identifier: "fr-FR" } },
+            { game: 7, name: "Sept", region: { identifier: "fr-FR" } },
+          ]),
+        );
+      }
+      throw new Error(`Unexpected IGDB request: ${url}`);
+    });
+    vi.stubGlobal("useRuntimeConfig", () => ({
+      igdbClientId: "client-id",
+      igdbClientSecret: "client-secret",
+    }));
+
+    const client = new IgdbClient(createCache(values));
+
+    await expect(client.getTrendingGames(1, "fr-FR")).resolves.toMatchObject({
+      degraded: false,
+      games: [{ id: 7, name: "Sept" }],
+    });
+  });
+
   it.each([
     ["empty access token", '{"access_token":"","expires_in":7200}'],
     ["whitespace access token", '{"access_token":" ","expires_in":7200}'],
