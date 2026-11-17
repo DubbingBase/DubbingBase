@@ -8,7 +8,11 @@ let adminClient: SupabaseClient<Database> | null = null;
 
 export function useSupabaseAdmin(event?: H3Event): SupabaseClient<Database> {
   if (!adminClient) {
-    const config = event ? useRuntimeConfig(event) : useRuntimeConfig();
+    // Scheduled tasks pass a task event with no `context.nitro`, which makes the
+    // event-scoped lookup throw; fall back to the shared runtime config there.
+    const hasNitroContext =
+      typeof event?.context === "object" && event.context !== null && "nitro" in event.context;
+    const config = event && hasNitroContext ? useRuntimeConfig(event) : useRuntimeConfig();
     const cfEnv = getCloudflareEnv(event);
     const url =
       asString(config.supabaseUrl) ||
