@@ -53,7 +53,8 @@ export function buildIgdbImageUrl(
 
 interface IgdbGameLocalization {
   game: number;
-  name: string;
+  // IGDB omits unset fields, and many localization rows carry only a region or cover.
+  name?: string;
   region?: { identifier?: string };
 }
 
@@ -84,7 +85,11 @@ function isIgdbPopularityPrimitive(value: unknown): value is IgdbPopularityPrimi
 }
 
 function isIgdbGameLocalization(value: unknown): value is IgdbGameLocalization {
-  return isRecord(value) && typeof value.game === "number" && typeof value.name === "string";
+  return (
+    isRecord(value) &&
+    typeof value.game === "number" &&
+    (value.name === undefined || typeof value.name === "string")
+  );
 }
 
 export class IgdbClient {
@@ -401,7 +406,11 @@ export class IgdbClient {
     const { localizations } = localizationResult;
     const localizedNames = new Map<number, string>();
     for (const localization of localizations) {
-      if (localization.region?.identifier === language && !localizedNames.has(localization.game)) {
+      if (
+        localization.name &&
+        localization.region?.identifier === language &&
+        !localizedNames.has(localization.game)
+      ) {
         localizedNames.set(localization.game, localization.name);
       }
     }
