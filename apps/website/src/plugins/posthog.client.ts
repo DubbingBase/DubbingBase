@@ -18,11 +18,14 @@ export default defineNuxtPlugin({
             defaults: "2026-05-30",
             person_profiles: "identified_only",
             // Anonymous and minimal: no cookie or storage (the visitor id lives in memory and
-            // resets on every page load), no person profiles, no click or error capture. Only page
-            // views are sent, matching what the privacy page promises.
+            // resets on every page load), no person profiles, no click, error or page-leave capture.
+            // Only page views are sent (including client-side route changes), matching what the
+            // privacy page promises.
             persistence: "memory",
             autocapture: false,
-            capture_pageview: true,
+            capture_exceptions: false,
+            capture_pageleave: false,
+            capture_pageview: "history_change",
             disable_surveys: true,
           });
 

@@ -20,16 +20,15 @@ describe("llmGenerateObject", () => {
   let areAllLlmQuotasExhausted: typeof import("./llm").areAllLlmQuotasExhausted;
 
   beforeAll(async () => {
-    // llm.ts falls back to the environment when runtime config has no value.
-    vi.stubEnv("GOOGLE_AI_KEY", "test-key");
-    vi.stubEnv("GEMINI_MODELS", "m1,m2");
+    // getGoogleApiKey / getGeminiModelChain read runtime config first, so set it there
+    // rather than relying on the environment.
+    Object.assign(useRuntimeConfig(), { googleAiKey: "test-key", geminiModels: "m1,m2" });
     vi.stubGlobal("fetch", fetchMock);
     ({ llmGenerateObject, areAllLlmQuotasExhausted } = await import("./llm"));
   });
 
   afterAll(() => {
     vi.unstubAllGlobals();
-    vi.unstubAllEnvs();
   });
 
   beforeEach(() => fetchMock.mockReset());
@@ -80,6 +79,14 @@ describe("llmGenerateObject", () => {
     expect(result.model).toBe("Gemini (m2)");
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(areAllLlmQuotasExhausted()).toBe(false);
+
+    // The 429 cached m1 as exhausted, so the next call skips it and goes straight to m2.
+    fetchMock.mockReset();
+    fetchMock.mockResolvedValueOnce(
+      geminiResponse({ candidates: [{ content: { parts: [{ text: '{"items":[]}' }] } }] }),
+    );
+    await llmGenerateObject("prompt", schema);
+    expect(String(fetchMock.mock.calls[0]?.[0])).toContain("/m2:generateContent");
   });
 
   it("rejects an answer that does not match the schema", async () => {
