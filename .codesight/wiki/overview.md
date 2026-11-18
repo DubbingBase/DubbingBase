@@ -4,17 +4,16 @@
 
 **dubbing-base-monorepo** is a typescript project built with nuxt, organized as a monorepo.
 
-**Workspaces:** `@app/website` (`apps/website`), `@app/supabase` (`packages/database`), `@app/locales` (`packages/locales`), `@app/og-image` (`packages/og-image`), `@app/shared-logic` (`packages/shared-logic`)
+**Workspaces:** `@app/website` (`apps/website`), `@app/supabase` (`packages/database`), `@app/locales` (`packages/locales`), `@app/shared-logic` (`packages/shared-logic`)
 
 ## Scale
 
-69 API routes · 28 database models · 145 UI components · 138 library files · 14 middleware layers · 59 environment variables
+67 API routes · 28 database models · 145 UI components · 134 library files · 14 middleware layers · 53 environment variables
 
 ## Subsystems
 
-- **[[id].get](./[id].get.md)** — 11 routes — touches: auth, cache, queue
+- **[[id].get](./[id].get.md)** — 11 routes — touches: auth, cache
 - **[[id].put](./[id].put.md)** — 1 routes — touches: auth
-- **[About-preference.get](./about-preference.get.md)** — 1 routes
 - **[Admin](./admin.md)** — 5 routes — touches: auth, queue, cache
 - **[Career-grid.get](./career-grid.get.md)** — 1 routes
 - **[Character-images.get](./character-images.get.md)** — 1 routes — touches: cache
@@ -30,7 +29,7 @@
 - **[Get-random-task.post](./get-random-task.post.md)** — 1 routes — touches: auth
 - **[Get-studio-details.get](./get-studio-details.get.md)** — 1 routes
 - **[Home-stats.get](./home-stats.get.md)** — 1 routes
-- **[Index.get](./index.get.md)** — 4 routes — touches: cache, db
+- **[Index.get](./index.get.md)** — 3 routes — touches: db
 - **[Internal-media-create.post](./internal-media-create.post.md)** — 1 routes — touches: auth
 - **[Internal-media-credits.get](./internal-media-credits.get.md)** — 1 routes
 - **[Link-user-voice-actor.post](./link-user-voice-actor.post.md)** — 1 routes — touches: auth
@@ -68,13 +67,13 @@
 
 **UI:** 145 components (vue) — see [ui.md](./ui.md)
 
-**Libraries:** 138 files — see [libraries.md](./libraries.md)
+**Libraries:** 134 files — see [libraries.md](./libraries.md)
 
 ## High-Impact Files
 
 Changes to these files have the widest blast radius across the codebase:
 
-- `apps/website/server/utils/db/client.ts` — imported by **57** files
+- `apps/website/server/utils/db/client.ts` — imported by **51** files
 - `apps/website/server/utils/index.ts` — imported by **28** files
 - `apps/website/server/utils/auth-handlers.ts` — imported by **24** files
 - `apps/website/server/utils/cache/index.ts` — imported by **20** files
@@ -95,7 +94,7 @@ Changes to these files have the widest blast radius across the codebase:
 - `DISCORD_WEBHOOK_URL` — `apps/website/server/utils/notifications/discord.ts`
 - `DISCORD_WEBHOOK_URL_1` — `apps/website/server/utils/notifications/discord.ts`
 - `DISCORD_WEBHOOK_URL_2` — `apps/website/server/utils/notifications/discord.ts`
-- _...28 more_
+- _...25 more_
 
 ---
-_Back to [index.md](./index.md) · Generated 2026-11-17_
+_Back to [index.md](./index.md) · Generated 2026-11-18_

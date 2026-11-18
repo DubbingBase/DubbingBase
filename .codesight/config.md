@@ -35,14 +35,8 @@
 - `NUXT_DISCORD_WEBHOOK_URL_3` **required** — apps/website/server/utils/notifications/discord.ts
 - `NUXT_GEMINI_MODELS` (has default) — apps/website/server/utils/llm.ts
 - `NUXT_GOOGLE_AI_KEY` **required** — .env.example
-- `NUXT_PUBLIC_SUPABASE_URL` (has default) — apps/website/server/api/og-image/index.get.ts
 - `NUXT_SUPABASE_SECRET_KEY` (has default) — apps/website/server/api/prepare-trending-media.post.ts
-- `NUXT_SUPABASE_URL` (has default) — apps/website/server/api/og-image/index.get.ts
-- `ONESIGNAL_APP_ID` **required** — .env.example
-- `ONESIGNAL_REST_API_KEY` **required** — .env.example
-- `RESEND_API_KEY` **required** — .env.example
-- `RESEND_FROM_EMAIL` (has default) — .env.example
-- `RESEND_TO_EMAIL` (has default) — .env.example
+- `NUXT_SUPABASE_URL` (has default) — apps/website/server/utils/db/client.ts
 - `ROUTE_CPU_BASE_OUTPUT` (has default) — apps/website/scripts/route-cpu-ssr.mjs
 - `ROUTE_CPU_BASE_WEBSITE_DIR` **required** — apps/website/scripts/route-cpu-ssr.mjs
 - `ROUTE_CPU_BENCHMARK` **required** — apps/website/scripts/route-cpu-ssr.mjs

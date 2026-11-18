@@ -2,27 +2,27 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The [id].get subsystem handles **11 routes** and touches: auth, cache, queue.
+The [id].get subsystem handles **11 routes** and touches: auth, cache.
 
 ## Routes
 
 - `GET` `/api/actor/:id` params(id) [auth, cache]
   `apps/website/server/api/actor/[id].get.ts`
-- `GET` `/api/advertisement/:id` params(id) [queue]
+- `GET` `/api/advertisement/:id` params(id)
   `apps/website/server/api/advertisement/[id].get.ts`
-- `GET` `/api/audiobook/:id` params(id) [queue]
+- `GET` `/api/audiobook/:id` params(id)
   `apps/website/server/api/audiobook/[id].get.ts`
 - `GET` `/api/character/:source/:id` params(source, id)
   `apps/website/server/api/character/[source]/[id].get.ts`
 - `GET` `/api/game/:id` params(id)
   `apps/website/server/api/game/[id].get.ts`
-- `GET` `/api/movie/:id` params(id) [queue]
+- `GET` `/api/movie/:id` params(id)
   `apps/website/server/api/movie/[id].get.ts`
-- `GET` `/api/podcast/:id` params(id) [queue]
+- `GET` `/api/podcast/:id` params(id)
   `apps/website/server/api/podcast/[id].get.ts`
-- `GET` `/api/show/:id` params(id) [queue]
+- `GET` `/api/show/:id` params(id)
   `apps/website/server/api/show/[id].get.ts`
-- `GET` `/api/toy/:id` params(id) [queue]
+- `GET` `/api/toy/:id` params(id)
   `apps/website/server/api/toy/[id].get.ts`
 - `GET` `/api/toy-metadata/:id` params(id)
   `apps/website/server/api/toy-metadata/[id].get.ts`

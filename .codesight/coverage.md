@@ -1,11 +1,10 @@
 # Test Coverage
 
 > **56%** of routes and models are covered by tests
-> 164 test files found
+> 162 test files found
 
 ## Covered Routes
 
-- GET:/api/about-preference
 - GET:/api/character-images
 - POST:/api/count-voice-actor-works
 - GET:/api/detail-collections

@@ -2,14 +2,12 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Index.get subsystem handles **4 routes** and touches: cache, db.
+The Index.get subsystem handles **3 routes** and touches: db.
 
 ## Routes
 
 - `GET` `/api/episode/index`
   `apps/website/server/api/episode/index.get.ts`
-- `GET` `/api/og-image/index` [cache]
-  `apps/website/server/api/og-image/index.get.ts`
 - `GET` `/api/search/index` [db]
   `apps/website/server/api/search/index.get.ts`
 - `GET` `/api/season/index`
@@ -19,7 +17,6 @@ The Index.get subsystem handles **4 routes** and touches: cache, db.
 
 Read these before implementing or modifying this subsystem:
 - `apps/website/server/api/episode/index.get.ts`
-- `apps/website/server/api/og-image/index.get.ts`
 - `apps/website/server/api/search/index.get.ts`
 - `apps/website/server/api/season/index.get.ts`
 

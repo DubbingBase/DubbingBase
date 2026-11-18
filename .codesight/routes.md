@@ -1,14 +1,13 @@
 # Routes
 
-- `GET` `/api/about-preference` ✓
 - `GET` `/api/actor/:id` params(id) [auth, cache]
 - `POST` `/api/admin/queue/clear` [auth, queue]
 - `DELETE` `/api/admin/queue/item` [auth, queue]
 - `GET` `/api/admin/queue` [auth, queue]
 - `POST` `/api/admin/work-duplicates/merge` [auth]
 - `GET` `/api/admin/work-duplicates` [auth, cache]
-- `GET` `/api/advertisement/:id` params(id) [queue]
-- `GET` `/api/audiobook/:id` params(id) [queue]
+- `GET` `/api/advertisement/:id` params(id)
+- `GET` `/api/audiobook/:id` params(id)
 - `GET` `/api/career-grid`
 - `GET` `/api/character/:source/:id` params(source, id)
 - `GET` `/api/character-images` [cache] ✓
@@ -35,9 +34,8 @@
 - `GET` `/api/media-catalog` [db]
 - `POST` `/api/media-queue` [auth, queue] ✓
 - `POST` `/api/merge_voice_actor_duplicates` [auth]
-- `GET` `/api/movie/:id` params(id) [queue]
-- `GET` `/api/og-image/index` [cache]
-- `GET` `/api/podcast/:id` params(id) [queue]
+- `GET` `/api/movie/:id` params(id)
+- `GET` `/api/podcast/:id` params(id)
 - `POST` `/api/prepare-trending-media` [auth, queue]
 - `POST` `/api/prepare_game` [auth] ✓
 - `POST` `/api/process-media-queue` [auth, cache, queue] ✓
@@ -51,12 +49,12 @@
 - `GET` `/api/search/index` [db]
 - `GET` `/api/search-voice-actors`
 - `GET` `/api/season/index`
-- `GET` `/api/show/:id` params(id) [queue]
+- `GET` `/api/show/:id` params(id)
 - `POST` `/api/submit-task` [auth, db, upload] ✓
 - `POST` `/api/submit-user-report` [auth, db] ✓
 - `GET` `/api/top-contributors` ✓
 - `GET` `/api/top-voice-actors` ✓
-- `GET` `/api/toy/:id` params(id) [queue]
+- `GET` `/api/toy/:id` params(id)
 - `GET` `/api/toy-metadata/:id` params(id)
 - `GET` `/api/trending/games` [cache]
 - `GET` `/api/trending/movies` [cache] ✓

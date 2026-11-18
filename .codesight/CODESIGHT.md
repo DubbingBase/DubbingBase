@@ -1,25 +1,24 @@
 # dubbing-base-monorepo — AI Context Map
 
 > **Stack:** nuxt | none | vue | typescript
-> **Monorepo:** @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
+> **Monorepo:** @app/website, @app/supabase, @app/locales, @app/shared-logic
 
-> 69 routes | 28 models | 145 components | 138 lib files | 59 env vars | 14 middleware | 56% test coverage
-> **Token savings:** this file is ~19,100 tokens. Without it, AI exploration would cost ~150,200 tokens. **Saves ~131,100 tokens per conversation.**
-> **Last scanned:** 2026-11-17 15:44 — re-run after significant changes
+> 67 routes | 28 models | 145 components | 134 lib files | 53 env vars | 14 middleware | 56% test coverage
+> **Token savings:** this file is ~18,700 tokens. Without it, AI exploration would cost ~147,400 tokens. **Saves ~128,700 tokens per conversation.**
+> **Last scanned:** 2026-11-18 19:38 — re-run after significant changes
 
 ---
 
 # Routes
 
-- `GET` `/api/about-preference` ✓
 - `GET` `/api/actor/:id` params(id) [auth, cache]
 - `POST` `/api/admin/queue/clear` [auth, queue]
 - `DELETE` `/api/admin/queue/item` [auth, queue]
 - `GET` `/api/admin/queue` [auth, queue]
 - `POST` `/api/admin/work-duplicates/merge` [auth]
 - `GET` `/api/admin/work-duplicates` [auth, cache]
-- `GET` `/api/advertisement/:id` params(id) [queue]
-- `GET` `/api/audiobook/:id` params(id) [queue]
+- `GET` `/api/advertisement/:id` params(id)
+- `GET` `/api/audiobook/:id` params(id)
 - `GET` `/api/career-grid`
 - `GET` `/api/character/:source/:id` params(source, id)
 - `GET` `/api/character-images` [cache] ✓
@@ -46,9 +45,8 @@
 - `GET` `/api/media-catalog` [db]
 - `POST` `/api/media-queue` [auth, queue] ✓
 - `POST` `/api/merge_voice_actor_duplicates` [auth]
-- `GET` `/api/movie/:id` params(id) [queue]
-- `GET` `/api/og-image/index` [cache]
-- `GET` `/api/podcast/:id` params(id) [queue]
+- `GET` `/api/movie/:id` params(id)
+- `GET` `/api/podcast/:id` params(id)
 - `POST` `/api/prepare-trending-media` [auth, queue]
 - `POST` `/api/prepare_game` [auth] ✓
 - `POST` `/api/process-media-queue` [auth, cache, queue] ✓
@@ -62,12 +60,12 @@
 - `GET` `/api/search/index` [db]
 - `GET` `/api/search-voice-actors`
 - `GET` `/api/season/index`
-- `GET` `/api/show/:id` params(id) [queue]
+- `GET` `/api/show/:id` params(id)
 - `POST` `/api/submit-task` [auth, db, upload] ✓
 - `POST` `/api/submit-user-report` [auth, db] ✓
 - `GET` `/api/top-contributors` ✓
 - `GET` `/api/top-voice-actors` ✓
-- `GET` `/api/toy/:id` params(id) [queue]
+- `GET` `/api/toy/:id` params(id)
 - `GET` `/api/toy-metadata/:id` params(id)
 - `GET` `/api/trending/games` [cache]
 - `GET` `/api/trending/movies` [cache] ✓
@@ -542,7 +540,6 @@
   - function toHistoryEntry: (row, entityType, context) => HistoryEntry | null
   - _...9 more_
 - `apps/website/server/utils/error-message.ts` — function getErrorMessage: (error) => string
-- `apps/website/server/utils/featureFlags.ts` — function isEnqueueOnNavigateEnabled: () => Promise<boolean>
 - `apps/website/server/utils/game-character-validation.ts`
   - function gameCharacterError: (statusCode, message) => void
   - function hasOnlyKeys: (value, unknown>, allowed) => void
@@ -577,10 +574,7 @@
 - `apps/website/server/utils/llm.ts`
   - function areAllLlmQuotasExhausted: () => boolean
   - function getLlmQuotaCache: () => void
-  - function llmGenerate: (prompt, options?) => Promise<
   - function llmGenerateObject: (prompt, schema, options?) => Promise<
-  - function llmVision: (prompt, imageData, mimeType, options?) => Promise<
-  - function llmVisionObject: (prompt, imageData, schema, mimeType, options?) => Promise<
 - `apps/website/server/utils/media-page-credits.ts` — function mediaPageMovieCredits: (credits) => void, function mediaPageAggregateCredits: (credits) => void
 - `apps/website/server/utils/media-queue-readiness.ts`
   - function getReadyMediaQueueNames: (value) => MediaQueueName[]
@@ -834,10 +828,6 @@
   - function fetchTmdbMediaSummary
   - interface TmdbMediaSummary
   - _...2 more_
-- `apps/website/src/utils/voice-actor-og-image.ts`
-  - function isVoiceActorOgImagesEnabled: (value) => boolean
-  - function getVoiceActorOgImageMetadata: (enabled, voiceActorId, siteUrl) => VoiceActorOgImageMetadata
-  - type VoiceActorOgImageMetadata
 - `apps/website/src/utils/voice-actor-profile-save.ts`
   - function voiceActorProfilePayload: (profile) => VoiceActorCreationPayload
   - function changedVoiceActorProfileFields: (previous, current) => Record<string, Json>
@@ -852,11 +842,6 @@
   - function mockEpisodePageResponse: (episode) => void
   - function setupMockApi: (page, options) => void
   - interface MockApiOptions
-- `packages/og-image/src/index.ts`
-  - function generateTemplate: (options) => void
-  - interface GenerateOptions
-  - type GeneratorType
-- `packages/og-image/src/voice-actor.ts` — function voiceActorGenerator: (params) => void, interface VoiceActorOgParams
 - `packages/shared-logic/src/composables/useActorData.ts`
   - function fetchActorData: (id, options) => Promise<ActorDataPayload | null>
   - function useActorData: (initialData?, options) => void
@@ -973,14 +958,8 @@
 - `NUXT_DISCORD_WEBHOOK_URL_3` **required** — apps/website/server/utils/notifications/discord.ts
 - `NUXT_GEMINI_MODELS` (has default) — apps/website/server/utils/llm.ts
 - `NUXT_GOOGLE_AI_KEY` **required** — .env.example
-- `NUXT_PUBLIC_SUPABASE_URL` (has default) — apps/website/server/api/og-image/index.get.ts
 - `NUXT_SUPABASE_SECRET_KEY` (has default) — apps/website/server/api/prepare-trending-media.post.ts
-- `NUXT_SUPABASE_URL` (has default) — apps/website/server/api/og-image/index.get.ts
-- `ONESIGNAL_APP_ID` **required** — .env.example
-- `ONESIGNAL_REST_API_KEY` **required** — .env.example
-- `RESEND_API_KEY` **required** — .env.example
-- `RESEND_FROM_EMAIL` (has default) — .env.example
-- `RESEND_TO_EMAIL` (has default) — .env.example
+- `NUXT_SUPABASE_URL` (has default) — apps/website/server/utils/db/client.ts
 - `ROUTE_CPU_BASE_OUTPUT` (has default) — apps/website/scripts/route-cpu-ssr.mjs
 - `ROUTE_CPU_BASE_WEBSITE_DIR` **required** — apps/website/scripts/route-cpu-ssr.mjs
 - `ROUTE_CPU_BENCHMARK` **required** — apps/website/scripts/route-cpu-ssr.mjs
@@ -1034,50 +1013,49 @@
 
 ## Most Imported Files (change these carefully)
 
-- `apps/website/server/utils/db/client.ts` — imported by **57** files
+- `apps/website/server/utils/db/client.ts` — imported by **51** files
 - `apps/website/server/utils/index.ts` — imported by **28** files
 - `apps/website/server/utils/auth-handlers.ts` — imported by **24** files
 - `apps/website/server/utils/cache/index.ts` — imported by **20** files
 - `apps/website/server/utils/api/igdb.ts` — imported by **13** files
 - `apps/website/server/utils/urls/supabase.ts` — imported by **12** files
-- `apps/website/server/utils/notifications/discord.ts` — imported by **12** files
 - `packages/shared-logic/src/types/index.ts` — imported by **12** files
-- `apps/website/server/utils/cache/http.ts` — imported by **11** files
 - `apps/website/server/utils/auth.ts` — imported by **11** files
 - `apps/website/server/utils/media-request.ts` — imported by **10** files
 - `apps/website/server/utils/services/media.ts` — imported by **10** files
 - `apps/website/server/utils/db/queries.ts` — imported by **9** files
+- `apps/website/server/utils/cache/http.ts` — imported by **9** files
 - `apps/website/server/utils/urls/tmdb.ts` — imported by **8** files
 - `apps/website/server/utils/cache/constants.ts` — imported by **8** files
 - `e2e/helpers/mock-api.ts` — imported by **8** files
-- `apps/website/server/utils/background.ts` — imported by **7** files
 - `apps/website/server/utils/dubbing-language.ts` — imported by **7** files
+- `apps/website/server/utils/notifications/discord.ts` — imported by **6** files
 - `apps/website/server/utils/narrow.ts` — imported by **5** files
 - `apps/website/server/utils/with-timeout.ts` — imported by **5** files
+- `apps/website/server/utils/cache/wikipedia.ts` — imported by **5** files
 
 ## Import Map (who imports what)
 
-- `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue.get.ts`, `apps/website/server/api/admin/work-duplicates/merge.post.ts`, `apps/website/server/api/admin/work-duplicates.get.ts` +52 more
+- `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue.get.ts`, `apps/website/server/api/admin/work-duplicates/merge.post.ts`, `apps/website/server/api/admin/work-duplicates.get.ts` +46 more
 - `apps/website/server/utils/index.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/character/[source]/[id].get.ts` +23 more
 - `apps/website/server/utils/auth-handlers.ts` ← `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue.get.ts`, `apps/website/server/api/admin/work-duplicates/merge.post.ts`, `apps/website/server/api/dashboard-stats.get.ts` +19 more
 - `apps/website/server/utils/cache/index.ts` ← `apps/website/server/utils/api/igdb.test.ts`, `apps/website/server/utils/api/igdb.ts`, `apps/website/server/utils/api/openlibrary.test.ts`, `apps/website/server/utils/api/openlibrary.ts`, `apps/website/server/utils/api/podcast.test.ts` +15 more
 - `apps/website/server/utils/api/igdb.ts` ← `apps/website/server/api/character/[source]/[id].get.ts`, `apps/website/server/api/game/[id].get.ts`, `apps/website/server/api/internal-media-credits.get.ts`, `apps/website/server/api/media-catalog.get.ts`, `apps/website/server/api/search/index.get.ts` +8 more
 - `apps/website/server/utils/urls/supabase.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/dashboard-stats.get.ts`, `apps/website/server/api/entity-history.get.ts`, `apps/website/server/api/find_duplicate_voice_actors.get.ts`, `apps/website/server/api/list-voice-actors.get.ts` +7 more
-- `apps/website/server/utils/notifications/discord.ts` ← `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/media-queue.post.ts`, `apps/website/server/api/movie/[id].get.ts`, `apps/website/server/api/podcast/[id].get.ts` +7 more
 - `packages/shared-logic/src/types/index.ts` ← `packages/shared-logic/src/composables/useAdvertisementData.ts`, `packages/shared-logic/src/composables/useAudiobookData.ts`, `packages/shared-logic/src/composables/useDetailCollections.ts`, `packages/shared-logic/src/composables/useDetailCollections.ts`, `packages/shared-logic/src/composables/useGameData.ts` +7 more
-- `apps/website/server/utils/cache/http.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/admin/work-duplicates.get.ts`, `apps/website/server/api/character-images.get.ts`, `apps/website/server/api/og-image/index.get.ts`, `apps/website/server/api/trending/games.get.ts` +6 more
 - `apps/website/server/utils/auth.ts` ← `apps/website/server/api/admin/work-duplicates.get.ts`, `apps/website/server/api/entity-history.get.ts`, `apps/website/server/api/media-queue.post.ts`, `apps/website/server/api/prepare-trending-media.post.ts`, `apps/website/server/api/process-media-queue.post.ts` +6 more
+- `apps/website/server/utils/media-request.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/character-images.get.ts`, `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/game/[id].get.ts` +5 more
+- `apps/website/server/utils/services/media.ts` ← `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/character/[source]/[id].get.ts`, `apps/website/server/api/character-images.get.ts`, `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/movie/[id].get.ts` +5 more
 
 ---
 
 # Test Coverage
 
 > **56%** of routes and models are covered by tests
-> 164 test files found
+> 162 test files found
 
 ## Covered Routes
 
-- GET:/api/about-preference
 - GET:/api/character-images
 - POST:/api/count-voice-actor-works
 - GET:/api/detail-collections
@@ -1205,16 +1183,10 @@
 
 ### Secrets
 
-- `ADMIN_EMAIL`
 - `CLOUDFLARE_ACCOUNT_ID`
 - `CLOUDFLARE_API_TOKEN`
 - `IGDB_CLIENT_ID`
 - `IGDB_CLIENT_SECRET`
-- `ONESIGNAL_APP_ID`
-- `ONESIGNAL_REST_API_KEY`
-- `RESEND_API_KEY`
-- `RESEND_FROM_EMAIL`
-- `RESEND_TO_EMAIL`
 - `SUPABASE_ACCESS_TOKEN`
 - `SUPABASE_PUBLISHABLE_KEY`
 - `SUPABASE_SECRET_KEY`

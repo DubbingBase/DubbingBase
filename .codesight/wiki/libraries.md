@@ -2,9 +2,9 @@
 
 > **Navigation aid.** Library inventory extracted via AST. Read the source files listed here before modifying exported functions.
 
-**138 library files** across 4 modules
+**134 library files** across 3 modules
 
-## Website (114 files)
+## Website (112 files)
 
 - `apps/website/server/utils/db/queries.ts` — getVoiceActorWithWork, getWorkByActor, getActorPageWorkByActor, getDubbingProjects, getDubbingProjectsForMediaEndpoint, getAdvertisementPageDubbingProjects, …
 - `apps/website/src/utils/dubbing-project-save.ts` — getEditableDubbingProjectStatus, serializeGameProjectCastRows, createStableRequestIdFactory, createDubbingProjectSaveClient, isDubbingProjectSaveConflict, getDubbingProjectSaveErrorMessage, …
@@ -29,9 +29,9 @@
 - `apps/website/src/utils/cast-workspace.ts` — filterCastRows, summarizeCast, getInitials, CastWorkspaceRow, CastFilter, ORIGINAL_CAST_SEED_LIMIT, …
 - `apps/website/server/utils/api/igdb.ts` — buildIgdbImageUrl, isIgdbGame, isIgdbCharacter, IgdbClient, IgdbTrendingGamesResult, IgdbPopularityPrimitive
 - `apps/website/server/utils/cache/http.ts` — getPublicCacheControl, getCloudflareCacheControl, setNoCacheHeaders, setPublicCacheHeaders, CacheProfile, NO_STORE_CACHE_CONTROL
-- `apps/website/server/utils/llm.ts` — areAllLlmQuotasExhausted, getLlmQuotaCache, llmGenerate, llmGenerateObject, llmVision, llmVisionObject
 - `apps/website/server/utils/notifications/discord.ts` — normalizeDiscordUrl, buildDiscordEmbed, sendDiscordAdminNotification, DiscordWebhookOptions, QueueName, DiscordNotificationCategory
-- _…and 89 more files_
+- `apps/website/src/composables/useContribute.ts` — fetchRandomTask, useContribute, ContributionTask, ContributionCategory, ClaimedCategory, ContributionClaim
+- _…and 87 more files_
 
 ## Shared-logic (21 files)
 
@@ -56,11 +56,6 @@
 - `packages/shared-logic/src/composables/useShowData.ts` — fetchShowData
 - `packages/shared-logic/src/composables/useToyData.ts` — fetchToyData
 - `packages/shared-logic/src/wikipedia-language.ts` — isWikipediaLanguage
-
-## Og-image (2 files)
-
-- `packages/og-image/src/index.ts` — generateTemplate, GenerateOptions, GeneratorType
-- `packages/og-image/src/voice-actor.ts` — voiceActorGenerator, VoiceActorOgParams
 
 ## E2e (1 files)
 
