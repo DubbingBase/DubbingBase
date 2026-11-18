@@ -144,6 +144,8 @@ function disposeCropper() {
 }
 
 async function setup() {
+  // Browser only: the guard lets the server build drop the cropperjs chunk entirely.
+  if (!import.meta.client) return;
   disposeCropper();
   errorMessage.value = "";
   if (!props.file || !container) return;

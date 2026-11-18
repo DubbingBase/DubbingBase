@@ -72,56 +72,8 @@
       <ClientOnly>
         <LazyHeaderPreferences />
         <template #fallback>
-          <details v-if="isAboutRoute" class="relative">
-            <summary
-              class="flex h-10 cursor-pointer list-none items-center rounded-full px-3 text-xs font-medium theme-text-secondary theme-hover-text theme-hover-surface-muted"
-            >
-              {{ t("settings.preferences") }}
-            </summary>
-            <div
-              class="absolute right-0 z-50 mt-2 grid w-64 gap-4 rounded-xl border theme-border theme-surface-overlay p-3 shadow-xl"
-            >
-              <div>
-                <p class="mb-2 text-xs font-semibold theme-text">
-                  {{ t("settings.theme") }}
-                </p>
-                <div class="flex flex-wrap gap-1">
-                  <a
-                    v-for="theme in themePreferences"
-                    :key="theme"
-                    :href="aboutPreferenceHref('theme', theme)"
-                    data-about-preference="theme"
-                    :data-preference-value="theme"
-                    class="rounded-lg px-2.5 py-1.5 text-xs theme-text-secondary theme-hover-surface-muted"
-                  >
-                    {{ t(`theme.${theme}`) }}
-                  </a>
-                </div>
-              </div>
-              <div>
-                <p class="mb-2 text-xs font-semibold theme-text">
-                  {{ t("language.switchNow") }}
-                </p>
-                <div class="flex flex-wrap gap-1">
-                  <a
-                    v-for="language in aboutLanguages"
-                    :key="language"
-                    :href="aboutPreferenceHref('lang', language)"
-                    data-about-preference="lang"
-                    :data-preference-value="language"
-                    :data-preference-target="aboutLanguageTarget(language)"
-                    class="rounded-lg px-2.5 py-1.5 text-xs theme-text-secondary theme-hover-surface-muted"
-                  >
-                    {{ t(`language.${language}`) }}
-                  </a>
-                </div>
-              </div>
-            </div>
-          </details>
-          <template v-else>
-            <div class="w-10 h-10 rounded-full theme-surface-raised animate-pulse"></div>
-            <div class="w-10 h-10 rounded-full theme-surface-raised animate-pulse"></div>
-          </template>
+          <div class="w-10 h-10 rounded-full theme-surface-raised animate-pulse"></div>
+          <div class="w-10 h-10 rounded-full theme-surface-raised animate-pulse"></div>
         </template>
       </ClientOnly>
 
@@ -155,20 +107,7 @@
         </template>
 
         <template #fallback>
-          <NuxtLink
-            v-if="isAboutRoute"
-            :to="localePath('/login')"
-            data-about-auth-fallback
-            :data-profile-href="localePath('/profile')"
-            :data-profile-label="t('nav.profile', 'Profile')"
-            :data-supabase-cookie-prefix="supabaseCookiePrefix"
-            :aria-label="t('nav.login')"
-            class="flex h-9 items-center rounded-full px-4 text-sm font-semibold theme-contrast theme-hover-contrast"
-          >
-            {{ t("nav.login") }}
-          </NuxtLink>
           <div
-            v-else
             class="w-9 h-9 md:w-10 md:h-10 ml-1 rounded-full theme-surface-raised theme-surface-muted animate-pulse"
           ></div>
         </template>
@@ -181,24 +120,10 @@
 import { nextTick, onMounted, onUnmounted, ref, computed } from "vue";
 import { useRoute } from "vue-router";
 import { UserIcon, SearchIcon, HomeIcon, ShieldIcon } from "lucide-vue-next";
-const { t, locale } = useI18n();
+const { t } = useI18n();
 const localePath = useLocalePathPrefix();
 const { user, isAdmin } = useClientUser();
-const supabaseCookiePrefix = useRuntimeConfig().public.supabase.cookiePrefix;
 const route = useRoute();
-const ABOUT_ROUTES = new Set(["/about", "/fr/about", "/es/about", "/ja/about"]);
-const themePreferences = ["system", "dark", "light"] as const;
-const aboutLanguages = ["en", "fr", "es", "ja"] as const;
-const isAboutRoute = computed(() => ABOUT_ROUTES.has(route.path));
-
-const aboutPreferenceHref = (key: "lang" | "theme", value: string): string => {
-  const query = new URLSearchParams({ locale: locale.value, [key]: value });
-  return `/api/about-preference?${query.toString()}`;
-};
-
-const aboutLanguageTarget = (language: string): string => {
-  return language === "en" ? "/about" : `/${language}/about`;
-};
 
 const isHomePage = computed(() => {
   const homePath = localePath("/");

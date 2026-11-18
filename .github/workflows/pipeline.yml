@@ -436,16 +436,10 @@ jobs:
           NUXT_IGDB_CLIENT_ID: ${{ secrets.IGDB_CLIENT_ID }}
           NUXT_IGDB_CLIENT_SECRET: ${{ secrets.IGDB_CLIENT_SECRET }}
           NUXT_GOOGLE_AI_KEY: ${{ secrets.GOOGLE_AI_KEY || secrets.NUXT_GOOGLE_AI_KEY || secrets.GEMINI_API_KEY }}
-          NUXT_ONESIGNAL_APP_ID: ${{ secrets.ONESIGNAL_APP_ID }}
-          NUXT_ONESIGNAL_REST_API_KEY: ${{ secrets.ONESIGNAL_REST_API_KEY }}
           NUXT_DISCORD_WEBHOOK_DISCOVERY_URL: ${{ secrets.DISCORD_WEBHOOK_DISCOVERY_URL || secrets.NUXT_DISCORD_WEBHOOK_DISCOVERY_URL || secrets.DISCORD_DISCOVERY_WEBHOOK_URL }}
           NUXT_DISCORD_WEBHOOK_CHECK_URL: ${{ secrets.DISCORD_WEBHOOK_CHECK_URL || secrets.NUXT_DISCORD_WEBHOOK_CHECK_URL || secrets.DISCORD_CHECK_WEBHOOK_URL }}
           NUXT_DISCORD_WEBHOOK_EXTRACT_URL: ${{ secrets.DISCORD_WEBHOOK_EXTRACT_URL || secrets.NUXT_DISCORD_WEBHOOK_EXTRACT_URL || secrets.DISCORD_EXTRACT_WEBHOOK_URL }}
           NUXT_DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL || secrets.NUXT_DISCORD_WEBHOOK_URL || secrets.DISCORD_ADMIN_WEBHOOK_LOG_URL }}
-          NUXT_RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          NUXT_RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
-          NUXT_RESEND_TO_EMAIL: ${{ secrets.RESEND_TO_EMAIL }}
-          NUXT_ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
           NITRO_PRESET: cloudflare-module
         run: pnpm --filter=@app/website build
 
@@ -462,16 +456,10 @@ jobs:
           NUXT_IGDB_CLIENT_ID: mock-igdb-client-id
           NUXT_IGDB_CLIENT_SECRET: mock-igdb-client-secret
           NUXT_GOOGLE_AI_KEY: mock-google-ai-key
-          NUXT_ONESIGNAL_APP_ID: mock-onesignal-app-id
-          NUXT_ONESIGNAL_REST_API_KEY: mock-onesignal-rest-api-key
           NUXT_DISCORD_WEBHOOK_DISCOVERY_URL: https://example.invalid/discovery
           NUXT_DISCORD_WEBHOOK_CHECK_URL: https://example.invalid/check
           NUXT_DISCORD_WEBHOOK_EXTRACT_URL: https://example.invalid/extract
           NUXT_DISCORD_WEBHOOK_URL: https://example.invalid/admin
-          NUXT_RESEND_API_KEY: mock-resend-api-key
-          NUXT_RESEND_FROM_EMAIL: no-reply@example.invalid
-          NUXT_RESEND_TO_EMAIL: admin@example.invalid
-          NUXT_ADMIN_EMAIL: admin@example.invalid
           NITRO_PRESET: cloudflare-module
         run: pnpm --filter=@app/website build
 

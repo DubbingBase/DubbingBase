@@ -1,5 +1,3 @@
-import { watch } from "vue";
-
 // Injected at build time by nuxt.config.ts `vite.define`.
 declare const __VERSION__: string;
 
@@ -12,10 +10,6 @@ export default defineNuxtPlugin({
 
     if (isDev || isTest) return;
 
-    const themeCookie = useCookie("dubbingbase-theme");
-    const langCookie = useCookie("user_lang");
-    const user = useSupabaseUser();
-
     const initializePostHog = (landingUrl: string, landingTime: Date) => {
       void import("posthog-js")
         .then(({ default: posthog }) => {
@@ -23,15 +17,13 @@ export default defineNuxtPlugin({
             api_host: "https://n.dubbingbase.com",
             defaults: "2026-05-30",
             person_profiles: "identified_only",
-            persistence: "cookie",
-            autocapture: true,
+            // Anonymous and minimal: no cookie or storage (the visitor id lives in memory and
+            // resets on every page load), no person profiles, no click or error capture. Only page
+            // views are sent, matching what the privacy page promises.
+            persistence: "memory",
+            autocapture: false,
             capture_pageview: true,
             disable_surveys: true,
-            capture_exceptions: {
-              capture_unhandled_errors: true,
-              capture_unhandled_rejections: true,
-              capture_console_errors: true,
-            },
           });
 
           // PostHog captures the current URL on init; preserve the landing page if navigation happened while loading.
@@ -39,24 +31,7 @@ export default defineNuxtPlugin({
             posthog.capture("$pageview", { $current_url: landingUrl }, { timestamp: landingTime });
           }
 
-          posthog.register({
-            application: "website",
-            app_version: __VERSION__,
-            theme: themeCookie.value || "system",
-            language: langCookie.value || "en",
-          });
-
-          watch(
-            user,
-            (newUser) => {
-              if (newUser?.id) {
-                posthog.identify(newUser.id);
-              } else {
-                posthog.reset();
-              }
-            },
-            { immediate: true },
-          );
+          posthog.register({ application: "website", app_version: __VERSION__ });
 
           nuxtApp.provide("posthog", posthog);
         })

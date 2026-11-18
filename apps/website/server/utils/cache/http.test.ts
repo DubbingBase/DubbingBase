@@ -36,18 +36,12 @@ describe("HTTP cache headers", () => {
     expect(getCloudflareCacheControl("static")).toBe(
       "public, max-age=604800, stale-while-revalidate=2592000",
     );
-    expect(getPublicCacheControl("og-image")).toBe("public, max-age=3600, s-maxage=86400");
-    expect(getCloudflareCacheControl("og-image")).toBe("public, max-age=86400");
-    expect(getPublicCacheControl("og-image-redirect")).toBe("public, max-age=60");
-    expect(getCloudflareCacheControl("og-image-redirect")).toBe("public, max-age=60");
   });
 
   it("gives shared caches the edge lifetime through s-maxage while browsers keep max-age", () => {
     // The Worker's own Cloudflare cache reads Cache-Control, not Cloudflare-CDN-Cache-Control.
     expect(getPublicCacheControl("page")).toContain("s-maxage=21600");
     expect(getPublicCacheControl("page")).toContain("max-age=60,");
-    // No s-maxage when the edge lifetime is not longer than the browser one.
-    expect(getPublicCacheControl("og-image-redirect")).toBe("public, max-age=60");
   });
 
   it("defines the no-store value for dynamic responses", () => {

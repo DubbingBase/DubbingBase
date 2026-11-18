@@ -63,8 +63,6 @@
         "apps/website/src/plugins/chunk-error-handler.client.ts",
         "apps/website/src/plugins/posthog.client.ts",
         "apps/website/src/utils/voice-actor-profile-save.ts",
-        "packages/og-image/src/index.ts",
-        "packages/og-image/src/voice-actor.ts",
         "packages/shared-logic/src/composables/useDetailCollections.ts"
       ],
       "rules": {

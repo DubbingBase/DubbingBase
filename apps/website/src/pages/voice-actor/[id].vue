@@ -670,10 +670,6 @@
 <script setup lang="ts">
 import PersonDetailsLayout from "../../components/layout/PersonDetailsLayout.vue";
 import {
-  getVoiceActorOgImageMetadata,
-  isVoiceActorOgImagesEnabled,
-} from "../../utils/voice-actor-og-image";
-import {
   useVoiceActorData,
   groupVoiceActorWorks,
   paginateVoiceActorWorkItems,
@@ -823,15 +819,8 @@ const actorName = computed(() => {
 
 const pageUrl = computed(() => new URL(localePath(`/voice-actor/${voiceActorId}`), siteUrl).href);
 
-const publicRuntimeConfig = useRuntimeConfig().public;
-const voiceActorOgImage = computed(() =>
-  getVoiceActorOgImageMetadata(
-    isVoiceActorOgImagesEnabled(publicRuntimeConfig.ogImagesEnabled),
-    voiceActorId,
-    siteUrl,
-  ),
-);
-const ogImageUrl = computed(() => voiceActorOgImage.value.url);
+// Shared square preview; there is no per-actor generated image.
+const ogImageUrl = computed(() => new URL("/android-chrome-512x512.png", siteUrl).href);
 const voiceActorPageTitle = computed(() =>
   actorName.value
     ? t("seo.voiceActorTitle", { name: actorName.value })
@@ -885,20 +874,11 @@ useHead({
     },
     { property: "og:logo", content: computed(() => new URL("/logo.png", siteUrl).href) },
     { property: "og:image", content: ogImageUrl },
-    {
-      property: "og:image:width",
-      content: computed(() => String(voiceActorOgImage.value.width)),
-    },
-    {
-      property: "og:image:height",
-      content: computed(() => String(voiceActorOgImage.value.height)),
-    },
+    { property: "og:image:width", content: "512" },
+    { property: "og:image:height", content: "512" },
     { property: "og:site_name", content: "DubbingBase" },
     // Twitter Card
-    {
-      name: "twitter:card",
-      content: computed(() => voiceActorOgImage.value.twitterCard),
-    },
+    { name: "twitter:card", content: "summary" },
     {
       name: "twitter:title",
       content: voiceActorPageTitle,

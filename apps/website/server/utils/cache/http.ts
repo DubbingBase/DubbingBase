@@ -7,8 +7,6 @@ export type CacheProfile =
   | "character-images"
   | "character-images-negative"
   | "static"
-  | "og-image"
-  | "og-image-redirect"
   | "sitemap";
 
 export const NO_STORE_CACHE_CONTROL = "no-store, no-cache, must-revalidate";
@@ -22,8 +20,6 @@ const PUBLIC_CACHE_CONTROL: Record<CacheProfile, string> = {
   // Responses with "no image" cards follow the 24h negative lifetime in KV.
   "character-images-negative": "public, max-age=3600, stale-while-revalidate=3600",
   static: "public, max-age=86400, stale-while-revalidate=2592000",
-  "og-image": "public, max-age=3600",
-  "og-image-redirect": "public, max-age=60",
   sitemap: "public, max-age=3600, stale-while-revalidate=86400",
 };
 
@@ -34,8 +30,6 @@ const CLOUDFLARE_CACHE_CONTROL: Record<CacheProfile, string> = {
   "character-images": "public, max-age=604800, stale-while-revalidate=2592000",
   "character-images-negative": "public, max-age=86400, stale-while-revalidate=3600",
   static: "public, max-age=604800, stale-while-revalidate=2592000",
-  "og-image": "public, max-age=86400",
-  "og-image-redirect": "public, max-age=60",
   sitemap: "public, max-age=86400, stale-while-revalidate=86400",
 };
 
