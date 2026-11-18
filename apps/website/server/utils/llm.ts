@@ -1,8 +1,7 @@
 import { getGlobalEnv } from "./global-env";
 import { asString } from "./narrow";
-import { generateText, generateObject } from "ai";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { z } from "zod";
+import { isRecord, readPath } from "@app/shared-logic";
 import { getErrorMessage } from "./error-message";
 
 function getGeminiModelChain(): string[] {
@@ -23,7 +22,7 @@ function getGeminiModelChain(): string[] {
   return ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite"];
 }
 
-function getGoogleClient() {
+function getGoogleApiKey(): string {
   const config = useRuntimeConfig();
   const globalEnv = getGlobalEnv();
   const apiKey =
@@ -36,7 +35,7 @@ function getGoogleClient() {
     process.env.GEMINI_API_KEY ||
     "";
   if (!apiKey) throw new Error("Google AI / Gemini API key is not configured (NUXT_GOOGLE_AI_KEY)");
-  return createGoogleGenerativeAI({ apiKey });
+  return apiKey;
 }
 
 function isRateLimitError(error: unknown): boolean {
@@ -222,66 +221,19 @@ async function runWithFallbacks<T>(executions: LlmExecution<T>[]): Promise<LlmRe
   throw new Error(`${prefix}${detail}`);
 }
 
-function buildGeminiCalls<T>(
-  models: string[],
-  build: (model: string) => LlmExecution<T>,
-): LlmExecution<T>[] {
-  return models.map(build);
+const GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models";
+
+function readTokenCount(usage: unknown, key: string): number | undefined {
+  const value = readPath(usage, key);
+  return typeof value === "number" ? value : undefined;
 }
 
 /**
- * Send a text prompt to an LLM and return the raw text response.
- * Tries all Gemini free-tier models in order (3.5-flash-lite → 2.5-flash → 2.0-flash → 1.5-flash),
- * Configure via GEMINI_MODELS env var (comma-separated).
- */
-export async function llmGenerate(
-  prompt: string,
-  options?: {
-    model?: string;
-    systemInstruction?: string;
-    temperature?: number;
-  },
-): Promise<{
-  text: string;
-  model: string;
-  usage?: LlmUsage;
-  quota?: string;
-  headers?: Record<string, string>;
-}> {
-  const system = options?.systemInstruction;
-  const temperature = options?.temperature;
-
-  const geminiModels = options?.model ? [options.model] : getGeminiModelChain();
-  const geminiExecs: LlmExecution<string>[] = buildGeminiCalls(geminiModels, (model) => ({
-    name: `Gemini (${model})`,
-    fn: () =>
-      generateText({
-        model: getGoogleClient()(model),
-        prompt,
-        system,
-        temperature,
-      }).then((r) => ({
-        data: r.text,
-        usage: r.usage,
-        headers: r.response?.headers,
-      })),
-  }));
-
-  const chain: LlmExecution<string>[] = geminiExecs;
-
-  const result = await runWithFallbacks(chain);
-  return {
-    text: result.data,
-    model: result.model,
-    usage: result.usage,
-    quota: result.quota,
-    headers: result.headers,
-  };
-}
-
-/**
- * Send a text prompt to an LLM and return a typed JSON object validated by a Zod schema.
- * Tries all Gemini free-tier models in order.
+ * Send a text prompt to Gemini and return a typed JSON object validated by a Zod schema.
+ * Tries all Gemini free-tier models in order (configure via GEMINI_MODELS, comma-separated).
+ *
+ * Calls the Gemini REST API directly: the Vercel AI SDK (ai, @ai-sdk/google, gateway,
+ * provider-utils) added about 385 KB to the Worker bundle for a single JSON request.
  */
 export async function llmGenerateObject<T extends z.ZodType>(
   prompt: string,
@@ -298,29 +250,56 @@ export async function llmGenerateObject<T extends z.ZodType>(
   quota?: string;
   headers?: Record<string, string>;
 }> {
-  const system = options?.systemInstruction;
-  const temperature = options?.temperature;
-
+  const { $schema: _ignored, ...responseJsonSchema } = z.toJSONSchema(schema);
   const geminiModels = options?.model ? [options.model] : getGeminiModelChain();
-  const geminiExecs: LlmExecution<z.infer<T>>[] = buildGeminiCalls(geminiModels, (model) => ({
+  const geminiExecs: LlmExecution<z.infer<T>>[] = geminiModels.map((model) => ({
     name: `Gemini (${model})`,
-    fn: () =>
-      generateObject({
-        model: getGoogleClient()(model),
-        prompt,
-        schema,
-        system,
-        temperature,
-      }).then((r) => ({
-        data: schema.parse(r.object),
-        usage: r.usage,
-        headers: r.response?.headers,
-      })),
+    fn: async () => {
+      const response = await fetch(
+        `${GEMINI_ENDPOINT}/${encodeURIComponent(model)}:generateContent`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json", "x-goog-api-key": getGoogleApiKey() },
+          body: JSON.stringify({
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            ...(options?.systemInstruction
+              ? { systemInstruction: { parts: [{ text: options.systemInstruction }] } }
+              : {}),
+            generationConfig: {
+              temperature: options?.temperature,
+              responseMimeType: "application/json",
+              responseJsonSchema,
+            },
+          }),
+        },
+      );
+      const headers = normalizeHeaders(response.headers);
+      const body: unknown = await response.json().catch(() => null);
+      if (!response.ok) {
+        const detail = readPath(body, "error", "message");
+        throw new Error(
+          `${response.status} ${typeof detail === "string" ? detail : response.statusText}`,
+        );
+      }
+      const parts = readPath(body, "candidates", "0", "content", "parts");
+      const text = Array.isArray(parts)
+        ? parts.map((part) => (isRecord(part) ? asString(part.text) : undefined) ?? "").join("")
+        : "";
+      if (!text) throw new Error("Gemini returned no content");
+      const usage = readPath(body, "usageMetadata");
+      return {
+        data: schema.parse(JSON.parse(text)),
+        usage: {
+          inputTokens: readTokenCount(usage, "promptTokenCount"),
+          outputTokens: readTokenCount(usage, "candidatesTokenCount"),
+          totalTokens: readTokenCount(usage, "totalTokenCount"),
+        },
+        headers,
+      };
+    },
   }));
 
-  const chain: LlmExecution<z.infer<T>>[] = geminiExecs;
-
-  const result = await runWithFallbacks(chain);
+  const result = await runWithFallbacks(geminiExecs);
   return {
     data: result.data,
     model: result.model,
@@ -328,144 +307,4 @@ export async function llmGenerateObject<T extends z.ZodType>(
     quota: result.quota,
     headers: result.headers,
   };
-}
-
-/**
- * Send a text prompt with an image to an LLM (vision) and return raw text.
- * Accepts a data URL ("data:image/jpeg;base64,...") or raw base64 with mimeType.
- * Uses Gemini.
- */
-export async function llmVision(
-  prompt: string,
-  imageData: string,
-  mimeType: string = "image/jpeg",
-  options?: {
-    model?: string;
-    systemInstruction?: string;
-    temperature?: number;
-  },
-): Promise<{
-  text: string;
-  model: string;
-  usage?: LlmUsage;
-  quota?: string;
-  headers?: Record<string, string>;
-}> {
-  const system = options?.systemInstruction;
-  const temperature = options?.temperature;
-  const { rawBase64, resolvedMime } = parseImageData(imageData, mimeType);
-
-  const imageContent = {
-    type: "image" as const,
-    image: `data:${resolvedMime};base64,${rawBase64}`,
-  };
-
-  const geminiModels = options?.model ? [options.model] : getGeminiModelChain();
-  const geminiExecs: LlmExecution<string>[] = buildGeminiCalls(geminiModels, (model) => ({
-    name: `Gemini (${model})`,
-    fn: () =>
-      generateText({
-        model: getGoogleClient()(model),
-        messages: [
-          {
-            role: "user",
-            content: [{ type: "text", text: prompt }, imageContent],
-          },
-        ],
-        system,
-        temperature,
-      }).then((r) => ({
-        data: r.text,
-        usage: r.usage,
-        headers: r.response?.headers,
-      })),
-  }));
-
-  const chain: LlmExecution<string>[] = geminiExecs;
-
-  const result = await runWithFallbacks(chain);
-  return {
-    text: result.data,
-    model: result.model,
-    usage: result.usage,
-    quota: result.quota,
-    headers: result.headers,
-  };
-}
-
-/**
- * Send a text prompt with an image to an LLM (vision) and return a typed JSON object.
- * Uses Gemini.
- */
-export async function llmVisionObject<T extends z.ZodType>(
-  prompt: string,
-  imageData: string,
-  schema: T,
-  mimeType: string = "image/jpeg",
-  options?: {
-    model?: string;
-    systemInstruction?: string;
-    temperature?: number;
-  },
-): Promise<{
-  data: z.infer<T>;
-  model: string;
-  usage?: LlmUsage;
-  quota?: string;
-  headers?: Record<string, string>;
-}> {
-  const system = options?.systemInstruction;
-  const temperature = options?.temperature;
-  const { rawBase64, resolvedMime } = parseImageData(imageData, mimeType);
-
-  const imageContent = {
-    type: "image" as const,
-    image: `data:${resolvedMime};base64,${rawBase64}`,
-  };
-
-  const geminiModels = options?.model ? [options.model] : getGeminiModelChain();
-  const geminiExecs: LlmExecution<z.infer<T>>[] = buildGeminiCalls(geminiModels, (model) => ({
-    name: `Gemini (${model})`,
-    fn: () =>
-      generateObject({
-        model: getGoogleClient()(model),
-        messages: [
-          {
-            role: "user",
-            content: [{ type: "text", text: prompt }, imageContent],
-          },
-        ],
-        schema,
-        system,
-        temperature,
-      }).then((r) => ({
-        data: schema.parse(r.object),
-        usage: r.usage,
-        headers: r.response?.headers,
-      })),
-  }));
-
-  const chain: LlmExecution<z.infer<T>>[] = geminiExecs;
-
-  const result = await runWithFallbacks(chain);
-  return {
-    data: result.data,
-    model: result.model,
-    usage: result.usage,
-    quota: result.quota,
-    headers: result.headers,
-  };
-}
-
-function parseImageData(imageData: string, mimeType: string) {
-  let rawBase64 = imageData;
-  let resolvedMime = mimeType;
-  if (imageData.startsWith("data:")) {
-    const match = imageData.match(/^data:([^;]+);base64,(.+)$/);
-    if (match?.[1] && match[2]) {
-      resolvedMime = match[1];
-      rawBase64 = match[2];
-    }
-  }
-  return { rawBase64, resolvedMime };
 }

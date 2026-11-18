@@ -57,7 +57,6 @@ mise run build-web
 ├── apps/website/       # Nuxt website and installable PWA
 ├── packages/database/ # Supabase configuration and migrations
 ├── packages/locales/
-├── packages/og-image/
 ├── packages/shared-logic/
 ├── package.json
 └── turbo.json

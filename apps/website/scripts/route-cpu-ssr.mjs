@@ -244,13 +244,13 @@ export default defineNitroPlugin(async (nitroApp) => {
 `;
 
 function scheduledTasksPatch(source) {
-  const guard = 'process.env.E2E_TEST === "true"';
+  const guard = "const disableScheduledTasks = isE2E;";
   if (source.split(guard).length !== 2) {
     throw new Error("Could not find the scheduled task guard in nuxt.config.ts.");
   }
   return source.replace(
     guard,
-    '(process.env.E2E_TEST === "true" || process.env.ROUTE_CPU_BENCHMARK === "true")',
+    'const disableScheduledTasks = isE2E || process.env.ROUTE_CPU_BENCHMARK === "true";',
   );
 }
 

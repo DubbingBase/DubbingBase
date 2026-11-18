@@ -1,9 +1,9 @@
 import tailwindcss from "@tailwindcss/vite";
-import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 import { defineNuxtConfig } from "nuxt/config";
 import { APP_LOCALES, DEFAULT_LOCALE } from "@app/shared-logic";
 import { deferPosthogPrefetch } from "./src/utils/posthog-prefetch-manifest";
+import { version as appVersion } from "./package.json";
 
 function env(name: string): string | undefined {
   return process.env[name] ?? process.env[`NUXT_${name}`];
@@ -12,37 +12,23 @@ function env(name: string): string | undefined {
 const supabaseUrl = env("SUPABASE_URL") ?? env("PUBLIC_SUPABASE_URL");
 const supabasePublishableKey = env("SUPABASE_PUBLISHABLE_KEY");
 const siteUrl = env("SITE_URL") ?? "https://dubbingbase.com";
-const ABOUT_PRERENDER_ROUTES = new Set(["/about", "/fr/about", "/es/about", "/ja/about"]);
+const isE2E = process.env.E2E_TEST === "true";
+// Scripts/route-cpu-ssr.mjs rewrites this exact line to also disable tasks while profiling.
+const disableScheduledTasks = isE2E;
+const isProduction = process.env.NODE_ENV === "production";
+// One prerendered About page per locale; the default locale has no prefix.
+const ABOUT_PRERENDER_ROUTES = APP_LOCALES.map((locale) =>
+  locale.code === DEFAULT_LOCALE ? "/about" : `/${locale.code}/about`,
+);
 
-function stripAboutClientRuntime(html: string): string {
-  return (
-    html
-      .replace(
-        /<link\b(?=[^>]*\brel=["'](?:modulepreload|prefetch)["'])(?=[^>]*\bhref=["']\/_nuxt\/)[^>]*>\s*/g,
-        "",
-      )
-      .replace(
-        /<link\b(?=[^>]*\brel=["']preload["'])(?=[^>]*\bas=["']fetch["'])(?=[^>]*\bhref=["'][^"']*_payload\.json)[^>]*>\s*/g,
-        "",
-      )
-      // Nuxt Fonts 0.14 preloads an unused italic Cyrillic face on these pages.
-      .replace(/<link\b(?=[^>]*\brel=["']preload["'])(?=[^>]*\bas=["']font["'])[^>]*>\s*/g, "")
-      .replace(/<link\b(?=[^>]*\bhref=["']\/favicon\.ico["'])[^>]*>\s*/g, "")
-      .replace(
-        /<body\b/,
-        `<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',` +
-          'Roboto,Helvetica,Arial,sans-serif"',
-      )
-      .replace(/<script\b(?=[^>]*\btype=["']importmap["'])[^>]*>[\s\S]*?<\/script>\s*/g, "")
-      .replace(
-        /<script\b(?=[^>]*\btype=["']module["'])(?=[^>]*\bsrc=["']\/_nuxt\/)[^>]*>\s*<\/script>\s*/g,
-        "",
-      )
-      .replace(/<script\b(?=[^>]*\bid=["']__NUXT_DATA__["'])[^>]*>[\s\S]*?<\/script>\s*/g, "")
-      .replace(/<script\b[^>]*>\s*window\.__NUXT_SITE_CONFIG__\s*=[\s\S]*?<\/script>\s*/g, "")
-      .replace(/<script\b[^>]*>\s*window\.__NUXT__\s*=[\s\S]*?<\/script>\s*/g, "")
-  );
-}
+// Admin pages sit behind the admin middleware and are never indexed, so they render in the
+// browser only. Nuxt then leaves their code out of the Worker bundle instead of shipping it for SSR.
+const ADMIN_SPA_ROUTE_RULES = Object.fromEntries(
+  APP_LOCALES.map((locale) => [
+    locale.code === DEFAULT_LOCALE ? "/admin/**" : `/${locale.code}/admin/**`,
+    { ssr: false },
+  ]),
+);
 
 export default defineNuxtConfig({
   rootDir: resolve(import.meta.dirname),
@@ -64,7 +50,7 @@ export default defineNuxtConfig({
     preset: process.env.NITRO_PRESET || "node-server",
     // The Playwright mock interceptor is only compiled for E2E runs so its
     // fixtures never ship in (or add a per-request check to) the production bundle.
-    ignore: ["**/*.test.ts", ...(process.env.E2E_TEST ? [] : ["**/middleware/00-e2e-mock.ts"])],
+    ignore: ["**/*.test.ts", ...(isE2E ? [] : ["**/middleware/00-e2e-mock.ts"])],
     // Dev only: the browser reaches Supabase through /supabase (see plugins/dev-supabase-proxy.client.ts),
     // so the site works from any host. ws keeps Realtime working.
     devProxy: supabaseUrl
@@ -73,40 +59,18 @@ export default defineNuxtConfig({
     prerender: {
       routes: [...ABOUT_PRERENDER_ROUTES, "/robots.txt"],
     },
-    hooks: {
-      "prerender:generate": (route) => {
-        if (!ABOUT_PRERENDER_ROUTES.has(route.route) || !route.contents) return;
-        route.contents = stripAboutClientRuntime(route.contents);
-      },
-    },
     experimental: {
       tasks: true,
     },
-    scheduledTasks:
-      process.env.E2E_TEST === "true"
-        ? {}
-        : {
-            "* * * * *": ["dispatcher"],
-            "0 6 * * *": ["enqueue-trending-media"],
-          },
-    rollupConfig: {
-      // Keep .wasm imports external so Rollup's JS plugins (e.g. inject)
-      // don't try to parse them. Wrangler pre-compiles them into
-      // WebAssembly.Module objects at deploy time (required on Workers,
-      // which block WebAssembly.instantiate(bytes)).
-      external: [/\.wasm($|\?)/],
-    },
-    cloudflare: {
-      wrangler: {
-        kv_namespaces: [
-          {
-            binding: "CACHE_KV",
-            id: "340974572b504ed2aa20c160e18f5697",
-          },
-        ],
-      },
-    },
+    scheduledTasks: disableScheduledTasks
+      ? {}
+      : {
+          "* * * * *": ["dispatcher"],
+          "0 6 * * *": ["enqueue-trending-media"],
+        },
   },
+
+  routeRules: ADMIN_SPA_ROUTE_RULES,
 
   runtimeConfig: {
     supabaseSecretKey: env("SUPABASE_SECRET_KEY"),
@@ -116,11 +80,7 @@ export default defineNuxtConfig({
     igdbClientId: env("IGDB_CLIENT_ID"),
     igdbClientSecret: env("IGDB_CLIENT_SECRET"),
     googleAiKey: env("GOOGLE_AI_KEY"),
-    geminiModel: env("GEMINI_MODEL") || "gemini-3.5-flash-lite",
     geminiModels: env("GEMINI_MODELS"),
-    llmProvider: env("LLM_PROVIDER") || "gemini",
-    onesignalAppId: env("ONESIGNAL_APP_ID"),
-    onesignalRestApiKey: env("ONESIGNAL_REST_API_KEY"),
     discordWebhookDiscoveryUrl:
       env("DISCORD_WEBHOOK_DISCOVERY_URL") || env("DISCORD_DISCOVERY_WEBHOOK_URL"),
     discordWebhookCheckUrl: env("DISCORD_WEBHOOK_CHECK_URL") || env("DISCORD_CHECK_WEBHOOK_URL"),
@@ -128,34 +88,27 @@ export default defineNuxtConfig({
       env("DISCORD_WEBHOOK_EXTRACT_URL") || env("DISCORD_EXTRACT_WEBHOOK_URL"),
     discordWebhookUrl: env("DISCORD_WEBHOOK_URL") || env("DISCORD_ADMIN_WEBHOOK_LOG_URL"),
     discordNotifyRoutine: env("DISCORD_NOTIFY_ROUTINE"),
-    resendApiKey: env("RESEND_API_KEY"),
-    resendFromEmail: env("RESEND_FROM_EMAIL"),
-    resendToEmail: env("RESEND_TO_EMAIL"),
-    adminEmail: env("ADMIN_EMAIL"),
     public: {
       siteUrl,
-      // Temporarily enable actor-specific previews with NUXT_PUBLIC_OG_IMAGES_ENABLED=true.
-      ogImagesEnabled: false,
-      supabaseUrl: supabaseUrl || "https://mock.supabase.co",
+      supabaseUrl,
       // True when nitro.devProxy forwards /supabase to a real Supabase (dev only).
       devSupabaseProxy: Boolean(supabaseUrl),
-      supabaseKey: supabasePublishableKey || "mock-publishable-key",
+      supabaseKey: supabasePublishableKey,
     },
   },
 
   supabase: {
-    url: supabaseUrl || "https://mock.supabase.co",
-    key: supabasePublishableKey || "mock-publishable-key",
+    url: supabaseUrl,
+    key: supabasePublishableKey,
     redirect: false,
     types: resolve(import.meta.dirname, "../../packages/database/src/database.types.ts"),
     cookieOptions: {
       sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
+      secure: isProduction,
     },
   },
 
   experimental: {
-    inlineRouteRules: true,
     routeTypedFetch: true,
     defaults: {
       nuxtLink: {
@@ -186,8 +139,10 @@ export default defineNuxtConfig({
       start_url: "/",
       scope: "/",
       display: "standalone",
-      background_color: "#121212",
-      theme_color: "#121212",
+      // A manifest cannot vary by color scheme, so use the dark theme's --app-color-background
+      // (the default theme). app.vue overrides theme-color per scheme with meta tags.
+      background_color: "#10131a",
+      theme_color: "#10131a",
       icons: [
         {
           src: "/android-chrome-192x192.png",
@@ -199,7 +154,14 @@ export default defineNuxtConfig({
           src: "/android-chrome-512x512.png",
           sizes: "512x512",
           type: "image/png",
-          purpose: "any maskable",
+          purpose: "any",
+        },
+        {
+          // Logo scaled into the maskable safe zone; "any maskable" on one icon is discouraged.
+          src: "/android-chrome-maskable-512x512.png",
+          sizes: "512x512",
+          type: "image/png",
+          purpose: "maskable",
         },
       ],
     },
@@ -228,45 +190,35 @@ export default defineNuxtConfig({
     // Dev server only: accept any Host (Tailscale/MagicDNS names, LAN hostnames) so the site is
     // reachable from every URL; no effect on production builds.
     server: { allowedHosts: true },
-    resolve: {
-      dedupe: [
-        "vue",
-        "@vue/runtime-core",
-        "@vue/runtime-dom",
-        "@vue/reactivity",
-        "@vue/server-renderer",
-        "@vue/shared",
-        "@vue/compiler-sfc",
-      ],
-    },
     define: {
-      __VERSION__: JSON.stringify(process.env.npm_package_version || "1.0.0"),
+      __VERSION__: JSON.stringify(appVersion),
     },
   },
 
   hooks: {
-    "build:manifest": (manifest) => deferPosthogPrefetch(manifest),
-    "nitro:build:public-assets": () => {
-      execFileSync(
-        process.execPath,
-        [resolve(import.meta.dirname, "scripts/prepare-static-about-assets.mjs")],
-        { stdio: "inherit" },
-      );
+    // Dev, tests and typechecks run without Supabase credentials, but a production build must
+    // never ship without them. `nuxt prepare` never builds Nitro.
+    "nitro:build:before": () => {
+      if (isProduction && !isE2E && (!supabaseUrl || !supabasePublishableKey)) {
+        throw new Error(
+          "Production builds require SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY; refusing to build without them.",
+        );
+      }
     },
+    "build:manifest": (manifest) => deferPosthogPrefetch(manifest),
   },
 
   css: ["~/assets/main.css"],
 
   modules: [
     "@nuxt/fonts",
-    "@vueuse/nuxt",
     "@nuxtjs/i18n",
     "@nuxtjs/supabase",
     "@nuxtjs/robots",
     "@nuxt/image",
     "@vite-pwa/nuxt",
-    "@nuxt/test-utils/module",
-    "@nuxtjs/html-validator",
+    // Test and validation tooling is not needed in the production bundle.
+    ...(isProduction ? [] : ["@nuxt/test-utils/module", "@nuxtjs/html-validator"]),
   ],
 
   fonts: {
@@ -310,8 +262,4 @@ export default defineNuxtConfig({
   },
 
   srcDir: "src/",
-  sourcemap: {
-    server: true,
-    client: true,
-  },
 });

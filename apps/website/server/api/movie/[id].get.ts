@@ -5,9 +5,6 @@ import {
   getDubbingProjectsForMediaEndpoint,
   getMediaPageDubbingProjectData,
 } from "../../utils/db/queries";
-import { useSupabaseAdmin } from "../../utils/db/client";
-import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
-import { scheduleBackgroundTask } from "../../utils/background";
 import { withMediaServiceTimeout } from "../../utils/media-request";
 export async function fetchMovieData(event: H3Event, movieId: number) {
   const acceptLanguage = getHeader(event, "accept-language") || undefined;
@@ -44,57 +41,6 @@ export async function fetchMovieData(event: H3Event, movieId: number) {
     : dubbingProjectData.voiceActors;
 
   const { movieWithImageUrls, collection } = apiData;
-
-  // ── Lazy Wikipedia Queue Enqueue ─────────────────────────────────
-  // Gated by PostHog 'enqueue-on-navigate' (server-side)
-  const isProcessed = dubbingProjects.length > 0;
-  const externalIds = movieWithImageUrls?.external_ids;
-  const hasWiki =
-    typeof externalIds === "object" &&
-    externalIds !== null &&
-    "wikidata_id" in externalIds &&
-    !!externalIds.wikidata_id;
-  const isAdult = movieWithImageUrls?.adult === true;
-
-  if (!isProcessed && hasWiki && !isAdult) {
-    scheduleBackgroundTask(
-      event,
-      async () => {
-        if (!(await isEnqueueOnNavigateEnabled())) return;
-
-        const supabaseAdmin = useSupabaseAdmin(event);
-        const { error } = await supabaseAdmin.rpc("enqueue_media_fetch", {
-          p_media_type: "movie",
-          p_tmdb_id: movieId,
-          p_season_number: undefined,
-          p_episode_number: undefined,
-        });
-        if (error) {
-          if (!error.message?.includes("already in the")) {
-            console.error("Failed to lazily enqueue movie:", error);
-          }
-        } else {
-          await sendDiscordAdminNotification(
-            "Media Enqueued (Auto)",
-            `Automatically enqueued movie **${movieWithImageUrls?.title || movieId}** (TMDB: ${movieId}) for all-languages dubbing discovery.`,
-            {
-              queue: "wiki_discovery",
-              ...(movieWithImageUrls?.poster_path
-                ? {
-                    imageUrl: `https://image.tmdb.org/t/p/w500${movieWithImageUrls.poster_path}`,
-                  }
-                : {}),
-              url: `/movie/${movieId}`,
-              color: 0x5865f2,
-              routine: true,
-              event,
-            },
-          );
-        }
-      },
-      "movie discovery",
-    );
-  }
 
   const baseData = {
     movie: movieWithImageUrls,

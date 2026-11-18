@@ -18,7 +18,6 @@ The project is a **pnpm workspace** orchestrated by Turborepo. Node.js and Deno 
 apps/website/             # Nuxt website and admin dashboard
 packages/database/        # Supabase configuration, migrations, seeds, generated types
 packages/locales/
-packages/og-image/
 packages/shared-logic/
 ```
 

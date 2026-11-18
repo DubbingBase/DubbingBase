@@ -6,9 +6,6 @@ import {
   getMediaPageDubbingProjectData,
 } from "../../utils/db/queries";
 import { processMedia } from "../../utils/urls/tmdb";
-import { useSupabaseAdmin } from "../../utils/db/client";
-import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
-import { scheduleBackgroundTask } from "../../utils/background";
 import { mediaPageAggregateCredits } from "../../utils/media-page-credits";
 import { withMediaServiceTimeout } from "../../utils/media-request";
 export async function fetchShowData(event: H3Event, showId: number) {
@@ -59,57 +56,6 @@ export async function fetchShowData(event: H3Event, showId: number) {
     : dubbingProjectData.voiceActors;
 
   const { serieWithImageUrls, aggregateCredits } = apiData;
-
-  // ── Lazy Wikipedia Queue Enqueue ─────────────────────────────────
-  // Gated by PostHog 'enqueue-on-navigate' (server-side)
-  const isProcessed = dubbingProjects.length > 0;
-  const externalIds = serieWithImageUrls?.external_ids;
-  const hasWiki =
-    typeof externalIds === "object" &&
-    externalIds !== null &&
-    "wikidata_id" in externalIds &&
-    !!externalIds.wikidata_id;
-  const isAdult = serieWithImageUrls?.adult === true;
-
-  if (!isProcessed && hasWiki && !isAdult) {
-    scheduleBackgroundTask(
-      event,
-      async () => {
-        if (!(await isEnqueueOnNavigateEnabled())) return;
-
-        const supabaseAdmin = useSupabaseAdmin(event);
-        const { error } = await supabaseAdmin.rpc("enqueue_media_fetch", {
-          p_media_type: "tv",
-          p_tmdb_id: showId,
-          p_season_number: undefined,
-          p_episode_number: undefined,
-        });
-        if (error) {
-          if (!error.message?.includes("already in the")) {
-            console.error("Failed to lazily enqueue show:", error);
-          }
-        } else {
-          await sendDiscordAdminNotification(
-            "Media Enqueued (Auto)",
-            `Automatically enqueued TV show **${serieWithImageUrls?.name || showId}** (TMDB: ${showId}) for all-languages dubbing discovery.`,
-            {
-              queue: "wiki_discovery",
-              ...(serieWithImageUrls?.poster_path
-                ? {
-                    imageUrl: `https://image.tmdb.org/t/p/w500${serieWithImageUrls.poster_path}`,
-                  }
-                : {}),
-              url: `/show/${showId}`,
-              color: 0x5865f2,
-              routine: true,
-              event,
-            },
-          );
-        }
-      },
-      "show discovery",
-    );
-  }
 
   const baseData = {
     serie: serieWithImageUrls,
