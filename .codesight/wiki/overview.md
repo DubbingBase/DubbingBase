@@ -8,7 +8,7 @@
 
 ## Scale
 
-67 API routes · 28 database models · 145 UI components · 133 library files · 14 middleware layers · 53 environment variables
+67 API routes · 28 database models · 145 UI components · 134 library files · 14 middleware layers · 53 environment variables
 
 ## Subsystems
 
@@ -67,7 +67,7 @@
 
 **UI:** 145 components (vue) — see [ui.md](./ui.md)
 
-**Libraries:** 133 files — see [libraries.md](./libraries.md)
+**Libraries:** 134 files — see [libraries.md](./libraries.md)
 
 ## High-Impact Files
 
@@ -77,8 +77,8 @@ Changes to these files have the widest blast radius across the codebase:
 - `apps/website/server/utils/index.ts` — imported by **28** files
 - `apps/website/server/utils/auth-handlers.ts` — imported by **26** files
 - `apps/website/server/utils/cache/index.ts` — imported by **20** files
-- `apps/website/server/utils/api/igdb.ts` — imported by **13** files
-- `apps/website/server/utils/urls/supabase.ts` — imported by **12** files
+- `packages/shared-logic/src/types/index.ts` — imported by **12** files
+- `apps/website/server/utils/media-request.ts` — imported by **10** files
 
 ## Required Environment Variables
 

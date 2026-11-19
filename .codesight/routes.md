@@ -8,7 +8,7 @@
 - `GET` `/api/admin/work-duplicates` [auth, cache]
 - `GET` `/api/advertisement/:id` params(id)
 - `GET` `/api/audiobook/:id` params(id)
-- `GET` `/api/career-grid`
+- `GET` `/api/career-grid` ✓
 - `GET` `/api/character/:source/:id` params(source, id)
 - `GET` `/api/character-images` [cache] ✓
 - `POST` `/api/count-voice-actor-works` ✓

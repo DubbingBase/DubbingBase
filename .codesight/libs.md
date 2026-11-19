@@ -9,7 +9,6 @@
   - type ActorPageVoiceRole
 - `apps/website/server/utils/api/advertisement.ts` — class AdvertisementClient
 - `apps/website/server/utils/api/igdb.ts`
-  - function buildIgdbImageUrl: (hash, size) => string
   - function isIgdbGame: (value) => value is IgdbGame
   - function isIgdbCharacter: (value) => value is IgdbCharacter
   - class IgdbClient
@@ -99,9 +98,9 @@
   - function displayValue: (value) => string | null
   - function changedFields: (kind, previous, next) => ChangedField[]
   - function safeHttpUrl: (value) => string | null
-  - function diffSnapshots: (kind, previous, next, context) => HistoryChange[]
+  - function diffSnapshots: (kind, previous, next) => HistoryChange[]
   - function toHistoryEntry: (row, entityType, context) => HistoryEntry | null
-  - _...9 more_
+  - _...8 more_
 - `apps/website/server/utils/error-message.ts` — function getErrorMessage: (error) => string
 - `apps/website/server/utils/game-character-validation.ts`
   - function gameCharacterError: (statusCode, message) => void
@@ -232,16 +231,7 @@
   - interface SitemapRecord
   - _...3 more_
 - `apps/website/server/utils/testing/supabase-server-stub.ts` — function serverSupabaseClient: () => Promise<never>
-- `apps/website/server/utils/urls/supabase.ts`
-  - function buildSupabaseImageUrl: (imagePath, bucket, _size) => string | null
-  - const withVoiceActorImageUrl
-  - const processVoiceActor
-- `apps/website/server/utils/urls/tmdb.ts`
-  - function buildTmdbImageUrl: (imagePath, size) => string | null
-  - function cleanCharacterName
-  - const TMDB_CONFIG
-  - const withTmdbImageUrls
-  - const processMedia
+- `apps/website/server/utils/urls/tmdb.ts` — function cleanCharacterName, const processMedia
 - `apps/website/server/utils/voice-actor-record.ts` — function isVoiceActorRecord: (value) => value is VoiceActorRecord, type VoiceActorRecord
 - `apps/website/server/utils/wiki-check-disposition.ts`
   - function wikiCheckDisposition: (evidence, candidateSectionIndexes, requestedLanguage?) => WikiCheckDisposition
@@ -308,6 +298,7 @@
 - `apps/website/src/composables/useKeyboardInset.ts` — function computeKeyboardInset, function useKeyboardInset
 - `apps/website/src/composables/useLocalePathPrefix.ts` — function useLocalePathPrefix: () => (path: string) => string
 - `apps/website/src/composables/useLocalePreference.ts` — function useLocalePreference: () => void
+- `apps/website/src/composables/useMediaImage.ts` — function useMediaImage: () => void
 - `apps/website/src/composables/useMetadataCreation.ts`
   - function isMetadataValidationError: (error) => boolean
   - function useMetadataCreation: () => void
@@ -467,6 +458,11 @@
   - function createCharacterMatcher: (roleName) => (characterName: string) => boolean
   - function normalizeCharacterName
   - function findCharacter
+- `packages/shared-logic/src/utils/media-image.ts`
+  - function getTmdbImagePath: (image, source) => string | null
+  - function resolveMediaImage: (image, options) => string | null
+  - type MediaImageOptions
+  - const VOICE_ACTOR_IMAGE_BUCKET
 - `packages/shared-logic/src/utils/narrow.ts`
   - function isRecord: (value) => value is Record<string, unknown>
   - function readProperty: (value, key) => unknown

@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/website, @app/supabase, @app/locales, @app/shared-logic
 
-> 67 routes | 28 models | 145 components | 133 lib files | 53 env vars | 14 middleware | 56% test coverage
-> **Token savings:** this file is ~18,600 tokens. Without it, AI exploration would cost ~147,100 tokens. **Saves ~128,500 tokens per conversation.**
-> **Last scanned:** 2026-11-19 13:00 — re-run after significant changes
+> 67 routes | 28 models | 145 components | 134 lib files | 53 env vars | 14 middleware | 57% test coverage
+> **Token savings:** this file is ~18,600 tokens. Without it, AI exploration would cost ~147,400 tokens. **Saves ~128,700 tokens per conversation.**
+> **Last scanned:** 2026-11-19 19:54 — re-run after significant changes
 
 ---
 
@@ -19,7 +19,7 @@
 - `GET` `/api/admin/work-duplicates` [auth, cache]
 - `GET` `/api/advertisement/:id` params(id)
 - `GET` `/api/audiobook/:id` params(id)
-- `GET` `/api/career-grid`
+- `GET` `/api/career-grid` ✓
 - `GET` `/api/character/:source/:id` params(source, id)
 - `GET` `/api/character-images` [cache] ✓
 - `POST` `/api/count-voice-actor-works` ✓
@@ -446,7 +446,6 @@
   - type ActorPageVoiceRole
 - `apps/website/server/utils/api/advertisement.ts` — class AdvertisementClient
 - `apps/website/server/utils/api/igdb.ts`
-  - function buildIgdbImageUrl: (hash, size) => string
   - function isIgdbGame: (value) => value is IgdbGame
   - function isIgdbCharacter: (value) => value is IgdbCharacter
   - class IgdbClient
@@ -536,9 +535,9 @@
   - function displayValue: (value) => string | null
   - function changedFields: (kind, previous, next) => ChangedField[]
   - function safeHttpUrl: (value) => string | null
-  - function diffSnapshots: (kind, previous, next, context) => HistoryChange[]
+  - function diffSnapshots: (kind, previous, next) => HistoryChange[]
   - function toHistoryEntry: (row, entityType, context) => HistoryEntry | null
-  - _...9 more_
+  - _...8 more_
 - `apps/website/server/utils/error-message.ts` — function getErrorMessage: (error) => string
 - `apps/website/server/utils/game-character-validation.ts`
   - function gameCharacterError: (statusCode, message) => void
@@ -669,16 +668,7 @@
   - interface SitemapRecord
   - _...3 more_
 - `apps/website/server/utils/testing/supabase-server-stub.ts` — function serverSupabaseClient: () => Promise<never>
-- `apps/website/server/utils/urls/supabase.ts`
-  - function buildSupabaseImageUrl: (imagePath, bucket, _size) => string | null
-  - const withVoiceActorImageUrl
-  - const processVoiceActor
-- `apps/website/server/utils/urls/tmdb.ts`
-  - function buildTmdbImageUrl: (imagePath, size) => string | null
-  - function cleanCharacterName
-  - const TMDB_CONFIG
-  - const withTmdbImageUrls
-  - const processMedia
+- `apps/website/server/utils/urls/tmdb.ts` — function cleanCharacterName, const processMedia
 - `apps/website/server/utils/voice-actor-record.ts` — function isVoiceActorRecord: (value) => value is VoiceActorRecord, type VoiceActorRecord
 - `apps/website/server/utils/wiki-check-disposition.ts`
   - function wikiCheckDisposition: (evidence, candidateSectionIndexes, requestedLanguage?) => WikiCheckDisposition
@@ -745,6 +735,7 @@
 - `apps/website/src/composables/useKeyboardInset.ts` — function computeKeyboardInset, function useKeyboardInset
 - `apps/website/src/composables/useLocalePathPrefix.ts` — function useLocalePathPrefix: () => (path: string) => string
 - `apps/website/src/composables/useLocalePreference.ts` — function useLocalePreference: () => void
+- `apps/website/src/composables/useMediaImage.ts` — function useMediaImage: () => void
 - `apps/website/src/composables/useMetadataCreation.ts`
   - function isMetadataValidationError: (error) => boolean
   - function useMetadataCreation: () => void
@@ -904,6 +895,11 @@
   - function createCharacterMatcher: (roleName) => (characterName: string) => boolean
   - function normalizeCharacterName
   - function findCharacter
+- `packages/shared-logic/src/utils/media-image.ts`
+  - function getTmdbImagePath: (image, source) => string | null
+  - function resolveMediaImage: (image, options) => string | null
+  - type MediaImageOptions
+  - const VOICE_ACTOR_IMAGE_BUCKET
 - `packages/shared-logic/src/utils/narrow.ts`
   - function isRecord: (value) => value is Record<string, unknown>
   - function readProperty: (value, key) => unknown
@@ -1016,22 +1012,22 @@
 - `apps/website/server/utils/index.ts` — imported by **28** files
 - `apps/website/server/utils/auth-handlers.ts` — imported by **26** files
 - `apps/website/server/utils/cache/index.ts` — imported by **20** files
-- `apps/website/server/utils/api/igdb.ts` — imported by **13** files
-- `apps/website/server/utils/urls/supabase.ts` — imported by **12** files
 - `packages/shared-logic/src/types/index.ts` — imported by **12** files
 - `apps/website/server/utils/media-request.ts` — imported by **10** files
 - `apps/website/server/utils/services/media.ts` — imported by **10** files
 - `apps/website/server/utils/db/queries.ts` — imported by **9** files
 - `apps/website/server/utils/cache/http.ts` — imported by **9** files
 - `apps/website/server/utils/auth.ts` — imported by **9** files
-- `apps/website/server/utils/urls/tmdb.ts` — imported by **8** files
 - `apps/website/server/utils/cache/constants.ts` — imported by **8** files
 - `e2e/helpers/mock-api.ts` — imported by **8** files
 - `apps/website/server/utils/dubbing-language.ts` — imported by **7** files
+- `apps/website/server/utils/narrow.ts` — imported by **6** files
+- `apps/website/server/utils/api/igdb.ts` — imported by **6** files
 - `apps/website/server/utils/notifications/discord.ts` — imported by **6** files
-- `apps/website/server/utils/narrow.ts` — imported by **5** files
 - `apps/website/server/utils/with-timeout.ts` — imported by **5** files
 - `apps/website/server/utils/cache/wikipedia.ts` — imported by **5** files
+- `apps/website/server/utils/dubbing-region-detection.ts` — imported by **5** files
+- `apps/website/server/utils/llm.ts` — imported by **5** files
 
 ## Import Map (who imports what)
 
@@ -1039,22 +1035,23 @@
 - `apps/website/server/utils/index.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/character/[source]/[id].get.ts` +23 more
 - `apps/website/server/utils/auth-handlers.ts` ← `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue.get.ts`, `apps/website/server/api/admin/work-duplicates/merge.post.ts`, `apps/website/server/api/admin/work-duplicates.get.ts` +21 more
 - `apps/website/server/utils/cache/index.ts` ← `apps/website/server/utils/api/igdb.test.ts`, `apps/website/server/utils/api/igdb.ts`, `apps/website/server/utils/api/openlibrary.test.ts`, `apps/website/server/utils/api/openlibrary.ts`, `apps/website/server/utils/api/podcast.test.ts` +15 more
-- `apps/website/server/utils/api/igdb.ts` ← `apps/website/server/api/character/[source]/[id].get.ts`, `apps/website/server/api/game/[id].get.ts`, `apps/website/server/api/internal-media-credits.get.ts`, `apps/website/server/api/media-catalog.get.ts`, `apps/website/server/api/search/index.get.ts` +8 more
-- `apps/website/server/utils/urls/supabase.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/dashboard-stats.get.ts`, `apps/website/server/api/entity-history.get.ts`, `apps/website/server/api/find_duplicate_voice_actors.get.ts`, `apps/website/server/api/list-voice-actors.get.ts` +7 more
 - `packages/shared-logic/src/types/index.ts` ← `packages/shared-logic/src/composables/useAdvertisementData.ts`, `packages/shared-logic/src/composables/useAudiobookData.ts`, `packages/shared-logic/src/composables/useDetailCollections.ts`, `packages/shared-logic/src/composables/useDetailCollections.ts`, `packages/shared-logic/src/composables/useGameData.ts` +7 more
 - `apps/website/server/utils/media-request.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/character-images.get.ts`, `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/game/[id].get.ts` +5 more
 - `apps/website/server/utils/services/media.ts` ← `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/character/[source]/[id].get.ts`, `apps/website/server/api/character-images.get.ts`, `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/movie/[id].get.ts` +5 more
 - `apps/website/server/utils/db/queries.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/character/[source]/[id].get.ts`, `apps/website/server/api/detail-collections.get.ts` +4 more
+- `apps/website/server/utils/cache/http.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/admin/work-duplicates.get.ts`, `apps/website/server/api/character-images.get.ts`, `apps/website/server/api/trending/games.get.ts`, `apps/website/server/api/trending/movies.get.ts` +4 more
+- `apps/website/server/utils/auth.ts` ← `apps/website/server/api/entity-history.get.ts`, `apps/website/server/api/media-queue.post.ts`, `apps/website/server/api/prepare-trending-media.post.ts`, `apps/website/server/api/process-media-queue.post.ts`, `apps/website/server/api/revert-task.post.ts` +4 more
 
 ---
 
 # Test Coverage
 
-> **56%** of routes and models are covered by tests
-> 161 test files found
+> **57%** of routes and models are covered by tests
+> 163 test files found
 
 ## Covered Routes
 
+- GET:/api/career-grid
 - GET:/api/character-images
 - POST:/api/count-voice-actor-works
 - GET:/api/detail-collections
