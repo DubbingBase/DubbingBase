@@ -16,35 +16,37 @@
 
         <!-- Subtle Interactive Stats Pill -->
         <div
-          v-if="!isLoadingHomeStats && homeStats && homeStats.voiceActorCount > 0"
           data-testid="home-stats"
           class="flex flex-wrap justify-center mb-8"
+          :class="{ invisible: !showHomeStats }"
         >
           <div
-            class="inline-flex items-center gap-1 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 theme-surface-muted backdrop-blur-md border theme-border-subtle theme-border rounded-full shadow-sm text-xs md:text-sm font-medium theme-text-muted transition-all hover:bg-white/60 theme-hover-surface-muted hover:shadow-md theme-hover-border-strong"
+            class="grid w-full max-w-sm grid-cols-3 items-center gap-1 px-3 py-1.5 sm:inline-flex sm:w-auto sm:max-w-none md:gap-2 md:px-4 md:py-2 theme-surface-muted backdrop-blur-md border theme-border-subtle theme-border rounded-full shadow-sm text-xs md:text-sm font-medium theme-text-muted transition-all hover:bg-white/60 theme-hover-surface-muted hover:shadow-md theme-hover-border-strong"
           >
             <span
-              class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors theme-hover-text theme-hover-surface-muted cursor-default"
+              class="flex flex-col items-center px-2 sm:flex-row sm:gap-1.5 sm:py-1.5 rounded-lg transition-colors theme-hover-text theme-hover-surface-muted cursor-default"
             >
-              <span class="theme-text font-bold">{{
+              <span class="theme-text font-bold whitespace-nowrap">{{
                 homeStats.voiceActorCount.toLocaleString()
               }}</span>
               <span>{{ $t("home.stats.voiceActors") }}</span>
             </span>
-            <span class="w-px h-3.5 theme-surface-muted"></span>
+            <span class="hidden w-px h-3.5 theme-surface-muted sm:block"></span>
             <span
-              class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors theme-hover-text theme-hover-surface-muted cursor-default"
+              class="flex flex-col items-center px-2 sm:flex-row sm:gap-1.5 sm:py-1.5 rounded-lg transition-colors theme-hover-text theme-hover-surface-muted cursor-default"
             >
-              <span class="theme-text font-bold">{{
+              <span class="theme-text font-bold whitespace-nowrap">{{
                 homeStats.dubbingProjectCount.toLocaleString()
               }}</span>
               <span>{{ $t("home.stats.projects") }}</span>
             </span>
-            <span class="w-px h-3.5 theme-surface-muted"></span>
+            <span class="hidden w-px h-3.5 theme-surface-muted sm:block"></span>
             <span
-              class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors theme-hover-text theme-hover-surface-muted cursor-default"
+              class="flex flex-col items-center px-2 sm:flex-row sm:gap-1.5 sm:py-1.5 rounded-lg transition-colors theme-hover-text theme-hover-surface-muted cursor-default"
             >
-              <span class="theme-text font-bold">{{ homeStats.workCount.toLocaleString() }}</span>
+              <span class="theme-text font-bold whitespace-nowrap">{{
+                homeStats.workCount.toLocaleString()
+              }}</span>
               <span>{{ $t("home.stats.works") }}</span>
             </span>
           </div>
@@ -542,6 +544,9 @@ const trendingVoiceActors = computed(() => trendingVoiceActorsData.data.value);
 const topVoiceActors = computed(() => topVoiceActorsData.data.value);
 const topContributors = computed(() => topContributorsData.data.value);
 const homeStats = computed(() => homeStatsData.data.value);
+const showHomeStats = computed(
+  () => !homeStatsData.pending.value && homeStats.value.voiceActorCount > 0,
+);
 
 function getTmdbPosterSrcset(image: string | null | undefined): string | undefined {
   const path = getTmdbImagePath(image);
@@ -555,7 +560,6 @@ const isLoadingGames = gamesData.pending;
 const isLoadingTrendingVoiceActors = trendingVoiceActorsData.pending;
 const isLoadingTopVoiceActors = topVoiceActorsData.pending;
 const isLoadingTopContributors = topContributorsData.pending;
-const isLoadingHomeStats = homeStatsData.pending;
 
 const errorMovies = computed(() => moviesData.error.value?.message || "");
 const errorSeries = computed(() => seriesData.error.value?.message || "");
