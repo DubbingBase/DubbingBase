@@ -8,6 +8,7 @@ import {
   toWebHandler,
 } from "h3";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { useRuntimeConfig } from "#app/nuxt";
 import { applyCachePolicy, applyDefaultCachePolicy } from "./cache/response-policy";
 import {
   getCloudflareCacheControl,
@@ -27,8 +28,8 @@ vi.mock("./db/queries", () => ({
   getWorkByActor: mocks.getWorkByActor,
   getActorPageWorkByActor: mocks.getActorPageWorkByActor,
 }));
-
 let handler: typeof import("../api/actor/[id].get").default;
+let cookiePrefix: string;
 
 beforeAll(async () => {
   vi.stubGlobal("defineEventHandler", defineEventHandler);
@@ -36,9 +37,8 @@ beforeAll(async () => {
   vi.stubGlobal("getHeader", getHeader);
   vi.stubGlobal("getQuery", getQuery);
   vi.stubGlobal("createError", createError);
-  vi.stubGlobal("useRuntimeConfig", () => ({
-    public: { supabase: { cookiePrefix: "sb-test-auth-token" } },
-  }));
+  cookiePrefix = useRuntimeConfig().public.supabase.cookiePrefix ?? "sb-test-auth-token";
+  vi.stubGlobal("useRuntimeConfig", () => ({ public: { supabase: { cookiePrefix } } }));
   handler = (await import("../api/actor/[id].get")).default;
 });
 
@@ -143,7 +143,7 @@ async function request(
       ? {
           onRequest: applyDefaultCachePolicy,
           onBeforeResponse: (event) =>
-            applyCachePolicy(event, { isDev: false, supabaseCookiePrefix: "sb-test-auth-token" }),
+            applyCachePolicy(event, { isDev: false, supabaseCookiePrefix: cookiePrefix }),
         }
       : {},
   );
@@ -154,6 +154,8 @@ async function request(
   app.use(
     defineEventHandler((event) => {
       event.context.params = { id: "31" };
+      // The browser Request implementation strips the Cookie header.
+      if (options.headers?.cookie) event.node.req.headers.cookie = options.headers.cookie;
       return handler(event);
     }),
   );
@@ -187,16 +189,21 @@ describe("actor page API projection", () => {
     expect(mocks.getPersonWithCredits).toHaveBeenNthCalledWith(2, 31, "en-US");
   });
 
-  it("does not cache authorized page projections", async () => {
-    const response = await request("actor-page", undefined, {
-      lang: "fr-FR",
-      cachePolicy: true,
-      headers: { authorization: "Bearer user-token" },
-    });
+  it.each(["authorization", "cookie"])(
+    "does not cache page projections authenticated by %s",
+    async (header) => {
+      const response = await request("actor-page", undefined, {
+        lang: "fr-FR",
+        cachePolicy: true,
+        headers: {
+          [header]: header === "cookie" ? `${cookiePrefix}.0=fixture` : "Bearer user-token",
+        },
+      });
 
-    expect(response.headers.get("cache-control")).toBe(NO_STORE_CACHE_CONTROL);
-    expect(response.headers.has("cloudflare-cdn-cache-control")).toBe(false);
-  });
+      expect(response.headers.get("cache-control")).toBe(NO_STORE_CACHE_CONTROL);
+      expect(response.headers.has("cloudflare-cdn-cache-control")).toBe(false);
+    },
+  );
 
   it.each([[undefined], ["unsupported"]])(
     "does not cache page projections without a canonical query language (%s)",

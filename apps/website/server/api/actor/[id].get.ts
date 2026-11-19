@@ -8,7 +8,8 @@ import {
 import { withMediaServiceTimeout } from "../../utils/media-request";
 import { setPublicCacheHeaders } from "../../utils/cache/http";
 import { hasSupabaseAuthCookie } from "../../utils/auth-session";
-import { APP_LOCALES, isRecord } from "@app/shared-logic";
+import { asString } from "../../utils/narrow";
+import { APP_LOCALES, isRecord, readPath } from "@app/shared-logic";
 type TmdbCastMember = Record<string, unknown> & {
   profile_path?: string | null;
   poster_path?: string | null;
@@ -308,7 +309,7 @@ export default defineEventHandler(async (event) => {
         !getHeader(event, "authorization") &&
         !hasSupabaseAuthCookie(
           getHeader(event, "cookie"),
-          useRuntimeConfig(event).public.supabase.cookiePrefix,
+          asString(readPath(useRuntimeConfig(event), "public", "supabase", "cookiePrefix")),
         );
       const hasCanonicalLanguage = canonicalLanguages.includes(requestedLanguage);
 
