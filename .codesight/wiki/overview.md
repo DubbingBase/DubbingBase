@@ -75,7 +75,7 @@ Changes to these files have the widest blast radius across the codebase:
 
 - `apps/website/server/utils/db/client.ts` — imported by **51** files
 - `apps/website/server/utils/index.ts` — imported by **28** files
-- `apps/website/server/utils/auth-handlers.ts` — imported by **24** files
+- `apps/website/server/utils/auth-handlers.ts` — imported by **26** files
 - `apps/website/server/utils/cache/index.ts` — imported by **20** files
 - `apps/website/server/utils/api/igdb.ts` — imported by **13** files
 - `apps/website/server/utils/urls/supabase.ts` — imported by **12** files
@@ -97,4 +97,4 @@ Changes to these files have the widest blast radius across the codebase:
 - _...25 more_
 
 ---
-_Back to [index.md](./index.md) · Generated 2026-11-18_
+_Back to [index.md](./index.md) · Generated 2026-11-19_

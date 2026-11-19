@@ -10,7 +10,7 @@
 **High-impact files** (change carefully):
 - apps/website/server/utils/db/client.ts (imported by 51 files)
 - apps/website/server/utils/index.ts (imported by 28 files)
-- apps/website/server/utils/auth-handlers.ts (imported by 24 files)
+- apps/website/server/utils/auth-handlers.ts (imported by 26 files)
 - apps/website/server/utils/cache/index.ts (imported by 20 files)
 - apps/website/server/utils/api/igdb.ts (imported by 13 files)
 
