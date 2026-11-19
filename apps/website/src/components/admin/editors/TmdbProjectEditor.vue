@@ -197,7 +197,7 @@
 </template>
 
 <script setup lang="ts">
-import { validateDubbingLanguage } from "@app/shared-logic";
+import { resolveMediaImage, validateDubbingLanguage } from "@app/shared-logic";
 import { useCharacterImages } from "../../../composables/useCharacterImages";
 import { ref, onMounted, computed, nextTick, watch, type Ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -289,8 +289,6 @@ interface CastRow extends EditorCastRowBase {
   highlight: boolean;
 }
 const castRows = ref<CastRow[]>([]);
-
-const TMDB_PROFILE_BASE = "https://image.tmdb.org/t/p/w185";
 
 const { toast, showToast } = useEditorToast();
 
@@ -407,7 +405,7 @@ const reportCharacterImageError = (key: string) => {
   if (row) reportImageError(characterRequestFor(characterNameFor(row)));
 };
 const tmdbProfileUrl = (path: string | null | undefined): string | null =>
-  path ? (path.startsWith("/") ? `${TMDB_PROFILE_BASE}${path}` : path) : null;
+  resolveMediaImage(path, { tmdbSize: "w185" });
 const initialTmdbCastOptions = computed(() => tmdbCast.value.slice(0, 50));
 
 const searchActors = (query: string) => {
@@ -635,11 +633,7 @@ watch(
       if (data.tmdbData) {
         contentId.value = tmdbId.value;
         mediaTitle.value = data.tmdbData.title;
-        let poster = data.tmdbData.posterPath;
-        if (poster && poster.startsWith("/")) {
-          poster = `https://image.tmdb.org/t/p/w500${poster}`;
-        }
-        posterUrl.value = poster || "";
+        posterUrl.value = resolveMediaImage(data.tmdbData.posterPath, { tmdbSize: "w500" }) ?? "";
         tmdbCast.value = data.tmdbData.cast;
       }
 

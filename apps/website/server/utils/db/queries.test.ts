@@ -448,7 +448,7 @@ describe("dubbing project detail queries", () => {
     const projects = await getToyPageDubbingProjects(31);
 
     expect(projects).toMatchObject(rows);
-    expect(projects[0]?.crew?.[0]?.person?.profile_picture).toBeNull();
+    expect(projects[0]?.crew?.[0]?.person).not.toHaveProperty("profile_picture");
     expect(queryMocks.selectedColumns[0]).not.toContain("*");
     expect(queryMocks.selectedColumns[0]).toContain("studio_data:studios(id, name)");
     expect(queryMocks.selectedColumns[0]).toContain("voice_actor:voice_actors(id");

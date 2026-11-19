@@ -210,7 +210,11 @@
                           decoding="async"
                           loading="lazy"
                           v-if="actor.voiceActor.profile_picture"
-                          :src="actor.voiceActor.profile_picture"
+                          :src="
+                            mediaImage(actor.voiceActor.profile_picture, {
+                              storageBucket: 'voice_actor_profile_pictures',
+                            })
+                          "
                           class="w-full h-full object-cover transition-transform duration-300"
                           alt="Voice Actor"
                         />
@@ -321,6 +325,7 @@
 </template>
 
 <script setup lang="ts">
+import { resolveMediaImage } from "@app/shared-logic";
 import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
 import DetailsDubTabs from "../../components/layout/details/DetailsDubTabs.vue";
 import DetailsStudioLink from "../../components/layout/details/DetailsStudioLink.vue";
@@ -331,7 +336,6 @@ import DetailsExternalLink from "../../components/layout/details/DetailsExternal
 import DetailsSynopsis from "../../components/layout/details/DetailsSynopsis.vue";
 import DetailsCastHeader from "../../components/layout/details/DetailsCastHeader.vue";
 import { useRoute, useRouter } from "vue-router";
-import type { Link as HeadLink } from "@unhead/vue";
 import { NuxtLink } from "#components";
 
 import { fetchMovieData, type MediaDetailDubbingProject } from "@app/shared-logic";
@@ -354,6 +358,9 @@ import {
   type DisplayCastActor,
   type MediaProjectView,
 } from "../../utils/media-cast";
+import { useMediaImage } from "~/composables/useMediaImage";
+
+const mediaImage = useMediaImage();
 
 const STRUCTURED_DATA_CAST_LIMIT = 20;
 const isReportModalOpen = ref(false);
@@ -441,17 +448,13 @@ function projectVoiceActorCount(project: MediaDetailDubbingProject): number {
   return dubbingProjectData.value.projectVoiceActorCounts.get(project) ?? 0;
 }
 
-const backdropUrl = computed(() => {
-  if (!movie.value?.backdrop_path) return null;
-  if (movie.value.backdrop_path.startsWith("http")) return movie.value.backdrop_path;
-  return `https://image.tmdb.org/t/p/original${movie.value.backdrop_path}`;
-});
+const backdropUrl = computed(() =>
+  resolveMediaImage(movie.value?.backdrop_path, { tmdbSize: "original" }),
+);
 
-const posterUrl = computed(() => {
-  if (!movie.value?.poster_path) return null;
-  if (movie.value.poster_path.startsWith("http")) return movie.value.poster_path;
-  return `https://image.tmdb.org/t/p/original${movie.value.poster_path}`;
-});
+const posterUrl = computed(() =>
+  resolveMediaImage(movie.value?.poster_path, { tmdbSize: "original" }),
+);
 
 const activeDubId = computed(() => {
   if (originalVersionRequested.value) return null;
@@ -500,13 +503,7 @@ const formattedCast = computed<DisplayCastActor[]>(() => {
   const { matches, unmatchedWorks } = matchCastWorks(movie.value.credits.cast, works);
 
   const matchedCards = matches.flatMap(({ actor, works: actorWorks }) => {
-    // TMDB returns profile_path without full URL sometimes in raw payload,
-    // but the backend processMedia adds TMDB urls to it.
-    // If it's a relative path starting with /, prepend tmdb url.
-    let profilePath = actor.profile_path;
-    if (profilePath && profilePath.startsWith("/")) {
-      profilePath = `https://image.tmdb.org/t/p/w185${profilePath}`;
-    }
+    const profilePath = resolveMediaImage(actor.profile_path, { tmdbSize: "w185" });
 
     // Find the voice actor work for this physical actor
     const cards = actorWorks.length > 0 ? actorWorks : [null];
@@ -753,22 +750,12 @@ useHead({
       content: computed(() => backdropUrl.value || posterUrl.value || ""),
     },
   ],
-  link: computed<HeadLink[]>(() => {
-    const links: HeadLink[] = [
-      { rel: "preconnect", href: "https://image.tmdb.org", crossorigin: "" },
-      { rel: "dns-prefetch", href: "https://image.tmdb.org" },
-      { rel: "preconnect", href: "https://thetvdb.com", crossorigin: "" },
-      { rel: "dns-prefetch", href: "https://thetvdb.com" },
-    ];
-    if (backdropUrl.value) {
-      links.push({
-        rel: "preload",
-        as: "image",
-        href: backdropUrl.value,
-      });
-    }
-    return links;
-  }),
+  link: [
+    { rel: "preconnect", href: "https://image.tmdb.org", crossorigin: "" },
+    { rel: "dns-prefetch", href: "https://image.tmdb.org" },
+    { rel: "preconnect", href: "https://thetvdb.com", crossorigin: "" },
+    { rel: "dns-prefetch", href: "https://thetvdb.com" },
+  ],
   script: [
     {
       type: "application/ld+json",

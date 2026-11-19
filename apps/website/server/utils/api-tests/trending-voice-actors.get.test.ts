@@ -14,10 +14,6 @@ vi.mock("../db/client", () => ({
   useSupabaseAdmin: () => ({ rpc: mocks.rpc }),
 }));
 
-vi.mock("../urls/supabase", () => ({
-  buildSupabaseImageUrl: (path: string | null) => (path ? `https://images.example/${path}` : null),
-}));
-
 let handler: EventHandler;
 
 beforeAll(async () => {
@@ -65,7 +61,7 @@ describe("trending voice actors response projection", () => {
         id: 1,
         firstname: "Ada",
         lastname: "Example",
-        profile_picture: "https://images.example/ada.jpg",
+        profile_picture: "ada.jpg",
         bio: "Full biography",
         work_count: 12,
       },
@@ -101,7 +97,7 @@ describe("trending voice actors response projection", () => {
         id: 1,
         firstname: "Ada",
         lastname: "Example",
-        profile_picture: "https://images.example/ada.jpg",
+        profile_picture: "ada.jpg",
         work_count: 12,
       },
     ]);

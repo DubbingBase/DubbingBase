@@ -92,7 +92,7 @@
                 <NuxtImg
                   format="webp"
                   v-if="logoPreview || form.logo_url"
-                  :src="logoPreview || form.logo_url"
+                  :src="logoPreview || mediaImage(form.logo_url, { storageBucket: 'studio_logos' })"
                   class="h-full w-full object-cover"
                   alt="Logo du Studio"
                 />
@@ -183,6 +183,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import imageCompression from "browser-image-compression";
+import { resolveMediaImage } from "@app/shared-logic";
+import { useMediaImage } from "~/composables/useMediaImage";
+
+const mediaImage = useMediaImage();
+const { supabaseUrl } = useRuntimeConfig().public;
 
 const route = useRoute();
 const router = useRouter();
@@ -324,12 +329,10 @@ const saveStudio = async () => {
         });
 
       if (!uploadError) {
-        const { data: publicUrlData } = supabase.storage
-          .from("studio_logos")
-          .getPublicUrl(filePath);
-        if (publicUrlData) {
-          finalLogoUrl = publicUrlData.publicUrl;
-        }
+        finalLogoUrl = resolveMediaImage(filePath, {
+          storageBucket: "studio_logos",
+          storageBase: supabaseUrl ?? "",
+        });
       } else {
         console.error("Logo upload error:", uploadError);
       }

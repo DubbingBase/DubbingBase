@@ -338,14 +338,13 @@ import { ref, computed, onMounted, onUnmounted } from "vue";
 import { refDebounced } from "@vueuse/core";
 import type { Tables } from "@app/supabase/types";
 import { readErrorMessage } from "~/utils/error-message";
+import { useMediaImage } from "~/composables/useMediaImage";
+
+const mediaImage = useMediaImage();
 const supabase = useSupabaseClient();
 
-const getProfilePictureUrl = (path: string | null) => {
-  if (!path) return null;
-  if (path.startsWith("http://") || path.startsWith("https://")) return path;
-  const { data } = supabase.storage.from("voice_actor_profile_pictures").getPublicUrl(path);
-  return data.publicUrl;
-};
+const getProfilePictureUrl = (path: string | null) =>
+  mediaImage(path, { storageBucket: "voice_actor_profile_pictures" });
 
 interface User {
   id: string;

@@ -5,7 +5,7 @@
       v-else-if="game"
       :share-dub="activeDubProject?.id"
       :title="game.name"
-      :backdrop-url="game.artworks?.[0]?.url || game.screenshots?.[0]?.url || null"
+      :backdrop-url="backdropUrl"
       :poster-url="coverUrl"
       :loading="pending"
     >
@@ -137,8 +137,12 @@
                       <img
                         decoding="async"
                         loading="lazy"
-                        v-if="char.mug_shot?.url"
-                        :src="char.mug_shot.url"
+                        v-if="char.mug_shot?.image_id || char.mug_shot?.url"
+                        :src="
+                          mediaImage(char.mug_shot?.image_id || char.mug_shot?.url, {
+                            igdbSize: '1080p',
+                          })
+                        "
                         class="w-full h-full object-cover"
                         alt="Character"
                       />
@@ -187,7 +191,11 @@
                           decoding="async"
                           loading="lazy"
                           v-if="char.voiceActor.profile_picture"
-                          :src="char.voiceActor.profile_picture"
+                          :src="
+                            mediaImage(char.voiceActor.profile_picture, {
+                              storageBucket: 'voice_actor_profile_pictures',
+                            })
+                          "
                           class="w-full h-full object-cover transition-transform duration-300"
                           alt="Voice Actor"
                         />
@@ -385,6 +393,9 @@ import {
   StarIcon,
 } from "lucide-vue-next";
 import ReportModal from "../../components/ReportModal.vue";
+import { useMediaImage } from "~/composables/useMediaImage";
+
+const mediaImage = useMediaImage();
 
 const isReportModalOpen = ref(false);
 
@@ -459,9 +470,16 @@ function projectVoiceActorCount(project: GameDubbingProject): number {
   return ids.size;
 }
 
-const coverUrl = computed(() => {
-  if (!game.value?.cover?.url) return null;
-  return game.value.cover.url;
+const coverUrl = computed(() =>
+  mediaImage(game.value?.cover?.image_id || game.value?.cover?.url, { igdbSize: "cover_big" }),
+);
+const backdropUrl = computed(() => {
+  const artwork = game.value?.artworks?.[0];
+  const screenshot = game.value?.screenshots?.[0];
+  return (
+    mediaImage(artwork?.image_id || artwork?.url, { igdbSize: "1080p" }) ??
+    mediaImage(screenshot?.image_id || screenshot?.url, { igdbSize: "screenshot_huge" })
+  );
 });
 
 const activeDubProject = computed(() =>

@@ -7,7 +7,7 @@ import {
   useToyClient,
 } from "../utils";
 import { useSupabaseAdmin } from "../utils/db/client";
-import { buildIgdbImageUrl, isIgdbGame } from "../utils/api/igdb";
+import { isIgdbGame } from "../utils/api/igdb";
 import { parsePagination } from "../utils/pagination";
 
 const MEDIA_CATEGORIES = {
@@ -115,7 +115,7 @@ async function resolveGameCatalogItems(ids: number[]): Promise<CatalogItem[]> {
         "game",
         id,
         game?.name || `Video Game #${id}`,
-        game?.cover ? buildIgdbImageUrl(game.cover.image_id, "cover_big") : null,
+        game?.cover?.image_id ?? null,
       );
     });
   } catch (error: unknown) {

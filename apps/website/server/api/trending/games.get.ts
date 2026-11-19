@@ -1,35 +1,14 @@
 import { useIgdbClient } from "../../utils";
 import type { H3Event } from "h3";
-import { buildIgdbImageUrl } from "../../utils/api/igdb";
 import type { IgdbGame } from "@app/shared-logic";
 import { readProperty, resolveLocaleLanguage } from "@app/shared-logic";
 import { setPublicCacheHeaders } from "../../utils/cache/http";
 import type { IgdbTrendingGamesResult } from "../../utils/api/igdb";
 
 function formatGame(game: IgdbGame, cardProjection: boolean) {
-  if (cardProjection) {
-    return {
-      id: game.id,
-      name: game.name,
-      media_type: "video_game" as const,
-      cover: game.cover
-        ? {
-            image_id: game.cover.image_id,
-            url: buildIgdbImageUrl(game.cover.image_id, "cover_big"),
-          }
-        : undefined,
-    };
-  }
-
-  const cover = game.cover
-    ? {
-        ...game.cover,
-        url: buildIgdbImageUrl(game.cover.image_id, "cover_big"),
-      }
-    : undefined;
-
+  const cover = game.cover ? { image_id: game.cover.image_id } : undefined;
   return {
-    ...game,
+    ...(cardProjection ? { id: game.id, name: game.name } : game),
     media_type: "video_game" as const,
     cover,
   };

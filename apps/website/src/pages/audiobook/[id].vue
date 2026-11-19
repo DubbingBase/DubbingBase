@@ -123,7 +123,11 @@
                         format="webp"
                         decoding="async"
                         v-if="item.profile_picture"
-                        :src="item.profile_picture"
+                        :src="
+                          mediaImage(item.profile_picture, {
+                            storageBucket: 'voice_actor_profile_pictures',
+                          })
+                        "
                         class="w-full h-full object-cover"
                         alt="Voice Actor"
                       />
@@ -198,6 +202,9 @@ import ReportModal from "../../components/ReportModal.vue";
 import { fetchAudiobookData } from "@app/shared-logic";
 import type { Audiobook, DetailCollectionProject, MediaWorkCastCard } from "@app/shared-logic";
 import { ExternalLink as ExternalLinkIcon, Search as SearchIcon } from "lucide-vue-next";
+import { useMediaImage } from "~/composables/useMediaImage";
+
+const mediaImage = useMediaImage();
 
 const route = useRoute();
 const router = useRouter();

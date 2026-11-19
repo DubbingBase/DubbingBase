@@ -1,6 +1,5 @@
 import { isVoiceActorRecord } from "../../utils/voice-actor-record";
 import { useSupabaseAdmin } from "../../utils/db/client";
-import { buildSupabaseImageUrl } from "../../utils/urls/supabase";
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
@@ -35,11 +34,7 @@ export default defineEventHandler(async (event) => {
         throw new Error("Invalid voice actor data");
       }
 
-      const profilePicture = buildSupabaseImageUrl(
-        result.voice_actor.profile_picture,
-        "voice_actor_profile_pictures",
-        "500",
-      );
+      const profilePicture = result.voice_actor.profile_picture;
 
       if (homeProjection) {
         return {

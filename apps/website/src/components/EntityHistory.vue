@@ -410,6 +410,9 @@ import {
   isSafeHref,
   type HistoryFilter,
 } from "../utils/entity-history-view";
+import { useMediaImage } from "~/composables/useMediaImage";
+
+const mediaImage = useMediaImage();
 
 const props = defineProps<{
   type: HistoryEntityType;
@@ -530,6 +533,13 @@ function sides(entryId: string, change: HistoryChange): DiffSide[] {
   const build = (name: "before" | "after", value: Json | null, href: string | null): DiffSide => {
     const text = displayValue(value);
     const key = `${entryId}:${change.field}:${name}`;
+    const displayHref =
+      change.type === "image"
+        ? mediaImage(href ?? (typeof value === "string" ? value : null), {
+            storageBucket:
+              change.field === "logo_url" ? "studio_logos" : "voice_actor_profile_pictures",
+          })
+        : href;
     const long =
       change.type === "text" &&
       !isSafeHref(href) &&
@@ -539,7 +549,7 @@ function sides(entryId: string, change: HistoryChange): DiffSide[] {
       name,
       key,
       text,
-      href: isSafeHref(href) ? href : null,
+      href: isSafeHref(displayHref) ? displayHref : null,
       long,
       clamped: long && !expanded.value.has(key),
     };

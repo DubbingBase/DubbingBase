@@ -34,6 +34,15 @@ registerEndpoint(
             beforeHref: null,
             afterHref: null,
           },
+          {
+            field: "profile_picture",
+            importance: "normal",
+            type: "image",
+            before: null,
+            after: "ann.jpg",
+            beforeHref: null,
+            afterHref: null,
+          },
         ],
       },
     ],
@@ -58,6 +67,11 @@ describe("EntityHistory revert", () => {
     await vi.waitFor(() =>
       expect(document.querySelector("[data-testid=history-revert]")).toBeTruthy(),
     );
+    const image = document.querySelector<HTMLImageElement>(
+      'img[src$="/storage/v1/object/public/voice_actor_profile_pictures/ann.jpg"]',
+    );
+    expect(image?.closest("a")?.getAttribute("href")).toBe(image?.getAttribute("src"));
+    expect(image).toBeTruthy();
 
     document.querySelector<HTMLElement>("[data-testid=history-revert]")?.click();
     await flushPromises();

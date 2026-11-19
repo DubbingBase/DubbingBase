@@ -43,7 +43,7 @@ export function actorPageResponse(
   actor: Record<string, unknown>,
   actorCredits: Record<string, unknown>[],
   voiceRoles: ActorPageVoiceRole[],
-  profilePath: string | null,
+  profilePath: string | null | undefined,
   backdropPath: string | null,
   options?: { filmographyCount: number },
 ) {

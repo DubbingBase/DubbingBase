@@ -129,7 +129,11 @@
                         <NuxtImg
                           format="webp"
                           v-if="actor.profile_picture"
-                          :src="actor.profile_picture"
+                          :src="
+                            mediaImage(actor.profile_picture, {
+                              storageBucket: 'voice_actor_profile_pictures',
+                            })
+                          "
                           class="h-full w-full object-cover"
                           :alt="`${actor.firstname} ${actor.lastname}`"
                           loading="lazy"
@@ -187,7 +191,11 @@
                       <NuxtImg
                         v-if="keptActor(group)?.profile_picture"
                         format="webp"
-                        :src="keptActor(group)?.profile_picture || ''"
+                        :src="
+                          mediaImage(keptActor(group)?.profile_picture, {
+                            storageBucket: 'voice_actor_profile_pictures',
+                          })
+                        "
                         class="h-full w-full object-cover"
                         :alt="`${group.merged.firstname} ${group.merged.lastname}`"
                         loading="lazy"
@@ -497,6 +505,9 @@ definePageMeta({
 
 import { ref } from "vue";
 import type { Tables } from "@app/supabase/types";
+import { useMediaImage } from "~/composables/useMediaImage";
+
+const mediaImage = useMediaImage();
 
 const { locale } = useI18n();
 

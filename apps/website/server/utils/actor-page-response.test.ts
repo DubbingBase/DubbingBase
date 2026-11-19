@@ -8,6 +8,7 @@ import {
   toWebHandler,
 } from "h3";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { useRuntimeConfig } from "#app/nuxt";
 import { applyCachePolicy, applyDefaultCachePolicy } from "./cache/response-policy";
 import {
   getCloudflareCacheControl,
@@ -27,8 +28,8 @@ vi.mock("./db/queries", () => ({
   getWorkByActor: mocks.getWorkByActor,
   getActorPageWorkByActor: mocks.getActorPageWorkByActor,
 }));
-
 let handler: typeof import("../api/actor/[id].get").default;
+let cookiePrefix: string;
 
 beforeAll(async () => {
   vi.stubGlobal("defineEventHandler", defineEventHandler);
@@ -36,9 +37,8 @@ beforeAll(async () => {
   vi.stubGlobal("getHeader", getHeader);
   vi.stubGlobal("getQuery", getQuery);
   vi.stubGlobal("createError", createError);
-  vi.stubGlobal("useRuntimeConfig", () => ({
-    public: { supabase: { cookiePrefix: "sb-test-auth-token" } },
-  }));
+  cookiePrefix = useRuntimeConfig().public.supabase.cookiePrefix ?? "sb-test-auth-token";
+  vi.stubGlobal("useRuntimeConfig", () => ({ public: { supabase: { cookiePrefix } } }));
   handler = (await import("../api/actor/[id].get")).default;
 });
 
@@ -143,7 +143,7 @@ async function request(
       ? {
           onRequest: applyDefaultCachePolicy,
           onBeforeResponse: (event) =>
-            applyCachePolicy(event, { isDev: false, supabaseCookiePrefix: "sb-test-auth-token" }),
+            applyCachePolicy(event, { isDev: false, supabaseCookiePrefix: cookiePrefix }),
         }
       : {},
   );
@@ -154,6 +154,8 @@ async function request(
   app.use(
     defineEventHandler((event) => {
       event.context.params = { id: "31" };
+      // The browser Request implementation strips the Cookie header.
+      if (options.headers?.cookie) event.node.req.headers.cookie = options.headers.cookie;
       return handler(event);
     }),
   );
@@ -187,16 +189,21 @@ describe("actor page API projection", () => {
     expect(mocks.getPersonWithCredits).toHaveBeenNthCalledWith(2, 31, "en-US");
   });
 
-  it("does not cache authorized page projections", async () => {
-    const response = await request("actor-page", undefined, {
-      lang: "fr-FR",
-      cachePolicy: true,
-      headers: { authorization: "Bearer user-token" },
-    });
+  it.each(["authorization", "cookie"])(
+    "does not cache page projections authenticated by %s",
+    async (header) => {
+      const response = await request("actor-page", undefined, {
+        lang: "fr-FR",
+        cachePolicy: true,
+        headers: {
+          [header]: header === "cookie" ? `${cookiePrefix}.0=fixture` : "Bearer user-token",
+        },
+      });
 
-    expect(response.headers.get("cache-control")).toBe(NO_STORE_CACHE_CONTROL);
-    expect(response.headers.has("cloudflare-cdn-cache-control")).toBe(false);
-  });
+      expect(response.headers.get("cache-control")).toBe(NO_STORE_CACHE_CONTROL);
+      expect(response.headers.has("cloudflare-cdn-cache-control")).toBe(false);
+    },
+  );
 
   it.each([[undefined], ["unsupported"]])(
     "does not cache page projections without a canonical query language (%s)",
@@ -306,7 +313,7 @@ describe("actor page API projection", () => {
         birthday: "1970-01-01",
         deathday: null,
         place_of_birth: "City",
-        profile_path: "https://image.tmdb.org/t/p/w500/actor.png",
+        profile_path: "/actor.png",
         backdrop_path: null,
         known_for_department: "Acting",
         credits: {
@@ -315,7 +322,7 @@ describe("actor page API projection", () => {
               id: 10,
               title: "Movie",
               character: "Lead",
-              poster_path: "https://image.tmdb.org/t/p/w500/movie.png",
+              poster_path: "/movie.png",
               release_date: "2020-01-01",
               media_type: "movie",
             },
@@ -331,7 +338,7 @@ describe("actor page API projection", () => {
               id: 20,
               name: "Show",
               character: "Guest",
-              poster_path: "https://image.tmdb.org/t/p/w500/show.png",
+              poster_path: "/show.png",
               first_air_date: "2022-01-01",
               media_type: "tv",
             },
@@ -361,7 +368,7 @@ describe("actor page API projection", () => {
       tv_credits: {
         cast: [
           { id: 200, name: "Show one", poster_path: null },
-          { id: 201, name: "Show two", poster_path: null },
+          { id: 201, name: "Show two" },
           { id: 998, name: "Invalid show", profile_path: false },
         ],
       },
@@ -369,18 +376,20 @@ describe("actor page API projection", () => {
 
     const response = await request("actor-page", 2);
     expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({
+    const body: unknown = await response.json();
+    expect(body).toMatchObject({
       filmographyCount: 15,
       actor: {
         credits: {
           cast: [
             { id: 112, title: "Movie 13", media_type: "movie" },
-            { id: 200, name: "Show one", media_type: "tv" },
+            { id: 200, name: "Show one", media_type: "tv", poster_path: null },
             { id: 201, name: "Show two", media_type: "tv" },
           ],
         },
       },
     });
+    expect(body).not.toHaveProperty("actor.credits.cast.2.poster_path");
 
     const outOfRangeResponse = await request("actor-page", 3);
     expect(outOfRangeResponse.status).toBe(200);

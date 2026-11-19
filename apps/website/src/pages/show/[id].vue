@@ -108,7 +108,9 @@
                     decoding="async"
                     loading="lazy"
                     v-if="season.poster_path"
-                    :src="season.poster_path"
+                    :src="
+                      resolveMediaImage(season.poster_path, { tmdbSize: 'original' }) ?? undefined
+                    "
                     class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                     :alt="season.name ?? ''"
                   />
@@ -265,7 +267,11 @@
                           decoding="async"
                           loading="lazy"
                           v-if="actor.voiceActor.profile_picture"
-                          :src="actor.voiceActor.profile_picture"
+                          :src="
+                            mediaImage(actor.voiceActor.profile_picture, {
+                              storageBucket: 'voice_actor_profile_pictures',
+                            })
+                          "
                           class="w-full h-full object-cover transition-transform duration-300"
                           alt="Voice Actor"
                         />
@@ -369,6 +375,7 @@
 </template>
 
 <script setup lang="ts">
+import { resolveMediaImage } from "@app/shared-logic";
 import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
 import DetailsDubTabs from "../../components/layout/details/DetailsDubTabs.vue";
 import DetailsStudioLink from "../../components/layout/details/DetailsStudioLink.vue";
@@ -402,6 +409,9 @@ import {
   type DisplayCastActor,
   type MediaProjectView,
 } from "../../utils/media-cast";
+import { useMediaImage } from "~/composables/useMediaImage";
+
+const mediaImage = useMediaImage();
 
 const isReportModalOpen = ref(false);
 
@@ -516,17 +526,13 @@ const isOriginalVersion = computed(
   () => canShowOriginalVersion.value && originalVersionRequested.value,
 );
 
-const backdropUrl = computed(() => {
-  if (!serie.value?.backdrop_path) return null;
-  if (serie.value.backdrop_path.startsWith("http")) return serie.value.backdrop_path;
-  return `https://image.tmdb.org/t/p/original${serie.value.backdrop_path}`;
-});
+const backdropUrl = computed(() =>
+  resolveMediaImage(serie.value?.backdrop_path, { tmdbSize: "original" }),
+);
 
-const posterUrl = computed(() => {
-  if (!serie.value?.poster_path) return null;
-  if (serie.value.poster_path.startsWith("http")) return serie.value.poster_path;
-  return `https://image.tmdb.org/t/p/original${serie.value.poster_path}`;
-});
+const posterUrl = computed(() =>
+  resolveMediaImage(serie.value?.poster_path, { tmdbSize: "original" }),
+);
 
 const activeDubId = computed(() => {
   if (originalVersionRequested.value) return null;
@@ -583,10 +589,7 @@ const formattedCast = computed<DisplayCastActor[]>(() => {
   const { matches, unmatchedWorks } = matchCastWorks(cast, works);
 
   const matchedCards = matches.flatMap(({ actor, works: actorWorks }) => {
-    let profilePath = actor.profile_path;
-    if (profilePath && profilePath.startsWith("/")) {
-      profilePath = `https://image.tmdb.org/t/p/w185${profilePath}`;
-    }
+    const profilePath = resolveMediaImage(actor.profile_path, { tmdbSize: "w185" });
     // Find the voice actor work for this physical actor
     const cards = actorWorks.length > 0 ? actorWorks : [null];
     return cards.map((work) => {
@@ -854,23 +857,16 @@ useHead({
         ]
       : [],
   ),
-  link: computed<HeadLink[]>(() => {
-    if (!isShowRoute.value) return [];
-    const links: HeadLink[] = [
-      { rel: "preconnect", href: "https://image.tmdb.org", crossorigin: "" },
-      { rel: "dns-prefetch", href: "https://image.tmdb.org" },
-      { rel: "preconnect", href: "https://thetvdb.com", crossorigin: "" },
-      { rel: "dns-prefetch", href: "https://thetvdb.com" },
-    ];
-    if (backdropUrl.value) {
-      links.push({
-        rel: "preload",
-        as: "image",
-        href: backdropUrl.value,
-      });
-    }
-    return links;
-  }),
+  link: computed<HeadLink[]>(() =>
+    isShowRoute.value
+      ? [
+          { rel: "preconnect", href: "https://image.tmdb.org", crossorigin: "" },
+          { rel: "dns-prefetch", href: "https://image.tmdb.org" },
+          { rel: "preconnect", href: "https://thetvdb.com", crossorigin: "" },
+          { rel: "dns-prefetch", href: "https://thetvdb.com" },
+        ]
+      : [],
+  ),
   script: computed(() =>
     isShowRoute.value
       ? [

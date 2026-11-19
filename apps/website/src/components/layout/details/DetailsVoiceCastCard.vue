@@ -8,7 +8,7 @@
     >
       <img
         v-if="item.profile_picture"
-        :src="item.profile_picture"
+        :src="mediaImage(item.profile_picture, { storageBucket: 'voice_actor_profile_pictures' })"
         :alt="`${item.firstname} ${item.lastname}`"
         class="w-full h-full object-cover"
         loading="lazy"
@@ -38,6 +38,9 @@
 
 <script setup lang="ts">
 import type { MediaWorkCastCard } from "@app/shared-logic";
+import { useMediaImage } from "~/composables/useMediaImage";
+
+const mediaImage = useMediaImage();
 
 const props = defineProps<{ item: MediaWorkCastCard; fallbackRole: string }>();
 const localePath = useLocalePath();

@@ -24,8 +24,10 @@
           >
             <div class="relative w-full h-72 rounded-xl overflow-hidden mb-3 theme-surface-muted">
               <NuxtImg
-                v-if="game.cover?.url"
-                :src="game.cover.url"
+                v-if="game.cover?.image_id || game.cover?.url"
+                :src="
+                  mediaImage(game.cover?.image_id || game.cover?.url, { igdbSize: 'cover_big' })
+                "
                 :alt="game.name"
                 format="webp"
                 class="object-cover w-full h-full transition duration-300"
@@ -75,7 +77,9 @@
             >
               <NuxtImg
                 v-if="va.profile_picture"
-                :src="va.profile_picture"
+                :src="
+                  mediaImage(va.profile_picture, { storageBucket: 'voice_actor_profile_pictures' })
+                "
                 :alt="va.firstname + ' ' + va.lastname"
                 format="webp"
                 class="object-cover w-full h-full"
@@ -125,7 +129,9 @@
             >
               <NuxtImg
                 v-if="va.profile_picture"
-                :src="va.profile_picture"
+                :src="
+                  mediaImage(va.profile_picture, { storageBucket: 'voice_actor_profile_pictures' })
+                "
                 :alt="va.firstname + ' ' + va.lastname"
                 format="webp"
                 class="object-cover w-full h-full"
@@ -153,6 +159,9 @@
 import type { HomeDataPayload } from "@app/shared-logic";
 import { toRefs } from "vue";
 import { useDragScroll } from "../composables/useDragScroll";
+import { useMediaImage } from "~/composables/useMediaImage";
+
+const mediaImage = useMediaImage();
 
 type Props = {
   hydrateOnVisible?: boolean;

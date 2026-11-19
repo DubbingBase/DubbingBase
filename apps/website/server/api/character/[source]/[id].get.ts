@@ -1,6 +1,5 @@
 import { useSupabaseAdmin } from "../../../utils/db/client";
 import { useIgdbClient, useTmdbClient, useTvdbClient } from "../../../utils";
-import { buildIgdbImageUrl } from "../../../utils/api/igdb";
 import { isRecord, readProperty } from "@app/shared-logic";
 import { MediaService } from "../../../utils/services/media";
 import { getDubbingProjects, getGamePageDubbingProjects } from "../../../utils/db/queries";
@@ -164,13 +163,11 @@ export default defineEventHandler(async (event) => {
           )
         : [],
     }));
-    const imageId = localCharacter?.mug_shot?.image_id;
-    const image = imageId ? buildIgdbImageUrl(imageId, "1080p") : null;
     return {
       source: "game" as const,
       id: character.id,
       name: character.name,
-      image,
+      image: localCharacter?.mug_shot?.image_id,
       description: localCharacter?.description ?? null,
       externalUrl: null,
       gameId: character.igdb_game_id,

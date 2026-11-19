@@ -130,12 +130,7 @@ export function safeHttpUrl(value: Json): string | null {
   }
 }
 
-export type HistoryLinkContext = {
-  /** Resolves a stored picture or logo path to a loadable image URL. */
-  imageUrl?: (path: string, field: string) => string | null;
-};
-
-function valueHref(field: string, value: Json, context: HistoryLinkContext): string | null {
+function valueHref(field: string, value: Json): string | null {
   if (value === null) return null;
   if (field === "tmdb_id") {
     return typeof value === "number" && Number.isSafeInteger(value) && value > 0
@@ -151,9 +146,6 @@ function valueHref(field: string, value: Json, context: HistoryLinkContext): str
     return typeof value === "number" && Number.isSafeInteger(value) && value > 0
       ? `/voice-actor/${value}`
       : null;
-  }
-  if (field === "profile_picture" || field === "logo_url") {
-    return typeof value === "string" ? (context.imageUrl?.(value, field) ?? null) : null;
   }
   if (field === "website_url") return safeHttpUrl(value);
   return null;
@@ -176,12 +168,7 @@ function expandSocialLinks(before: Json, after: Json): ChangedField[] {
 }
 
 /** Decorated changes for display: importance, type and deep links. */
-export function diffSnapshots(
-  kind: FieldKind,
-  previous: unknown,
-  next: unknown,
-  context: HistoryLinkContext = {},
-): HistoryChange[] {
+export function diffSnapshots(kind: FieldKind, previous: unknown, next: unknown): HistoryChange[] {
   const decorated: HistoryChange[] = [];
   for (const change of changedFields(kind, previous, next)) {
     const meta = fieldMeta[kind][change.field];
@@ -198,10 +185,8 @@ export function diffSnapshots(
         type: meta.type,
         before: displayValue(part.before),
         after: displayValue(part.after),
-        beforeHref: isSocial
-          ? safeHttpUrl(part.before)
-          : valueHref(part.field, part.before, context),
-        afterHref: isSocial ? safeHttpUrl(part.after) : valueHref(part.field, part.after, context),
+        beforeHref: isSocial ? safeHttpUrl(part.before) : valueHref(part.field, part.before),
+        afterHref: isSocial ? safeHttpUrl(part.after) : valueHref(part.field, part.after),
       });
     }
   }
@@ -219,7 +204,7 @@ export type AuditRow = {
   reverted_at?: string | null;
 };
 
-export type HistoryEntryContext = HistoryLinkContext & {
+export type HistoryEntryContext = {
   /** Site path of the media a cast credit belongs to, from its dubbing project id. */
   mediaHref?: (dubbingProjectId: number) => string | null;
 };
@@ -245,7 +230,7 @@ export function toHistoryEntry(
 ): HistoryEntry | null {
   const isWork = row.entity_type === "work";
   const kind = isWork ? "work" : entityType === "studio" ? "studio" : "profile";
-  const changes = diffSnapshots(kind, row.previous_value, row.new_value, context);
+  const changes = diffSnapshots(kind, row.previous_value, row.new_value);
   if (changes.length === 0) return null;
 
   let label: string | null = null;

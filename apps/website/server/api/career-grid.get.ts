@@ -1,3 +1,4 @@
+import { resolveMediaImage } from "@app/shared-logic";
 import { asString } from "../utils/narrow";
 import { useTmdbClient } from "../utils";
 import { MediaService } from "../utils/services/media";
@@ -599,10 +600,8 @@ export default defineEventHandler(async (event) => {
         throw createError({ statusCode: 404, message: "Media not found" });
       }
 
-      let posterDataUri = null;
-      if (media.poster_path) {
-        posterDataUri = await fetchImageAsDataUri(media.poster_path.replace("/w500/", "/w780/"));
-      }
+      const posterUrl = resolveMediaImage(media.poster_path, { tmdbSize: "w780" });
+      const posterDataUri = posterUrl ? await fetchImageAsDataUri(posterUrl) : null;
 
       const result = buildMediaOgImage(media, posterDataUri, langParam);
       svgWidth = result.svgWidth;
@@ -638,12 +637,12 @@ export default defineEventHandler(async (event) => {
             characterName = "";
           }
 
-          let mediaPoster = item.media?.poster_path || null;
-          if (mediaPoster && mediaPoster.includes("/w500/")) {
-            mediaPoster = mediaPoster.replace("/w500/", "/w92/");
-          } else if (mediaPoster && !mediaPoster.startsWith("http")) {
-            mediaPoster = `https://image.tmdb.org/t/p/w92${mediaPoster}`;
-          }
+          const mediaPoster = resolveMediaImage(
+            item.media?.poster_path,
+            item.media?.media_type === "video_game"
+              ? { igdbSize: "cover_small" }
+              : { tmdbSize: "w92" },
+          );
 
           return {
             title: item.media?.title || item.media?.name || "Unknown Work",
@@ -668,31 +667,15 @@ export default defineEventHandler(async (event) => {
             characterName = "";
           }
 
-          let characterImage = null;
-          if (castMember.profile_path) {
-            characterImage = castMember.profile_path.replace("/w500/", "/w92/");
-          }
-
-          let title = "Unknown Work";
-          let popularity = 0;
-          let mediaPoster = null;
-
-          if (media) {
-            title = media.title || media.name || title;
-            popularity = media.popularity || 0;
-            if (media.poster_path) {
-              mediaPoster = media.poster_path.replace("/w500/", "/w92/");
-            }
-          } else {
-            title = contentId ? `Work #${contentId}` : title;
-          }
-
           acc.push({
-            title,
+            title: media.title || media.name || "Unknown Work",
             characterName: characterName || "",
-            popularity,
-            mediaPosterUrl: mediaPoster,
-            characterImageUrl: characterImage,
+            popularity: media.popularity || 0,
+            mediaPosterUrl: resolveMediaImage(
+              media.poster_path,
+              media.media_type === "video_game" ? { igdbSize: "cover_small" } : { tmdbSize: "w92" },
+            ),
+            characterImageUrl: resolveMediaImage(castMember.profile_path, { tmdbSize: "w92" }),
           });
 
           return acc;
@@ -730,10 +713,11 @@ export default defineEventHandler(async (event) => {
           : "") ||
         "Unknown";
 
-      let avatarDataUri: string | null = null;
-      if (voiceActor.profile_picture) {
-        avatarDataUri = await fetchImageAsDataUri(voiceActor.profile_picture);
-      }
+      const avatarUrl = resolveMediaImage(voiceActor.profile_picture, {
+        storageBase: asString(useRuntimeConfig(event).supabaseUrl) ?? "",
+        storageBucket: "voice_actor_profile_pictures",
+      });
+      const avatarDataUri = avatarUrl ? await fetchImageAsDataUri(avatarUrl) : null;
 
       const res = buildCareerGridImage({
         name,

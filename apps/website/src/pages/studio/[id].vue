@@ -3,7 +3,7 @@
     <DetailsHero
       :title="studio.name"
       :backdrop-url="null"
-      :image-url="studio.logo_url"
+      :image-url="mediaImage(studio.logo_url, { storageBucket: 'studio_logos' })"
       image-aspect-ratio="logo"
     >
       <template #metadata v-if="studio.city || studio.country">
@@ -130,9 +130,12 @@
                   v-if="project.media?.poster_path"
                   loading="lazy"
                   :src="
-                    project.media.poster_path.startsWith('http')
-                      ? project.media.poster_path
-                      : 'https://image.tmdb.org/t/p/w342' + project.media.poster_path
+                    mediaImage(
+                      project.media.poster_path,
+                      project.content_type === 'video_game'
+                        ? { igdbSize: 'cover_big' }
+                        : { tmdbSize: 'w342' },
+                    )
                   "
                   :alt="project.media?.title || project.media?.name"
                   format="webp"
@@ -276,9 +279,11 @@ import DetailsShareButton from "../../components/layout/details/DetailsShareButt
 import PersonSkeleton from "../../components/PersonSkeleton.vue";
 
 import { useI18n } from "vue-i18n";
+import { useMediaImage } from "~/composables/useMediaImage";
+
+const mediaImage = useMediaImage();
 
 const route = useRoute();
-const supabase = useSupabaseClient();
 const { user } = useClientUser();
 const localePath = useLocalePath();
 const { t, locale } = useI18n();
@@ -347,11 +352,8 @@ const rosterItems = computed(() =>
   paginateDetailCollection(voiceActorsRoster.value, rosterPage.value, 12),
 );
 
-const getProfileUrl = (path: string) => {
-  if (path.startsWith("http")) return path;
-  const { data } = supabase.storage.from("voice_actor_profile_pictures").getPublicUrl(path);
-  return data.publicUrl;
-};
+const getProfileUrl = (path: string) =>
+  mediaImage(path, { storageBucket: "voice_actor_profile_pictures" });
 
 useHead({
   title: computed(() => studio.value?.name || t("seo.studiosPageTitle")),

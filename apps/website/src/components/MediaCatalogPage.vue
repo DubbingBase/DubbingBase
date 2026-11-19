@@ -47,7 +47,7 @@
           >
             <NuxtImg
               v-if="item.coverUrl && type === 'game'"
-              :src="item.coverUrl"
+              :src="mediaImage(item.coverUrl, { igdbSize: 'cover_big' })"
               :alt="item.title"
               format="webp"
               loading="lazy"
@@ -56,7 +56,7 @@
             />
             <img
               v-else-if="item.coverUrl"
-              :src="item.coverUrl"
+              :src="mediaImage(item.coverUrl)"
               :alt="item.title"
               loading="lazy"
               decoding="async"
@@ -80,6 +80,9 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import type { PaginatedResponse } from "@app/shared-logic";
+import { useMediaImage } from "~/composables/useMediaImage";
+
+const mediaImage = useMediaImage();
 
 type CatalogType = "game" | "audiobook" | "podcast" | "advertisement" | "toy";
 type CatalogItem = {

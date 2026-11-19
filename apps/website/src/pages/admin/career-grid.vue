@@ -25,7 +25,11 @@
             <NuxtImg
               format="webp"
               v-if="selectedActor.profile_picture"
-              :src="selectedActor.profile_picture"
+              :src="
+                mediaImage(selectedActor.profile_picture, {
+                  storageBucket: 'voice_actor_profile_pictures',
+                })
+              "
               class="h-full w-full object-cover"
             />
             <span v-else class="text-xs font-bold theme-text-muted">{{
@@ -81,7 +85,9 @@
               <NuxtImg
                 format="webp"
                 v-if="va.profile_picture"
-                :src="va.profile_picture"
+                :src="
+                  mediaImage(va.profile_picture, { storageBucket: 'voice_actor_profile_pictures' })
+                "
                 class="h-full w-full object-cover"
               />
               <span v-else class="text-xs font-bold theme-text-muted">{{
@@ -179,6 +185,9 @@ definePageMeta({
 import { ref, onMounted, onUnmounted } from "vue";
 import { readErrorMessage } from "~/utils/error-message";
 import type { Tables } from "@app/supabase/types";
+import { useMediaImage } from "~/composables/useMediaImage";
+
+const mediaImage = useMediaImage();
 
 type VoiceActorCandidate = Pick<
   Tables<"voice_actors">,

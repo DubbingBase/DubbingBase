@@ -11,7 +11,6 @@ const routeMocks = vi.hoisted(() => ({
   useSupabaseAdmin: vi.fn(),
   requireUser: vi.fn(),
   notifyContributionEdit: vi.fn(),
-  buildSupabaseImageUrl: vi.fn((path: string) => `https://storage.test/${path}`),
 }));
 
 vi.mock("../db/client", () => ({ useSupabaseAdmin: routeMocks.useSupabaseAdmin }));
@@ -19,7 +18,6 @@ vi.mock("../auth", () => ({ requireUser: routeMocks.requireUser }));
 vi.mock("../notifications/contribution", () => ({
   notifyContributionEdit: routeMocks.notifyContributionEdit,
 }));
-vi.mock("../urls/supabase", () => ({ buildSupabaseImageUrl: routeMocks.buildSupabaseImageUrl }));
 
 let handler: typeof import("../../api/upload-profile-picture.post").default;
 

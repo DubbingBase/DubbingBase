@@ -73,7 +73,10 @@ import {
   TvIcon,
   UserIcon,
 } from "lucide-vue-next";
-import type { SearchResult } from "@app/shared-logic";
+import { VOICE_ACTOR_IMAGE_BUCKET, type SearchResult } from "@app/shared-logic";
+import { useMediaImage } from "~/composables/useMediaImage";
+
+const mediaImage = useMediaImage();
 
 const props = defineProps<{
   result: SearchResult;
@@ -124,9 +127,23 @@ const displayName = computed(
 const mediaTypeIcon = computed(() => mediaTypeIcons[props.result.media_type]);
 const mediaTypeIconColor = computed(() => mediaTypeIconColors[props.result.media_type]);
 
-const imagePath = computed(
-  () => props.result.poster_path || props.result.profile_path || props.result.cover?.url,
-);
+const imagePath = computed(() => {
+  const { media_type, poster_path, profile_path, profile_picture, cover } = props.result;
+  if (media_type === "movie" || media_type === "tv") {
+    return mediaImage(poster_path || profile_path, { tmdbSize: "w185" });
+  }
+  if (media_type === "person") return mediaImage(profile_path, { tmdbSize: "w500" });
+  if (media_type === "voice_actor") {
+    return (
+      mediaImage(profile_picture, { storageBucket: VOICE_ACTOR_IMAGE_BUCKET }) ??
+      mediaImage(profile_path, { tmdbSize: "w500" })
+    );
+  }
+  if (media_type === "video_game") {
+    return mediaImage(cover?.image_id ?? cover?.url, { igdbSize: "cover_big" });
+  }
+  return mediaImage(poster_path || profile_path || cover?.url);
+});
 const releaseYear = computed(() => {
   const date = props.result.release_date || props.result.first_air_date;
   if (date) return date.substring(0, 4);

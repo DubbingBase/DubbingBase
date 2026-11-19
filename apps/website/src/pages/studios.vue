@@ -81,7 +81,7 @@
             >
               <img
                 v-if="studio.logo_url"
-                :src="studio.logo_url"
+                :src="mediaImage(studio.logo_url, { storageBucket: 'studio_logos' })"
                 :alt="studio.name"
                 decoding="async"
                 class="object-contain w-full h-full p-4 transition duration-500 bg-white"
@@ -115,6 +115,9 @@
 import { ref, computed, watch } from "vue";
 import { refDebounced } from "@vueuse/core";
 import type { Tables } from "@app/supabase/types";
+import { useMediaImage } from "~/composables/useMediaImage";
+
+const mediaImage = useMediaImage();
 
 const localePath = useLocalePath();
 const { t } = useI18n();

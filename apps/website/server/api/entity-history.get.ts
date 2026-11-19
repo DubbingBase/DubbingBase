@@ -9,7 +9,6 @@ import {
 } from "../utils/entity-history";
 import { evaluateRevert } from "../utils/history-revert";
 import { currentRowKey, loadCurrentRows } from "../utils/history-store";
-import { buildSupabaseImageUrl } from "../utils/urls/supabase";
 
 // Public, read-only change history (who changed which field, when, with before/after and deep
 // links). Open editing relies on this transparency instead of an approval queue, so it needs
@@ -66,8 +65,6 @@ export default defineEventHandler(async (event): Promise<HistoryResponse> => {
   const entries: HistoryEntry[] = [];
   for (const row of rows) {
     const entry = toHistoryEntry(row, type, {
-      imageUrl: (path, field) =>
-        buildSupabaseImageUrl(path, field === "logo_url" ? "studio_logos" : undefined),
       mediaHref: (projectId) => mediaByProject.get(projectId) ?? null,
     });
     if (!entry) continue;

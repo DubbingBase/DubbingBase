@@ -1,5 +1,4 @@
 import { useIgdbClient, useTmdbClient } from "../utils";
-import { buildIgdbImageUrl } from "../utils/api/igdb";
 import { loadGameCharacterCatalog } from "../utils/game-characters";
 import { DEFAULT_LANGUAGE, resolveLocaleLanguage } from "@app/shared-logic";
 export default defineEventHandler(async (event) => {
@@ -34,9 +33,7 @@ export default defineEventHandler(async (event) => {
         stable_id: character.stable_id,
         name: character.name,
         character: character.name,
-        profile_path: character.mug_shot?.image_id
-          ? buildIgdbImageUrl(character.mug_shot.image_id, "1080p")
-          : null,
+        profile_path: character.mug_shot?.image_id,
         gender: character.gender ?? null,
       })),
     };

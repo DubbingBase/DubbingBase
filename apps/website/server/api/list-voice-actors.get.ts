@@ -1,5 +1,4 @@
 import { useSupabaseAdmin } from "../utils/db/client";
-import { buildSupabaseImageUrl } from "../utils/urls/supabase";
 import type { Tables } from "@app/shared-logic";
 
 type VoiceActorDirectoryRow = Pick<
@@ -43,11 +42,7 @@ export default defineEventHandler(async (event) => {
           id: actor.id,
           firstname: actor.firstname,
           lastname: actor.lastname,
-          profile_picture_url: buildSupabaseImageUrl(
-            actor.profile_picture,
-            "voice_actor_profile_pictures",
-            "500",
-          ),
+          profile_picture_url: actor.profile_picture,
         })),
         total: count ?? 0,
       };

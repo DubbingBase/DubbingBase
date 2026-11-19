@@ -1,5 +1,4 @@
 import { useTmdbClient } from "../../utils";
-import { buildTmdbImageUrl } from "../../utils/urls/tmdb";
 import { setPublicCacheHeaders } from "../../utils/cache/http";
 import { readProperty, resolveLocaleLanguage } from "@app/shared-logic";
 
@@ -57,21 +56,16 @@ export default defineEventHandler(async (event) => {
     results: json.results
       .filter((show) => show.adult !== true)
       .map((result) => {
-        const posterPath = buildTmdbImageUrl(result.poster_path, "w342");
         if (query.projection === "card") {
           return {
             id: result.id,
             name: result.name,
             title: result.title,
-            poster_path: posterPath,
+            poster_path: result.poster_path,
           };
         }
 
-        return {
-          ...result,
-          backdrop_path: buildTmdbImageUrl(result.backdrop_path, "w780"),
-          poster_path: posterPath,
-        };
+        return result;
       }),
   };
 

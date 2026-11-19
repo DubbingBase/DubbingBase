@@ -32,4 +32,5 @@ export * from "./composables/useStudioData";
 export * from "./composables/useDetailCollections";
 export * from "./utils/character";
 export * from "./utils/narrow";
+export * from "./utils/media-image";
 export * from "./utils/voice-actor-work-groups";

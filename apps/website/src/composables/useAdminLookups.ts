@@ -1,3 +1,4 @@
+import { useMediaImage } from "./useMediaImage";
 import { reactive } from "vue";
 
 export interface AdminLookupOption {
@@ -30,12 +31,9 @@ export function useAdminLookups() {
     studioLabels.set(id, name);
   };
 
-  // profile_picture holds a bare Storage path (e.g. "4438.jpg"); other values are already URLs.
-  const profilePictureUrl = (path: string | null | undefined): string | null => {
-    if (!path) return null;
-    if (path.startsWith("http")) return path;
-    return supabase.storage.from("voice_actor_profile_pictures").getPublicUrl(path).data.publicUrl;
-  };
+  const mediaImage = useMediaImage();
+  const profilePictureUrl = (path: string | null | undefined) =>
+    mediaImage(path, { storageBucket: "voice_actor_profile_pictures" });
 
   const rememberVoiceActor = (
     id: number | null | undefined,

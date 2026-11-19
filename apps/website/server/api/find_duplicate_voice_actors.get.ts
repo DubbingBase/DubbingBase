@@ -1,7 +1,6 @@
 import type { Json, Tables } from "@app/supabase";
 import { defineAdminHandler } from "../utils/auth-handlers";
 import { useSupabaseAdmin } from "../utils/db/client";
-import { buildSupabaseImageUrl } from "../utils/urls/supabase";
 
 type DuplicateVoiceActor = Pick<
   Tables<"voice_actors">,
@@ -55,7 +54,7 @@ function projectDuplicateVoiceActor(value: Json): DuplicateVoiceActor {
     date_of_birth: value.date_of_birth,
     tmdb_id: value.tmdb_id,
     wikidata_id: value.wikidata_id,
-    profile_picture: buildSupabaseImageUrl(value.profile_picture),
+    profile_picture: value.profile_picture,
   };
 }
 

@@ -6,10 +6,8 @@ import {
   useAdvertisementClient,
   useToyClient,
 } from "../../utils";
-import { buildIgdbImageUrl } from "../../utils/api/igdb";
 import { normalizeString } from "../../utils/normalize";
 import { processMedia } from "../../utils/urls/tmdb";
-import { buildSupabaseImageUrl } from "../../utils/urls/supabase";
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { readProperty } from "@app/shared-logic";
 import {
@@ -189,12 +187,7 @@ export default defineEventHandler(async (event) => {
           results.push({
             ...game,
             media_type: "video_game",
-            cover: game.cover
-              ? {
-                  ...game.cover,
-                  url: buildIgdbImageUrl(game.cover.image_id, "cover_big"),
-                }
-              : undefined,
+            cover: game.cover ? { image_id: game.cover.image_id } : undefined,
             popularity: Math.sqrt((game.rating_count ?? 0) + 1) * 10,
             vote_average: (game.rating ?? 0) / 10,
             vote_count: game.rating_count ?? 0,
@@ -410,8 +403,7 @@ export default defineEventHandler(async (event) => {
               ...voiceActor,
               provider_rank: Math.min(index, person.provider_rank ?? index),
               actor: person,
-              profile_path:
-                buildSupabaseImageUrl(voiceActor.profile_picture) ?? person.profile_path,
+              profile_path: voiceActor.profile_picture ? undefined : person.profile_path,
               popularity: person.popularity ?? 50,
               media_type: "voice_actor",
             });
@@ -419,7 +411,6 @@ export default defineEventHandler(async (event) => {
             respMap.set(vaKey, {
               ...voiceActor,
               provider_rank: index,
-              profile_path: buildSupabaseImageUrl(voiceActor.profile_picture),
               media_type: "voice_actor",
               popularity: 50,
               known_for_department: "Dubbing",
@@ -429,7 +420,6 @@ export default defineEventHandler(async (event) => {
           respMap.set(vaKey, {
             ...voiceActor,
             provider_rank: index,
-            profile_path: buildSupabaseImageUrl(voiceActor.profile_picture),
             media_type: "voice_actor",
             popularity: 30,
             known_for_department: "Dubbing",

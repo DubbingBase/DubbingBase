@@ -82,7 +82,11 @@
             >
               <NuxtImg
                 v-if="actor.profile_picture_url"
-                :src="actor.profile_picture_url"
+                :src="
+                  mediaImage(actor.profile_picture_url, {
+                    storageBucket: 'voice_actor_profile_pictures',
+                  })
+                "
                 :alt="actor.firstname + ' ' + actor.lastname"
                 format="webp"
                 decoding="async"
@@ -116,6 +120,9 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
 import { refDebounced } from "@vueuse/core";
+import { useMediaImage } from "~/composables/useMediaImage";
+
+const mediaImage = useMediaImage();
 
 const { t } = useI18n();
 const localePath = useLocalePath();
