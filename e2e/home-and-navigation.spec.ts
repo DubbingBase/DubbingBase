@@ -55,6 +55,42 @@ test.describe("Home Page & Global Navigation", () => {
     expect(violations).toEqual([]);
   });
 
+  test("keeps the mobile search form in place while homepage stats load", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 720 });
+    let releaseStats = (): void => {};
+    const statsGate = new Promise<void>((resolve) => {
+      releaseStats = resolve;
+    });
+    await page.route("**/api/home-stats", async (route) => {
+      await statsGate;
+      await route.fulfill({
+        json: { voiceActorCount: 12500, dubbingProjectCount: 28500, workCount: 72000 },
+      });
+    });
+
+    await page.goto("/es/about");
+    await waitForVueHydration(page);
+    const statsRequest = page.waitForRequest("**/api/home-stats");
+    const stats = page.getByTestId("home-stats");
+    const search = page.getByTestId("home-search-form");
+    const readSearchTop = () => search.evaluate((form) => form.getBoundingClientRect().top);
+
+    let searchTopWhileLoading: number;
+    try {
+      await page.locator("header").getByRole("link", { name: "Logo", exact: true }).click();
+      await statsRequest;
+      await expect(stats).toBeHidden();
+      await expect(search).toBeVisible();
+      await page.evaluate(() => document.fonts.ready.then(() => undefined));
+      searchTopWhileLoading = await readSearchTop();
+    } finally {
+      releaseStats();
+    }
+
+    await expect(stats).toBeVisible();
+    expect(await readSearchTop()).toBe(searchTopWhileLoading);
+  });
+
   test("theme selector applies the selected theme", async ({ page }) => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
     await waitForVueHydration(page);
