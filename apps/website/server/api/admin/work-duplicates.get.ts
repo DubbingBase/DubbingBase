@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { requireAdmin } from "../../utils/auth";
+import { defineAdminHandler } from "../../utils/auth-handlers";
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { setNoCacheHeaders } from "../../utils/cache/http";
 
@@ -59,9 +59,8 @@ const responseSchema = z.object({
   totalGroups: z.number(),
 });
 
-export default defineEventHandler(async (event) => {
+export default defineAdminHandler(async (event) => {
   setNoCacheHeaders(event);
-  await requireAdmin(event);
   const parsedQuery = querySchema.safeParse(getQuery(event));
   if (!parsedQuery.success) {
     throw createError({
