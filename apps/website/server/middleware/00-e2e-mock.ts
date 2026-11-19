@@ -1230,6 +1230,13 @@ export const MOCK_HOME_DATA = {
       release_date: "1981-06-12",
       vote_average: 8.4,
     },
+    {
+      id: 601,
+      title: "E.T. the Extra-Terrestrial",
+      poster_path: "/et.jpg",
+      release_date: "1982-06-11",
+      vote_average: 7.9,
+    },
   ],
   trendingShows: [
     {
@@ -1706,10 +1713,18 @@ export default defineEventHandler(async (event) => {
 
   // 10. Trending & Home APIs
   if (path.includes("/api/trending/movies")) {
-    return send(event, JSON.stringify(MOCK_HOME_DATA.trendingMovies), "application/json");
+    return send(
+      event,
+      JSON.stringify({ results: MOCK_HOME_DATA.trendingMovies }),
+      "application/json",
+    );
   }
   if (path.includes("/api/trending/shows")) {
-    return send(event, JSON.stringify(MOCK_HOME_DATA.trendingShows), "application/json");
+    return send(
+      event,
+      JSON.stringify({ results: MOCK_HOME_DATA.trendingShows }),
+      "application/json",
+    );
   }
   if (path.includes("/api/trending/games")) {
     return send(event, JSON.stringify(MOCK_HOME_DATA.trendingGames), "application/json");
@@ -1727,9 +1742,9 @@ export default defineEventHandler(async (event) => {
     return send(
       event,
       JSON.stringify({
-        voice_actors: 2500,
-        dubbing_projects: 8500,
-        contributions: 12000,
+        voiceActorCount: 2500,
+        dubbingProjectCount: 8500,
+        workCount: 12000,
       }),
       "application/json",
     );

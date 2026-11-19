@@ -2,7 +2,6 @@ import tailwindcss from "@tailwindcss/vite";
 import { resolve } from "node:path";
 import { defineNuxtConfig } from "nuxt/config";
 import { APP_LOCALES, DEFAULT_LOCALE } from "@app/shared-logic";
-import { deferPosthogPrefetch } from "./src/utils/posthog-prefetch-manifest";
 import { version as appVersion } from "./package.json";
 
 function env(name: string): string | undefined {
@@ -205,7 +204,13 @@ export default defineNuxtConfig({
         );
       }
     },
-    "build:manifest": (manifest) => deferPosthogPrefetch(manifest),
+    "build:manifest": (manifest) => {
+      // Keep module preloads for the current page and let other chunks load on demand.
+      // Speculative SSR prefetches compete with the first render and can fail at the edge.
+      for (const entry of Object.values(manifest)) {
+        entry.prefetch = false;
+      }
+    },
   },
 
   css: ["~/assets/main.css"],
