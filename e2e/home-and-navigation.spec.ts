@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { test, expect } from "@playwright/test";
 import { setupMockApi, waitForVueHydration } from "./helpers/mock-api";
 
@@ -24,6 +25,34 @@ test.describe("Home Page & Global Navigation", () => {
       false,
     );
     api.expectNoErrors();
+  });
+
+  test("prioritizes the first movie poster and keeps the stats readable on mobile", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 412, height: 823 });
+    await page.emulateMedia({ colorScheme: "light" });
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+
+    const leadPoster = page.getByRole("img", { name: "Raiders of the Lost Ark" });
+    await expect(leadPoster).toHaveAttribute("loading", "eager");
+    await expect(leadPoster).toHaveAttribute("fetchpriority", "high");
+    const nextPoster = page.getByRole("img", { name: "E.T. the Extra-Terrestrial" });
+    await expect(nextPoster).toHaveAttribute("loading", "lazy");
+    await expect(nextPoster).not.toHaveAttribute("fetchpriority", "high");
+    await expect(page.getByRole("img", { name: "Breaking Bad" })).toHaveAttribute(
+      "loading",
+      "lazy",
+    );
+
+    const stats = page.getByTestId("home-stats");
+    await expect(stats).toBeVisible();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+    const { violations } = await new AxeBuilder({ page })
+      .include('[data-testid="home-stats"]')
+      .withRules(["color-contrast"])
+      .analyze();
+    expect(violations).toEqual([]);
   });
 
   test("theme selector applies the selected theme", async ({ page }) => {

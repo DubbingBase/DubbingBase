@@ -17,6 +17,7 @@
         <!-- Subtle Interactive Stats Pill -->
         <div
           v-if="!isLoadingHomeStats && homeStats && homeStats.voiceActorCount > 0"
+          data-testid="home-stats"
           class="flex flex-wrap justify-center mb-8"
         >
           <div
@@ -25,7 +26,7 @@
             <span
               class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors theme-hover-text theme-hover-surface-muted cursor-default"
             >
-              <span class="text-[var(--app-color-primary)] font-bold opacity-90">{{
+              <span class="theme-text font-bold">{{
                 homeStats.voiceActorCount.toLocaleString()
               }}</span>
               <span>{{ $t("home.stats.voiceActors") }}</span>
@@ -34,7 +35,7 @@
             <span
               class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors theme-hover-text theme-hover-surface-muted cursor-default"
             >
-              <span class="text-[var(--app-color-primary)] font-bold opacity-90">{{
+              <span class="theme-text font-bold">{{
                 homeStats.dubbingProjectCount.toLocaleString()
               }}</span>
               <span>{{ $t("home.stats.projects") }}</span>
@@ -43,9 +44,7 @@
             <span
               class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors theme-hover-text theme-hover-surface-muted cursor-default"
             >
-              <span class="text-[var(--app-color-primary)] font-bold opacity-90">{{
-                homeStats.workCount.toLocaleString()
-              }}</span>
+              <span class="theme-text font-bold">{{ homeStats.workCount.toLocaleString() }}</span>
               <span>{{ $t("home.stats.works") }}</span>
             </span>
           </div>
@@ -104,7 +103,7 @@
             class="home-card-rail flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 custom-scrollbar"
           >
             <div
-              v-for="movie in trendingMovies"
+              v-for="(movie, index) in trendingMovies"
               :key="movie.id"
               class="w-48 flex-shrink-0 snap-start"
             >
@@ -124,7 +123,8 @@
                     width="192"
                     height="288"
                     class="object-cover w-full h-full transition duration-300"
-                    loading="lazy"
+                    :loading="index === 0 ? 'eager' : 'lazy'"
+                    :fetchpriority="index === 0 ? 'high' : undefined"
                     decoding="async"
                   />
                 </div>
