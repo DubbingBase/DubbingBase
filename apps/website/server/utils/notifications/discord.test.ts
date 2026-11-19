@@ -53,6 +53,13 @@ describe("Discord admin notifications", () => {
     expect(String(embed.description)).toContain("(truncated)");
   });
 
+  it.each([
+    ["/poster.jpg", "https://image.tmdb.org/t/p/w500/poster.jpg"],
+    ["igdb:co42", "https://images.igdb.com/igdb/image/upload/t_cover_big/co42.jpg"],
+  ])("resolves %s for external embeds", (imageUrl, url) => {
+    expect(buildDiscordEmbed("Event", "Details", { imageUrl }).image).toEqual({ url });
+  });
+
   it("sends wiki_check outcomes to only the first valid configured webhook", async () => {
     vi.stubEnv(
       "NUXT_DISCORD_WEBHOOK_CHECK_URL",

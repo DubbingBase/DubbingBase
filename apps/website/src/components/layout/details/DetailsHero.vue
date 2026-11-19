@@ -3,10 +3,21 @@
     class="relative w-full h-[42vh] min-h-[300px] md:h-[50vh] md:min-h-[400px] overflow-hidden theme-surface-muted theme-surface"
   >
     <div class="absolute inset-0">
+      <!-- object-cover needs enough pixels for the hero height on narrow screens. -->
+      <img
+        v-if="backdropPath"
+        class="w-full h-full object-cover"
+        :class="blurBackdrop ? 'blur-3xl opacity-50 scale-110' : ''"
+        alt="Backdrop"
+        fetchpriority="high"
+        sizes="max(100vw, 75vh, 535px)"
+        :srcset="`${resolveMediaImage(backdropPath, { tmdbSize: 'w780' })} 780w, ${resolveMediaImage(backdropPath, { tmdbSize: 'w1280' })} 1280w`"
+        :src="resolveMediaImage(backdropPath, { tmdbSize: 'w1280' }) ?? undefined"
+      />
       <NuxtImg
-        v-if="backdropUrl"
+        v-else-if="backdropUrl"
         :src="backdropUrl"
-        :placeholder="backdropUrl.replace('/original/', '/w92/')"
+        :placeholder="backdropUrl"
         class="w-full h-full object-cover"
         :class="blurBackdrop ? 'blur-3xl opacity-50 scale-110' : ''"
         alt="Backdrop"
@@ -35,10 +46,24 @@
             : '',
         ]"
       >
+        <img
+          v-if="posterPath"
+          class="w-full h-auto object-cover"
+          :alt="title"
+          width="192"
+          height="288"
+          sizes="(min-width: 768px) 192px, (min-width: 640px) 128px, 96px"
+          :srcset="`${resolveMediaImage(posterPath, { tmdbSize: 'w185' })} 185w, ${resolveMediaImage(posterPath, { tmdbSize: 'w342' })} 342w, ${resolveMediaImage(posterPath, { tmdbSize: 'w500' })} 500w`"
+          :src="resolveMediaImage(posterPath, { tmdbSize: 'w342' }) ?? undefined"
+        />
         <NuxtImg
-          v-if="imageUrl"
+          v-else-if="imageUrl"
           :src="imageUrl"
-          :placeholder="imageUrl.replace('/original/', '/w92/')"
+          :placeholder="
+            getTmdbImagePath(imageUrl, 'url')
+              ? (resolveMediaImage(imageUrl, { tmdbSize: 'w92' }) ?? undefined)
+              : imageUrl
+          "
           :class="[
             'w-full h-full',
             imageAspectRatio === 'logo' ? 'object-contain p-4' : 'object-cover',
@@ -66,11 +91,17 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{
+import { resolveMediaImage, getTmdbImagePath } from "@app/shared-logic";
+const props = defineProps<{
   title?: string;
   backdropUrl?: string | null;
   blurBackdrop?: boolean;
   imageUrl?: string | null;
   imageAspectRatio?: "poster" | "profile" | "logo";
 }>();
+
+const backdropPath = computed(() => getTmdbImagePath(props.backdropUrl, "url"));
+const posterPath = computed(() =>
+  props.imageAspectRatio === "poster" ? getTmdbImagePath(props.imageUrl, "url") : null,
+);
 </script>

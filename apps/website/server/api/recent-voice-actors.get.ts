@@ -1,5 +1,4 @@
 import { useSupabaseAdmin } from "../utils/db/client";
-import { buildSupabaseImageUrl } from "../utils/urls/supabase";
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   const limit = Number(query.limit) || 10;
@@ -23,11 +22,7 @@ export default defineEventHandler(async (event) => {
 
     const results = (rows || []).map((row) => ({
       ...row,
-      profile_picture: buildSupabaseImageUrl(
-        row.profile_picture,
-        "voice_actor_profile_pictures",
-        "500",
-      ),
+      profile_picture: row.profile_picture,
     }));
 
     return results;

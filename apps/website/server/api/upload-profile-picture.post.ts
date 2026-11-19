@@ -3,7 +3,6 @@ import { notifyContributionEdit } from "../utils/notifications/contribution";
 import { getRequestHeader, getRequestIP, type H3Event } from "h3";
 import { randomUUID } from "node:crypto";
 import { useSupabaseAdmin } from "../utils/db/client";
-import { buildSupabaseImageUrl } from "../utils/urls/supabase";
 import { readProperty } from "@app/shared-logic";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -259,7 +258,6 @@ export default defineEventHandler(async (event) => {
     return {
       ok: true,
       fullPath: uploadedFile.path,
-      publicUrl: buildSupabaseImageUrl(uploadedFile.path),
     };
   } catch (error) {
     if (error && typeof error === "object" && "statusCode" in error) {

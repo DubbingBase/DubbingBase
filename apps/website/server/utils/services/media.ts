@@ -1,11 +1,9 @@
-import { withVoiceActorImageUrl } from "../urls/supabase";
 import { useSupabaseAdmin } from "../db/client";
 import { TMDBClient } from "../api/tmdb";
 import { TVDBClient } from "../api/tvdb";
-import { buildTmdbImageUrl, processMedia, cleanCharacterName } from "../urls/tmdb";
+import { processMedia, cleanCharacterName } from "../urls/tmdb";
 import { mediaPageAggregateCredits, mediaPageMovieCredits } from "../media-page-credits";
 import { useCache, useIgdbClient, useOpenLibraryClient } from "../index";
-import { buildIgdbImageUrl } from "../api/igdb";
 import { createCacheNamespace } from "../cache";
 import { CHARACTER_IMAGE_POSITIVE_TTL } from "../character-images";
 import { buildCacheKey, hashCacheValue } from "../cache/constants";
@@ -200,7 +198,7 @@ function projectVoiceActorPageMedia(
             ? { character: null }
             : {}),
         ...(typeof credit.profile_path === "string"
-          ? { profile_path: buildTmdbImageUrl(credit.profile_path) }
+          ? { profile_path: credit.profile_path }
           : credit.profile_path === null
             ? { profile_path: null }
             : {}),
@@ -214,14 +212,8 @@ function projectVoiceActorPageMedia(
       id: typeof value.id === "number" ? value.id : contentId,
       ...(typeof value.title === "string" ? { title: value.title } : {}),
       ...(typeof value.name === "string" ? { name: value.name } : {}),
-      poster_path: buildTmdbImageUrl(
-        typeof value.poster_path === "string" ? value.poster_path : null,
-        "original",
-      ),
-      backdrop_path: buildTmdbImageUrl(
-        typeof value.backdrop_path === "string" ? value.backdrop_path : null,
-        "original",
-      ),
+      poster_path: typeof value.poster_path === "string" ? value.poster_path : null,
+      backdrop_path: typeof value.backdrop_path === "string" ? value.backdrop_path : null,
       ...(typeof value.release_date === "string" || value.release_date === null
         ? { release_date: value.release_date }
         : {}),
@@ -251,7 +243,7 @@ function voiceActorBackdropPath(personData: unknown): string | null {
   ];
   allCredits.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
   const best = allCredits.find((credit) => credit.backdrop_path);
-  return best?.backdrop_path ? buildTmdbImageUrl(best.backdrop_path, "original") : null;
+  return best?.backdrop_path ?? null;
 }
 
 function indexTmdbCastByActorId(media: unknown): Map<number, TmdbCastMember> {
@@ -384,7 +376,6 @@ export class MediaService {
       });
     }
 
-    const voiceActorWithImages = withVoiceActorImageUrl(voiceActor);
     const workItems = voiceActor.work || [];
     const relevantActorIds = new Set<number>();
     for (const work of workItems) {
@@ -539,12 +530,8 @@ export class MediaService {
             title: game.name,
             name: game.name,
             overview: game.summary || "",
-            poster_path: game.cover ? buildIgdbImageUrl(game.cover.image_id, "cover_big") : null,
-            backdrop_path: game.artworks?.[0]
-              ? buildIgdbImageUrl(game.artworks[0].image_id, "1080p")
-              : game.screenshots?.[0]
-                ? buildIgdbImageUrl(game.screenshots[0].image_id, "screenshot_huge")
-                : null,
+            poster_path: game.cover?.image_id ?? null,
+            backdrop_path: game.artworks?.[0]?.image_id ?? game.screenshots?.[0]?.image_id ?? null,
             release_date: game.first_release_date
               ? new Date(game.first_release_date * 1000).toISOString().split("T")[0]
               : "1970-01-01",
@@ -905,7 +892,7 @@ export class MediaService {
     const potentialWikipediaUrl: string | null = await wikipediaPromise;
 
     return {
-      voiceActor: voiceActorWithImages,
+      voiceActor,
       enhancedWorks,
       medias: Array.from(compactMediasMap.values()),
       potentialWikipediaUrl,
@@ -1100,23 +1087,13 @@ export class MediaService {
         collection = {
           ...collectionData,
           backdrop_path:
-            typeof collectionData.backdrop_path === "string"
-              ? `https://image.tmdb.org/t/p/w500${collectionData.backdrop_path}`
-              : null,
+            typeof collectionData.backdrop_path === "string" ? collectionData.backdrop_path : null,
           poster_path:
-            typeof collectionData.poster_path === "string"
-              ? `https://image.tmdb.org/t/p/w500${collectionData.poster_path}`
-              : null,
+            typeof collectionData.poster_path === "string" ? collectionData.poster_path : null,
           parts: parts.map((part) => ({
             ...part,
-            backdrop_path:
-              typeof part.backdrop_path === "string"
-                ? `https://image.tmdb.org/t/p/w500${part.backdrop_path}`
-                : null,
-            poster_path:
-              typeof part.poster_path === "string"
-                ? `https://image.tmdb.org/t/p/w500${part.poster_path}`
-                : null,
+            backdrop_path: typeof part.backdrop_path === "string" ? part.backdrop_path : null,
+            poster_path: typeof part.poster_path === "string" ? part.poster_path : null,
           })),
         };
       }

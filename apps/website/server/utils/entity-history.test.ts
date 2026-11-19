@@ -8,8 +8,6 @@ const base = {
   user_name: "Alice",
 };
 const context = {
-  imageUrl: (path: string, field: string) =>
-    `https://img.test/${field === "logo_url" ? "logos" : "pictures"}/${path}`,
   mediaHref: (projectId: number) => (projectId === 7 ? "/movie/99" : null),
 };
 
@@ -38,7 +36,7 @@ describe("diffSnapshots", () => {
     });
   });
 
-  it("builds deep links for external ids, websites, social links and images", () => {
+  it("builds deep links for external ids, websites, social links and raw image fields", () => {
     const changes = diffSnapshots(
       "profile",
       {
@@ -53,15 +51,16 @@ describe("diffSnapshots", () => {
         profile_picture: "1/new.png",
         social_media_links: { twitter: "https://x.com/a", instagram: "https://instagram.com/b" },
       },
-      context,
     );
     const byField = Object.fromEntries(changes.map((change) => [change.field, change]));
     expect(byField.tmdb_id?.afterHref).toBe("https://www.themoviedb.org/person/42");
     expect(byField.wikidata_id?.afterHref).toBe("https://www.wikidata.org/wiki/Q42");
     expect(byField.profile_picture).toMatchObject({
       type: "image",
-      beforeHref: "https://img.test/pictures/1/old.png",
-      afterHref: "https://img.test/pictures/1/new.png",
+      before: "1/old.png",
+      after: "1/new.png",
+      beforeHref: null,
+      afterHref: null,
     });
     // Social links are expanded per platform and only the changed platform appears.
     expect(Object.keys(byField).filter((field) => field.startsWith("social_media_links"))).toEqual([

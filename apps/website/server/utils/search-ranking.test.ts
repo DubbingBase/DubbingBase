@@ -205,7 +205,7 @@ describe("search locale and projection", () => {
       name: "Example game",
       score: 0.16,
       first_release_date: 1_700_000_000,
-      cover: { url: "https://images.example/cover.jpg", image_id: "private-provider-field" },
+      cover: { url: "https://images.example/cover.jpg", image_id: "co7" },
       internal_provider_data: "omitted",
     };
 
@@ -227,7 +227,7 @@ describe("search locale and projection", () => {
       original_title: undefined,
       original_name: undefined,
       studio_names: undefined,
-      cover: { url: "https://images.example/cover.jpg" },
+      cover: { image_id: "co7" },
       author_name: undefined,
       brand: undefined,
       manufacturer: undefined,

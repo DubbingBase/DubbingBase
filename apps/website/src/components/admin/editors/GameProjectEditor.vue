@@ -60,7 +60,7 @@
                     <AdminCastAvatar
                       size="sm"
                       :name="option.name"
-                      :src="igdbImageUrl(option.mug_shot?.url)"
+                      :src="igdbImageUrl(option.mug_shot)"
                     />{{ option.name }}
                   </span>
                 </template>
@@ -263,6 +263,9 @@ import type { CastWorkspaceRow } from "~/utils/cast-workspace";
 import { useDisplayLanguage } from "~/composables/useDisplayLanguage";
 import { useEditorToast } from "~/composables/useEditorToast";
 import { createEditorRowKey, useEditorFormState } from "~/composables/useEditorFormState";
+import { useMediaImage } from "~/composables/useMediaImage";
+
+const mediaImage = useMediaImage();
 
 const supabase = useSupabaseClient();
 const saveDubbingProject = createDubbingProjectSaveClient((body) =>
@@ -337,7 +340,7 @@ type GameProjectWork = Omit<EditorProjectWork, "voice_actors"> &
   };
 type GameProjectRecord = Omit<EditorProjectRecord, "work"> & { work: GameProjectWork[] };
 type GameApiResponse = {
-  game: { name: string; cover?: { url?: string | null } | null } | null;
+  game: { name: string; cover?: { image_id?: string; url?: string | null } | null } | null;
   characters: GameCharacterApiRow[];
   character_catalog_status: "available" | "unavailable";
 };
@@ -614,11 +617,10 @@ const saveWikidataReference = async (row: CastRow) => {
   await updateGameCharacterReferences(row, { wikidata_qid: qid || null });
 };
 
-// IGDB mug shots are protocol-relative URLs.
-const igdbImageUrl = (url: string | null | undefined): string | null =>
-  url ? (url.startsWith("//") ? `https:${url}` : url) : null;
+const igdbImageUrl = (image: GameCharacterOption["mug_shot"]): string | null =>
+  mediaImage(image?.image_id || image?.url, { igdbSize: "thumb" }) ?? null;
 const characterImageById = (id: number | string | null): string | null =>
-  igdbImageUrl(igdbCharacters.value.find((character) => character.id === id)?.mug_shot?.url);
+  igdbImageUrl(igdbCharacters.value.find((character) => character.id === id)?.mug_shot);
 const castView = computed<CastWorkspaceRow[]>(() =>
   castRows.value.map((row) => ({
     key: row.key,
@@ -805,7 +807,9 @@ watch(
           data.igdbData.character_catalog_status === "unavailable" ? "unavailable" : "available";
         if (data.igdbData.game) {
           mediaTitle.value = data.igdbData.game.name;
-          posterUrl.value = data.igdbData.game.cover?.url?.replace("t_thumb", "t_cover_big") || "";
+          const cover = data.igdbData.game.cover;
+          posterUrl.value =
+            mediaImage(cover?.image_id || cover?.url, { igdbSize: "cover_big" }) ?? "";
         }
         if (data.igdbData.characters) {
           igdbCharacters.value = data.igdbData.characters.map((character: GameCharacterApiRow) => ({

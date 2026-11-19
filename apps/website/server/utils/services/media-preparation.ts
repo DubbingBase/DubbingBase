@@ -1,4 +1,9 @@
-import { isDubbingLanguage, displayDubbingLanguage, type DubbingLanguage } from "@app/shared-logic";
+import {
+  resolveMediaImage,
+  isDubbingLanguage,
+  displayDubbingLanguage,
+  type DubbingLanguage,
+} from "@app/shared-logic";
 import { z } from "zod";
 import { getErrorMessage } from "../error-message";
 import {
@@ -9,8 +14,6 @@ import {
 import { applyExtractedCredits, type ExtractedCredit } from "./voice-actor";
 import { useWikipediaCache, useIgdbClient } from "../index";
 import type { SimpleCache } from "../cache";
-import { buildTmdbImageUrl } from "../urls/tmdb";
-import { buildIgdbImageUrl } from "../api/igdb";
 import { llmGenerateObject } from "../llm";
 import { isExploitableVoiceActorName, normalizeString } from "../normalize";
 import {
@@ -506,11 +509,10 @@ export async function extractMediaDubbingCredits(options: {
       const movieData: unknown = await response.json();
       if (!isTmdbMediaDetails(movieData)) throw new Error("TMDB returned invalid media details");
       mediaTitle = movieData.title || movieData.name || "Unknown title";
-      if (movieData.poster_path) imageUrl = buildTmdbImageUrl(movieData.poster_path) || undefined;
+      if (movieData.poster_path) imageUrl = movieData.poster_path || undefined;
     }
     mediaTitle = options.scanMetadata?.title || mediaTitle;
-    if (options.scanMetadata?.posterPath)
-      imageUrl = buildTmdbImageUrl(options.scanMetadata.posterPath) || imageUrl;
+    if (options.scanMetadata?.posterPath) imageUrl = options.scanMetadata.posterPath || imageUrl;
 
     // Cache localized cast lookups per language edition
     const langCastCache = new Map<string, TmdbCastMember[]>();
@@ -685,7 +687,7 @@ export async function extractGameDubbingCredits(options: {
     gameTitle = options.scanMetadata?.title || game?.name || "Unknown title";
     const coverImageId = options.scanMetadata?.posterPath || game?.cover?.image_id;
     if (coverImageId) {
-      imageUrl = buildIgdbImageUrl(coverImageId, "cover_big") || undefined;
+      imageUrl = resolveMediaImage(coverImageId, { igdbSize: "cover_big" }) || undefined;
     }
 
     const characterMap = new Map(

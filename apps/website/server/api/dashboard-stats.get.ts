@@ -1,5 +1,4 @@
 import { useSupabaseAdmin } from "../utils/db/client";
-import { buildSupabaseImageUrl } from "../utils/urls/supabase";
 import { defineAdminHandler } from "../utils/auth-handlers";
 import { isRecord } from "@app/shared-logic";
 interface DashboardStats {
@@ -91,9 +90,7 @@ async function getTopVoiceActors(limit = 10): Promise<Record<string, unknown>[]>
     return {
       ...voiceActor,
       role_count: result.role_count,
-      profile_picture: buildSupabaseImageUrl(
-        typeof profilePicture === "string" ? profilePicture : null,
-      ),
+      profile_picture: typeof profilePicture === "string" ? profilePicture : null,
     };
   });
 }

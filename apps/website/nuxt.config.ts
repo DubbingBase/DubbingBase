@@ -255,7 +255,7 @@ export default defineNuxtConfig({
       "images.igdb.com",
       ...(supabaseUrl ? [new URL(supabaseUrl).host] : []),
     ],
-    // Dev: server-built storage URLs are "/supabase/..." (see server/utils/urls/supabase.ts);
+    // Dev: Nuxt resolves storage keys to "/supabase/..." (see src/composables/useMediaImage.ts);
     // the image optimizer fetches them from the real Supabase URL.
     alias: supabaseUrl ? { "/supabase": supabaseUrl } : {},
     format: ["avif", "webp"],

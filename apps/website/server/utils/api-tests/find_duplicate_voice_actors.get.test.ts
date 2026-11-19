@@ -9,9 +9,6 @@ vi.mock("../auth", () => ({
 vi.mock("../db/client", () => ({
   useSupabaseAdmin: () => ({ rpc: mocks.rpc }),
 }));
-vi.mock("../urls/supabase", () => ({
-  buildSupabaseImageUrl: (path: string | null) => (path ? `https://images.example/${path}` : null),
-}));
 
 let handler: EventHandler;
 
@@ -74,7 +71,7 @@ describe("duplicate voice actor response projection", () => {
             date_of_birth: "1980-01-01",
             tmdb_id: 12,
             wikidata_id: "Q123",
-            profile_picture: "https://images.example/ada.jpg",
+            profile_picture: "ada.jpg",
           },
         ],
       },

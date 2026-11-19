@@ -52,7 +52,27 @@ test.describe("Media Detail Pages", () => {
 
   test("renders Movie detail page with dubbing cast", async ({ page }) => {
     const api = await setupMockApi(page);
-    await page.goto("/movie/85", { waitUntil: "domcontentloaded" });
+    const response = await page.goto("/movie/85", { waitUntil: "domcontentloaded" });
+    const html = (await response?.text()) ?? "";
+    const images = html.match(/<img\b[^>]*>/g) ?? [];
+    const backdrop = images.find((tag) => getAttribute(tag, "alt") === "Backdrop") ?? "";
+    const poster =
+      images.find((tag) => getAttribute(tag, "alt") === "Raiders of the Lost Ark") ?? "";
+
+    // The browser can choose and start loading the hero images before hydration.
+    expect(getAttribute(backdrop, "srcset")).toContain("/w780/raiders_bg.jpg 780w");
+    expect(getAttribute(backdrop, "fetchpriority")).toBe("high");
+    expect(getAttribute(backdrop, "loading")).not.toBe("lazy");
+    expect(
+      (html.match(/<link\b[^>]*>/g) ?? []).some(
+        (tag) =>
+          getAttribute(tag, "rel") === "preload" &&
+          getAttribute(tag, "href").endsWith("/original/raiders_bg.jpg"),
+      ),
+    ).toBe(false);
+    expect(getAttribute(poster, "srcset")).toContain("/w185/raiders.jpg 185w");
+    expect(getAttribute(poster, "width")).toBe("192");
+    expect(getAttribute(poster, "height")).toBe("288");
 
     // Verify title and synopsis
     await expect(page.getByRole("heading", { name: "Raiders of the Lost Ark" })).toBeVisible({

@@ -16,6 +16,7 @@ export type SearchResult = {
   firstname?: string;
   lastname?: string;
   profile_path?: string;
+  profile_picture?: string | null;
   poster_path?: string;
   popularity?: number;
   score?: number;
@@ -24,7 +25,7 @@ export type SearchResult = {
   first_release_date?: number;
   original_title?: string;
   original_name?: string;
-  cover?: { url: string };
+  cover?: { image_id?: string; url?: string };
   author_name?: string;
   authors?: Array<{ name: string }>;
   brand?: string;

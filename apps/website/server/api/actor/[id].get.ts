@@ -1,7 +1,5 @@
 import { useTmdbClient } from "../../utils";
 import { getActorPageWorkByActor, getWorkByActor } from "../../utils/db/queries";
-import { buildSupabaseImageUrl } from "../../utils/urls/supabase";
-import { buildTmdbImageUrl } from "../../utils/urls/tmdb";
 import {
   actorPageResponse,
   pickTrendingBackdropPath,
@@ -57,7 +55,7 @@ function getActorPageCredits(movieCreditsValue: unknown, tvCreditsValue: unknown
         title: candidate.title,
         name: candidate.name,
         character: candidate.character,
-        poster_path: buildTmdbImageUrl(candidate.poster_path),
+        poster_path: candidate.poster_path,
         release_date: candidate.release_date,
         first_air_date: candidate.first_air_date,
         media_type: mediaType,
@@ -144,7 +142,7 @@ async function getActorPageVoiceRoles(
                 id: row.voice_actors.id,
                 firstname: row.voice_actors.firstname,
                 lastname: row.voice_actors.lastname,
-                profile_picture: buildSupabaseImageUrl(row.voice_actors.profile_picture),
+                profile_picture: row.voice_actors.profile_picture,
               },
             ]
           : [],
@@ -224,7 +222,7 @@ async function getVoiceRoles(
           ? [
               {
                 ...voice_actors,
-                profile_picture: buildSupabaseImageUrl(voice_actors.profile_picture),
+                profile_picture: voice_actors.profile_picture,
               },
             ]
           : [],
@@ -236,7 +234,7 @@ async function getVoiceRoles(
               original_title:
                 getStringProperty(mediaDetails, "original_title") ||
                 getStringProperty(mediaDetails, "original_name"),
-              poster_path: buildTmdbImageUrl(getStringProperty(mediaDetails, "poster_path")),
+              poster_path: getStringProperty(mediaDetails, "poster_path"),
               release_date:
                 getStringProperty(mediaDetails, "release_date") ||
                 getStringProperty(mediaDetails, "first_air_date"),
@@ -300,8 +298,8 @@ export default defineEventHandler(async (event) => {
         actor,
         actorPageCredits.credits,
         voiceRoleResult.roles,
-        buildTmdbImageUrl(getStringProperty(actor, "profile_path")),
-        buildTmdbImageUrl(pickTrendingBackdropPath([actor.movie_credits, actor.tv_credits])),
+        getStringProperty(actor, "profile_path"),
+        pickTrendingBackdropPath([actor.movie_credits, actor.tv_credits]),
         filmographyPage === undefined
           ? undefined
           : { filmographyCount: actorPageCredits.filmographyCount },
@@ -344,20 +342,13 @@ export default defineEventHandler(async (event) => {
         ...credit,
         media_type: "tv",
       })),
-    ].map((castMember) => ({
-      ...castMember,
-      profile_path: buildTmdbImageUrl(castMember.profile_path),
-      poster_path: buildTmdbImageUrl(castMember.poster_path),
-      backdrop_path: buildTmdbImageUrl(castMember.backdrop_path),
-    }));
+    ];
 
     const response = {
       actor: {
         ...actor,
-        profile_path: buildTmdbImageUrl(getStringProperty(actor, "profile_path")),
-        backdrop_path: buildTmdbImageUrl(
-          pickTrendingBackdropPath([actor.movie_credits, actor.tv_credits]),
-        ),
+        profile_path: getStringProperty(actor, "profile_path"),
+        backdrop_path: pickTrendingBackdropPath([actor.movie_credits, actor.tv_credits]),
         credits: {
           cast: actorCredits,
         },

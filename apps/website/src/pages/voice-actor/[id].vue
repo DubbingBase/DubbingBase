@@ -5,8 +5,8 @@
     <PersonDetailsLayout
       v-else-if="voiceActor"
       :name="voiceActor.firstname + ' ' + voiceActor.lastname"
-      :profile-url="profilePicture"
-      :backdrop-url="backdropPath"
+      :profile-url="mediaImage(profilePicture, { storageBucket: 'voice_actor_profile_pictures' })"
+      :backdrop-url="mediaImage(backdropPath, { tmdbSize: 'original', igdbSize: '1080p' })"
       :loading="false"
     >
       <template #metadata>
@@ -134,7 +134,7 @@
                   class="w-10 h-10 bg-white rounded-lg flex items-center justify-center p-1 shrink-0 overflow-hidden"
                 >
                   <NuxtImg
-                    :src="studio.logo_url"
+                    :src="mediaImage(studio.logo_url, { storageBucket: 'studio_logos' })"
                     :alt="studio.name"
                     decoding="async"
                     loading="lazy"
@@ -302,7 +302,12 @@
                           decoding="async"
                           loading="lazy"
                           v-if="item.media.poster_path"
-                          :src="resolveImageUrl(item.media.poster_path)"
+                          :src="
+                            resolveImageUrl(
+                              item.media.poster_path,
+                              item.work.dubbing_projects?.content_type,
+                            )
+                          "
                           :alt="getMediaTitle(item.media)"
                           class="w-full h-full object-cover transition-transform duration-300"
                         />
@@ -557,7 +562,12 @@
                               decoding="async"
                               loading="lazy"
                               v-if="item.media.poster_path"
-                              :src="resolveImageUrl(item.media.poster_path)"
+                              :src="
+                                resolveImageUrl(
+                                  item.media.poster_path,
+                                  item.work.dubbing_projects?.content_type,
+                                )
+                              "
                               :alt="getMediaTitle(item.media)"
                               class="w-full h-full object-cover transition-transform duration-300"
                             />
@@ -697,6 +707,9 @@ import { useCharacterImages } from "../../composables/useCharacterImages";
 import { useCharacterImageViewport } from "../../composables/useCharacterImageViewport";
 import { computed, ref, watch } from "vue";
 import { refDebounced } from "@vueuse/core";
+import { useMediaImage } from "~/composables/useMediaImage";
+
+const mediaImage = useMediaImage();
 
 const isReportModalOpen = ref(false);
 
@@ -903,7 +916,9 @@ useHead({
             "@type": "Person",
             name: actorName.value || t("seo.voiceActorTitleFallback"),
             jobTitle: t("seo.voiceActorTitleFallback"),
-            image: profilePicture.value || ogImageUrl.value,
+            image:
+              mediaImage(profilePicture.value, { storageBucket: "voice_actor_profile_pictures" }) ||
+              ogImageUrl.value,
             url: pageUrl.value,
           },
         });
@@ -1085,11 +1100,13 @@ const workedStudios = computed(() => {
   return Array.from(studiosMap.values()).sort((a, b) => a.name.localeCompare(b.name));
 });
 
-const resolveImageUrl = (path: string | undefined | null) => {
-  if (!path) return "";
-  if (path.startsWith("http")) return path;
-  return `https://image.tmdb.org/t/p/w185${path}`;
-};
+const resolveImageUrl = (path: string | undefined | null, mediaType?: string | null) =>
+  mediaImage(
+    path,
+    normalizeContentType(mediaType) === "video_game"
+      ? { igdbSize: "cover_big" }
+      : { tmdbSize: "w185" },
+  ) ?? "";
 
 watch([searchQuery, activeTab, sortMode, displayMode], () => {
   groupPages.value = {};

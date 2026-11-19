@@ -67,7 +67,7 @@ export type GameDetailCastCard = {
   id: number | string;
   name: string;
   game_character_id?: string | null;
-  mug_shot?: { url?: string | null } | null;
+  mug_shot?: { image_id?: string; url?: string | null } | null;
   work_id?: number;
   voiceActor: DetailVoiceActor | null;
 };

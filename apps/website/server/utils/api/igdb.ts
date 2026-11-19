@@ -35,22 +35,6 @@ function debugLog(message: string, data?: unknown) {
   console.log(`[IGDB] ${message}`, data ? JSON.stringify(data, null, 2) : "");
 }
 
-export function buildIgdbImageUrl(
-  hash: string,
-  size:
-    | "thumb"
-    | "cover_small"
-    | "cover_big"
-    | "screenshot_med"
-    | "screenshot_big"
-    | "screenshot_huge"
-    | "logo_med"
-    | "720p"
-    | "1080p" = "cover_big",
-): string {
-  return `https://images.igdb.com/igdb/image/upload/t_${size}/${hash}.jpg`;
-}
-
 interface IgdbGameLocalization {
   game: number;
   // IGDB omits unset fields, and many localization rows carry only a region or cover.
@@ -265,9 +249,9 @@ export class IgdbClient {
 
   async getGame(id: number, pageProjection = false): Promise<IgdbGame | null> {
     const pageFields = `id, name, slug, summary, rating, first_release_date,
-       cover.image_id, cover.url,
-       artworks.image_id, artworks.url,
-       screenshots.image_id, screenshots.url,
+       cover.image_id,
+       artworks.image_id,
+       screenshots.image_id,
        genres.id, genres.name,
        platforms.id, platforms.name,
        involved_companies.id, involved_companies.company.id, involved_companies.company.name,
@@ -278,9 +262,9 @@ export class IgdbClient {
         ? `fields ${pageFields}
        where id = ${id};`
         : `fields id, name, slug, summary, rating, rating_count, first_release_date,
-       cover.image_id, cover.url,
-       artworks.image_id, artworks.url,
-       screenshots.image_id, screenshots.url,
+       cover.image_id,
+       artworks.image_id,
+       screenshots.image_id,
        genres.name,
        platforms.name, platforms.slug,
        involved_companies.company.name, involved_companies.developer, involved_companies.publisher,
@@ -320,7 +304,7 @@ export class IgdbClient {
       }
       const page = await this.query(
         "characters",
-        `fields ${pageProjection ? "id, name, mug_shot.image_id, mug_shot.url" : "id, name, description, species, gender, mug_shot.image_id, mug_shot.url, games"};
+        `fields ${pageProjection ? "id, name, mug_shot.image_id" : "id, name, description, species, gender, mug_shot.image_id, games"};
          where games = (${gameId});
          sort id asc;
          limit ${pageSize};

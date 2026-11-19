@@ -18,7 +18,6 @@ vi.mock("../../utils", () => ({
   useTmdbClient: routeMocks.useTmdbClient,
   useIgdbClient: routeMocks.useIgdbClient,
 }));
-vi.mock("../../utils/api/igdb", () => ({ buildIgdbImageUrl: vi.fn() }));
 vi.mock("../../utils/game-characters", () => ({
   loadGameCharacterCatalog: vi.fn(),
 }));

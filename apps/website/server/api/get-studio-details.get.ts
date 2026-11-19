@@ -33,10 +33,12 @@ export default defineEventHandler(async (event) => {
         : 100;
       const offset = Number.isFinite(requestedOffset) ? Math.max(requestedOffset, 0) : 0;
 
-      const columns = query.view === "directory" ? "id,name,city,country,logo_url" : "*";
-      let studiosQuery = supabase
-        .from("studios")
-        .select(columns, { count: hasPagination ? "exact" : undefined });
+      const countMode: "exact" | undefined = hasPagination ? "exact" : undefined;
+      const countOption = { count: countMode };
+      let studiosQuery =
+        query.view === "directory"
+          ? supabase.from("studios").select("id,name,city,country,logo_url", countOption)
+          : supabase.from("studios").select("*", countOption);
 
       if (search) {
         const escapedSearch = search.replace(/[%_,()]/g, " ");
@@ -53,7 +55,8 @@ export default defineEventHandler(async (event) => {
 
       const { data: rows, count, error } = await studiosQuery;
       if (error) throw error;
-      return hasPagination ? { studios: rows || [], total: count ?? 0 } : rows || [];
+      const studios = rows ?? [];
+      return hasPagination ? { studios, total: count ?? 0 } : studios;
     } catch (error) {
       console.error("Error fetching studios:", error);
       throw createError({
@@ -170,9 +173,7 @@ export default defineEventHandler(async (event) => {
                 game
                   ? {
                       title: game.name,
-                      poster_path: game.cover
-                        ? buildIgdbImageUrl(game.cover.image_id, "cover_big")
-                        : null,
+                      poster_path: game.cover?.image_id,
                     }
                   : null,
               );
@@ -236,7 +237,7 @@ export default defineEventHandler(async (event) => {
             .from("voice_actors")
             .select("id, firstname, lastname, profile_picture")
             .in("id", vaIds);
-          voiceActorsRoster = vaData || [];
+          voiceActorsRoster = vaData ?? [];
         }
       }
     }

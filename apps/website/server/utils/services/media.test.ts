@@ -126,13 +126,13 @@ describe("MediaService voice actor media indexing", () => {
         id: 42,
         name: "First match",
         character: "One",
-        profile_picture: "https://image.tmdb.org/t/p/w500/first.jpg",
+        profile_picture: "/first.jpg",
       },
       {
         id: 42,
         name: "First match",
         character: "One",
-        profile_picture: "https://image.tmdb.org/t/p/w500/first.jpg",
+        profile_picture: "/first.jpg",
       },
     ]);
   });
@@ -202,7 +202,7 @@ describe("MediaService voice actor media indexing", () => {
     });
 
     expect(result.media.credits).toEqual({
-      cast: [{ id: 1, character: "Role", profile_path: null }],
+      cast: [{ id: 1, character: "Role", profile_path: undefined }],
     });
   });
 
@@ -242,7 +242,7 @@ describe("MediaService voice actor media indexing", () => {
         {
           id: 1,
           name: "Actor",
-          profile_path: "https://image.tmdb.org/t/p/w500/actor.jpg",
+          profile_path: "/actor.jpg",
           character: "Role",
         },
       ],
@@ -335,7 +335,7 @@ describe("MediaService voice actor media indexing", () => {
         id: 8,
         name: "Lead actor",
         character: "Lead",
-        profile_path: "https://image.tmdb.org/t/p/w500/lead.jpg",
+        profile_path: "/lead.jpg",
         roles: [{ character: "Lead", episode_count: 2 }],
       },
     ]);

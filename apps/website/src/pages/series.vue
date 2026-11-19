@@ -43,7 +43,7 @@
         >
           <NuxtImg
             v-if="serie.poster_path"
-            :src="'https://image.tmdb.org/t/p/w342' + serie.poster_path"
+            :src="resolveMediaImage(serie.poster_path, { tmdbSize: 'w342' }) ?? undefined"
             :alt="serie.name"
             format="webp"
             decoding="async"
@@ -61,6 +61,7 @@
 </template>
 
 <script setup lang="ts">
+import { resolveMediaImage } from "@app/shared-logic";
 import { computed } from "vue";
 import { resolveLocaleLanguage, type SerieTrendingResponse } from "@app/shared-logic";
 

@@ -11,7 +11,12 @@
           >
             <NuxtImg
               v-if="character.image"
-              :src="character.image"
+              :src="
+                mediaImage(
+                  character.image,
+                  character.source === 'game' ? { igdbSize: '1080p' } : undefined,
+                )
+              "
               :alt="character.name"
               class="h-full w-full object-cover"
               format="webp"
@@ -190,6 +195,9 @@ import DetailsActionBar from "../../../components/layout/details/DetailsActionBa
 import DetailsShareButton from "../../../components/layout/details/DetailsShareButton.vue";
 import DetailsPage from "../../../components/layout/details/DetailsPage.vue";
 import PersonSkeleton from "../../../components/PersonSkeleton.vue";
+import { useMediaImage } from "~/composables/useMediaImage";
+
+const mediaImage = useMediaImage();
 
 const route = useRoute();
 function queryText(value: unknown): string | undefined {

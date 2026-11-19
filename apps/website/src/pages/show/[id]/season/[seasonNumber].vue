@@ -184,6 +184,7 @@
 </template>
 
 <script setup lang="ts">
+import { resolveMediaImage } from "@app/shared-logic";
 import MediaDetailsLayout from "../../../../components/layout/MediaDetailsLayout.vue";
 import DetailsDubTabs from "../../../../components/layout/details/DetailsDubTabs.vue";
 import DetailsStudioLink from "../../../../components/layout/details/DetailsStudioLink.vue";
@@ -386,28 +387,22 @@ const episodeItems = computed(() => {
           ? { dub: activeDubId.value }
           : {},
     },
-    stillUrl: episode.still_path?.startsWith("http")
-      ? episode.still_path
-      : episode.still_path
-        ? `https://image.tmdb.org/t/p/w342${episode.still_path}`
-        : undefined,
+    stillUrl: resolveMediaImage(episode.still_path, { tmdbSize: "w342" }) ?? undefined,
     airDateLabel: episode.air_date ? formatDate(episode.air_date) : "",
   }));
 });
 
-const backdropUrl = computed(() => {
-  const path = season.value?.backdrop_path || serie.value?.backdrop_path;
-  if (!path) return null;
-  if (path.startsWith("http")) return path;
-  return `https://image.tmdb.org/t/p/original${path}`;
-});
+const backdropUrl = computed(() =>
+  resolveMediaImage(season.value?.backdrop_path || serie.value?.backdrop_path, {
+    tmdbSize: "original",
+  }),
+);
 
-const posterUrl = computed(() => {
-  const path = season.value?.poster_path || serie.value?.poster_path;
-  if (!path) return null;
-  if (path.startsWith("http")) return path;
-  return `https://image.tmdb.org/t/p/original${path}`;
-});
+const posterUrl = computed(() =>
+  resolveMediaImage(season.value?.poster_path || serie.value?.poster_path, {
+    tmdbSize: "original",
+  }),
+);
 
 const pending = computed(() => seasonPending.value);
 const requestError = computed(() =>
@@ -519,18 +514,15 @@ useHead({
         ]
       : [],
   ),
-  link: computed<HeadLink[]>(() => {
-    if (!isSeasonRoute.value) return [];
-    const links: HeadLink[] = [
-      { rel: "preconnect", href: "https://image.tmdb.org", crossorigin: "" },
-      { rel: "dns-prefetch", href: "https://image.tmdb.org" },
-      { rel: "preconnect", href: "https://thetvdb.com", crossorigin: "" },
-      { rel: "dns-prefetch", href: "https://thetvdb.com" },
-    ];
-    if (backdropUrl.value) {
-      links.push({ rel: "preload", as: "image", href: backdropUrl.value });
-    }
-    return links;
-  }),
+  link: computed<HeadLink[]>(() =>
+    isSeasonRoute.value
+      ? [
+          { rel: "preconnect", href: "https://image.tmdb.org", crossorigin: "" },
+          { rel: "dns-prefetch", href: "https://image.tmdb.org" },
+          { rel: "preconnect", href: "https://thetvdb.com", crossorigin: "" },
+          { rel: "dns-prefetch", href: "https://thetvdb.com" },
+        ]
+      : [],
+  ),
 });
 </script>

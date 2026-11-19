@@ -145,112 +145,120 @@ describe("GET /api/character/:source/:id", () => {
     expect(body).toMatchObject({ appearances: [{ credits: [] }] });
   });
 
-  it("preserves local, linked IGDB, and legacy game credits within the local game record", async () => {
-    const gameCharacterId = "11111111-1111-4111-8111-111111111111";
-    routeMocks.source = "game";
-    routeMocks.id = gameCharacterId;
-    routeMocks.useSupabaseAdmin.mockReturnValue({
-      from: vi.fn(() => ({
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        maybeSingle: vi.fn().mockResolvedValue({
-          data: {
-            id: gameCharacterId,
-            igdb_game_id: 456,
-            name: "Custom hero",
-            igdb_character_id: 77,
-          },
-          error: null,
-        }),
-      })),
-    });
-    routeMocks.loadGameCharacterCatalog.mockResolvedValue({
-      characters: [
-        {
-          id: 77,
-          name: "IGDB hero",
-          games: [456],
-          mug_shot: undefined,
-          stable_id: `game_character:${gameCharacterId}`,
-          game_character_id: gameCharacterId,
-          igdb_character_id: 77,
-          wikidata_qid: null,
-          identity_source: "local",
-          local_name: "Custom hero",
-          local_updated_at: null,
-          igdb_candidate_ids: [],
-        },
-      ],
-      providerStatus: "available",
-      localStatus: "available",
-    });
-    routeMocks.getGamePageDubbingProjects.mockResolvedValue([
-      {
-        id: 9,
-        language: "fr-FR",
-        studio_data: { id: 3, name: "Studio" },
-        works: [
+  it.each([undefined, "mug77"])(
+    "preserves game credits and passes through image ID %s",
+    async (imageId) => {
+      const gameCharacterId = "11111111-1111-4111-8111-111111111111";
+      routeMocks.source = "game";
+      routeMocks.id = gameCharacterId;
+      routeMocks.useSupabaseAdmin.mockReturnValue({
+        from: vi.fn(() => ({
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          maybeSingle: vi.fn().mockResolvedValue({
+            data: {
+              id: gameCharacterId,
+              igdb_game_id: 456,
+              name: "Custom hero",
+              igdb_character_id: 77,
+            },
+            error: null,
+          }),
+        })),
+      });
+      routeMocks.loadGameCharacterCatalog.mockResolvedValue({
+        characters: [
           {
-            id: 20,
+            id: 77,
+            name: "IGDB hero",
+            games: [456],
+            mug_shot: imageId ? { image_id: imageId } : undefined,
+            stable_id: `game_character:${gameCharacterId}`,
             game_character_id: gameCharacterId,
-            character_id: null,
-            actor_id: null,
-            character_name: "Custom hero",
-            performance: "Line",
-            note: "Local UUID",
-            voice_actor: { id: 10, firstname: "Jean", lastname: "Test", profile_picture: null },
-          },
-          {
-            id: 21,
-            game_character_id: null,
-            character_id: 77,
-            actor_id: null,
-            character_name: "IGDB link",
-            performance: "Linked",
-            note: null,
-            voice_actor: { id: 11, firstname: "A", lastname: "B", profile_picture: null },
-          },
-          {
-            id: 22,
-            game_character_id: null,
-            character_id: 9000000077,
-            actor_id: null,
-            character_name: "Legacy ID",
-            performance: null,
-            note: "Legacy",
-            voice_actor: { id: 12, firstname: "C", lastname: "D", profile_picture: null },
-          },
-          {
-            id: 23,
-            game_character_id: null,
-            character_id: 5,
-            actor_id: null,
-            character_name: "Unrelated",
-            performance: null,
-            note: null,
-            voice_actor: { id: 13, firstname: "E", lastname: "F", profile_picture: null },
+            igdb_character_id: 77,
+            wikidata_qid: null,
+            identity_source: "local",
+            local_name: "Custom hero",
+            local_updated_at: null,
+            igdb_candidate_ids: [],
           },
         ],
-      },
-    ]);
+        providerStatus: "available",
+        localStatus: "available",
+      });
+      routeMocks.getGamePageDubbingProjects.mockResolvedValue([
+        {
+          id: 9,
+          language: "fr-FR",
+          studio_data: { id: 3, name: "Studio" },
+          works: [
+            {
+              id: 20,
+              game_character_id: gameCharacterId,
+              character_id: null,
+              actor_id: null,
+              character_name: "Custom hero",
+              performance: "Line",
+              note: "Local UUID",
+              voice_actor: { id: 10, firstname: "Jean", lastname: "Test", profile_picture: null },
+            },
+            {
+              id: 21,
+              game_character_id: null,
+              character_id: 77,
+              actor_id: null,
+              character_name: "IGDB link",
+              performance: "Linked",
+              note: null,
+              voice_actor: { id: 11, firstname: "A", lastname: "B", profile_picture: null },
+            },
+            {
+              id: 22,
+              game_character_id: null,
+              character_id: 9000000077,
+              actor_id: null,
+              character_name: "Legacy ID",
+              performance: null,
+              note: "Legacy",
+              voice_actor: { id: 12, firstname: "C", lastname: "D", profile_picture: null },
+            },
+            {
+              id: 23,
+              game_character_id: null,
+              character_id: 5,
+              actor_id: null,
+              character_name: "Unrelated",
+              performance: null,
+              note: null,
+              voice_actor: { id: 13, firstname: "E", lastname: "F", profile_picture: null },
+            },
+          ],
+        },
+      ]);
 
-    const app = createApp();
-    app.use("/game/local", handler);
-    const response = await toWebHandler(app)(new Request("http://localhost/game/local"));
-    const body: unknown = await response.json();
+      const app = createApp();
+      app.use("/game/local", handler);
+      const response = await toWebHandler(app)(new Request("http://localhost/game/local"));
+      const body: unknown = await response.json();
 
-    expect(response.status).toBe(200);
-    expect(body).toMatchObject({
-      source: "game",
-      id: gameCharacterId,
-      name: "Custom hero",
-      igdbCharacterId: 77,
-      appearances: [
-        { credits: [{ id: 20, performance: "Line", note: "Local UUID" }] },
-        { credits: [{ id: 21, performance: "Linked" }] },
-        { credits: [{ id: 22, note: "Legacy" }] },
-      ],
-    });
-    expect(JSON.stringify(body)).not.toContain('"id":23');
-  });
+      expect(response.status).toBe(200);
+      expect(body).toMatchObject({
+        source: "game",
+        id: gameCharacterId,
+        name: "Custom hero",
+        igdbCharacterId: 77,
+        appearances: [
+          { credits: [{ id: 20, performance: "Line", note: "Local UUID" }] },
+          { credits: [{ id: 21, performance: "Linked" }] },
+          { credits: [{ id: 22, note: "Legacy" }] },
+        ],
+      });
+      if (imageId) {
+        expect(body).toHaveProperty("image", imageId);
+      } else {
+        expect(body).not.toHaveProperty("image");
+      }
+      expect(JSON.stringify(body)).not.toContain('"id":23');
+    },
+  );
 });

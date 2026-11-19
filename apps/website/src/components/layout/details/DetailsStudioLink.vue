@@ -9,7 +9,7 @@
     >
       <img
         v-if="studio.logo_url"
-        :src="studio.logo_url"
+        :src="mediaImage(studio.logo_url, { storageBucket: 'studio_logos' })"
         :alt="studio.name ?? ''"
         class="w-full h-full object-contain p-0.5"
       />
@@ -27,6 +27,9 @@
 
 <script setup lang="ts">
 import DetailsActionButton from "./DetailsActionButton.vue";
+import { useMediaImage } from "~/composables/useMediaImage";
+
+const mediaImage = useMediaImage();
 const localePath = useLocalePath();
 defineProps<{
   studio: { id: number; name?: string | null; logo_url?: string | null };

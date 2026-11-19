@@ -211,7 +211,11 @@
                       >
                         <img
                           v-if="actor.voiceActor.profile_picture"
-                          :src="actor.voiceActor.profile_picture"
+                          :src="
+                            mediaImage(actor.voiceActor.profile_picture, {
+                              storageBucket: 'voice_actor_profile_pictures',
+                            })
+                          "
                           decoding="async"
                           loading="lazy"
                           class="w-full h-full object-cover transition-transform duration-300"
@@ -358,6 +362,7 @@
 </template>
 
 <script setup lang="ts">
+import { resolveMediaImage } from "@app/shared-logic";
 import MediaDetailsLayout from "../../../../../../components/layout/MediaDetailsLayout.vue";
 import DetailsDubTabs from "../../../../../../components/layout/details/DetailsDubTabs.vue";
 import DetailsStudioLink from "../../../../../../components/layout/details/DetailsStudioLink.vue";
@@ -369,7 +374,6 @@ import DetailsExternalLink from "../../../../../../components/layout/details/Det
 import DetailsSynopsis from "../../../../../../components/layout/details/DetailsSynopsis.vue";
 import DetailsCastHeader from "../../../../../../components/layout/details/DetailsCastHeader.vue";
 import { useRoute, useRouter } from "vue-router";
-import type { Link as HeadLink } from "@unhead/vue";
 import { NuxtLink } from "#components";
 
 import { computed, ref, watch } from "vue";
@@ -398,6 +402,9 @@ import {
   type CharacterImageRequest,
 } from "../../../../../../composables/useCharacterImages";
 import { useCharacterImageViewport } from "../../../../../../composables/useCharacterImageViewport";
+import { useMediaImage } from "~/composables/useMediaImage";
+
+const mediaImage = useMediaImage();
 
 const isReportModalOpen = ref(false);
 const { page: castPage, setPage: setCastPage } = useUrlPagination("castPage");
@@ -523,17 +530,13 @@ const title = computed(() => {
   return `${t("details.season", { num: seasonNumber.value })} · ${t("details.episode", { num: episode.value.episode_number })} - ${episodeName}`;
 });
 
-const backdropUrl = computed(() => {
-  if (!episode.value?.still_path) return null;
-  if (episode.value.still_path.startsWith("http")) return episode.value.still_path;
-  return `https://image.tmdb.org/t/p/original${episode.value.still_path}`;
-});
+const backdropUrl = computed(() =>
+  resolveMediaImage(episode.value?.still_path, { tmdbSize: "original" }),
+);
 
-const posterUrl = computed(() => {
-  if (!episode.value?.still_path) return null;
-  if (episode.value.still_path.startsWith("http")) return episode.value.still_path;
-  return `https://image.tmdb.org/t/p/w500${episode.value.still_path}`;
-});
+const posterUrl = computed(() =>
+  resolveMediaImage(episode.value?.still_path, { tmdbSize: "w500" }),
+);
 
 const activeDubId = computed(() => {
   if (originalVersionRequested.value) return null;
@@ -635,10 +638,7 @@ const formattedCast = computed<DisplayCastActor[]>(() => {
   const { matches, unmatchedWorks } = matchCastWorks(cast, works);
   const matchedCards = matches.flatMap(({ actor, works: actorWorks }) =>
     actorWorks.map((work) => {
-      let profilePath = actor.profile_path;
-      if (profilePath?.startsWith("/")) {
-        profilePath = `https://image.tmdb.org/t/p/w185${profilePath}`;
-      }
+      const profilePath = resolveMediaImage(actor.profile_path, { tmdbSize: "w185" });
       const voiceActor =
         work.voice_actor_id === undefined
           ? work.voice_actor
@@ -859,21 +859,11 @@ useHead({
       content: computed(() => backdropUrl.value || posterUrl.value || ""),
     },
   ],
-  link: computed<HeadLink[]>(() => {
-    const links: HeadLink[] = [
-      { rel: "preconnect", href: "https://image.tmdb.org", crossorigin: "" },
-      { rel: "dns-prefetch", href: "https://image.tmdb.org" },
-      { rel: "preconnect", href: "https://thetvdb.com", crossorigin: "" },
-      { rel: "dns-prefetch", href: "https://thetvdb.com" },
-    ];
-    if (backdropUrl.value) {
-      links.push({
-        rel: "preload",
-        as: "image",
-        href: backdropUrl.value,
-      });
-    }
-    return links;
-  }),
+  link: [
+    { rel: "preconnect", href: "https://image.tmdb.org", crossorigin: "" },
+    { rel: "dns-prefetch", href: "https://image.tmdb.org" },
+    { rel: "preconnect", href: "https://thetvdb.com", crossorigin: "" },
+    { rel: "dns-prefetch", href: "https://thetvdb.com" },
+  ],
 });
 </script>

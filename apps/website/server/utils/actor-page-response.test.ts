@@ -306,7 +306,7 @@ describe("actor page API projection", () => {
         birthday: "1970-01-01",
         deathday: null,
         place_of_birth: "City",
-        profile_path: "https://image.tmdb.org/t/p/w500/actor.png",
+        profile_path: "/actor.png",
         backdrop_path: null,
         known_for_department: "Acting",
         credits: {
@@ -315,7 +315,7 @@ describe("actor page API projection", () => {
               id: 10,
               title: "Movie",
               character: "Lead",
-              poster_path: "https://image.tmdb.org/t/p/w500/movie.png",
+              poster_path: "/movie.png",
               release_date: "2020-01-01",
               media_type: "movie",
             },
@@ -331,7 +331,7 @@ describe("actor page API projection", () => {
               id: 20,
               name: "Show",
               character: "Guest",
-              poster_path: "https://image.tmdb.org/t/p/w500/show.png",
+              poster_path: "/show.png",
               first_air_date: "2022-01-01",
               media_type: "tv",
             },
@@ -361,7 +361,7 @@ describe("actor page API projection", () => {
       tv_credits: {
         cast: [
           { id: 200, name: "Show one", poster_path: null },
-          { id: 201, name: "Show two", poster_path: null },
+          { id: 201, name: "Show two" },
           { id: 998, name: "Invalid show", profile_path: false },
         ],
       },
@@ -369,18 +369,20 @@ describe("actor page API projection", () => {
 
     const response = await request("actor-page", 2);
     expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({
+    const body: unknown = await response.json();
+    expect(body).toMatchObject({
       filmographyCount: 15,
       actor: {
         credits: {
           cast: [
             { id: 112, title: "Movie 13", media_type: "movie" },
-            { id: 200, name: "Show one", media_type: "tv" },
+            { id: 200, name: "Show one", media_type: "tv", poster_path: null },
             { id: 201, name: "Show two", media_type: "tv" },
           ],
         },
       },
     });
+    expect(body).not.toHaveProperty("actor.credits.cast.2.poster_path");
 
     const outOfRangeResponse = await request("actor-page", 3);
     expect(outOfRangeResponse.status).toBe(200);

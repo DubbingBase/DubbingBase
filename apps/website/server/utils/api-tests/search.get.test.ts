@@ -32,9 +32,7 @@ vi.mock("../../utils", () => ({
 }));
 
 vi.mock("../../utils/db/client", () => ({ useSupabaseAdmin: mocks.useSupabaseAdmin }));
-vi.mock("../../utils/api/igdb", () => ({ buildIgdbImageUrl: (id: string) => id }));
 vi.mock("../../utils/urls/tmdb", () => ({ processMedia: (item: unknown) => item }));
-vi.mock("../../utils/urls/supabase", () => ({ buildSupabaseImageUrl: (path: string) => path }));
 
 let handler: EventHandler;
 
@@ -251,6 +249,47 @@ describe("global search response", () => {
       "audiobook:7",
     ]);
   });
+
+  it.each(["", "&projection=search-page"])(
+    "returns raw image identifiers %s",
+    async (projection) => {
+      mocks.tmdbSearch.mockImplementation(async (_query, page) => ({
+        results:
+          page === 1
+            ? [
+                { id: 10, media_type: "person", name: "First Actor", profile_path: "/first.jpg" },
+                { id: 11, media_type: "person", name: "Second Actor", profile_path: "/second.jpg" },
+              ]
+            : [],
+      }));
+      mocks.igdbSearch.mockResolvedValue([
+        {
+          id: 20,
+          name: "Example Game",
+          cover: { image_id: "co20", url: "https://example.com/legacy.jpg" },
+        },
+      ]);
+      mocks.voiceActors = [
+        {
+          id: 30,
+          tmdb_id: 10,
+          firstname: "First",
+          lastname: "Actor",
+          profile_picture: "portraits/30.jpg",
+        },
+        { id: 31, tmdb_id: 11, firstname: "Second", lastname: "Actor" },
+      ];
+
+      const body: unknown = await (await request(`/?query=Example${projection}`)).json();
+      expect(body).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ id: 20, cover: { image_id: "co20" } }),
+          expect.objectContaining({ id: 30, profile_picture: "portraits/30.jpg" }),
+          expect.objectContaining({ id: 31, profile_path: "/second.jpg" }),
+        ]),
+      );
+    },
+  );
 
   it("keeps the best TMDB position when the same movie is returned on both pages", async () => {
     const hit = { id: 406994, media_type: "movie", title: "Better Watch Out" };

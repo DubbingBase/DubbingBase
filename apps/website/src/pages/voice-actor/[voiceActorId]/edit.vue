@@ -567,11 +567,7 @@
               <div
                 class="h-10 w-8 rounded overflow-hidden border theme-border theme-surface-overlay shrink-0 flex items-center justify-center theme-text-secondary"
               >
-                <img
-                  v-if="item.poster_path || item.cover_url"
-                  :src="item.poster_path || item.cover_url || undefined"
-                  class="h-full w-full object-cover"
-                />
+                <img v-if="item.imageUrl" :src="item.imageUrl" class="h-full w-full object-cover" />
                 <span v-else class="text-[8px]">N/A</span>
               </div>
               <div class="min-w-0 flex-1">
@@ -627,8 +623,8 @@
               class="h-14 w-10 rounded overflow-hidden border theme-border theme-surface-overlay shrink-0 flex items-center justify-center theme-text-secondary"
             >
               <img
-                v-if="selectedMedia?.poster_path || selectedMedia?.cover_url"
-                :src="selectedMedia.poster_path || selectedMedia.cover_url || undefined"
+                v-if="selectedMedia?.imageUrl"
+                :src="selectedMedia.imageUrl"
                 class="h-full w-full object-cover"
               />
               <span v-else class="text-[8px]">N/A</span>
@@ -673,7 +669,14 @@
               >
                 <img
                   v-if="castMember.profile_path"
-                  :src="castMember.profile_path"
+                  :src="
+                    mediaImage(
+                      castMember.profile_path,
+                      selectedMediaType === 'video_game'
+                        ? { igdbSize: '1080p' }
+                        : { tmdbSize: 'w185' },
+                    )
+                  "
                   class="h-full w-full object-cover"
                 />
                 <span v-else class="text-[8px]">?</span>
@@ -889,6 +892,10 @@ import {
   voiceActorProfilePayload,
 } from "~/utils/voice-actor-profile-save";
 import type { Tables } from "@app/supabase/types";
+import type { SearchResult } from "@app/shared-logic";
+import { useMediaImage } from "~/composables/useMediaImage";
+
+const mediaImage = useMediaImage();
 
 type LinkedWork = Tables<"work"> & {
   dubbing_projects: Pick<Tables<"dubbing_projects">, "id" | "content_id" | "content_type"> | null;
@@ -900,7 +907,9 @@ type MediaSearchItem = {
   title?: string | null;
   name?: string | null;
   poster_path?: string | null;
+  cover?: SearchResult["cover"];
   cover_url?: string | null;
+  imageUrl?: string;
   release_date?: string | null;
   first_air_date?: string | null;
   author?: string | null;
@@ -982,8 +991,7 @@ const canChangePicture = computed(() => isAdmin.value || isTrusted.value || !pro
 const resolvedProfilePicture = computed(() => {
   if (!profilePicture.value) return "";
   if (profilePicture.value.startsWith("http")) return profilePicture.value;
-  return supabase.storage.from("voice_actor_profile_pictures").getPublicUrl(profilePicture.value)
-    .data.publicUrl;
+  return mediaImage(profilePicture.value, { storageBucket: "voice_actor_profile_pictures" });
 });
 
 // Upload properties
@@ -1389,9 +1397,18 @@ async function executeMediaSearch(requestId: number) {
       query: { query: q },
     });
     if (requestId !== mediaSearchRequestId) return;
-    mediaSearchResults.value = results.filter(
-      (result) => result.media_type === selectedMediaType.value,
-    );
+    mediaSearchResults.value = results
+      .filter((result) => result.media_type === selectedMediaType.value)
+      .map((result) => ({
+        ...result,
+        imageUrl:
+          result.media_type === "video_game"
+            ? mediaImage(result.cover?.image_id ?? result.cover?.url ?? result.cover_url, {
+                igdbSize: "cover_big",
+              })
+            : (mediaImage(result.poster_path, { tmdbSize: "w342" }) ??
+              mediaImage(result.cover_url)),
+      }));
   } catch (err) {
     console.error(err);
   } finally {

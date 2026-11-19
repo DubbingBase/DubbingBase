@@ -1,5 +1,4 @@
 import { useSupabaseAdmin } from "../utils/db/client";
-import { buildTmdbImageUrl } from "../utils/urls/tmdb";
 import { sendDiscordAdminNotification } from "../utils/notifications/discord";
 import { requireAdmin } from "../utils/auth";
 
@@ -147,11 +146,7 @@ export default defineEventHandler(async (event) => {
     }
 
     const summaryMessage = `Enqueued **${enqueuedCount}** items.\nSkipped **${alreadyInQueueCount}** already in queue.\nSkipped **${skippedCount}** already have voice actors.\nFailed to enqueue **${failedCount}** items.`;
-    let imageUrl: string | undefined = undefined;
-    const firstPoster = itemsToProcess[0]?.poster_path;
-    if (firstPoster) {
-      imageUrl = buildTmdbImageUrl(firstPoster) || undefined;
-    }
+    const imageUrl = itemsToProcess[0]?.poster_path;
 
     await sendDiscordAdminNotification("DubbingBase Trending Media Report", summaryMessage, {
       event,

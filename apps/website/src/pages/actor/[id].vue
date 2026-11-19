@@ -130,7 +130,13 @@
                   >
                     <img
                       v-if="va.profile_picture"
-                      :src="getActorImageSrc(va.profile_picture)"
+                      :src="
+                        getActorImageSrc(
+                          mediaImage(va.profile_picture, {
+                            storageBucket: 'voice_actor_profile_pictures',
+                          }),
+                        )
+                      "
                       :alt="`${va.firstname} ${va.lastname}`"
                       class="object-cover w-full h-full"
                       loading="lazy"
@@ -270,7 +276,13 @@
                       >
                         <img
                           v-if="item.voice_actors[0].profile_picture"
-                          :src="getActorImageSrc(item.voice_actors[0].profile_picture)"
+                          :src="
+                            getActorImageSrc(
+                              mediaImage(item.voice_actors[0].profile_picture, {
+                                storageBucket: 'voice_actor_profile_pictures',
+                              }),
+                            )
+                          "
                           :alt="`${item.voice_actors[0].firstname} ${item.voice_actors[0].lastname}`"
                           class="w-full h-full object-cover"
                           loading="lazy"
@@ -403,6 +415,7 @@
 </template>
 
 <script setup lang="ts">
+import { resolveMediaImage } from "@app/shared-logic";
 import DetailsMetaChip from "../../components/layout/details/DetailsMetaChip.vue";
 import PersonDetailsLayout from "../../components/layout/PersonDetailsLayout.vue";
 import { ref, watch, computed } from "vue";
@@ -414,6 +427,9 @@ import { prepareActorSsrData } from "../../utils/actor-ssr-data";
 import CharacterPhoto from "../../components/CharacterPhoto.vue";
 import { useCharacterImages } from "../../composables/useCharacterImages";
 import { useCharacterImageViewport } from "../../composables/useCharacterImageViewport";
+import { useMediaImage } from "~/composables/useMediaImage";
+
+const mediaImage = useMediaImage();
 
 const isReportModalOpen = ref(false);
 const hasOpenedReportModal = ref(false);
@@ -666,9 +682,7 @@ useHead({
 });
 
 function resolveImageUrl(path: string | null | undefined): string | undefined {
-  if (!path) return undefined;
-  if (path.startsWith("http")) return path;
-  return `https://image.tmdb.org/t/p/w342${path}`;
+  return resolveMediaImage(path, { tmdbSize: "w500" }) ?? undefined;
 }
 
 const languageDisplayNames = computed(() => {

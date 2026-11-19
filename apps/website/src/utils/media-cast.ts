@@ -1,3 +1,4 @@
+import { resolveMediaImage } from "@app/shared-logic";
 export const MEDIA_CAST_PAGE_SIZE = 24;
 
 export interface CastActorReference {
@@ -63,9 +64,7 @@ export function originalVersionCast<Actor extends CastActorReference>(
   return actors.map((actor) => ({
     ...actor,
     actorId: actor.id,
-    profile_path: actor.profile_path?.startsWith("/")
-      ? `https://image.tmdb.org/t/p/w185${actor.profile_path}`
-      : actor.profile_path,
+    profile_path: resolveMediaImage(actor.profile_path, { tmdbSize: "w185" }),
     voiceActor: null,
   }));
 }

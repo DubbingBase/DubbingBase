@@ -8,9 +8,6 @@ const routeMocks = vi.hoisted(() => ({
 
 vi.mock("../auth", () => ({ resolveUser: routeMocks.resolveUser }));
 vi.mock("../db/client", () => ({ useSupabaseAdmin: routeMocks.useSupabaseAdmin }));
-vi.mock("../urls/supabase", () => ({
-  buildSupabaseImageUrl: (path: string) => `https://img.test/${path}`,
-}));
 
 let handler: typeof import("../../api/entity-history.get").default;
 

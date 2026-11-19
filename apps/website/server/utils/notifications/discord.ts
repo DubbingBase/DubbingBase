@@ -1,5 +1,5 @@
+import { resolveMediaImage, readProperty } from "@app/shared-logic";
 import type { H3Event } from "h3";
-import { readProperty } from "@app/shared-logic";
 
 export type QueueName = "wiki_discovery" | "wiki_check" | "wiki_extract" | string;
 export type DiscordNotificationCategory = "general" | "discovery" | "check" | "extract";
@@ -153,7 +153,8 @@ export function buildDiscordEmbed(
     footer: { text: "DubbingBase Admin Notifications" },
   };
   if (options?.url) embed.url = normalizeDiscordUrl(options.url);
-  if (options?.imageUrl) embed.image = { url: options.imageUrl };
+  const imageUrl = resolveMediaImage(options?.imageUrl, { tmdbSize: "w500" });
+  if (imageUrl) embed.image = { url: imageUrl };
   return embed;
 }
 

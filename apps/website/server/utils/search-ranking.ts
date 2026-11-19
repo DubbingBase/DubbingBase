@@ -75,11 +75,9 @@ export function getTmdbLocale(locale: unknown): string {
 }
 
 export function projectSearchResult(item: SearchItem): SearchItem {
-  const cover = item.cover;
-  const coverUrl =
-    typeof cover === "object" && cover !== null && !Array.isArray(cover)
-      ? readProperty(cover, "url")
-      : undefined;
+  const coverImageId =
+    item.media_type === "video_game" ? readProperty(item.cover, "image_id") : undefined;
+  const coverUrl = readProperty(item.cover, "url");
 
   return {
     id: item.id,
@@ -90,6 +88,7 @@ export function projectSearchResult(item: SearchItem): SearchItem {
     firstname: item.firstname,
     lastname: item.lastname,
     profile_path: item.profile_path,
+    ...(item.media_type === "voice_actor" ? { profile_picture: item.profile_picture } : {}),
     poster_path: item.poster_path,
     popularity: item.popularity,
     score: item.score,
@@ -99,7 +98,11 @@ export function projectSearchResult(item: SearchItem): SearchItem {
     original_title: item.original_title,
     original_name: item.original_name,
     studio_names: item.studio_names,
-    ...(typeof coverUrl === "string" ? { cover: { url: coverUrl } } : {}),
+    ...(typeof coverImageId === "string"
+      ? { cover: { image_id: coverImageId } }
+      : typeof coverUrl === "string"
+        ? { cover: { url: coverUrl } }
+        : {}),
     author_name: item.author_name,
     brand: item.brand,
     manufacturer: item.manufacturer,

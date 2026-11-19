@@ -1,5 +1,4 @@
 import { useSupabaseAdmin } from "./client";
-import { processVoiceActor, withVoiceActorImageUrl } from "../urls/supabase";
 import type { MediaDetailVoiceActor, ToyDubbingProject } from "@app/shared-logic";
 
 export async function getVoiceActorWithWork(id: number) {
@@ -70,12 +69,12 @@ export async function getDubbingProjects(contentId: number, contentType: string)
     ...project,
     works: (project.works || []).map((work) => ({
       ...work,
-      voice_actor: processVoiceActor(work.voice_actor),
+      voice_actor: work.voice_actor ?? null,
     })),
-    studio_data: project.studio_data || null,
+    studio_data: project.studio_data ?? null,
     crew: (project.crew || []).map((member) => ({
       ...member,
-      person: processVoiceActor(member.person),
+      person: member.person ?? null,
     })),
   }));
 }
@@ -160,12 +159,12 @@ export async function getAdvertisementPageDubbingProjects(contentId: number) {
     ...project,
     works: (project.works || []).map((work) => ({
       ...work,
-      voice_actor: processVoiceActor(work.voice_actor),
+      voice_actor: work.voice_actor ?? null,
     })),
-    studio_data: project.studio_data || null,
+    studio_data: project.studio_data ?? null,
     crew: (project.crew || []).map((member) => ({
       ...member,
-      person: processVoiceActor(member.person),
+      person: member.person ?? null,
     })),
   }));
 }
@@ -184,11 +183,11 @@ export async function getMediaPageDubbingProjectData(contentId: number, contentT
   const dubbingProjects = (data || []).map((project) => ({
     id: project.id,
     language: project.language,
-    studio_data: project.studio_data || null,
+    studio_data: project.studio_data ?? null,
     works: (project.works || []).map((work) => {
       const voiceActorId = work.voice_actor?.id ?? null;
       if (voiceActorId !== null && !voiceActorsById.has(voiceActorId) && work.voice_actor) {
-        const voiceActor = withVoiceActorImageUrl(work.voice_actor);
+        const voiceActor = work.voice_actor;
         voiceActorsById.set(voiceActorId, {
           id: voiceActorId,
           firstname: work.voice_actor.firstname,
@@ -233,9 +232,9 @@ export async function getMediaPageDubbingProjects(
     ...project,
     works: (project.works || []).map((work) => ({
       ...work,
-      voice_actor: processVoiceActor(work.voice_actor),
+      voice_actor: work.voice_actor ?? null,
     })),
-    studio_data: project.studio_data || null,
+    studio_data: project.studio_data ?? null,
     crew: [],
   }));
 }
@@ -269,13 +268,13 @@ export async function getMediaPageDubbingProjectSummaries(contentId: number, con
     return {
       id: project.id,
       language: project.language,
-      studio_data: project.studio_data || null,
+      studio_data: project.studio_data ?? null,
       has_voice_actor: voiceActorIds.size > 0,
       voice_actor_count: voiceActorIds.size,
       work_count: project.works?.length || 0,
       crew: (project.crew || []).map((member) => ({
         ...member,
-        person: processVoiceActor(member.person),
+        person: member.person ?? null,
       })),
     };
   });
@@ -312,12 +311,12 @@ export async function getPodcastPageDubbingProjects(contentId: number) {
     ...project,
     works: (project.works || []).map((work) => ({
       ...work,
-      voice_actor: processVoiceActor(work.voice_actor),
+      voice_actor: work.voice_actor ?? null,
     })),
-    studio_data: project.studio_data || null,
+    studio_data: project.studio_data ?? null,
     crew: (project.crew || []).map((member) => ({
       ...member,
-      person: processVoiceActor(member.person),
+      person: member.person ?? null,
     })),
   }));
 }
@@ -353,12 +352,12 @@ export async function getToyPageDubbingProjects(contentId: number): Promise<ToyD
     ...project,
     works: (project.works || []).map((work) => ({
       ...work,
-      voice_actor: processVoiceActor(work.voice_actor),
+      voice_actor: work.voice_actor ?? null,
     })),
     studio_data: project.studio_data || null,
     crew: (project.crew || []).map((member) => ({
       ...member,
-      person: processVoiceActor(member.person),
+      person: member.person ?? null,
     })),
   }));
 }
@@ -391,9 +390,9 @@ export async function getGamePageDubbingProjects(contentId: number) {
     ...project,
     works: (project.works || []).map((work) => ({
       ...work,
-      voice_actor: processVoiceActor(work.voice_actor),
+      voice_actor: work.voice_actor ?? null,
     })),
-    studio_data: project.studio_data || null,
+    studio_data: project.studio_data ?? null,
     crew: [],
   }));
 }
@@ -438,7 +437,7 @@ export async function getEpisodePageDubbingProjectData(
     works: (project.works || []).map((work) => {
       const voiceActorId = work.voice_actor?.id ?? null;
       if (voiceActorId !== null && !voiceActorsById.has(voiceActorId) && work.voice_actor) {
-        const voiceActor = withVoiceActorImageUrl(work.voice_actor);
+        const voiceActor = work.voice_actor;
         voiceActorsById.set(voiceActor.id, {
           id: voiceActor.id,
           firstname: voiceActor.firstname,
@@ -456,7 +455,7 @@ export async function getEpisodePageDubbingProjectData(
         voice_actor_id: voiceActorId,
       };
     }),
-    studio_data: project.studio_data || null,
+    studio_data: project.studio_data ?? null,
   }));
 
   const visibleProjects = projectsWithWorks
@@ -522,7 +521,7 @@ export async function getEpisodePageProjectWorks(contentId: number, projectId: n
   const works = (data.works || []).map((work) => {
     const voiceActorId = work.voice_actor?.id ?? null;
     if (voiceActorId !== null && work.voice_actor && !voiceActorsById.has(voiceActorId)) {
-      const voiceActor = withVoiceActorImageUrl(work.voice_actor);
+      const voiceActor = work.voice_actor;
       voiceActorsById.set(voiceActorId, {
         id: voiceActor.id,
         firstname: voiceActor.firstname,
@@ -572,7 +571,7 @@ export async function getSeasonPageDubbingProjects(contentId: number, contentTyp
     return {
       id: project.id,
       language: project.language,
-      studio_data: project.studio_data || null,
+      studio_data: project.studio_data ?? null,
       has_voice_actor: hasVoiceActor,
       voice_actor_count: voiceActorIds.size,
       work_count: works.length,

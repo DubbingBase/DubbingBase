@@ -138,8 +138,8 @@ describe("provider-only endpoint response caching", () => {
           id: 1,
           title: "Fixture movie",
           overview: "Full movie overview",
-          poster_path: "https://image.tmdb.org/t/p/w342/poster.jpg",
-          backdrop_path: "https://image.tmdb.org/t/p/w780/backdrop.jpg",
+          poster_path: "/poster.jpg",
+          backdrop_path: "/backdrop.jpg",
         },
       ],
     });
@@ -153,11 +153,27 @@ describe("provider-only endpoint response caching", () => {
       {
         id: 1,
         title: "Fixture movie",
-        poster_path: "https://image.tmdb.org/t/p/w342/poster.jpg",
+        poster_path: "/poster.jpg",
       },
     ]);
     expectPublic(projectedResponse, "discovery");
   });
+
+  it.each(["movies", "shows"])(
+    "preserves null and omitted trending %s poster paths",
+    async (name) => {
+      routeMocks.getTrending.mockResolvedValue({
+        results: [{ id: 1, poster_path: null }, { id: 2 }],
+      });
+
+      const handler = name === "movies" ? trendingMoviesHandler : trendingShowsHandler;
+      const response = await request(handler, "/api/test?lang=fr-FR&projection=card");
+      expect(response.status).toBe(200);
+      await expect(response.json()).resolves.toEqual({
+        results: [{ id: 1, poster_path: null }, { id: 2 }],
+      });
+    },
+  );
 
   it.each(["movies", "shows"])("keeps malformed trending %s fallback no-store", async (name) => {
     routeMocks.getTrending.mockResolvedValue({ results: "invalid" });

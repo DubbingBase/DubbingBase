@@ -60,7 +60,11 @@
               <NuxtImg
                 format="webp"
                 v-if="actorA.profile_picture"
-                :src="actorA.profile_picture"
+                :src="
+                  mediaImage(actorA.profile_picture, {
+                    storageBucket: 'voice_actor_profile_pictures',
+                  })
+                "
                 class="h-full w-full object-cover"
               />
               <span v-else class="text-xs font-bold theme-text-muted">{{
@@ -116,7 +120,11 @@
                 <NuxtImg
                   format="webp"
                   v-if="va.profile_picture"
-                  :src="va.profile_picture"
+                  :src="
+                    mediaImage(va.profile_picture, {
+                      storageBucket: 'voice_actor_profile_pictures',
+                    })
+                  "
                   class="h-full w-full object-cover"
                 />
                 <span v-else class="text-xs font-bold theme-text-muted">{{
@@ -174,7 +182,11 @@
               <NuxtImg
                 format="webp"
                 v-if="actorB.profile_picture"
-                :src="actorB.profile_picture"
+                :src="
+                  mediaImage(actorB.profile_picture, {
+                    storageBucket: 'voice_actor_profile_pictures',
+                  })
+                "
                 class="h-full w-full object-cover"
               />
               <span v-else class="text-xs font-bold theme-text-muted">{{
@@ -230,7 +242,11 @@
                 <NuxtImg
                   format="webp"
                   v-if="va.profile_picture"
-                  :src="va.profile_picture"
+                  :src="
+                    mediaImage(va.profile_picture, {
+                      storageBucket: 'voice_actor_profile_pictures',
+                    })
+                  "
                   class="h-full w-full object-cover"
                 />
                 <span v-else class="text-xs font-bold theme-text-muted">{{
@@ -311,7 +327,11 @@
                       <NuxtImg
                         format="webp"
                         v-if="actor.profile_picture"
-                        :src="actor.profile_picture"
+                        :src="
+                          mediaImage(actor.profile_picture, {
+                            storageBucket: 'voice_actor_profile_pictures',
+                          })
+                        "
                         class="h-full w-full object-cover"
                       />
                       <svg
@@ -543,6 +563,9 @@ definePageMeta({
 import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import { readErrorMessage } from "~/utils/error-message";
 import type { Tables } from "@app/supabase/types";
+import { useMediaImage } from "~/composables/useMediaImage";
+
+const mediaImage = useMediaImage();
 
 type VoiceActorCandidate = Pick<Tables<"voice_actors">, "id" | "firstname" | "lastname"> &
   Partial<

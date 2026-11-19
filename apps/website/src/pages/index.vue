@@ -116,7 +116,7 @@
                 >
                   <NuxtImg
                     v-if="movie.poster_path"
-                    :src="movie.poster_path"
+                    :src="resolveMediaImage(movie.poster_path, { tmdbSize: 'w342' }) ?? undefined"
                     :srcset="getTmdbPosterSrcset(movie.poster_path)"
                     :alt="movie.title"
                     format="webp"
@@ -167,7 +167,7 @@
                 >
                   <NuxtImg
                     v-if="show.poster_path"
-                    :src="show.poster_path"
+                    :src="resolveMediaImage(show.poster_path, { tmdbSize: 'w342' }) ?? undefined"
                     :srcset="getTmdbPosterSrcset(show.poster_path)"
                     :alt="show.name || show.title"
                     format="webp"
@@ -272,7 +272,7 @@
 </template>
 
 <script setup lang="ts">
-import { resolveLocaleLanguage } from "@app/shared-logic";
+import { resolveMediaImage, getTmdbImagePath, resolveLocaleLanguage } from "@app/shared-logic";
 import type { HomeDataPayload } from "@app/shared-logic";
 import { useDragScroll } from "../composables/useDragScroll";
 import { ref, computed, watch, type MaybeRefOrGetter } from "vue";
@@ -543,13 +543,10 @@ const topVoiceActors = computed(() => topVoiceActorsData.data.value);
 const topContributors = computed(() => topContributorsData.data.value);
 const homeStats = computed(() => homeStatsData.data.value);
 
-function getTmdbPosterSrcset(imageUrl: string | null | undefined): string | undefined {
-  if (!imageUrl?.startsWith("https://image.tmdb.org/t/p/w342/")) {
-    return undefined;
-  }
-
-  const standardDensityUrl = imageUrl.replace("/w342/", "/w185/");
-  return `${standardDensityUrl} 1x, ${imageUrl} 2x`;
+function getTmdbPosterSrcset(image: string | null | undefined): string | undefined {
+  const path = getTmdbImagePath(image);
+  if (!path) return undefined;
+  return `${resolveMediaImage(path, { tmdbSize: "w185" })} 1x, ${resolveMediaImage(path, { tmdbSize: "w342" })} 2x`;
 }
 
 const isLoadingMovies = moviesData.pending;

@@ -109,11 +109,17 @@ describe("GET /api/game/:id", () => {
   });
 
   it("returns games without enqueueing discovery work", async () => {
+    mocks.getGame.mockResolvedValueOnce({
+      id: 1942,
+      name: "Test game",
+      cover: { image_id: "co42", url: "//images.igdb.com/igdb/image/upload/t_thumb/co42.jpg" },
+    });
     const response = await request("/api/game/1942?projection=media-page");
 
     expect(response.status).toBe(200);
     const data = await response.json();
     expect(data.game_data_status).toBe("available");
+    expect(data.game.cover).toEqual({ image_id: "co42" });
     expect(mocks.getGamePageDubbingProjects).toHaveBeenCalledWith(1942);
     expect(mocks.getDubbingProjects).not.toHaveBeenCalled();
   });

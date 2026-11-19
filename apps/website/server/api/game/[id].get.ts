@@ -1,5 +1,4 @@
 import { useIgdbClient } from "../../utils";
-import { buildIgdbImageUrl } from "../../utils/api/igdb";
 import { getDubbingProjects, getGamePageDubbingProjects } from "../../utils/db/queries";
 import type { IgdbGame } from "@app/shared-logic";
 import { loadGameCharacterCatalog, type ResolvedGameCharacter } from "../../utils/game-characters";
@@ -10,24 +9,12 @@ function processIgdbGame(
   pageProjection: boolean,
 ): IgdbGame & { media_type: "video_game" } {
   const artworks = (pageProjection ? game.artworks?.slice(0, 1) : game.artworks)?.map(
-    (artwork) => ({
-      ...artwork,
-      url: buildIgdbImageUrl(artwork.image_id, "1080p"),
-    }),
+    ({ url: _url, ...artwork }) => artwork,
   );
   const screenshots = (pageProjection ? game.screenshots?.slice(0, 1) : game.screenshots)?.map(
-    (screenshot) => ({
-      ...screenshot,
-      url: buildIgdbImageUrl(screenshot.image_id, "screenshot_huge"),
-    }),
+    ({ url: _url, ...screenshot }) => screenshot,
   );
-
-  const cover = game.cover
-    ? {
-        image_id: game.cover.image_id,
-        url: buildIgdbImageUrl(game.cover.image_id, "cover_big"),
-      }
-    : undefined;
+  const cover = game.cover ? { image_id: game.cover.image_id } : undefined;
 
   if (pageProjection) {
     return {
@@ -55,25 +42,14 @@ function processIgdbGame(
   return {
     ...game,
     media_type: "video_game",
-    cover: game.cover
-      ? {
-          ...game.cover,
-          url: buildIgdbImageUrl(game.cover.image_id, "cover_big"),
-        }
-      : undefined,
+    cover,
     artworks,
     screenshots,
   };
 }
 
 function processIgdbCharacter(char: ResolvedGameCharacter, pageProjection: boolean) {
-  const mugShot = char.mug_shot
-    ? {
-        ...(pageProjection ? {} : char.mug_shot),
-        image_id: char.mug_shot.image_id,
-        url: buildIgdbImageUrl(char.mug_shot.image_id, "1080p"),
-      }
-    : undefined;
+  const mugShot = char.mug_shot ? { image_id: char.mug_shot.image_id } : undefined;
 
   if (!pageProjection) return { ...char, mug_shot: mugShot };
 
