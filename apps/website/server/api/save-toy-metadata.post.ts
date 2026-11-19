@@ -1,6 +1,6 @@
 import type { Json } from "@app/supabase/types";
 import type { Tables, Toy, ToyMetadataInput, ToyMetadataSaveResponse } from "@app/shared-logic";
-import { requireAdmin } from "../utils/auth";
+import { defineAdminHandler } from "../utils/auth-handlers";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { isRecord } from "@app/shared-logic";
 
@@ -114,8 +114,7 @@ function mapToy(row: ToyMetadataRow): Toy {
   };
 }
 
-export default defineEventHandler(async (event): Promise<ToyMetadataSaveResponse> => {
-  const user = await requireAdmin(event);
+export default defineAdminHandler(async (event, user): Promise<ToyMetadataSaveResponse> => {
   const body: unknown = await readBody(event);
 
   if (
