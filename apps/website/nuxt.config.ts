@@ -15,6 +15,7 @@ const isE2E = process.env.E2E_TEST === "true";
 // Scripts/route-cpu-ssr.mjs rewrites this exact line to also disable tasks while profiling.
 const disableScheduledTasks = isE2E;
 const isProduction = process.env.NODE_ENV === "production";
+let entryStylesheet = "";
 // One prerendered About page per locale; the default locale has no prefix.
 const ABOUT_PRERENDER_ROUTES = APP_LOCALES.map((locale) =>
   locale.code === DEFAULT_LOCALE ? "/about" : `/${locale.code}/about`,
@@ -72,6 +73,7 @@ export default defineNuxtConfig({
   routeRules: ADMIN_SPA_ROUTE_RULES,
 
   runtimeConfig: {
+    homepageStylesheet: "",
     supabaseSecretKey: env("SUPABASE_SECRET_KEY"),
     supabaseUrl,
     tmdbApiKey: env("TMDB_API_KEY"),
@@ -197,17 +199,22 @@ export default defineNuxtConfig({
   hooks: {
     // Dev, tests and typechecks run without Supabase credentials, but a production build must
     // never ship without them. `nuxt prepare` never builds Nitro.
-    "nitro:build:before": () => {
+    "nitro:build:before": (nitro) => {
       if (isProduction && !isE2E && (!supabaseUrl || !supabasePublishableKey)) {
         throw new Error(
           "Production builds require SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY; refusing to build without them.",
         );
       }
+      // The client manifest is ready by this point and Nitro has yet to serialize its config.
+      nitro.options.runtimeConfig.homepageStylesheet = entryStylesheet;
     },
     "build:manifest": (manifest) => {
+      const entries = Object.values(manifest);
+      entryStylesheet = entries.find((entry) => entry.isEntry && entry.css?.length)?.css?.[0] ?? "";
+
       // Keep module preloads for the current page and let other chunks load on demand.
       // Speculative SSR prefetches compete with the first render and can fail at the edge.
-      for (const entry of Object.values(manifest)) {
+      for (const entry of entries) {
         entry.prefetch = false;
       }
     },
