@@ -367,7 +367,6 @@
   - function matchCastWorks: (actors, works) => CastWorkMatchResult<Actor, Work>
   - interface CastActorReference
   - _...6 more_
-- `apps/website/src/utils/posthog-prefetch-manifest.ts` — function deferPosthogPrefetch: (manifest, ClientManifestEntry>) => void, interface ClientManifestEntry
 - `apps/website/src/utils/route-param.ts` — function firstRouteParam: (value) => string | undefined
 - `apps/website/src/utils/search-routes.ts` — function getSearchResultRoute: (result, "id" | "media_type">) => string, type SearchFilter
 - `apps/website/src/utils/season-data.ts`

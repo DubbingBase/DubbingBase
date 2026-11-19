@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/website, @app/supabase, @app/locales, @app/shared-logic
 
-> 67 routes | 28 models | 145 components | 134 lib files | 53 env vars | 14 middleware | 56% test coverage
-> **Token savings:** this file is ~18,700 tokens. Without it, AI exploration would cost ~147,400 tokens. **Saves ~128,700 tokens per conversation.**
-> **Last scanned:** 2026-11-19 08:06 — re-run after significant changes
+> 67 routes | 28 models | 145 components | 133 lib files | 53 env vars | 14 middleware | 56% test coverage
+> **Token savings:** this file is ~18,600 tokens. Without it, AI exploration would cost ~147,100 tokens. **Saves ~128,500 tokens per conversation.**
+> **Last scanned:** 2026-11-19 10:11 — re-run after significant changes
 
 ---
 
@@ -804,7 +804,6 @@
   - function matchCastWorks: (actors, works) => CastWorkMatchResult<Actor, Work>
   - interface CastActorReference
   - _...6 more_
-- `apps/website/src/utils/posthog-prefetch-manifest.ts` — function deferPosthogPrefetch: (manifest, ClientManifestEntry>) => void, interface ClientManifestEntry
 - `apps/website/src/utils/route-param.ts` — function firstRouteParam: (value) => string | undefined
 - `apps/website/src/utils/search-routes.ts` — function getSearchResultRoute: (result, "id" | "media_type">) => string, type SearchFilter
 - `apps/website/src/utils/season-data.ts`
@@ -1052,7 +1051,7 @@
 # Test Coverage
 
 > **56%** of routes and models are covered by tests
-> 162 test files found
+> 161 test files found
 
 ## Covered Routes
 
