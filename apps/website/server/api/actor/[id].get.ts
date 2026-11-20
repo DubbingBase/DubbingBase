@@ -186,7 +186,7 @@ async function getVoiceRoles(
     const missingMediaItems = uniqueMediaItems.filter(
       ({ contentId, contentType }) => !mediaMap.has(`${contentType}:${contentId}`),
     );
-    const BATCH_SIZE = 15;
+    const BATCH_SIZE = 6;
     for (let i = 0; i < missingMediaItems.length; i += BATCH_SIZE) {
       const batch = missingMediaItems.slice(i, i + BATCH_SIZE);
       const results = await Promise.all(
