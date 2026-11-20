@@ -289,6 +289,12 @@ jobs:
           if [ -z "$BASE_SHA" ] || [[ "$BASE_SHA" =~ ^0+$ ]]; then
             BASE_SHA="$(git rev-parse HEAD^)"
           fi
+          # After a force-push, `github.event.before` is the replaced head, which no longer
+          # exists in the clone. Fall back to the merge-base with the default branch.
+          if ! git cat-file -e "$BASE_SHA^{commit}" 2>/dev/null; then
+            echo "Base $BASE_SHA is not in the clone (force-push?); using merge-base with origin/main."
+            BASE_SHA="$(git merge-base HEAD origin/main)"
+          fi
           git cat-file -e "$BASE_SHA^{commit}"
 
           baseline_dir="$(mktemp -d)"
