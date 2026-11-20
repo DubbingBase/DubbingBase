@@ -11,7 +11,7 @@ export default defineNuxtPlugin({
     if (isDev || isTest) return;
 
     const initializePostHog = (landingUrl: string, landingTime: Date) => {
-      void import("posthog-js")
+      void import("posthog-js/dist/module.slim")
         .then(({ default: posthog }) => {
           posthog.init("phc_me2esmRfMkokDSbTzKQfNHaUZgpBOAqgi2921wCYOtP", {
             api_host: "https://n.dubbingbase.com",
