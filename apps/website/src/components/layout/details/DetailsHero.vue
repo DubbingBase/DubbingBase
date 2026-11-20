@@ -3,14 +3,15 @@
     class="relative w-full h-[42vh] min-h-[300px] md:h-[50vh] md:min-h-[400px] overflow-hidden theme-surface-muted theme-surface"
   >
     <div class="absolute inset-0">
-      <!-- object-cover needs enough pixels for the hero height on narrow screens. -->
+      <!-- object-cover crops the backdrop under a dark scrim, so phones take the 780w file even at
+           2x density; the 1280w file (about twice the bytes) is only for wider screens. -->
       <img
         v-if="backdropPath"
         class="w-full h-full object-cover"
         :class="blurBackdrop ? 'blur-3xl opacity-50 scale-110' : ''"
         alt="Backdrop"
         fetchpriority="high"
-        sizes="max(100vw, 75vh, 535px)"
+        sizes="(max-width: 767px) 420px, max(100vw, 75vh, 535px)"
         :srcset="`${resolveMediaImage(backdropPath, { tmdbSize: 'w780' })} 780w, ${resolveMediaImage(backdropPath, { tmdbSize: 'w1280' })} 1280w`"
         :src="resolveMediaImage(backdropPath, { tmdbSize: 'w1280' }) ?? undefined"
       />
