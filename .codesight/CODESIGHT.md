@@ -5,7 +5,7 @@
 
 > 67 routes | 28 models | 145 components | 137 lib files | 53 env vars | 14 middleware | 57% test coverage
 > **Token savings:** this file is ~18,700 tokens. Without it, AI exploration would cost ~148,100 tokens. **Saves ~129,400 tokens per conversation.**
-> **Last scanned:** 2026-11-20 18:29 — re-run after significant changes
+> **Last scanned:** 2026-11-20 19:08 — re-run after significant changes
 
 ---
 
@@ -469,7 +469,10 @@
   - class SimpleKeyValidator
   - interface CacheKeyInput
   - const CACHE_SCHEMA_VERSION
-- `apps/website/server/utils/cache/edge.ts` — function edgeCache: (ttlSeconds) => EdgeCacheInit, type EdgeCacheInit
+- `apps/website/server/utils/cache/edge.ts`
+  - function edgeCache: (ttlSeconds) => EdgeCacheInit
+  - function fetchWithEdgePostCache: (identity, ttlSeconds, send) => void
+  - type EdgeCacheInit
 - `apps/website/server/utils/cache/http.ts`
   - function getPublicCacheControl: (profile) => string
   - function getCloudflareCacheControl: (profile) => string
@@ -1021,10 +1024,10 @@
 - `apps/website/server/utils/db/queries.ts` — imported by **9** files
 - `apps/website/server/utils/cache/http.ts` — imported by **9** files
 - `apps/website/server/utils/auth.ts` — imported by **9** files
-- `apps/website/server/utils/cache/constants.ts` — imported by **8** files
+- `apps/website/server/utils/cache/constants.ts` — imported by **9** files
+- `apps/website/server/utils/cache/edge.ts` — imported by **8** files
 - `e2e/helpers/mock-api.ts` — imported by **8** files
 - `apps/website/server/utils/dubbing-language.ts` — imported by **7** files
-- `apps/website/server/utils/cache/edge.ts` — imported by **7** files
 - `apps/website/server/utils/narrow.ts` — imported by **6** files
 - `apps/website/server/utils/api/igdb.ts` — imported by **6** files
 - `apps/website/server/utils/notifications/discord.ts` — imported by **6** files

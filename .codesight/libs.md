@@ -32,7 +32,10 @@
   - class SimpleKeyValidator
   - interface CacheKeyInput
   - const CACHE_SCHEMA_VERSION
-- `apps/website/server/utils/cache/edge.ts` — function edgeCache: (ttlSeconds) => EdgeCacheInit, type EdgeCacheInit
+- `apps/website/server/utils/cache/edge.ts`
+  - function edgeCache: (ttlSeconds) => EdgeCacheInit
+  - function fetchWithEdgePostCache: (identity, ttlSeconds, send) => void
+  - type EdgeCacheInit
 - `apps/website/server/utils/cache/http.ts`
   - function getPublicCacheControl: (profile) => string
   - function getCloudflareCacheControl: (profile) => string
