@@ -246,7 +246,11 @@ export default defineNuxtConfig({
       fontsource: false,
       googleicons: false,
     },
-    families: [{ name: "Inter", provider: "google", display: "swap", preload: true }],
+    // Normal style only: declaring the italic face made pages with italic text fetch a second
+    // 51 KiB font after the CSS (a critical request chain); the browser slants the normal face.
+    families: [
+      { name: "Inter", provider: "google", display: "swap", preload: true, styles: ["normal"] },
+    ],
   },
 
   site: {
