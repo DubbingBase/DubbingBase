@@ -111,7 +111,7 @@
             <template #default="{ item }">
               <div
                 :key="item.work_id"
-                class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-border"
+                class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-border [content-visibility:auto] [contain-intrinsic-size:auto_260px]"
               >
                 <div class="flex flex-col gap-4">
                   <div class="flex items-center gap-4">
