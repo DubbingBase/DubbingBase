@@ -23,6 +23,34 @@ type CharacterImagesResponse = {
   tvdbIds: Record<string, number>;
 };
 
+/**
+ * Resolved portraits survive leaving and re-entering a page (a title, then Back),
+ * so cards do not drop to placeholders and refetch every production. Browser-only:
+ * nothing is written during server rendering, so no state crosses requests.
+ * Only found images are kept; "no image" and failures are looked up again.
+ */
+type SharedCharacterImages = {
+  images: Map<string, CharacterImage>;
+  characterIds: Map<string, string>;
+  tvdbIds: Map<string, number>;
+};
+const MAX_SHARED_IMAGES = 600;
+const sharedByLanguage = new Map<string, SharedCharacterImages>();
+
+function sharedFor(language: string): SharedCharacterImages {
+  let shared = sharedByLanguage.get(language);
+  if (!shared) {
+    shared = { images: new Map(), characterIds: new Map(), tvdbIds: new Map() };
+    sharedByLanguage.set(language, shared);
+  }
+  return shared;
+}
+
+/** Test hook: forget every remembered portrait. */
+export function resetSharedCharacterImages(): void {
+  sharedByLanguage.clear();
+}
+
 const MAX_BATCH = 24;
 const MAX_CONCURRENT_REQUESTS = 4;
 const NAME_SEPARATOR = "|";
@@ -53,6 +81,40 @@ export function useCharacterImages(requests: Ref<readonly CharacterImageRequest[
   const tvdbIds = ref<Record<string, number>>({});
   const characterIds = reactive<Record<string, string>>({});
   const requested = new Set<string>();
+  let shared = sharedFor(language.value);
+
+  /** Seeds this instance from what earlier pages already resolved in this locale. */
+  function seedFromShared(): void {
+    if (!import.meta.client) return;
+    for (const [key, image] of shared.images) {
+      images[key] = image;
+      requested.add(key);
+      const characterId = shared.characterIds.get(key);
+      if (characterId !== undefined) characterIds[key] = characterId;
+    }
+    tvdbIds.value = Object.fromEntries(shared.tvdbIds);
+  }
+
+  function remember(key: string, image: CharacterImage | null): void {
+    if (!import.meta.client) return;
+    if (!image) {
+      shared.images.delete(key);
+      return;
+    }
+    shared.images.delete(key);
+    shared.images.set(key, image);
+    const characterId = characterIds[key];
+    if (characterId !== undefined) shared.characterIds.set(key, characterId);
+    const production = key.split(":", 2).join(":");
+    const tvdbId = tvdbIds.value[production];
+    if (tvdbId !== undefined) shared.tvdbIds.set(production, tvdbId);
+    while (shared.images.size > MAX_SHARED_IMAGES) {
+      const oldest = shared.images.keys().next().value;
+      if (oldest === undefined) break;
+      shared.images.delete(oldest);
+      shared.characterIds.delete(oldest);
+    }
+  }
   const skipped = new Map<string, CharacterImageSource[]>();
   // Latest request per card wins, so a slow stale response cannot restore a failed image.
   const generations = new Map<string, number>();
@@ -106,7 +168,10 @@ export function useCharacterImages(requests: Ref<readonly CharacterImageRequest[
         const characterId = response.characterIds[key];
         if (characterId !== undefined) characterIds[key] = characterId;
       }
-      for (const key of responseKeys) images[key] = response.images[key] ?? null;
+      for (const key of responseKeys) {
+        images[key] = response.images[key] ?? null;
+        remember(key, images[key]);
+      }
     } catch {
       // Provider or network failure: keep the placeholder; the card is requested again
       // the next time it is shown (page change or filter).
@@ -201,6 +266,7 @@ export function useCharacterImages(requests: Ref<readonly CharacterImageRequest[
     const skip = [...new Set([...(skipped.get(key) ?? []), failed.source])];
     skipped.set(key, skip);
     images[key] = null;
+    remember(key, null);
     enqueueLoad([key], skip);
   }
 
@@ -218,6 +284,8 @@ export function useCharacterImages(requests: Ref<readonly CharacterImageRequest[
 
   onMounted(() => {
     mounted = true;
+    // After hydration: seeding earlier would not match the server-rendered placeholders.
+    seedFromShared();
     loadVisible();
   });
   watch(
@@ -236,6 +304,8 @@ export function useCharacterImages(requests: Ref<readonly CharacterImageRequest[
     for (const key of Object.keys(images)) delete images[key];
     for (const key of Object.keys(characterIds)) delete characterIds[key];
     tvdbIds.value = {};
+    shared = sharedFor(language.value);
+    seedFromShared();
     loadVisible();
   });
   onBeforeUnmount(() => {
