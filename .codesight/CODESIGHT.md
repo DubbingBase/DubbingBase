@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/website, @app/supabase, @app/locales, @app/shared-logic
 
-> 67 routes | 28 models | 145 components | 136 lib files | 53 env vars | 14 middleware | 57% test coverage
-> **Token savings:** this file is ~18,700 tokens. Without it, AI exploration would cost ~147,900 tokens. **Saves ~129,200 tokens per conversation.**
-> **Last scanned:** 2026-11-20 16:01 — re-run after significant changes
+> 67 routes | 28 models | 145 components | 137 lib files | 53 env vars | 14 middleware | 57% test coverage
+> **Token savings:** this file is ~18,700 tokens. Without it, AI exploration would cost ~148,100 tokens. **Saves ~129,400 tokens per conversation.**
+> **Last scanned:** 2026-11-20 16:36 — re-run after significant changes
 
 ---
 
@@ -453,7 +453,7 @@
   - interface IgdbPopularityPrimitive
 - `apps/website/server/utils/api/openlibrary.ts` — function buildOpenLibraryCoverUrl: (coverId, size) => string, class OpenLibraryClient
 - `apps/website/server/utils/api/podcast.ts` — class PodcastClient, interface ITunesPodcastResult
-- `apps/website/server/utils/api/tmdb.ts` — class TMDBClient
+- `apps/website/server/utils/api/tmdb.ts` — function tmdbEdgeCacheTtl: (endpoint) => number, class TMDBClient
 - `apps/website/server/utils/api/toy.ts` — class ToyClient
 - `apps/website/server/utils/api/tvdb.ts` — class TVDBClient, const TVDB_AUTH_TOKEN_NAMESPACE
 - `apps/website/server/utils/auth-handlers.ts` — function defineUserHandler: (handler, user) => void, function defineAdminHandler: (handler, admin) => void
@@ -469,6 +469,7 @@
   - class SimpleKeyValidator
   - interface CacheKeyInput
   - const CACHE_SCHEMA_VERSION
+- `apps/website/server/utils/cache/edge.ts` — function edgeCache: (ttlSeconds) => EdgeCacheInit, type EdgeCacheInit
 - `apps/website/server/utils/cache/http.ts`
   - function getPublicCacheControl: (profile) => string
   - function getCloudflareCacheControl: (profile) => string
@@ -1023,13 +1024,13 @@
 - `apps/website/server/utils/cache/constants.ts` — imported by **8** files
 - `e2e/helpers/mock-api.ts` — imported by **8** files
 - `apps/website/server/utils/dubbing-language.ts` — imported by **7** files
+- `apps/website/server/utils/cache/edge.ts` — imported by **7** files
 - `apps/website/server/utils/narrow.ts` — imported by **6** files
 - `apps/website/server/utils/api/igdb.ts` — imported by **6** files
 - `apps/website/server/utils/notifications/discord.ts` — imported by **6** files
 - `apps/website/server/utils/with-timeout.ts` — imported by **5** files
 - `apps/website/server/utils/cache/wikipedia.ts` — imported by **5** files
 - `apps/website/server/utils/dubbing-region-detection.ts` — imported by **5** files
-- `apps/website/server/utils/llm.ts` — imported by **5** files
 
 ## Import Map (who imports what)
 
@@ -1049,7 +1050,7 @@
 # Test Coverage
 
 > **57%** of routes and models are covered by tests
-> 163 test files found
+> 164 test files found
 
 ## Covered Routes
 

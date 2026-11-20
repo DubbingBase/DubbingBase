@@ -16,7 +16,7 @@
   - interface IgdbPopularityPrimitive
 - `apps/website/server/utils/api/openlibrary.ts` — function buildOpenLibraryCoverUrl: (coverId, size) => string, class OpenLibraryClient
 - `apps/website/server/utils/api/podcast.ts` — class PodcastClient, interface ITunesPodcastResult
-- `apps/website/server/utils/api/tmdb.ts` — class TMDBClient
+- `apps/website/server/utils/api/tmdb.ts` — function tmdbEdgeCacheTtl: (endpoint) => number, class TMDBClient
 - `apps/website/server/utils/api/toy.ts` — class ToyClient
 - `apps/website/server/utils/api/tvdb.ts` — class TVDBClient, const TVDB_AUTH_TOKEN_NAMESPACE
 - `apps/website/server/utils/auth-handlers.ts` — function defineUserHandler: (handler, user) => void, function defineAdminHandler: (handler, admin) => void
@@ -32,6 +32,7 @@
   - class SimpleKeyValidator
   - interface CacheKeyInput
   - const CACHE_SCHEMA_VERSION
+- `apps/website/server/utils/cache/edge.ts` — function edgeCache: (ttlSeconds) => EdgeCacheInit, type EdgeCacheInit
 - `apps/website/server/utils/cache/http.ts`
   - function getPublicCacheControl: (profile) => string
   - function getCloudflareCacheControl: (profile) => string
