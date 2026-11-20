@@ -415,4 +415,25 @@ describe("useCharacterImages", () => {
     await flushPromises();
     expect(second.api.imageFor(ron(671))).toBeNull();
   });
+
+  it("remembers a server answer of no image for a few minutes, then asks again", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    reply({ [key(671)]: null });
+    setup([ron(671)]);
+    await flushPromises();
+    const calls = queries.length;
+    unmounts.pop()?.();
+
+    setup([ron(671)]);
+    await flushPromises();
+    expect(queries.length).toBe(calls);
+    unmounts.pop()?.();
+
+    vi.setSystemTime(Date.now() + 6 * 60 * 1000);
+    reply({ [key(671)]: null });
+    setup([ron(671)]);
+    await flushPromises();
+    expect(queries.length).toBe(calls + 1);
+    vi.useRealTimers();
+  });
 });
