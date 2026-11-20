@@ -4,8 +4,8 @@
 > **Monorepo:** @app/website, @app/supabase, @app/locales, @app/shared-logic
 
 > 67 routes | 28 models | 145 components | 137 lib files | 53 env vars | 14 middleware | 57% test coverage
-> **Token savings:** this file is ~18,800 tokens. Without it, AI exploration would cost ~148,100 tokens. **Saves ~129,400 tokens per conversation.**
-> **Last scanned:** 2026-11-20 19:58 — re-run after significant changes
+> **Token savings:** this file is ~18,800 tokens. Without it, AI exploration would cost ~148,100 tokens. **Saves ~129,300 tokens per conversation.**
+> **Last scanned:** 2026-11-20 20:22 — re-run after significant changes
 
 ---
 
@@ -472,6 +472,8 @@
 - `apps/website/server/utils/cache/edge.ts`
   - function edgeCache: (ttlSeconds) => EdgeCacheInit
   - function fetchWithEdgePostCache: (identity, ttlSeconds, send) => void
+  - function rememberStale: (identity, body, ttlSeconds) => Promise<void>
+  - function recallStale: (identity) => Promise<Response | null>
   - type EdgeCacheInit
 - `apps/website/server/utils/cache/http.ts`
   - function getPublicCacheControl: (profile) => string

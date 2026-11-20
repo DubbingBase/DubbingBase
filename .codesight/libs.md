@@ -35,6 +35,8 @@
 - `apps/website/server/utils/cache/edge.ts`
   - function edgeCache: (ttlSeconds) => EdgeCacheInit
   - function fetchWithEdgePostCache: (identity, ttlSeconds, send) => void
+  - function rememberStale: (identity, body, ttlSeconds) => Promise<void>
+  - function recallStale: (identity) => Promise<Response | null>
   - type EdgeCacheInit
 - `apps/website/server/utils/cache/http.ts`
   - function getPublicCacheControl: (profile) => string
