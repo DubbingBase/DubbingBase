@@ -29,8 +29,8 @@
 - `apps/website/src/utils/cast-workspace.ts` — filterCastRows, summarizeCast, getInitials, CastWorkspaceRow, CastFilter, ORIGINAL_CAST_SEED_LIMIT, …
 - `apps/website/server/utils/cache/http.ts` — getPublicCacheControl, getCloudflareCacheControl, setNoCacheHeaders, setPublicCacheHeaders, CacheProfile, NO_STORE_CACHE_CONTROL
 - `apps/website/server/utils/notifications/discord.ts` — normalizeDiscordUrl, buildDiscordEmbed, sendDiscordAdminNotification, DiscordWebhookOptions, QueueName, DiscordNotificationCategory
+- `apps/website/src/composables/useCharacterImages.ts` — resetSharedCharacterImages, characterImageKey, useCharacterImages, CharacterImageSource, CharacterImage, CharacterImageRequest
 - `apps/website/src/composables/useContribute.ts` — fetchRandomTask, useContribute, ContributionTask, ContributionCategory, ClaimedCategory, ContributionClaim
-- `apps/website/server/utils/api/igdb.ts` — isIgdbGame, isIgdbCharacter, IgdbClient, IgdbTrendingGamesResult, IgdbPopularityPrimitive
 - _…and 89 more files_
 
 ## Shared-logic (22 files)
