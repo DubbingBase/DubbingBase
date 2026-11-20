@@ -403,8 +403,10 @@ import {
 } from "../../../../../../composables/useCharacterImages";
 import { useCharacterImageViewport } from "../../../../../../composables/useCharacterImageViewport";
 import { useMediaImage } from "~/composables/useMediaImage";
+import { useSupabasePreconnect } from "~/composables/useSupabasePreconnect";
 
 const mediaImage = useMediaImage();
+useSupabasePreconnect();
 
 const isReportModalOpen = ref(false);
 const { page: castPage, setPage: setCastPage } = useUrlPagination("castPage");
@@ -860,10 +862,8 @@ useHead({
     },
   ],
   link: [
-    { rel: "preconnect", href: "https://image.tmdb.org", crossorigin: "" },
+    { rel: "preconnect", href: "https://image.tmdb.org" },
     { rel: "dns-prefetch", href: "https://image.tmdb.org" },
-    { rel: "preconnect", href: "https://thetvdb.com", crossorigin: "" },
-    { rel: "dns-prefetch", href: "https://thetvdb.com" },
   ],
 });
 </script>

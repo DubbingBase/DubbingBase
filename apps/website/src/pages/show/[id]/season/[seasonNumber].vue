@@ -517,10 +517,8 @@ useHead({
   link: computed<HeadLink[]>(() =>
     isSeasonRoute.value
       ? [
-          { rel: "preconnect", href: "https://image.tmdb.org", crossorigin: "" },
+          { rel: "preconnect", href: "https://image.tmdb.org" },
           { rel: "dns-prefetch", href: "https://image.tmdb.org" },
-          { rel: "preconnect", href: "https://thetvdb.com", crossorigin: "" },
-          { rel: "dns-prefetch", href: "https://thetvdb.com" },
         ]
       : [],
   ),

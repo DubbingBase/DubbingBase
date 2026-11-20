@@ -410,8 +410,10 @@ import {
   type MediaProjectView,
 } from "../../utils/media-cast";
 import { useMediaImage } from "~/composables/useMediaImage";
+import { useSupabasePreconnect } from "~/composables/useSupabasePreconnect";
 
 const mediaImage = useMediaImage();
+useSupabasePreconnect();
 
 const isReportModalOpen = ref(false);
 
@@ -860,10 +862,8 @@ useHead({
   link: computed<HeadLink[]>(() =>
     isShowRoute.value
       ? [
-          { rel: "preconnect", href: "https://image.tmdb.org", crossorigin: "" },
+          { rel: "preconnect", href: "https://image.tmdb.org" },
           { rel: "dns-prefetch", href: "https://image.tmdb.org" },
-          { rel: "preconnect", href: "https://thetvdb.com", crossorigin: "" },
-          { rel: "dns-prefetch", href: "https://thetvdb.com" },
         ]
       : [],
   ),

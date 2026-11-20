@@ -116,8 +116,10 @@ import { ref, computed, watch } from "vue";
 import { refDebounced } from "@vueuse/core";
 import type { Tables } from "@app/supabase/types";
 import { useMediaImage } from "~/composables/useMediaImage";
+import { useSupabasePreconnect } from "~/composables/useSupabasePreconnect";
 
 const mediaImage = useMediaImage();
+useSupabasePreconnect();
 
 const localePath = useLocalePath();
 const { t } = useI18n();

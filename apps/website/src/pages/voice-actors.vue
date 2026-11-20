@@ -121,8 +121,10 @@
 import { ref, computed, watch } from "vue";
 import { refDebounced } from "@vueuse/core";
 import { useMediaImage } from "~/composables/useMediaImage";
+import { useSupabasePreconnect } from "~/composables/useSupabasePreconnect";
 
 const mediaImage = useMediaImage();
+useSupabasePreconnect();
 
 const { t } = useI18n();
 const localePath = useLocalePath();
