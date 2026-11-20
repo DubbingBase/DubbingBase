@@ -3,6 +3,8 @@ import { notifyContributionEdit } from "../utils/notifications/contribution";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { isJson, isRecord } from "@app/shared-logic";
 
+const IMMUTABLE_CACHE_SECONDS = "31536000";
+
 const voiceActorFields = new Set([
   "firstname",
   "lastname",
@@ -76,6 +78,8 @@ async function uploadExternalPicture(
     const { error } = await bucket.upload(path, arrayBuffer, {
       contentType: imageResponse.headers.get("content-type") || "image/jpeg",
       upsert: false,
+      // The path embeds the content hash, so the file never changes under the same URL.
+      cacheControl: IMMUTABLE_CACHE_SECONDS,
     });
     if (error) {
       const { data: existingFiles } = await bucket.list("", { search: path });

@@ -6,6 +6,7 @@ import { useSupabaseAdmin } from "../utils/db/client";
 import { readProperty } from "@app/shared-logic";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const IMMUTABLE_CACHE_SECONDS = "31536000";
 const RATE_LIMITER_BINDING = "PROFILE_PICTURE_UPLOAD_LIMITER";
 const RATE_LIMIT_KEY_PREFIX = "voice-actor-picture-upload:";
 const USER_RATE_LIMIT_KEY_PREFIX = "voice-actor-picture-upload-user:";
@@ -191,7 +192,12 @@ export default defineEventHandler(async (event) => {
     const filePath = `${vaId}/${randomUUID()}.${imageType.extension}`;
     const { data: uploadedFile, error: uploadError } = await supabaseAdmin.storage
       .from("voice_actor_profile_pictures")
-      .upload(filePath, fileField.data, { contentType, upsert: false });
+      .upload(filePath, fileField.data, {
+        contentType,
+        upsert: false,
+        // The path holds a fresh UUID, so the file never changes under the same URL.
+        cacheControl: IMMUTABLE_CACHE_SECONDS,
+      });
 
     if (uploadError || !uploadedFile) {
       console.error("Failed to upload voice actor profile picture");
