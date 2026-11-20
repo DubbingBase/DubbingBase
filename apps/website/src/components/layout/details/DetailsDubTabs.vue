@@ -47,7 +47,11 @@ function tabClass(active: boolean): string[] {
 function countClass(active: boolean): string[] {
   return [
     "text-xs px-1.5 py-0.5 rounded-full font-medium transition-colors",
-    active ? "bg-black/15 text-black" : "theme-surface-raised theme-surface-muted theme-text-muted",
+    // Active: the tab's own on-primary text colour on the plain primary background, outlined so the
+    // badge still reads as a pill. Black text on a darkened primary failed contrast in the light theme.
+    active
+      ? "text-[var(--app-color-on-primary)] ring-1 ring-inset ring-current/50"
+      : "theme-surface-raised theme-surface-muted theme-text-muted",
   ];
 }
 </script>
