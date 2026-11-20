@@ -203,6 +203,15 @@ export default defineNuxtConfig({
   },
 
   hooks: {
+    // The website never uses Supabase realtime, so the browser build swaps its client for a stub
+    // (see src/lib/realtime-stub.ts); this keeps about 26 KB gzipped out of the entry chunk.
+    "vite:extendConfig": (config, { isClient }) => {
+      if (!isClient || !isProduction) return;
+      const stub = resolve(import.meta.dirname, "src/lib/realtime-stub.ts");
+      const alias = (config.resolve ??= {}).alias;
+      if (Array.isArray(alias)) alias.push({ find: "@supabase/realtime-js", replacement: stub });
+      else config.resolve.alias = { ...alias, "@supabase/realtime-js": stub };
+    },
     // Dev, tests and typechecks run without Supabase credentials, but a production build must
     // never ship without them. `nuxt prepare` never builds Nitro.
     "nitro:build:before": (nitro) => {
