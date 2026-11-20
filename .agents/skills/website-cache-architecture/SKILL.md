@@ -28,6 +28,8 @@ Key design: cache at the unit that costs one write. The voice-actor page keeps o
 
 ## Outbound provider requests
 
+- Stale-while-error: on a cache miss `TMDBClient` stores the last good payload for 7 days with `rememberStale` (Workers Cache API, no KV) and serves it through `recallStale` when TMDB answers 408/425/429/5xx or times out after the retry. Never mask a 404.
+
 - Fan-out concurrency is at most 6: Workers keep about 6 outbound connections open, so more only queues, and each Worker invocation has a subrequest limit (50 free, 1000 paid; KV reads count).
 - `TMDBClient.get` retries once on 429/5xx/timeout (delay capped at 1 s, `Retry-After` honored). Keep total retries under the 12 s `withMediaServiceTimeout`.
 - In-flight coalescing is per isolate only; it does not stop a cross-isolate herd on a cold key.
