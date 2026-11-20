@@ -27,6 +27,10 @@ export default defineNuxtPlugin({
             capture_pageleave: false,
             capture_pageview: "history_change",
             disable_surveys: true,
+            // Session replay and web-vitals capture are not used; disabling them keeps the
+            // ~80 KiB recorder and web-vitals bundles from loading.
+            disable_session_recording: true,
+            capture_performance: false,
           });
 
           // PostHog captures the current URL on init; preserve the landing page if navigation happened while loading.
