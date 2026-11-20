@@ -109,6 +109,12 @@ export default defineNuxtConfig({
     },
   },
 
+  features: {
+    // Nuxt links its entry stylesheet by default; inlining every stylesheet removes the
+    // render-blocking request, and the HTML is cached at the edge so the extra bytes are paid once.
+    inlineStyles: () => true,
+  },
+
   experimental: {
     routeTypedFetch: true,
     defaults: {
