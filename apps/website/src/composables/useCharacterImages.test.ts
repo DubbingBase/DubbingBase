@@ -4,7 +4,11 @@ import { renderToString } from "@vue/server-renderer";
 import { createError, getQuery } from "h3";
 import { createSSRApp, defineComponent, h, nextTick, ref } from "vue";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { characterImageKey, useCharacterImages } from "./useCharacterImages";
+import {
+  characterImageKey,
+  resetSharedCharacterImages,
+  useCharacterImages,
+} from "./useCharacterImages";
 
 const { mockLocale } = vi.hoisted(() => ({
   mockLocale: { value: "en", set: (_value: string) => {} },
@@ -67,6 +71,7 @@ function setup(initial: Request[]) {
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 60));
 
 afterEach(() => {
+  resetSharedCharacterImages();
   for (const unmount of unmounts) unmount();
   unmounts.length = 0;
 });
@@ -376,5 +381,38 @@ describe("useCharacterImages", () => {
     );
     expect(retryQueries.find((query) => query.item === hermioneKey)).not.toHaveProperty("skip");
     expect(api.imageFor(hermioneRequest)?.source).toBe("tvdb");
+  });
+
+  it("shows portraits resolved on a previous page immediately, without asking again", async () => {
+    reply({ [key(671)]: tvdb("https://img/ron.jpg") }, { "movie:671": 66 }, { [key(671)]: "9" });
+    const first = setup([ron(671), hermione(671)]);
+    await flushPromises();
+    expect(first.api.imageFor(ron(671))?.src).toBe("https://img/ron.jpg");
+    const callsAfterFirst = queries.length;
+    unmounts.pop()?.();
+
+    // Back to the page: a new instance seeds from the shared store after mount.
+    const second = setup([ron(671)]);
+    await nextTick();
+    expect(second.api.imageFor(ron(671))?.src).toBe("https://img/ron.jpg");
+    expect(second.api.characterIdFor(ron(671))).toBe("9");
+    expect(second.api.tvdbIds.value["movie:671"]).toBe(66);
+    await flushPromises();
+    expect(queries.length).toBe(callsAfterFirst);
+  });
+
+  it("does not keep a portrait that failed to load", async () => {
+    reply({ [key(671)]: tvdb("https://img/dead.jpg") });
+    const first = setup([ron(671)]);
+    await flushPromises();
+    reply({ [key(671)]: null });
+    first.api.reportImageError(ron(671));
+    await flushPromises();
+    unmounts.pop()?.();
+
+    reply({ [key(671)]: null });
+    const second = setup([ron(671)]);
+    await flushPromises();
+    expect(second.api.imageFor(ron(671))).toBeNull();
   });
 });
