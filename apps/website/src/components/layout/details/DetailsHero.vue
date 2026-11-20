@@ -11,8 +11,8 @@
         :class="blurBackdrop ? 'blur-3xl opacity-50 scale-110' : ''"
         alt="Backdrop"
         fetchpriority="high"
-        sizes="(max-width: 767px) 420px, max(100vw, 75vh, 535px)"
-        :srcset="`${resolveMediaImage(backdropPath, { tmdbSize: 'w780' })} 780w, ${resolveMediaImage(backdropPath, { tmdbSize: 'w1280' })} 1280w`"
+        :sizes="BACKDROP_SIZES"
+        :srcset="backdropSrcset"
         :src="resolveMediaImage(backdropPath, { tmdbSize: 'w1280' }) ?? undefined"
       />
       <NuxtImg
@@ -102,6 +102,33 @@ const props = defineProps<{
 }>();
 
 const backdropPath = computed(() => getTmdbImagePath(props.backdropUrl, "url"));
+
+const BACKDROP_SIZES = "(max-width: 767px) 420px, max(100vw, 75vh, 535px)";
+const backdropSrcset = computed(() =>
+  backdropPath.value
+    ? `${resolveMediaImage(backdropPath.value, { tmdbSize: "w780" })} 780w, ${resolveMediaImage(backdropPath.value, { tmdbSize: "w1280" })} 1280w`
+    : undefined,
+);
+
+// The page's inlined CSS pushes the <img> about 100 KB into the HTML, so the browser would find
+// the LCP image late. Preloading it from the top of <head> starts the download right away; the
+// srcset and sizes must match the <img> so the preloaded file is the one it uses.
+useHead({
+  link: computed(() =>
+    backdropPath.value
+      ? [
+          {
+            rel: "preload",
+            as: "image",
+            imagesrcset: backdropSrcset.value,
+            imagesizes: BACKDROP_SIZES,
+            fetchpriority: "high",
+            tagPriority: -14,
+          },
+        ]
+      : [],
+  ),
+});
 const posterPath = computed(() =>
   props.imageAspectRatio === "poster" ? getTmdbImagePath(props.imageUrl, "url") : null,
 );
