@@ -1,4 +1,5 @@
 import { ofetch } from "ofetch";
+import { edgeCache } from "../cache/edge";
 import type { Podcast, PodcastEpisode } from "@app/shared-logic";
 
 export interface ITunesPodcastResult {
@@ -75,6 +76,8 @@ export class PodcastClient {
         limit: 50,
       },
       timeout: 6000,
+      // Episode lists change daily at most; one hour absorbs repeat page views.
+      ...edgeCache(60 * 60),
     });
 
     if (!response?.results || response.results.length === 0) return null;

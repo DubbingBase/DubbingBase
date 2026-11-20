@@ -1,5 +1,9 @@
 import { createCacheNamespace, SimpleCache } from "../cache";
+import { edgeCache } from "../cache/edge";
 import { isRecord } from "@app/shared-logic";
+
+// Stable character and series metadata; the bearer token is not part of the edge key.
+const TVDB_EDGE_TTL = 24 * 60 * 60;
 
 export const TVDB_AUTH_TOKEN_NAMESPACE = createCacheNamespace<string>();
 
@@ -134,6 +138,7 @@ export class TVDBClient {
           Accept: "application/json",
         },
         signal: AbortSignal.timeout(8000),
+        ...edgeCache(TVDB_EDGE_TTL),
       });
 
       if (response.status === 401) {
@@ -145,6 +150,7 @@ export class TVDBClient {
             Accept: "application/json",
           },
           signal: AbortSignal.timeout(8000),
+          ...edgeCache(TVDB_EDGE_TTL),
         });
       }
 

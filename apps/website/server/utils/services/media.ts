@@ -5,6 +5,7 @@ import { processMedia, cleanCharacterName } from "../urls/tmdb";
 import { mediaPageAggregateCredits, mediaPageMovieCredits } from "../media-page-credits";
 import { useCache, useIgdbClient, useOpenLibraryClient } from "../index";
 import { createCacheNamespace } from "../cache";
+import { edgeCache } from "../cache/edge";
 import { CHARACTER_IMAGE_POSITIVE_TTL } from "../character-images";
 import { buildCacheKey, hashCacheValue } from "../cache/constants";
 import { isRecord, readPath, readProperty } from "@app/shared-logic";
@@ -399,7 +400,8 @@ export class MediaService {
     // 2. Fetch unique media items with a concurrency-limited pool.
     // Serial batches stall on the slowest straggler; a pool keeps CONCURRENCY
     // requests in flight and starts the next target as soon as one finishes.
-    const CONCURRENCY = 15;
+    // Workers keep about 6 outbound connections open; more only queue.
+    const CONCURRENCY = 6;
     const tmdbLanguage =
       (language || this.acceptLanguage || "fr-FR").split(",")[0]?.trim() || "fr-FR";
     const tmdbPersonId = voiceActor.tmdb_id;
@@ -945,6 +947,7 @@ export class MediaService {
             const response = await fetch(url, {
               headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
               signal: AbortSignal.timeout(2500),
+              ...edgeCache(24 * 60 * 60),
             });
             if (!response.ok) throw new Error(`Wikidata request failed with ${response.status}`);
             const data: unknown = await response.json();

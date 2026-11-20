@@ -1,6 +1,7 @@
 import { isRecord, readPath, readProperty } from "@app/shared-logic";
 import { withTimeout } from "../with-timeout";
 import { buildCacheKey } from "../cache/constants";
+import { edgeCache } from "../cache/edge";
 import { createCacheNamespace, type SimpleCache } from "../cache";
 import { CHARACTER_IMAGE_POSITIVE_TTL } from "../character-images";
 
@@ -60,7 +61,7 @@ function claimStrings(entity: unknown, property: string): string[] {
 
 async function getJson(url: string): Promise<unknown> {
   const response = await withTimeout(
-    fetch(url, { headers: { "User-Agent": USER_AGENT } }),
+    fetch(url, { headers: { "User-Agent": USER_AGENT }, ...edgeCache(24 * 60 * 60) }),
     REQUEST_TIMEOUT_MS,
     "Wikimedia",
   );

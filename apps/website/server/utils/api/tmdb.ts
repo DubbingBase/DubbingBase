@@ -1,4 +1,27 @@
 import { readProperty } from "@app/shared-logic";
+import { isRetryableMediaRequestStatus } from "../retryable-request";
+import { edgeCache, type EdgeCacheInit } from "../cache/edge";
+
+const TMDB_MAX_RETRY_DELAY_MS = 1000;
+const HOUR = 60 * 60;
+
+/**
+ * Edge lifetime (seconds) for a TMDB endpoint in Cloudflare's own HTTP cache,
+ * or 0 to bypass it. This is not KV: it costs no writes and absorbs repeated
+ * identical calls (actor pages, voice-actor fan-out) in the same data center.
+ * Searches and trending lists stay uncached.
+ */
+export function tmdbEdgeCacheTtl(endpoint: string): number {
+  if (endpoint.startsWith("search/") || endpoint.startsWith("trending/")) return 0;
+  if (endpoint.startsWith("person/")) return 6 * HOUR;
+  return 24 * HOUR;
+}
+
+function retryDelayMs(response: Response | null): number {
+  const retryAfter = Number(response?.headers.get("retry-after"));
+  const seconds = Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : 300;
+  return Math.min(seconds, TMDB_MAX_RETRY_DELAY_MS);
+}
 type TmdbResponse = Record<string, unknown> & { cast?: unknown[] };
 
 function isTmdbResponse(value: unknown): value is TmdbResponse {
@@ -32,15 +55,32 @@ export class TMDBClient {
       });
     }
 
+    const init: RequestInit & EdgeCacheInit = {
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+        Accept: "application/json",
+        ...(language ? { "Accept-Language": language } : {}),
+      },
+      ...edgeCache(tmdbEdgeCacheTtl(endpoint)),
+    };
+
     try {
-      const response = await fetch(url.toString(), {
-        headers: {
-          Authorization: `Bearer ${this.apiKey}`,
-          Accept: "application/json",
-          ...(language ? { "Accept-Language": language } : {}),
-        },
-        signal: AbortSignal.timeout(5000),
-      });
+      // One short retry on 429/5xx or a timeout: a rate-limited provider
+      // usually answers the next call, and the page-level cache only stores
+      // complete results.
+      let response: Response | null = null;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          response = await fetch(url.toString(), { ...init, signal: AbortSignal.timeout(5000) });
+        } catch (e: unknown) {
+          if (attempt === 1) throw e;
+          await new Promise((resolve) => setTimeout(resolve, retryDelayMs(null)));
+          continue;
+        }
+        if (response.ok || !isRetryableMediaRequestStatus(response.status) || attempt === 1) break;
+        await new Promise((resolve) => setTimeout(resolve, retryDelayMs(response)));
+      }
+      if (!response) throw new Error(`TMDB API error: no response for ${endpoint}`);
 
       if (!response.ok) {
         throw new Error(`TMDB API error: ${response.status}`);

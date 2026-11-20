@@ -73,4 +73,55 @@ describe("TMDB metadata fetches", () => {
 
     expect(urls[0]?.searchParams.get("append_to_response")).toBe("credits");
   });
+
+  it("keeps metadata in Cloudflare's edge cache but never searches or trending", async () => {
+    const inits: Array<RequestInit & { cf?: unknown }> = [];
+    vi.stubGlobal("useRuntimeConfig", () => ({ tmdbApiKey: "test-key" }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (_input: RequestInfo | URL, init?: RequestInit & { cf?: unknown }) => {
+        inits.push(init ?? {});
+        return new Response(JSON.stringify({ id: 1, results: [] }));
+      }),
+    );
+
+    const client = new TMDBClient();
+    await client.getPersonWithCredits(5);
+    await client.getMediaWithCredits("movie", 1);
+    await client.searchMulti("x");
+    await client.getTrending("tv", "day");
+
+    expect(inits[0]?.cf).toMatchObject({
+      cacheEverything: true,
+      cacheTtlByStatus: { "200-299": 6 * 3600, "500-599": 0 },
+    });
+    expect(inits[1]?.cf).toMatchObject({ cacheTtlByStatus: { "200-299": 24 * 3600 } });
+    expect(inits[2]?.cf).toBeUndefined();
+    expect(inits[3]?.cf).toBeUndefined();
+  });
+
+  it("retries once after a 429 and then succeeds", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response("", { status: 429, headers: { "retry-after": "0" } }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ id: 9 })));
+    vi.stubGlobal("useRuntimeConfig", () => ({ tmdbApiKey: "test-key" }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(new TMDBClient().getCollection(9)).resolves.toMatchObject({ id: 9 });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not retry a 404 and gives up after one retry on persistent 5xx", async () => {
+    vi.stubGlobal("useRuntimeConfig", () => ({ tmdbApiKey: "test-key" }));
+    const notFound = vi.fn(async () => new Response("", { status: 404 }));
+    vi.stubGlobal("fetch", notFound);
+    await expect(new TMDBClient().getCollection(1)).rejects.toThrow("TMDB API error: 404");
+    expect(notFound).toHaveBeenCalledTimes(1);
+
+    const down = vi.fn(async () => new Response("", { status: 503 }));
+    vi.stubGlobal("fetch", down);
+    await expect(new TMDBClient().getCollection(1)).rejects.toThrow("TMDB API error: 503");
+    expect(down).toHaveBeenCalledTimes(2);
+  });
 });

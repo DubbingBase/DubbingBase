@@ -1,6 +1,9 @@
 import { createCacheNamespace, SimpleCache } from "../cache";
 import { buildCacheKey } from "../cache/constants";
+import { edgeCache } from "../cache/edge";
 import { readProperty, type Audiobook, type OpenLibraryAuthor } from "@app/shared-logic";
+
+const OPENLIBRARY_EDGE_TTL = 24 * 60 * 60;
 
 export function buildOpenLibraryCoverUrl(coverId: number, size: "S" | "M" | "L" = "L"): string {
   return `https://covers.openlibrary.org/b/id/${coverId}-${size}.jpg`;
@@ -231,6 +234,7 @@ export class OpenLibraryClient {
               Accept: "application/json",
             },
             signal: AbortSignal.timeout(6000),
+            ...edgeCache(OPENLIBRARY_EDGE_TTL),
           });
 
           if (!res.ok) return null;
@@ -259,6 +263,7 @@ export class OpenLibraryClient {
           Accept: "application/json",
         },
         signal: AbortSignal.timeout(8000),
+        ...edgeCache(OPENLIBRARY_EDGE_TTL),
       });
 
       if (!res.ok) {
@@ -341,6 +346,7 @@ export class OpenLibraryClient {
           Accept: "application/json",
         },
         signal: AbortSignal.timeout(8000),
+        ...edgeCache(OPENLIBRARY_EDGE_TTL),
       });
 
       if (!res.ok) {
