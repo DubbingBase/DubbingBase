@@ -237,6 +237,15 @@ export default defineNuxtConfig({
     experimental: {
       processCSSVariables: true,
     },
+    // Only Google (Inter) and local fonts are used. Disabling the other default providers stops
+    // the build from fetching their catalogs, where a CDN timeout would fail the whole build.
+    providers: {
+      adobe: false,
+      bunny: false,
+      fontshare: false,
+      fontsource: false,
+      googleicons: false,
+    },
     families: [{ name: "Inter", provider: "google", display: "swap", preload: true }],
   },
 
