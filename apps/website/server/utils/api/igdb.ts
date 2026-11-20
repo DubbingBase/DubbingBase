@@ -6,11 +6,16 @@ import {
   type IgdbCharacter,
   type IgdbGame,
 } from "@app/shared-logic";
+import { fetchWithEdgePostCache } from "../cache/edge";
+import { hashCacheValue } from "../cache/constants";
 import {
   createMediaResponseError,
   fetchMediaRequest,
   RetryableMediaRequestError,
 } from "../retryable-request";
+
+// Game metadata: one day absorbs repeat lookups without any KV write.
+const IGDB_EDGE_TTL = 24 * 60 * 60;
 
 interface IgdbCachedToken {
   accessToken: string;
@@ -187,21 +192,28 @@ export class IgdbClient {
     endpoint: string,
     body: string,
     isRow: (value: unknown) => value is T,
+    // Only stable lookups opt in; searches and trending queries are never cached.
+    options: { edgeTtl?: number } = {},
   ): Promise<T[]> {
     let token = await this.authenticate();
 
     try {
-      let response = await fetchMediaRequest(`${this.baseUrl}/${endpoint}`, {
-        method: "POST",
-        headers: {
-          "Client-ID": this.clientId,
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-          "Content-Type": "text/plain",
-        },
-        body,
-        signal: AbortSignal.timeout(8000),
-      });
+      let response = await fetchWithEdgePostCache(
+        `igdb:${endpoint}:${hashCacheValue(body)}`,
+        options.edgeTtl ?? 0,
+        () =>
+          fetchMediaRequest(`${this.baseUrl}/${endpoint}`, {
+            method: "POST",
+            headers: {
+              "Client-ID": this.clientId,
+              Authorization: `Bearer ${token}`,
+              Accept: "application/json",
+              "Content-Type": "text/plain",
+            },
+            body,
+            signal: AbortSignal.timeout(8000),
+          }),
+      );
 
       if (response.status === 401) {
         debugLog(`IGDB 401 on /${endpoint}. Retrying.`);
@@ -272,6 +284,7 @@ export class IgdbClient {
        websites.url, websites.category;
        where id = ${id};`,
       isIgdbGame,
+      { edgeTtl: IGDB_EDGE_TTL },
     );
     return results[0] ?? null;
   }
@@ -310,6 +323,7 @@ export class IgdbClient {
          limit ${pageSize};
          offset ${offset};`,
         isIgdbCharacter,
+        { edgeTtl: IGDB_EDGE_TTL },
       );
       for (const character of page) {
         if (!characterIds.has(character.id)) {
