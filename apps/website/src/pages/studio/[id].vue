@@ -280,8 +280,10 @@ import PersonSkeleton from "../../components/PersonSkeleton.vue";
 
 import { useI18n } from "vue-i18n";
 import { useMediaImage } from "~/composables/useMediaImage";
+import { useSupabasePreconnect } from "~/composables/useSupabasePreconnect";
 
 const mediaImage = useMediaImage();
+useSupabasePreconnect();
 
 const route = useRoute();
 const { user } = useClientUser();
@@ -370,7 +372,7 @@ useHead({
     },
   ],
   link: [
-    { rel: "preconnect", href: "https://image.tmdb.org", crossorigin: "" },
+    { rel: "preconnect", href: "https://image.tmdb.org" },
     { rel: "dns-prefetch", href: "https://image.tmdb.org" },
   ],
 });

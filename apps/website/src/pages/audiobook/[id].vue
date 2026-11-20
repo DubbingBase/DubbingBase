@@ -203,8 +203,10 @@ import { fetchAudiobookData } from "@app/shared-logic";
 import type { Audiobook, DetailCollectionProject, MediaWorkCastCard } from "@app/shared-logic";
 import { ExternalLink as ExternalLinkIcon, Search as SearchIcon } from "lucide-vue-next";
 import { useMediaImage } from "~/composables/useMediaImage";
+import { useSupabasePreconnect } from "~/composables/useSupabasePreconnect";
 
 const mediaImage = useMediaImage();
+useSupabasePreconnect();
 
 const route = useRoute();
 const router = useRouter();

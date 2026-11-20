@@ -130,11 +130,9 @@ const itemKey = (item: CatalogItem): number => item.id;
 useHead({
   title: computed(() => t("browse.title", { type: t(typeLabelKeys[props.type]) })),
   link: [
-    { rel: "preconnect", href: "https://image.tmdb.org", crossorigin: "" },
+    { rel: "preconnect", href: "https://image.tmdb.org" },
     { rel: "dns-prefetch", href: "https://image.tmdb.org" },
-    { rel: "preconnect", href: "https://thetvdb.com", crossorigin: "" },
-    { rel: "dns-prefetch", href: "https://thetvdb.com" },
-    { rel: "preconnect", href: "https://images.igdb.com", crossorigin: "" },
+    { rel: "preconnect", href: "https://images.igdb.com" },
     { rel: "dns-prefetch", href: "https://images.igdb.com" },
   ],
 });

@@ -708,8 +708,10 @@ import { useCharacterImageViewport } from "../../composables/useCharacterImageVi
 import { computed, ref, watch } from "vue";
 import { refDebounced } from "@vueuse/core";
 import { useMediaImage } from "~/composables/useMediaImage";
+import { useSupabasePreconnect } from "~/composables/useSupabasePreconnect";
 
 const mediaImage = useMediaImage();
+useSupabasePreconnect();
 
 const isReportModalOpen = ref(false);
 
@@ -900,7 +902,7 @@ useHead({
     { name: "twitter:image", content: ogImageUrl },
   ],
   link: [
-    { rel: "preconnect", href: "https://image.tmdb.org", crossorigin: "" },
+    { rel: "preconnect", href: "https://image.tmdb.org" },
     { rel: "dns-prefetch", href: "https://image.tmdb.org" },
   ],
   script: [

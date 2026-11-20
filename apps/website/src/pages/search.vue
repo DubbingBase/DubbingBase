@@ -306,9 +306,9 @@ watch(
 useHead({
   title: computed(() => t("search.title")),
   link: [
-    { rel: "preconnect", href: "https://image.tmdb.org", crossorigin: "" },
+    { rel: "preconnect", href: "https://image.tmdb.org" },
     { rel: "dns-prefetch", href: "https://image.tmdb.org" },
-    { rel: "preconnect", href: "https://images.igdb.com", crossorigin: "" },
+    { rel: "preconnect", href: "https://images.igdb.com" },
     { rel: "dns-prefetch", href: "https://images.igdb.com" },
   ],
 });

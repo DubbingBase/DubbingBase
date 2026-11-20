@@ -394,8 +394,10 @@ import {
 } from "lucide-vue-next";
 import ReportModal from "../../components/ReportModal.vue";
 import { useMediaImage } from "~/composables/useMediaImage";
+import { useSupabasePreconnect } from "~/composables/useSupabasePreconnect";
 
 const mediaImage = useMediaImage();
+useSupabasePreconnect();
 
 const isReportModalOpen = ref(false);
 
@@ -613,7 +615,7 @@ useHead({
     },
   ],
   link: [
-    { rel: "preconnect", href: "https://images.igdb.com", crossorigin: "" },
+    { rel: "preconnect", href: "https://images.igdb.com" },
     { rel: "dns-prefetch", href: "https://images.igdb.com" },
   ],
 });

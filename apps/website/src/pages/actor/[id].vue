@@ -428,8 +428,10 @@ import CharacterPhoto from "../../components/CharacterPhoto.vue";
 import { useCharacterImages } from "../../composables/useCharacterImages";
 import { useCharacterImageViewport } from "../../composables/useCharacterImageViewport";
 import { useMediaImage } from "~/composables/useMediaImage";
+import { useSupabasePreconnect } from "~/composables/useSupabasePreconnect";
 
 const mediaImage = useMediaImage();
+useSupabasePreconnect();
 
 const isReportModalOpen = ref(false);
 const hasOpenedReportModal = ref(false);
@@ -654,7 +656,7 @@ useHead({
     },
   ],
   link: [
-    { rel: "preconnect", href: "https://image.tmdb.org", crossorigin: "" },
+    { rel: "preconnect", href: "https://image.tmdb.org" },
     { rel: "dns-prefetch", href: "https://image.tmdb.org" },
   ],
   script: [

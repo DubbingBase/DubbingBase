@@ -196,8 +196,10 @@ import DetailsShareButton from "../../../components/layout/details/DetailsShareB
 import DetailsPage from "../../../components/layout/details/DetailsPage.vue";
 import PersonSkeleton from "../../../components/PersonSkeleton.vue";
 import { useMediaImage } from "~/composables/useMediaImage";
+import { useSupabasePreconnect } from "~/composables/useSupabasePreconnect";
 
 const mediaImage = useMediaImage();
+useSupabasePreconnect();
 
 const route = useRoute();
 function queryText(value: unknown): string | undefined {
