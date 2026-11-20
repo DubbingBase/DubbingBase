@@ -313,6 +313,7 @@
 - `apps/website/src/composables/useVoiceActorProfileRecord.ts` — function useVoiceActorProfileRecord: () => void
 - `apps/website/src/lib/media-editor-routes.ts` — function getMediaEditorRoute: ({...}, mediaId, projectId, }) => string | null
 - `apps/website/src/lib/mediaQueue.ts` — function enqueueMedia: (params) => Promise<void>
+- `apps/website/src/lib/realtime-stub.ts` — class RealtimeClient
 - `apps/website/src/utils/access-token-cache.ts` — function createAccessTokenCache: (auth) => void, interface AccessTokenAuthClient
 - `apps/website/src/utils/actor-ssr-data.ts` — function prepareActorSsrData: (payload) => void
 - `apps/website/src/utils/cast-workspace.ts`
