@@ -169,7 +169,7 @@
             <template #default="{ item: actor }">
               <div
                 :key="actor.id"
-                class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-border"
+                class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-border [content-visibility:auto] [contain-intrinsic-size:auto_260px]"
               >
                 <div class="flex flex-col sm:grid sm:grid-cols-3 gap-4">
                   <!-- Original Actor -->

@@ -31,6 +31,11 @@ export default defineNuxtPlugin({
             // ~80 KiB recorder and web-vitals bundles from loading.
             disable_session_recording: true,
             capture_performance: false,
+            // Dead-click, heatmap and feature-flag features are unused too; each one loads an
+            // extra script or request.
+            capture_dead_clicks: false,
+            capture_heatmaps: false,
+            advanced_disable_flags: true,
           });
 
           // PostHog captures the current URL on init; preserve the landing page if navigation happened while loading.

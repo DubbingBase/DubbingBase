@@ -123,7 +123,7 @@
             <template #default="{ item: char }">
               <div
                 :key="char.id"
-                class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-border"
+                class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-border [content-visibility:auto] [contain-intrinsic-size:auto_260px]"
               >
                 <!-- 2 Column Layout for Games (Character -> Voice Actor) -->
                 <div class="flex flex-col sm:grid sm:grid-cols-2 gap-4">
