@@ -27,10 +27,14 @@ type CharacterImagesResponse = {
  * Resolved portraits survive leaving and re-entering a page (a title, then Back),
  * so cards do not drop to placeholders and refetch every production. Browser-only:
  * nothing is written during server rendering, so no state crosses requests.
- * Only found images are kept; "no image" and failures are looked up again.
+ * Found images are kept for the session. "No image" answers are kept briefly,
+ * because the response does not say whether a provider failure produced them;
+ * failed requests are never kept.
  */
+const MISS_TTL_MS = 5 * 60 * 1000;
 type SharedCharacterImages = {
   images: Map<string, CharacterImage>;
+  misses: Map<string, number>;
   characterIds: Map<string, string>;
   tvdbIds: Map<string, number>;
 };
@@ -40,7 +44,7 @@ const sharedByLanguage = new Map<string, SharedCharacterImages>();
 function sharedFor(language: string): SharedCharacterImages {
   let shared = sharedByLanguage.get(language);
   if (!shared) {
-    shared = { images: new Map(), characterIds: new Map(), tvdbIds: new Map() };
+    shared = { images: new Map(), misses: new Map(), characterIds: new Map(), tvdbIds: new Map() };
     sharedByLanguage.set(language, shared);
   }
   return shared;
@@ -92,15 +96,36 @@ export function useCharacterImages(requests: Ref<readonly CharacterImageRequest[
       const characterId = shared.characterIds.get(key);
       if (characterId !== undefined) characterIds[key] = characterId;
     }
+    const now = Date.now();
+    for (const [key, at] of shared.misses) {
+      if (now - at > MISS_TTL_MS) {
+        shared.misses.delete(key);
+        continue;
+      }
+      if (key in images) continue;
+      images[key] = null;
+      requested.add(key);
+    }
     tvdbIds.value = Object.fromEntries(shared.tvdbIds);
   }
 
-  function remember(key: string, image: CharacterImage | null): void {
+  /** `answered`: the server replied (even "no image"); false when the image failed in the browser. */
+  function remember(key: string, image: CharacterImage | null, answered = true): void {
     if (!import.meta.client) return;
     if (!image) {
       shared.images.delete(key);
+      if (answered) {
+        shared.misses.delete(key);
+        shared.misses.set(key, Date.now());
+        while (shared.misses.size > MAX_SHARED_IMAGES) {
+          const oldest = shared.misses.keys().next().value;
+          if (oldest === undefined) break;
+          shared.misses.delete(oldest);
+        }
+      } else shared.misses.delete(key);
       return;
     }
+    shared.misses.delete(key);
     shared.images.delete(key);
     shared.images.set(key, image);
     const characterId = characterIds[key];
@@ -266,7 +291,7 @@ export function useCharacterImages(requests: Ref<readonly CharacterImageRequest[
     const skip = [...new Set([...(skipped.get(key) ?? []), failed.source])];
     skipped.set(key, skip);
     images[key] = null;
-    remember(key, null);
+    remember(key, null, false);
     enqueueLoad([key], skip);
   }
 
