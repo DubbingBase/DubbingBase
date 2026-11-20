@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/website, @app/supabase, @app/locales, @app/shared-logic
 
-> 67 routes | 28 models | 145 components | 134 lib files | 53 env vars | 14 middleware | 57% test coverage
-> **Token savings:** this file is ~18,600 tokens. Without it, AI exploration would cost ~147,400 tokens. **Saves ~128,700 tokens per conversation.**
-> **Last scanned:** 2026-11-20 08:20 — re-run after significant changes
+> 67 routes | 28 models | 145 components | 135 lib files | 53 env vars | 14 middleware | 57% test coverage
+> **Token savings:** this file is ~18,600 tokens. Without it, AI exploration would cost ~147,600 tokens. **Saves ~129,000 tokens per conversation.**
+> **Last scanned:** 2026-11-20 09:08 — re-run after significant changes
 
 ---
 
@@ -743,6 +743,7 @@
 - `apps/website/src/composables/useReports.ts` — function useReports
 - `apps/website/src/composables/useShowPageData.ts` — function useShowPageData: (showId, locale) => void
 - `apps/website/src/composables/useSimpleCastWorkspace.ts` — function useSimpleCastWorkspace
+- `apps/website/src/composables/useSupabasePreconnect.ts` — function useSupabasePreconnect: () => void
 - `apps/website/src/composables/useTheme.ts` — function useTheme: () => void
 - `apps/website/src/composables/useUrlPagination.ts` — function readUrlPage: (value) => number, function useUrlPagination: (queryKey) => void
 - `apps/website/src/composables/useVoiceActorPageData.ts` — function fetchVoiceActorPageData: (id, lang?) => Promise<VoiceActorPageDataPayload | null>
