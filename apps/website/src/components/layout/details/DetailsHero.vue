@@ -120,6 +120,8 @@ useHead({
           {
             rel: "preload",
             as: "image",
+            // Browsers ignore href when imagesrcset is present; the HTML validator requires it.
+            href: resolveMediaImage(backdropPath.value, { tmdbSize: "w1280" }) ?? undefined,
             imagesrcset: backdropSrcset.value,
             imagesizes: BACKDROP_SIZES,
             fetchpriority: "high",
