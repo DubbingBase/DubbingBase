@@ -194,6 +194,13 @@ export default defineNuxtConfig({
 
   vite: {
     plugins: [tailwindcss()],
+    // The website never uses Supabase realtime, so production builds swap its client for a stub
+    // (see src/lib/realtime-stub.ts); this keeps about 26 KB gzipped out of the entry chunk.
+    resolve: {
+      alias: isProduction
+        ? { "@supabase/realtime-js": resolve(import.meta.dirname, "src/lib/realtime-stub.ts") }
+        : {},
+    },
     // Dev server only: accept any Host (Tailscale/MagicDNS names, LAN hostnames) so the site is
     // reachable from every URL; no effect on production builds.
     server: { allowedHosts: true },
