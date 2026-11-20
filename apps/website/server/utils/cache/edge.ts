@@ -77,3 +77,44 @@ export async function fetchWithEdgePostCache(
   }
   return response;
 }
+
+const STALE_HOST = "https://stale.edge-cache.invalid/";
+
+/**
+ * Keeps a long-lived copy of a provider payload in the Workers Cache API so a
+ * later provider failure (429, 5xx, timeout) can be answered with slightly old
+ * data instead of an error. Free and best-effort like the rest of this file;
+ * a no-op without the Cache API.
+ */
+export async function rememberStale(
+  identity: string,
+  body: string,
+  ttlSeconds: number,
+): Promise<void> {
+  const cache = workersDefaultCache();
+  if (!cache || ttlSeconds <= 0) return;
+  try {
+    await cache.put(
+      new Request(STALE_HOST + encodeURIComponent(identity)),
+      new Response(body, {
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": `public, max-age=${ttlSeconds}`,
+        },
+      }),
+    );
+  } catch {
+    // Not keeping a stale copy is always safe.
+  }
+}
+
+/** The copy stored by `rememberStale`, or null. */
+export async function recallStale(identity: string): Promise<Response | null> {
+  const cache = workersDefaultCache();
+  if (!cache) return null;
+  try {
+    return (await cache.match(new Request(STALE_HOST + encodeURIComponent(identity)))) ?? null;
+  } catch {
+    return null;
+  }
+}

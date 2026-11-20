@@ -149,4 +149,35 @@ describe("TMDB metadata fetches", () => {
     );
     info.mockRestore();
   });
+
+  it("answers from the last good copy when TMDB is down, but never masks a 404", async () => {
+    const store = new Map<string, Response>();
+    vi.stubGlobal("caches", {
+      default: {
+        match: async (request: Request) => store.get(request.url)?.clone(),
+        put: async (request: Request, response: Response) => {
+          store.set(request.url, response);
+        },
+      },
+    });
+    vi.stubGlobal("useRuntimeConfig", () => ({ tmdbApiKey: "test-key" }));
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ id: 7, name: "Good" })))
+      .mockImplementation(async () => new Response("", { status: 503 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+
+    const client = new TMDBClient();
+    await expect(client.getPersonWithCredits(7)).resolves.toMatchObject({ name: "Good" });
+    // Same call during an outage (after the retry) returns the stored copy.
+    await expect(client.getPersonWithCredits(7)).resolves.toMatchObject({ name: "Good" });
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("stale copy"));
+    // A different person has no copy, so the outage still surfaces.
+    await expect(client.getPersonWithCredits(8)).rejects.toThrow("TMDB API error: 503");
+
+    fetchMock.mockReset().mockImplementation(async () => new Response("", { status: 404 }));
+    await expect(client.getPersonWithCredits(7)).rejects.toThrow("TMDB API error: 404");
+    warn.mockRestore();
+  });
 });

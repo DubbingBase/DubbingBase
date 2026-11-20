@@ -1,9 +1,19 @@
 import { readProperty } from "@app/shared-logic";
 import { isRetryableMediaRequestStatus } from "../retryable-request";
-import { edgeCache, type EdgeCacheInit } from "../cache/edge";
+import { edgeCache, recallStale, rememberStale, type EdgeCacheInit } from "../cache/edge";
 
 const TMDB_MAX_RETRY_DELAY_MS = 1000;
 const HOUR = 60 * 60;
+// How long the last good copy is kept for answering during a provider outage.
+const STALE_TTL_SECONDS = 7 * 24 * HOUR;
+
+/** Failures worth answering from a stale copy; a 404 or invalid key is never masked. */
+function isOutage(error: unknown): boolean {
+  if (error instanceof TypeError) return true;
+  if (!(error instanceof Error)) return false;
+  if (error.name === "TimeoutError" || error.name === "AbortError") return true;
+  return /^TMDB API error: (408|425|429|5\d\d)$/.test(error.message);
+}
 
 /**
  * Edge lifetime (seconds) for a TMDB endpoint in Cloudflare's own HTTP cache,
@@ -106,8 +116,21 @@ export class TMDBClient {
       if (!isTmdbResponse(data)) {
         throw new Error(`TMDB API returned an invalid response for ${endpoint}`);
       }
+      // An edge HIT already means a recent copy exists; keep the long-lived
+      // fallback only when this call actually reached TMDB.
+      if (tmdbEdgeCacheTtl(endpoint) > 0 && response.headers.get("cf-cache-status") !== "HIT") {
+        await rememberStale(url.toString(), JSON.stringify(data), STALE_TTL_SECONDS);
+      }
       return data;
     } catch (e: unknown) {
+      if (tmdbEdgeCacheTtl(endpoint) > 0 && isOutage(e)) {
+        const stale = await recallStale(url.toString());
+        const staleData: unknown = stale ? await stale.json().catch(() => null) : null;
+        if (isTmdbResponse(staleData)) {
+          console.warn(`[TMDB] Served a stale copy during an outage: ${endpoint.split("/")[0]}`);
+          return staleData;
+        }
+      }
       if (e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError")) {
         console.warn(`[TMDB] Request timed out for ${endpoint}`);
         throw new Error(`TMDB API timeout: ${endpoint}`);
