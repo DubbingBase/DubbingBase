@@ -124,4 +124,29 @@ describe("TMDB metadata fetches", () => {
     await expect(new TMDBClient().getCollection(1)).rejects.toThrow("TMDB API error: 503");
     expect(down).toHaveBeenCalledTimes(2);
   });
+
+  it("logs the edge cache status without ids for cacheable endpoints only", async () => {
+    const info = vi.spyOn(console, "info").mockImplementation(() => undefined);
+    vi.stubGlobal("useRuntimeConfig", () => ({ tmdbApiKey: "test-key" }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify({ id: 1, results: [] }), {
+            headers: { "cf-cache-status": "HIT" },
+          }),
+      ),
+    );
+
+    const client = new TMDBClient();
+    await client.getPersonWithCredits(123456);
+    await client.searchMulti("x");
+
+    expect(info).toHaveBeenCalledTimes(1);
+    expect(info).toHaveBeenCalledWith(
+      "[TMDB] edge",
+      JSON.stringify({ kind: "person", cache: "HIT", status: 200, attempts: 1 }),
+    );
+    info.mockRestore();
+  });
 });

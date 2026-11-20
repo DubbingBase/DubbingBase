@@ -69,8 +69,10 @@ export class TMDBClient {
       // usually answers the next call, and the page-level cache only stores
       // complete results.
       let response: Response | null = null;
+      let attempts = 0;
       for (let attempt = 0; attempt < 2; attempt++) {
         try {
+          attempts = attempt + 1;
           response = await fetch(url.toString(), { ...init, signal: AbortSignal.timeout(5000) });
         } catch (e: unknown) {
           if (attempt === 1) throw e;
@@ -81,6 +83,20 @@ export class TMDBClient {
         await new Promise((resolve) => setTimeout(resolve, retryDelayMs(response)));
       }
       if (!response) throw new Error(`TMDB API error: no response for ${endpoint}`);
+
+      // One line per edge-cacheable call (sampled by Workers observability), to
+      // measure the edge hit rate: group by `cache` (HIT, MISS, EXPIRED, ...).
+      if (tmdbEdgeCacheTtl(endpoint) > 0) {
+        console.info(
+          "[TMDB] edge",
+          JSON.stringify({
+            kind: endpoint.split("/")[0],
+            cache: response.headers.get("cf-cache-status") ?? "none",
+            status: response.status,
+            attempts,
+          }),
+        );
+      }
 
       if (!response.ok) {
         throw new Error(`TMDB API error: ${response.status}`);
