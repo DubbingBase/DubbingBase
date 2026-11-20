@@ -441,11 +441,13 @@ function useHomeSection<T>(
   handler: () => Promise<T>,
   defaultValue: () => T,
   enabled: MaybeRefOrGetter<boolean> = true,
+  server = true,
 ) {
   return useAsyncData(() => `home-${section}:${trendingLanguage.value}`, handler, {
     default: defaultValue,
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
     lazy: true,
+    server,
     watch: [trendingLanguage],
     enabled,
   });
@@ -495,6 +497,8 @@ const gamesData = useHomeSection(
       query: { lang: trendingLanguage.value, projection: "card" },
     }),
   () => [],
+  true,
+  false,
 );
 
 const trendingVoiceActorsData = useHomeSection(
@@ -504,6 +508,8 @@ const trendingVoiceActorsData = useHomeSection(
       query: { projection: "home" },
     }),
   () => [],
+  true,
+  false,
 );
 
 const topVoiceActorsData = useHomeSection(
@@ -513,6 +519,8 @@ const topVoiceActorsData = useHomeSection(
       query: { limit: 10, projection: "home" },
     }),
   () => [],
+  true,
+  false,
 );
 
 const topContributorsData = useHomeSection(
@@ -556,9 +564,14 @@ function getTmdbPosterSrcset(image: string | null | undefined): string | undefin
 
 const isLoadingMovies = moviesData.pending;
 const isLoadingSeries = seriesData.pending;
-const isLoadingGames = gamesData.pending;
-const isLoadingTrendingVoiceActors = trendingVoiceActorsData.pending;
-const isLoadingTopVoiceActors = topVoiceActorsData.pending;
+// Below-the-fold sections skip SSR, so their status is "idle" until hydration; treat that as
+// loading so the server HTML ships the skeleton instead of an empty rail.
+function isSectionLoading(status: Readonly<Ref<string>>): ComputedRef<boolean> {
+  return computed(() => status.value === "idle" || status.value === "pending");
+}
+const isLoadingGames = isSectionLoading(gamesData.status);
+const isLoadingTrendingVoiceActors = isSectionLoading(trendingVoiceActorsData.status);
+const isLoadingTopVoiceActors = isSectionLoading(topVoiceActorsData.status);
 const isLoadingTopContributors = topContributorsData.pending;
 
 const errorMovies = computed(() => moviesData.error.value?.message || "");

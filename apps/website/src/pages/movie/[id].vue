@@ -70,7 +70,7 @@
 
         <ForceEnqueueButton v-if="movie?.id" media-type="movie" :media-id="movie.id" />
 
-        <DetailsReportButton @click="isReportModalOpen = true" />
+        <DetailsReportButton @click="openReportModal" />
       </template>
 
       <template #content>
@@ -320,7 +320,11 @@
       {{ $t("movie.notFound") }}
     </div>
 
-    <ReportModal v-model:open="isReportModalOpen" :target-url="currentUrl" />
+    <LazyReportModal
+      v-if="hasOpenedReportModal"
+      v-model:open="isReportModalOpen"
+      :target-url="currentUrl"
+    />
   </div>
 </template>
 
@@ -342,7 +346,6 @@ import { fetchMovieData, type MediaDetailDubbingProject } from "@app/shared-logi
 import { computed, ref, watch } from "vue";
 import { refDebounced } from "@vueuse/core";
 import { ArrowLeftIcon, ClapperboardIcon, UserIcon, MicIcon, StarIcon } from "lucide-vue-next";
-import ReportModal from "../../components/ReportModal.vue";
 import CharacterPhoto from "../../components/CharacterPhoto.vue";
 import {
   useCharacterImages,
@@ -366,10 +369,15 @@ useSupabasePreconnect();
 
 const STRUCTURED_DATA_CAST_LIMIT = 20;
 const isReportModalOpen = ref(false);
+const hasOpenedReportModal = ref(false);
+
+function openReportModal(): void {
+  hasOpenedReportModal.value = true;
+  isReportModalOpen.value = true;
+}
 
 const route = useRoute();
 const router = useRouter();
-const supabase = useSupabaseClient();
 const movieId = (Array.isArray(route.params.id) ? route.params.id[0] : route.params.id) || "";
 const siteUrl = useSiteConfig().url;
 const currentUrl = computed(() => new URL(route.fullPath, siteUrl).href);

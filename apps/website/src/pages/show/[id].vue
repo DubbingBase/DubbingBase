@@ -74,7 +74,7 @@
 
         <ForceEnqueueButton v-if="serie?.id" media-type="tv" :media-id="serie.id" />
 
-        <DetailsReportButton @click="isReportModalOpen = true" />
+        <DetailsReportButton @click="openReportModal" />
       </template>
 
       <template #content>
@@ -369,7 +369,11 @@
       {{ $t("series.notFound") }}
     </div>
 
-    <ReportModal v-model:open="isReportModalOpen" :target-url="currentUrl" />
+    <LazyReportModal
+      v-if="hasOpenedReportModal"
+      v-model:open="isReportModalOpen"
+      :target-url="currentUrl"
+    />
   </div>
   <NuxtPage v-else />
 </template>
@@ -399,7 +403,6 @@ import type { MediaDetailCredits, MediaDetailDubbingProject } from "@app/shared-
 import { computed, ref, watch } from "vue";
 import { refDebounced } from "@vueuse/core";
 import { ArrowLeftIcon, ClapperboardIcon, UserIcon, MicIcon, StarIcon } from "lucide-vue-next";
-import ReportModal from "../../components/ReportModal.vue";
 import {
   hasOriginalVersion,
   isOriginalVersionQuery,
@@ -416,11 +419,16 @@ const mediaImage = useMediaImage();
 useSupabasePreconnect();
 
 const isReportModalOpen = ref(false);
+const hasOpenedReportModal = ref(false);
+
+function openReportModal(): void {
+  hasOpenedReportModal.value = true;
+  isReportModalOpen.value = true;
+}
 
 const route = useRoute();
 const isShowRoute = computed(() => route.params.seasonNumber === undefined);
 const router = useRouter();
-const supabase = useSupabaseClient();
 const showId = computed(
   () => (Array.isArray(route.params.id) ? route.params.id[0] : route.params.id) || "",
 );

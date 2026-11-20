@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen">
-    <PersonSkeleton v-if="pending || loading" />
+    <PersonSkeleton v-if="(pending || loading) && !voiceActor" />
 
     <PersonDetailsLayout
       v-else-if="voiceActor"
@@ -71,7 +71,8 @@
           </div>
         </div>
 
-        <EntityHistory
+        <LazyEntityHistory
+          hydrate-on-visible
           type="voice_actor"
           :entity-id="voiceActorId"
           :entity-name="voiceActorDisplayName"
@@ -97,7 +98,7 @@
         <button
           type="button"
           :aria-label="$t('report.title')"
-          @click="isReportModalOpen = true"
+          @click="openReportModal"
           class="text-sm theme-text-muted theme-hover-danger-text transition-colors flex items-center gap-1.5"
           :title="$t('report.title')"
         >
@@ -673,7 +674,11 @@
       {{ $t("voiceActor.notFound") }}
     </div>
 
-    <ReportModal v-model:open="isReportModalOpen" :target-url="currentUrl" />
+    <LazyReportModal
+      v-if="hasOpenedReportModal"
+      v-model:open="isReportModalOpen"
+      :target-url="currentUrl"
+    />
   </div>
 </template>
 
@@ -701,7 +706,6 @@ import {
   Megaphone as MegaphoneIcon,
   Smile as SmileIcon,
 } from "lucide-vue-next";
-import ReportModal from "../../components/ReportModal.vue";
 import CharacterPhoto from "../../components/CharacterPhoto.vue";
 import { useCharacterImages } from "../../composables/useCharacterImages";
 import { useCharacterImageViewport } from "../../composables/useCharacterImageViewport";
@@ -714,6 +718,12 @@ const mediaImage = useMediaImage();
 useSupabasePreconnect();
 
 const isReportModalOpen = ref(false);
+const hasOpenedReportModal = ref(false);
+
+function openReportModal(): void {
+  hasOpenedReportModal.value = true;
+  isReportModalOpen.value = true;
+}
 
 const supabase = useSupabaseClient();
 const router = useRouter();
