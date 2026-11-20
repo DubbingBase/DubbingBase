@@ -58,9 +58,9 @@
 - **[Submit-user-report.post](./submit-user-report.post.md)** — 1 routes — touches: auth, db
 - **[Top-contributors.get](./top-contributors.get.md)** — 1 routes
 - **[Top-voice-actors.get](./top-voice-actors.get.md)** — 1 routes
-- **[Update-voice-actor.post](./update-voice-actor.post.md)** — 1 routes — touches: auth, upload
+- **[Update-voice-actor.post](./update-voice-actor.post.md)** — 1 routes — touches: auth, cache, upload
 - **[Update_user_role.post](./update_user_role.post.md)** — 1 routes — touches: auth
-- **[Upload-profile-picture.post](./upload-profile-picture.post.md)** — 1 routes — touches: auth, upload
+- **[Upload-profile-picture.post](./upload-profile-picture.post.md)** — 1 routes — touches: auth, cache, upload
 - **[Voice-actors.get](./voice-actors.get.md)** — 1 routes
 
 **Database:** unknown, 28 models — see [database.md](./database.md)

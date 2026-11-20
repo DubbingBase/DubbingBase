@@ -60,9 +60,9 @@
 - `GET` `/api/trending/movies` [cache] ✓
 - `GET` `/api/trending/shows` [cache]
 - `GET` `/api/trending/voice-actors`
-- `POST` `/api/update-voice-actor` [auth, upload] ✓
+- `POST` `/api/update-voice-actor` [auth, cache, upload] ✓
 - `POST` `/api/update_user_role` [auth]
-- `POST` `/api/upload-profile-picture` [auth, upload] ✓
+- `POST` `/api/upload-profile-picture` [auth, cache, upload] ✓
 - `GET` `/api/voice-actor/:id` params(id)
 - `ALL` `/routes/sitemap.xml`
 - `GET` `/routes/sitemaps/:file` params(file)

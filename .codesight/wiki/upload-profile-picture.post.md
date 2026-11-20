@@ -2,11 +2,11 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Upload-profile-picture.post subsystem handles **1 routes** and touches: auth.
+The Upload-profile-picture.post subsystem handles **1 routes** and touches: auth, cache.
 
 ## Routes
 
-- `POST` `/api/upload-profile-picture` [auth, upload]
+- `POST` `/api/upload-profile-picture` [auth, cache, upload]
   `apps/website/server/api/upload-profile-picture.post.ts`
 
 ## Related Models
