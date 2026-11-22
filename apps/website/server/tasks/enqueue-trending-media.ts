@@ -1,5 +1,5 @@
-import { readPath } from "@app/shared-logic";
-import { asString } from "../utils/narrow";
+import { readPath, readProperty } from "@app/shared-logic";
+import { internalRequestHeaders, resolveInternalSecret } from "../utils/internal-secret";
 
 export default defineTask({
   meta: {
@@ -10,20 +10,11 @@ export default defineTask({
     const cf: unknown = readPath(event, "context", "cloudflare");
     const config = useRuntimeConfig();
     const nitroApp = useNitroApp();
-    const secretKey =
-      asString(config.supabaseSecretKey) ||
-      asString(readPath(cf, "env", "SUPABASE_SECRET_KEY")) ||
-      asString(readPath(cf, "env", "NUXT_SUPABASE_SECRET_KEY")) ||
-      process.env.SUPABASE_SECRET_KEY ||
-      process.env.NUXT_SUPABASE_SECRET_KEY ||
-      "";
+    const secretKey = resolveInternalSecret(config.supabaseSecretKey, readProperty(cf, "env"));
 
     const response = await nitroApp.localFetch("/api/prepare-trending-media", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(secretKey ? { "x-internal-secret": secretKey } : {}),
-      },
+      headers: internalRequestHeaders(secretKey),
       context: event?.context,
     });
 

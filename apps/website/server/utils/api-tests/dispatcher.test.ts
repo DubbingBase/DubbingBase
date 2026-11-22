@@ -22,8 +22,9 @@ beforeAll(async () => {
 beforeEach(() => {
   mocks.rpc.mockReset();
   mocks.localFetch.mockReset();
-  mocks.localFetch.mockResolvedValue(
-    new Response(JSON.stringify({ processed: 1 }), { status: 200 }),
+  // A fresh Response per call: a body can only be read once.
+  mocks.localFetch.mockImplementation(
+    async () => new Response(JSON.stringify({ processed: 1 }), { status: 200 }),
   );
   vi.spyOn(console, "debug").mockImplementation(() => undefined);
   vi.spyOn(console, "info").mockImplementation(() => undefined);
@@ -62,11 +63,14 @@ describe("dispatcher", () => {
   });
 
   it("starts only queue processors reported ready", async () => {
-    mocks.rpc.mockResolvedValue({ data: ["wiki_scan"], error: null });
+    mocks.rpc
+      .mockResolvedValueOnce({ data: ["wiki_scan"], error: null })
+      .mockResolvedValue({ data: [], error: null });
 
     await runDispatcher({ context: {} });
 
     expect(mocks.localFetch).toHaveBeenCalledTimes(1);
+    expect(mocks.rpc).toHaveBeenCalledTimes(2);
     expect(mocks.localFetch).toHaveBeenCalledWith(
       "/api/process-media-queue",
       expect.objectContaining({ body: { queue: "wiki_scan" } }),
@@ -86,5 +90,29 @@ describe("dispatcher", () => {
       "wiki_scan",
       "wiki_extract",
     ]);
+  });
+
+  it("keeps draining a queue within one tick until it is no longer ready", async () => {
+    mocks.rpc
+      .mockResolvedValueOnce({ data: ["wiki_scan"], error: null })
+      .mockResolvedValueOnce({ data: ["wiki_scan"], error: null })
+      .mockResolvedValueOnce({ data: ["wiki_scan"], error: null })
+      .mockResolvedValue({ data: [], error: null });
+
+    await runDispatcher({ context: {} });
+
+    expect(mocks.localFetch).toHaveBeenCalledTimes(3);
+  });
+
+  it("stops retrying a queue that reports ready but processes nothing", async () => {
+    mocks.rpc.mockResolvedValue({ data: ["wiki_extract"], error: null });
+    mocks.localFetch.mockImplementation(
+      async () =>
+        new Response(JSON.stringify({ processed: 0, reason: "quota_exhausted" }), { status: 200 }),
+    );
+
+    await runDispatcher({ context: {} });
+
+    expect(mocks.localFetch).toHaveBeenCalledTimes(1);
   });
 });
