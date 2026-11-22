@@ -242,6 +242,7 @@ import { ref, onMounted, computed, nextTick, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
   createDubbingProjectSaveClient,
+  createRequestId,
   createStableRequestIdFactory,
   getDubbingProjectSaveErrorMessage,
   getEditableDubbingProjectStatus,
@@ -275,7 +276,6 @@ const saveDubbingProject = createDubbingProjectSaveClient((body) =>
   }),
 );
 const characterReferenceRequestIds = createStableRequestIdFactory();
-const gameCharacterCreateRequestIds = createStableRequestIdFactory();
 const voiceActorCreateRequestIds = createStableRequestIdFactory();
 const route = useRoute();
 const router = useRouter();
@@ -361,7 +361,7 @@ type GameCharacterOption = {
   game_character_id: string | null;
   igdb_character_id: number | null;
   wikidata_qid: string | null;
-  identity_source: "igdb" | "local";
+  identity_source: "igdb" | "local" | "draft";
   local_name: string | null;
   local_updated_at: string | null;
   igdb_candidate_ids: number[];
@@ -371,15 +371,16 @@ type GameCharacterOption = {
 type GameCharacterApiRow = Omit<GameCharacterOption, "id"> & {
   id: number | null;
   stable_id: string;
+  identity_source: "igdb" | "local";
 };
 
 const { toast, showToast } = useEditorToast();
 
 const getDisplayLanguage = useDisplayLanguage();
 
-const isCreatingGameCharacter = ref(false);
 const isUpdatingCharacterReferences = ref(false);
 const wikidataDrafts = ref<Record<string, string>>({});
+const draftCharacters = ref<Record<string, string>>({});
 const isLoading = ref(true);
 const loadError = ref<string | null>(null);
 
@@ -391,6 +392,7 @@ const form = useEditorFormState({
     selectedStudioId: selectedStudioId.value,
     crew: crewState.snapshot(),
     castRows: castRows.value,
+    draftCharacters: draftCharacters.value,
   }),
   restore: (saved) => {
     contentId.value = saved.contentId;
@@ -399,6 +401,7 @@ const form = useEditorFormState({
     selectedStudioId.value = saved.selectedStudioId;
     crewState.restore(saved.crew);
     castRows.value = saved.castRows;
+    draftCharacters.value = saved.draftCharacters;
   },
 });
 // Workspace presentation state
@@ -437,7 +440,21 @@ const removeCastRow = (key: string) => {
 };
 
 const igdbCharacters = ref<GameCharacterOption[]>([]);
-const initialCharacterOptions = computed(() => igdbCharacters.value.slice(0, 50));
+const characterOptions = computed<GameCharacterOption[]>(() => [
+  ...Object.entries(draftCharacters.value).map(([id, name]): GameCharacterOption => ({
+    id: `draft_game_character:${id}`,
+    name,
+    game_character_id: id,
+    igdb_character_id: null,
+    wikidata_qid: null,
+    identity_source: "draft",
+    local_name: null,
+    local_updated_at: null,
+    igdb_candidate_ids: [],
+  })),
+  ...igdbCharacters.value,
+]);
+const initialCharacterOptions = computed(() => characterOptions.value.slice(0, 50));
 const characterCatalogStatus = ref<"available" | "unavailable">("available");
 const providerCharacterCount = computed(
   () => igdbCharacters.value.filter((character) => character.identity_source === "igdb").length,
@@ -446,15 +463,15 @@ let lastCharacterQuery = "";
 
 const searchCharacters = (query: string) => {
   lastCharacterQuery = query;
-  if (!query) return igdbCharacters.value.slice(0, 50);
-  return igdbCharacters.value
+  if (!query) return initialCharacterOptions.value;
+  return characterOptions.value
     .filter((c) => c.name.toLowerCase().includes(query.toLowerCase()))
     .slice(0, 50);
 };
 
 const getCharacterName = (id: number | string | null) => {
   if (!id) return "";
-  const char = igdbCharacters.value.find((c) => c.id === id);
+  const char = characterOptions.value.find((c) => c.id === id);
   return char ? char.name : "";
 };
 
@@ -466,12 +483,12 @@ const handleCharacterSelect = (row: CastRow, val: number | string | null) => {
     row.character_name = "";
     return;
   }
-  const char = igdbCharacters.value.find((c) => c.id === val);
+  const char = characterOptions.value.find((c) => c.id === val);
   if (char) {
     row.character_ref = char.id;
     row.character_id = char.igdb_character_id;
     row.game_character_id = char.game_character_id;
-    row.character_name = char.game_character_id ? char.local_name || char.name : char.name;
+    row.character_name = char.local_name || char.name;
   }
 };
 
@@ -488,39 +505,17 @@ const handleCharacterFreeText = (row: CastRow) => {
   lastCharacterQuery = "";
 };
 
-const handleCharacterCreate = async (row: CastRow, query: string) => {
-  if (isCreatingGameCharacter.value) return;
+const handleCharacterCreate = (row: CastRow, query: string) => {
   const gameId = contentId.value ?? igdbGameId.value;
   const name = query.trim();
   if (!gameId || !name) return;
-
-  const payload = { igdb_game_id: gameId, name };
-  isCreatingGameCharacter.value = true;
-  try {
-    const created = await $fetch<{
-      character: { id: string };
-    }>("/api/game-characters", {
-      method: "POST",
-      body: {
-        request_id: gameCharacterCreateRequestIds.forPayload(payload),
-        ...payload,
-      },
-    });
-    await reloadGameCharacterOptions();
-    const local = igdbCharacters.value.find(
-      (character) =>
-        character.identity_source === "local" &&
-        character.game_character_id === created.character.id,
-    );
-    if (!local) throw new Error("Created game character was not returned");
-
-    gameCharacterCreateRequestIds.clear();
-    handleCharacterSelect(row, local.id);
-  } catch (error) {
-    showToast(getDubbingProjectSaveErrorMessage(error), "error");
-  } finally {
-    isCreatingGameCharacter.value = false;
+  if (name.length > 300) {
+    showToast(t("projectEditor.gameCharacterNameTooLong"), "error");
+    return;
   }
+  const id = createRequestId();
+  draftCharacters.value[id] = name;
+  handleCharacterSelect(row, `draft_game_character:${id}`);
 };
 
 const getLocalCharacter = (row: CastRow) =>
@@ -675,6 +670,10 @@ const saveGameProject = async () => {
     const crew = crewState.toSaveRows();
 
     const cast = serializeGameProjectCastRows(castRows.value);
+    const usedCharacterIds = new Set(cast.map((row) => row.game_character_id));
+    const usedDrafts = Object.entries(draftCharacters.value).filter(([id]) =>
+      usedCharacterIds.has(id),
+    );
 
     const result = await saveDubbingProject({
       project_id: projectId,
@@ -688,6 +687,7 @@ const saveGameProject = async () => {
       },
       crew,
       cast,
+      ...(usedDrafts.length > 0 ? { new_game_characters: Object.fromEntries(usedDrafts) } : {}),
     });
     projectId = result.projectId;
     projectUpdatedAt.value = result.updatedAt;
@@ -696,7 +696,13 @@ const saveGameProject = async () => {
       await refreshProject();
       // Let the reload watcher apply persisted values before marking them clean.
       await nextTick();
+      if (initialDataError.value) {
+        loadError.value = t("projectEditor.gameSavedReloadFailed");
+        form.saveFailed(loadError.value);
+        return;
+      }
     }
+    draftCharacters.value = {};
     form.saveSucceeded();
     showToast(t("projectEditor.toastSaved"), "success");
     if (!isEditMode.value && projectId && contentId.value) {

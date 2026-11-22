@@ -140,6 +140,18 @@ function validBody() {
   };
 }
 
+const draftCharacterId = "22222222-2222-4222-8222-222222222222";
+
+function gameDraftBody() {
+  const body = validBody();
+  return {
+    ...body,
+    project: { ...body.project, content_id: 42, content_type: "video_game" },
+    cast: [{ game_character_id: draftCharacterId, character_name: "Draft Role" }],
+    new_game_characters: { [draftCharacterId]: "Draft Role" },
+  };
+}
+
 describe("POST /api/save-dubbing-project", () => {
   it("requires an administrator before external lookups or privileged writes", async () => {
     routeMocks.requireAdmin.mockImplementation(() => {
@@ -275,6 +287,55 @@ describe("POST /api/save-dubbing-project", () => {
         ],
       }),
     );
+  });
+
+  it("uses one atomic save for draft characters and verifies only persisted character IDs", async () => {
+    const { rpc, localCharacterQuery } = createSupabaseMock({
+      data: [{ project_id: 51, updated_at: null, audit_log_id: "audit-1", replayed: false }],
+      error: null,
+    });
+    const body = gameDraftBody();
+    const localId = "11111111-1111-4111-8111-111111111111";
+    body.cast.push({ game_character_id: localId, character_name: "Existing Role" });
+
+    expect((await post(body)).status).toBe(200);
+    expect(localCharacterQuery.in).toHaveBeenCalledExactlyOnceWith("id", [localId]);
+    expect(routeMocks.getIgdbGame).not.toHaveBeenCalled();
+    expect(rpc).toHaveBeenCalledExactlyOnceWith("save_dubbing_project_editor_with_characters", {
+      p_actor_id: "admin-1",
+      p_request_id: body.request_id,
+      p_project_id: body.project_id,
+      p_expected_updated_at: body.expected_updated_at,
+      p_project: body.project,
+      p_crew: body.crew,
+      p_cast: body.cast,
+      p_new_game_characters: body.new_game_characters,
+    });
+  });
+
+  it("rejects unused drafts and drafts with an IGDB mapping before saving", async () => {
+    const { rpc } = createSupabaseMock({ data: null, error: null });
+    const body = gameDraftBody();
+
+    expect((await post({ ...body, cast: [] })).status).toBe(400);
+    expect((await post({ ...body, cast: [{ ...body.cast[0], character_id: 7 }] })).status).toBe(
+      400,
+    );
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it("verifies a new game's ID even when the cast contains a draft character", async () => {
+    const { rpc } = createSupabaseMock({ data: null, error: null });
+    routeMocks.getIgdbGame.mockResolvedValue(null);
+    const response = await post({
+      ...gameDraftBody(),
+      project_id: null,
+      expected_updated_at: null,
+    });
+
+    expect(response.status).toBe(422);
+    expect(routeMocks.getIgdbGame).toHaveBeenCalledExactlyOnceWith(42);
+    expect(rpc).not.toHaveBeenCalled();
   });
 
   it("preserves an IGDB character credit when editing a video game project", async () => {

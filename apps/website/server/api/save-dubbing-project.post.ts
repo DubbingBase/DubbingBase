@@ -182,6 +182,7 @@ function parseBody(value: unknown): ProjectSaveBody {
       "project",
       "crew",
       "cast",
+      "new_game_characters",
     ])
   ) {
     throw projectSaveError(400, "Invalid project save request");
@@ -240,15 +241,49 @@ function parseBody(value: unknown): ProjectSaveBody {
     crew.push({ job_id: item.job_id, person_id: item.person_id });
   }
 
+  const newGameCharacters: Record<string, string> = {};
+  if ("new_game_characters" in value) {
+    if (contentType !== "video_game" || !isRecord(value.new_game_characters)) {
+      throw projectSaveError(400, "Invalid new game characters");
+    }
+    for (const [id, name] of Object.entries(value.new_game_characters)) {
+      if (
+        !isOptionalUuid(id) ||
+        id !== id.toLowerCase() ||
+        id === value.request_id.toLowerCase() ||
+        typeof name !== "string" ||
+        name.length === 0 ||
+        name.length > 300 ||
+        name !== name.trim()
+      ) {
+        throw projectSaveError(400, "Invalid new game character fields");
+      }
+      newGameCharacters[id] = name;
+    }
+  }
+
   const cast: CastSaveRow[] = [];
   const castIds = new Set<number>();
+  const assignedDrafts = new Set<string>();
   for (const item of value.cast) {
     const row = parseCastRow(item, contentType);
     if (row.id !== undefined && castIds.has(row.id)) {
       throw projectSaveError(400, "Duplicate cast row id");
     }
     if (row.id !== undefined) castIds.add(row.id);
+    if (row.game_character_id && Object.hasOwn(newGameCharacters, row.game_character_id)) {
+      if (
+        row.character_id != null ||
+        row.character_name !== newGameCharacters[row.game_character_id]
+      ) {
+        throw projectSaveError(400, "Invalid assignment for a new game character");
+      }
+      assignedDrafts.add(row.game_character_id);
+    }
     cast.push(row);
+  }
+  if (assignedDrafts.size !== Object.keys(newGameCharacters).length) {
+    throw projectSaveError(400, "Every new game character must be assigned to the cast");
   }
 
   const requestId = value.request_id;
@@ -270,6 +305,7 @@ function parseBody(value: unknown): ProjectSaveBody {
     },
     crew,
     cast,
+    ...(assignedDrafts.size > 0 ? { new_game_characters: newGameCharacters } : {}),
   };
 }
 
@@ -313,9 +349,14 @@ async function validateExternalReferences(body: ProjectSaveBody, event: H3EventT
       );
     }
   } else if (contentType === "video_game") {
+    const newGameCharacters = body.new_game_characters ?? {};
     const requestedLocalIds = [
       ...new Set(
-        body.cast.flatMap((row) => (row.game_character_id ? [row.game_character_id] : [])),
+        body.cast.flatMap((row) =>
+          row.game_character_id && !Object.hasOwn(newGameCharacters, row.game_character_id)
+            ? [row.game_character_id]
+            : [],
+        ),
       ),
     ];
     if (requestedLocalIds.length > 0) {
@@ -351,6 +392,14 @@ async function validateExternalReferences(body: ProjectSaveBody, event: H3EventT
         ? []
         : [row.character_id],
     );
+    // The save RPC confirms that an existing project still belongs to this game.
+    if (
+      body.project_id !== null &&
+      body.new_game_characters &&
+      requestedCharacterIds.length === 0
+    ) {
+      return;
+    }
     if (requestedLocalIds.length === 0 || requestedCharacterIds.length > 0) {
       try {
         const igdb = useIgdbClient();
@@ -399,7 +448,7 @@ export default defineAdminHandler(async (event, user) => {
   await validateExternalReferences(body, event);
 
   const supabase = event.context.supabaseAdmin || useSupabaseAdmin(event);
-  const { data, error } = await supabase.rpc("save_dubbing_project_editor", {
+  const args = {
     p_actor_id: user.id,
     p_request_id: body.request_id,
     p_project_id: body.project_id,
@@ -407,7 +456,13 @@ export default defineAdminHandler(async (event, user) => {
     p_project: body.project,
     p_crew: body.crew,
     p_cast: body.cast,
-  });
+  };
+  const { data, error } = body.new_game_characters
+    ? await supabase.rpc("save_dubbing_project_editor_with_characters", {
+        ...args,
+        p_new_game_characters: body.new_game_characters,
+      })
+    : await supabase.rpc("save_dubbing_project_editor", args);
 
   if (error) {
     if (error.code === "42501") {

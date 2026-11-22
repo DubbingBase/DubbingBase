@@ -160,6 +160,7 @@
     "remove": "Remove",
     "description": "Description",
     "create": "Create",
+    "createNamed": "Create “{name}”",
     "searching": "Searching...",
     "link": "Link",
     "refresh": "Refresh",
@@ -1412,6 +1413,8 @@
     "gameSaveQid": "Save QID",
     "gameUnlinkIgdb": "Unlink IGDB",
     "gameEnterRoleName": "Enter a role name before choosing free text.",
+    "gameCharacterNameTooLong": "Use 300 characters or fewer for the name.",
+    "gameSavedReloadFailed": "The project was saved. Reload this page to continue editing.",
     "gameReferenceUpdated": "Game character reference updated.",
     "gameInvalidQid": "Enter a valid Wikidata QID, such as Q12345."
   },

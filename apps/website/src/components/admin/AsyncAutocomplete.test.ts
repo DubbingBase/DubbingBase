@@ -6,7 +6,6 @@ import { nextTick } from "vue";
 const localeMessages: Record<string, string> = {
   "common.searching": "Searching...",
   "search.noResults": "No results found.",
-  "common.create": 'Create "{name}"',
 };
 
 const tMock = (key: string, params?: Record<string, string>) => {
@@ -167,9 +166,8 @@ describe("AsyncAutocomplete.vue", () => {
     expect(wrapper.emitted("update:modelValue")?.[0]).toEqual([null]);
   });
 
-  it("shows create button when allowCreate is true and search term >= 2", async () => {
+  it("shows the name to create and emits that same name", async () => {
     const wrapper = await mountSuspended(AsyncAutocomplete, {
-      ...globalOptions,
       props: {
         ...defaultProps,
         allowCreate: true,
@@ -177,17 +175,20 @@ describe("AsyncAutocomplete.vue", () => {
     });
 
     const input = wrapper.find("input");
-    await input.setValue("new item");
+    await input.setValue("  new item  ");
     await input.trigger("focus");
     await nextTick();
 
-    const bodyText = document.body.textContent || "";
-    expect(bodyText).toContain('Create "new item"');
+    const createButton = Array.from(document.querySelectorAll("button")).find(
+      (button) => button.textContent?.trim() === "Create “new item”",
+    );
+    expect(createButton).toBeDefined();
+    createButton?.click();
+    expect(wrapper.emitted("create")).toEqual([["new item"]]);
   });
 
   it("hides create button when an item is selected and search term matches its display value", async () => {
     const wrapper = await mountSuspended(AsyncAutocomplete, {
-      ...globalOptions,
       props: {
         ...defaultProps,
         allowCreate: true,
@@ -203,7 +204,7 @@ describe("AsyncAutocomplete.vue", () => {
     // The search term will sync to "Item 1" (which is >= 2 chars),
     // but because it matches the selected item exactly, the create button should NOT show.
     const bodyText = document.body.textContent || "";
-    expect(bodyText).not.toContain('Create "Item 1"');
+    expect(bodyText).not.toContain("Create “Item 1”");
   });
 
   it("does not emit search event when selecting an option", async () => {

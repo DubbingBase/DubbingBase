@@ -1474,6 +1474,24 @@ export type Database = {
           updated_at: string;
         }[];
       };
+      save_dubbing_project_editor_with_characters: {
+        Args: {
+          p_actor_id: string;
+          p_cast: Json;
+          p_crew: Json;
+          p_expected_updated_at: string;
+          p_new_game_characters: Json;
+          p_project: Json;
+          p_project_id: number;
+          p_request_id: string;
+        };
+        Returns: {
+          audit_log_id: string;
+          project_id: number;
+          replayed: boolean;
+          updated_at: string;
+        }[];
+      };
       save_regional_project_actor_assignments:
         | {
             Args: {

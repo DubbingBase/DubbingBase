@@ -75,19 +75,21 @@
             <div
               v-if="
                 allowCreate &&
-                searchTerm.length >= 2 &&
+                createName.length >= 2 &&
                 !isLoading &&
-                (modelValue == null || searchTerm !== resolveLabel(modelValue))
+                (modelValue == null || createName !== resolveLabel(modelValue).trim())
               "
               class="border-t theme-border mt-1 pt-1"
             >
               <button
                 type="button"
-                @click="$emit('create', searchTerm)"
+                @click="$emit('create', createName)"
                 class="w-full text-left px-3 py-2 text-sm theme-text theme-hover-surface-muted rounded-lg font-medium outline-none theme-surface-muted transition-colors flex items-center gap-2"
               >
-                <PlusIcon class="w-4 h-4" />
-                {{ $t("common.create", { name: searchTerm }) }}
+                <PlusIcon class="w-4 h-4 shrink-0" aria-hidden="true" />
+                <span class="min-w-0 wrap-anywhere">{{
+                  $t("common.createNamed", { name: createName })
+                }}</span>
               </button>
             </div>
           </ComboboxViewport>
@@ -142,6 +144,7 @@ const emit = defineEmits<{
 }>();
 
 const searchTerm = ref("");
+const createName = computed(() => searchTerm.value.trim());
 const ownResults = shallowRef<readonly T[] | null>(null);
 const ownLoading = ref(false);
 const searchFailed = ref(false);
