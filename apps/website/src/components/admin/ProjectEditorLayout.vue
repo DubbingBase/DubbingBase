@@ -40,6 +40,13 @@
           {{ $t("projectEditor.addLanguage").replace(/^\+\s*/, "") }}
         </AppFilterChip>
       </nav>
+      <!-- New project: the dubbing language defines it, so ask for it before anything else. -->
+      <div v-if="isCreating" class="max-w-xs space-y-1.5" data-testid="editor-language-picker">
+        <label :for="`${formId}-hero-language`" class="text-sm font-semibold theme-text">
+          {{ $t("projectEditor.dubbingLanguage") }} *
+        </label>
+        <AdminLanguageSelect :id="`${formId}-hero-language`" v-model="language" required />
+      </div>
     </AdminEditorHero>
 
     <div
@@ -94,6 +101,7 @@
       :error-message="form.errorMessage.value"
       :save-label="saveLabel"
       :form-id="formId"
+      :disabled="isCreating && !language"
       @discard="form.discard"
     />
     <AdminUnsavedChangesDialog
@@ -140,6 +148,9 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<{ submit: [] }>();
 const section = defineModel<EditorSection>("section", { default: "cast" });
+
+const language = defineModel<string>("language", { default: "" });
+const isCreating = computed(() => !props.projectIdParam || props.projectIdParam === "new");
 
 const { t } = useI18n();
 const localePath = useLocalePath();

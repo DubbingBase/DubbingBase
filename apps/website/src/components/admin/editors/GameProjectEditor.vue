@@ -1,6 +1,7 @@
 <template>
   <AdminProjectEditorLayout
     v-model:section="section"
+    v-model:language="dubbingLanguage"
     :title="mediaTitle || $t('projectEditor.createGameProject')"
     :eyebrow="
       isEditMode ? $t('projectEditor.editGameProject') : $t('projectEditor.createGameProject')
@@ -663,7 +664,11 @@ const onVoiceActorCreated = (voiceActor: AdminLookupOption) => {
 
 const saveGameProject = async () => {
   if (!contentId.value) return showToast(t("projectEditor.igdbIdRequired"), "error");
-  if (!dubbingLanguage.value) return showToast(t("projectEditor.languageRequired"), "error");
+  if (!dubbingLanguage.value) {
+    // The language field lives in Settings; take the user there so the error is actionable.
+    section.value = "settings";
+    return showToast(t("projectEditor.languageRequired"), "error");
+  }
   form.beginSave();
   try {
     let projectId = isEditMode.value ? Number(projectIdParam) : null;
