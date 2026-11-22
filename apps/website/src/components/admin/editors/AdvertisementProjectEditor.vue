@@ -1,6 +1,7 @@
 <template>
   <AdminProjectEditorLayout
     v-model:section="section"
+    v-model:language="dubbingLanguage"
     :title="
       mediaTitle ||
       (isEditMode ? 'Modifier le projet publicitaire' : 'Créer un projet publicitaire')

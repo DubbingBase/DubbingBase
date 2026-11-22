@@ -1,6 +1,7 @@
 <template>
   <AdminProjectEditorLayout
     v-model:section="section"
+    v-model:language="dubbingLanguage"
     :title="
       mediaTitle ||
       (isEditMode ? 'Modifier le projet de livre audio' : 'Créer un projet de livre audio')
