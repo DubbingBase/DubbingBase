@@ -4,8 +4,8 @@
 > **Monorepo:** @app/website, @app/supabase, @app/locales, @app/shared-logic
 
 > 67 routes | 28 models | 145 components | 137 lib files | 53 env vars | 14 middleware | 57% test coverage
-> **Token savings:** this file is ~18,800 tokens. Without it, AI exploration would cost ~148,100 tokens. **Saves ~129,300 tokens per conversation.**
-> **Last scanned:** 2026-11-20 20:22 — re-run after significant changes
+> **Token savings:** this file is ~18,800 tokens. Without it, AI exploration would cost ~148,100 tokens. **Saves ~129,400 tokens per conversation.**
+> **Last scanned:** 2026-11-22 19:04 — re-run after significant changes
 
 ---
 
@@ -772,11 +772,11 @@
 - `apps/website/src/utils/dubbing-project-save.ts`
   - function getEditableDubbingProjectStatus: (value) => DubbingProjectStatus
   - function serializeGameProjectCastRows: (rows) => DubbingProjectCastSaveRow[]
+  - function createRequestId: () => string
   - function createStableRequestIdFactory: (randomUUID) => void
   - function createDubbingProjectSaveClient: (transport, randomUUID) => void
   - function isDubbingProjectSaveConflict: (error) => boolean
-  - function getDubbingProjectSaveErrorMessage: (error) => string
-  - _...10 more_
+  - _...11 more_
 - `apps/website/src/utils/duplicate-work.ts`
   - function duplicateWorkDraftHasChanges: (initial, current) => boolean
   - function canPrefetchDuplicateWorkPage: (requestSucceeded, currentIndex, groupCount, nextCursor) => boolean
@@ -1056,7 +1056,7 @@
 # Test Coverage
 
 > **57%** of routes and models are covered by tests
-> 164 test files found
+> 166 test files found
 
 ## Covered Routes
 
