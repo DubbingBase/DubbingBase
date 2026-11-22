@@ -160,6 +160,7 @@
     "remove": "Eliminar",
     "description": "Descripción",
     "create": "Crear",
+    "createNamed": "Crear «{name}»",
     "searching": "Buscando...",
     "link": "Enlace",
     "refresh": "Actualizar",
@@ -1412,6 +1413,8 @@
     "gameSaveQid": "Guardar el QID",
     "gameUnlinkIgdb": "Desvincular de IGDB",
     "gameEnterRoleName": "Introduce el nombre del papel antes de elegir texto libre.",
+    "gameCharacterNameTooLong": "Usa un máximo de 300 caracteres para el nombre.",
+    "gameSavedReloadFailed": "Se guardó el proyecto. Recarga esta página para seguir editando.",
     "gameReferenceUpdated": "Referencia del personaje actualizada.",
     "gameInvalidQid": "Introduce un QID de Wikidata válido, como Q12345."
   },

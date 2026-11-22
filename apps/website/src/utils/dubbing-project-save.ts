@@ -124,6 +124,7 @@ export interface DubbingProjectSaveRequest {
   };
   crew: DubbingProjectCrewSaveRow[];
   cast: DubbingProjectCastSaveRow[];
+  new_game_characters?: Record<string, string>;
 }
 
 export interface DubbingProjectSaveResponse {
@@ -138,7 +139,7 @@ export type DubbingProjectSaveTransport = (
   request: DubbingProjectSaveRequest & { request_id: string },
 ) => Promise<DubbingProjectSaveResponse>;
 
-function createRequestId(): string {
+export function createRequestId(): string {
   if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
 
   const bytes = crypto.getRandomValues(new Uint8Array(16));

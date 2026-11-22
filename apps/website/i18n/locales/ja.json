@@ -160,6 +160,7 @@
     "remove": "削除",
     "description": "説明",
     "create": "作成",
+    "createNamed": "「{name}」を作成",
     "searching": "検索中...",
     "link": "リンク",
     "refresh": "更新",
@@ -1412,6 +1413,8 @@
     "gameSaveQid": "QIDを保存",
     "gameUnlinkIgdb": "IGDBのリンクを解除",
     "gameEnterRoleName": "自由入力を選ぶ前に役名を入力してください。",
+    "gameCharacterNameTooLong": "名前は300文字以内で入力してください。",
+    "gameSavedReloadFailed": "プロジェクトを保存しました。編集を続けるにはページを再読み込みしてください。",
     "gameReferenceUpdated": "キャラクターの参照を更新しました。",
     "gameInvalidQid": "Q12345のような有効なWikidata QIDを入力してください。"
   },
