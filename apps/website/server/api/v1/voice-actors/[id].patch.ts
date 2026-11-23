@@ -1,7 +1,7 @@
 import * as v from "valibot";
 import { defineApiRoute } from "../../../utils/api-v1/define";
 import { ApiError } from "../../../utils/api-v1/errors";
-import { Json, VoiceActor, voiceActorId } from "../../../utils/api-v1/voice-actors";
+import { Json, VoiceActor, positiveId } from "../../../utils/api-v1/voice-actors";
 import { useSupabaseAdmin } from "../../../utils/db/client";
 
 // Picture and workflow `status` changes are deliberately not exposed in v1.
@@ -28,7 +28,7 @@ export const route = defineApiRoute({
   tags: ["Voice actors"],
   scope: "voice-actors:write",
   idempotent: true,
-  params: v.object({ id: voiceActorId }),
+  params: v.object({ id: positiveId }),
   query: v.object({}),
   body: v.strictObject({
     updates: VoiceActorUpdates,

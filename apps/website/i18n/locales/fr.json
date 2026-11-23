@@ -571,7 +571,9 @@
     "createFailed": "Impossible de créer le jeton.",
     "loadFailed": "Impossible de charger vos jetons.",
     "adminOnly": "Les jetons d'API sont réservés aux administrateurs.",
-    "newToken": "Nouveau jeton"
+    "newToken": "Nouveau jeton",
+    "revokeFailed": "Impossible de révoquer le jeton. Réessayez.",
+    "retry": "Réessayer"
   },
   "about": {
     "title": "À propos",

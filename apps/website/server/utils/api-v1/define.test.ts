@@ -64,6 +64,21 @@ function principal(scopes: ApiScope[]) {
 }
 
 describe("defineApiRoute", () => {
+  it("rate limits a client address before looking the token up", async () => {
+    const limited = (ip: string) =>
+      handle(
+        new Request("http://localhost/things/7", {
+          method: "PATCH",
+          headers: { authorization: "Bearer dbk_live_x", "cf-connecting-ip": ip },
+        }),
+      );
+    mocks.authenticateApiToken.mockResolvedValue(null);
+    let status = 0;
+    for (let i = 0; i < 601; i += 1) status = (await limited("192.0.2.77")).status;
+    expect(status).toBe(429);
+    expect(mocks.authenticateApiToken).toHaveBeenCalledTimes(600);
+  });
+
   it("rejects a missing or non-API token with 401 and WWW-Authenticate", async () => {
     const none = await call({});
     expect(none.status).toBe(401);
@@ -110,7 +125,7 @@ describe("defineApiRoute", () => {
   });
 
   it("documents scope, body, idempotency and error responses in the OpenAPI operation", () => {
-    const operation = operationFor(route.docs);
+    const operation = operationFor(route.docs, {});
     expect(operation.security).toEqual([{ bearerAuth: ["voice-actors:write"] }]);
     expect(operation.requestBody).toBeDefined();
     expect(operation.parameters.map((parameter) => parameter.name)).toEqual([
@@ -118,5 +133,29 @@ describe("defineApiRoute", () => {
       "Idempotency-Key",
     ]);
     expect(Object.keys(operation.responses)).toEqual(["200", "400", "401", "403", "429"]);
+  });
+
+  it("hoists recursive schema definitions into components so $refs resolve", () => {
+    type Tree = { name: string; children: Tree[] };
+    const Tree: v.GenericSchema<Tree> = v.object({
+      name: v.string(),
+      children: v.array(v.lazy(() => Tree)),
+    });
+    const recursive = defineApiRoute({
+      summary: "Tree",
+      tags: ["Test"],
+      scope: "voice-actors:read",
+      params: v.object({}),
+      query: v.object({}),
+      response: Tree,
+      handler: () => ({ name: "root", children: [] }),
+    });
+    const components: Record<string, unknown> = {};
+    const operation = operationFor(recursive.docs, components);
+    const text = JSON.stringify(operation);
+    expect(text).not.toContain("#/$defs/");
+    const refs = [...text.matchAll(/#\/components\/schemas\/([\w-]+)/g)].map((m) => m[1] ?? "");
+    expect(refs.length).toBeGreaterThan(0);
+    for (const name of refs) expect(Object.keys(components)).toContain(name);
   });
 });

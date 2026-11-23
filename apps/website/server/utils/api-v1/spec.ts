@@ -1,14 +1,15 @@
 import manifest from "#api-v1-manifest";
 import { API_SCOPES } from "../../../shared/api-scopes";
-import { operationFor, type ApiRouteDocs } from "./define";
+import { operationFor, type ApiRouteDocs, type SchemaComponents } from "./define";
 
 export function buildOpenApiSpec() {
   const paths: Record<string, Record<string, unknown>> = {};
+  const schemas: SchemaComponents = {};
   for (const { route, method, module } of manifest) {
     const docs: ApiRouteDocs | undefined = module.route?.docs;
     if (!docs) continue;
     const path = route.replace(/:(\w+)/g, "{$1}");
-    (paths[path] ??= {})[method.toLowerCase()] = operationFor(docs);
+    (paths[path] ??= {})[method.toLowerCase()] = operationFor(docs, schemas);
   }
   return {
     openapi: "3.1.0",
@@ -21,6 +22,7 @@ export function buildOpenApiSpec() {
     },
     paths,
     components: {
+      schemas,
       securitySchemes: {
         bearerAuth: {
           type: "http",

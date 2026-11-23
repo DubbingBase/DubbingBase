@@ -1,12 +1,11 @@
 import { defineAdminHandler } from "../../utils/auth-handlers";
 import { useSupabaseAdmin } from "../../utils/db/client";
-
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+import { isUuid } from "../../utils/game-character-validation";
 
 /** Revokes one of the signed-in admin's tokens. Revoked rows are kept for the audit trail. */
 export default defineAdminHandler(async (event, admin) => {
   const id = getRouterParam(event, "id");
-  if (!id || !UUID.test(id)) {
+  if (!id || !isUuid(id)) {
     throw createError({ statusCode: 400, message: "Invalid token id" });
   }
   const { data, error } = await useSupabaseAdmin(event)

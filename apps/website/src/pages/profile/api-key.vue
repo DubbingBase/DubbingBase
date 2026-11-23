@@ -91,6 +91,17 @@
         </button>
       </form>
 
+      <div
+        v-if="listError || actionError"
+        class="flex items-center gap-3 text-sm theme-status-danger-text"
+        role="alert"
+      >
+        <span>{{ actionError || listError }}</span>
+        <button v-if="listError" type="button" class="underline" @click="refresh">
+          {{ $t("settings.retry") }}
+        </button>
+      </div>
+
       <div class="theme-surface-raised rounded-xl border theme-border-subtle overflow-x-auto">
         <table class="w-full text-sm">
           <thead class="text-left theme-text-muted">
@@ -121,7 +132,7 @@
                 </button>
               </td>
             </tr>
-            <tr v-if="tokens.length === 0">
+            <tr v-if="loaded && tokens.length === 0">
               <td colspan="6" class="p-6 text-center theme-text-muted">
                 {{ $t("settings.noApiKeys") }}
               </td>
@@ -149,13 +160,18 @@ const createdToken = ref<string | null>(null);
 const copied = ref(false);
 const creating = ref(false);
 const error = ref("");
+const listError = ref("");
+const actionError = ref("");
+const loaded = ref(false);
 const tokenInput = useTemplateRef<HTMLInputElement>("tokenInput");
 
 async function refresh() {
+  listError.value = "";
   try {
     tokens.value = (await listTokens()).tokens;
+    loaded.value = true;
   } catch {
-    error.value = t("settings.loadFailed");
+    listError.value = t("settings.loadFailed");
   }
 }
 
@@ -172,17 +188,25 @@ async function create() {
     copied.value = false;
     name.value = "";
     selectedScopes.value = [];
-    await refresh();
   } catch {
     error.value = t("settings.createFailed");
+    return;
   } finally {
     creating.value = false;
   }
+  // The token exists now; a failed refresh is reported as a list error, not a failed creation.
+  await refresh();
 }
 
 async function revoke(token: ApiTokenRecord) {
   if (!window.confirm(t("settings.revokeConfirm", { name: token.name }))) return;
-  await revokeToken(token.id);
+  actionError.value = "";
+  try {
+    await revokeToken(token.id);
+  } catch {
+    actionError.value = t("settings.revokeFailed");
+    return;
+  }
   await refresh();
 }
 

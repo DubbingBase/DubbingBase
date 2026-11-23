@@ -17,16 +17,33 @@ interface Row {
   last_used_at: string | null;
 }
 
+interface Failures {
+  lookupError?: boolean;
+  ownerError?: { status?: number; code?: string };
+}
+
 function setup(
   row: Row | null,
   owner: { app_metadata?: { role?: string }; banned_until?: string } | null,
+  failures: Failures = {},
 ) {
   const update = vi.fn(() => ({ eq: vi.fn(async () => ({ error: null })) }));
   const from = vi.fn(() => ({
-    select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: row, error: null }) }) }),
+    select: () => ({
+      eq: () => ({
+        maybeSingle: async () =>
+          failures.lookupError
+            ? { data: null, error: { code: "XX000" } }
+            : { data: row, error: null },
+      }),
+    }),
     update,
   }));
-  const getUserById = vi.fn(async () => ({ data: { user: owner } }));
+  const getUserById = vi.fn(async () =>
+    failures.ownerError
+      ? { data: { user: null }, error: failures.ownerError }
+      : { data: { user: owner }, error: null },
+  );
   mocks.useSupabaseAdmin.mockReturnValue({ from, auth: { admin: { getUserById } } });
   return { update };
 }
@@ -64,6 +81,18 @@ describe("authenticateApiToken", () => {
   ])("rejects %s", async (_name, row, owner) => {
     setup(row, owner);
     expect(await authenticateApiToken(event, "dbk_live_x")).toBeNull();
+  });
+
+  it("treats a deleted owner (404) as unauthorized but an auth outage as an error", async () => {
+    setup(base, null, { ownerError: { status: 404, code: "user_not_found" } });
+    expect(await authenticateApiToken(event, "dbk_live_x")).toBeNull();
+    setup(base, null, { ownerError: { status: 500 } });
+    await expect(authenticateApiToken(event, "dbk_live_x")).rejects.toThrow();
+  });
+
+  it("surfaces a failed token lookup instead of reporting a bad credential", async () => {
+    setup(null, admin, { lookupError: true });
+    await expect(authenticateApiToken(event, "dbk_live_x")).rejects.toThrow();
   });
 
   it("accepts an owner whose ban has ended", async () => {

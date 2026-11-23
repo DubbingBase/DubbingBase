@@ -38,8 +38,10 @@ export const VoiceActor = v.object({
   updated_at: v.nullable(v.string()),
 });
 
-export const voiceActorId = v.pipe(
+/** A positive id from a path or cursor, rejected when `Number` could not hold it exactly. */
+export const positiveId = v.pipe(
   v.string(),
   v.regex(/^[1-9]\d{0,15}$/, "must be a positive integer"),
   v.transform(Number),
+  v.safeInteger("must be a safe integer"),
 );

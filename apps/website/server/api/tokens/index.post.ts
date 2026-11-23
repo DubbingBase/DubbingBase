@@ -29,7 +29,8 @@ export default defineAdminHandler(async (event, admin) => {
     .from("api_tokens")
     .select("id", { count: "exact", head: true })
     .eq("user_id", admin.id)
-    .is("revoked_at", null);
+    .is("revoked_at", null)
+    .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
   if ((count ?? 0) >= MAX_ACTIVE_TOKENS) {
     throw createError({ statusCode: 409, message: "Too many active API tokens; revoke one first" });
   }

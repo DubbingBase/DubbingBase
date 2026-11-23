@@ -48,12 +48,18 @@ export async function authenticateApiToken(
     .select("id, user_id, scopes, expires_at, revoked_at, last_used_at")
     .eq("token_hash", await hashApiToken(token))
     .maybeSingle();
-  if (error || !data || data.revoked_at) return null;
+  // A failed lookup is an outage, not a bad credential: let it surface as a 500.
+  if (error) throw new Error("API token lookup failed");
+  if (!data || data.revoked_at) return null;
   if (data.expires_at && Date.parse(data.expires_at) <= Date.now()) return null;
 
   // The owner must still exist, not be banned, and still be an admin, so demoting or banning a
   // user silences their tokens immediately without having to revoke each one.
-  const { data: owner } = await supabase.auth.admin.getUserById(data.user_id);
+  const { data: owner, error: ownerError } = await supabase.auth.admin.getUserById(data.user_id);
+  if (ownerError) {
+    if (ownerError.status === 404 || ownerError.code === "user_not_found") return null;
+    throw new Error("API token owner lookup failed");
+  }
   const banned = owner.user?.banned_until
     ? Date.parse(owner.user.banned_until) > Date.now()
     : false;
@@ -70,28 +76,45 @@ export async function authenticateApiToken(
   return { tokenId: data.id, userId: data.user_id, scopes };
 }
 
-const RATE_LIMIT = 120;
-const RATE_WINDOW_MS = 60_000;
-const windows = new Map<string, { start: number; count: number }>();
+/**
+ * Fixed-window limiter keyed by an opaque string. State lives in the isolate's memory, so it
+ * caps bursts from one client rather than enforcing an exact global quota. The key table is
+ * bounded: expired windows are dropped first, then the oldest keys.
+ */
+function createRateLimiter(limit: number, maxKeys: number, windowMs = 60_000) {
+  const windows = new Map<string, { start: number; count: number }>();
+  return (key: string, now = Date.now()) => {
+    const current = windows.get(key);
+    const window = current && now - current.start < windowMs ? current : { start: now, count: 0 };
+    window.count += 1;
+    windows.set(key, window);
+    if (windows.size > maxKeys) {
+      for (const [other, value] of windows) {
+        if (now - value.start >= windowMs) windows.delete(other);
+      }
+      for (const other of windows.keys()) {
+        if (windows.size <= maxKeys) break;
+        windows.delete(other);
+      }
+    }
+    return {
+      allowed: window.count <= limit,
+      limit,
+      remaining: Math.max(limit - window.count, 0),
+      retryAfter: Math.max(Math.ceil((window.start + windowMs - now) / 1000), 1),
+    };
+  };
+}
+
+/** Per token, once the token has authenticated. */
+export const consumeRateLimit = createRateLimiter(120, 5000);
 
 /**
- * Fixed-window limit per token. State lives in the isolate's memory, so it caps bursts from
- * one client rather than enforcing an exact global quota.
+ * Per client address, before any token lookup, so unknown or revoked token values cannot drive
+ * unbounded database queries. Keyed on the address Cloudflare sets, never on the token.
  */
-export function consumeRateLimit(tokenId: string, now = Date.now()) {
-  const current = windows.get(tokenId);
-  const window =
-    current && now - current.start < RATE_WINDOW_MS ? current : { start: now, count: 0 };
-  window.count += 1;
-  windows.set(tokenId, window);
-  if (windows.size > 5000) {
-    for (const [key, value] of windows)
-      if (now - value.start >= RATE_WINDOW_MS) windows.delete(key);
-  }
-  return {
-    allowed: window.count <= RATE_LIMIT,
-    limit: RATE_LIMIT,
-    remaining: Math.max(RATE_LIMIT - window.count, 0),
-    retryAfter: Math.max(Math.ceil((window.start + RATE_WINDOW_MS - now) / 1000), 1),
-  };
+export const consumeIpRateLimit = createRateLimiter(600, 10_000);
+
+export function clientAddress(event: H3Event): string {
+  return getHeader(event, "cf-connecting-ip") ?? "unknown";
 }

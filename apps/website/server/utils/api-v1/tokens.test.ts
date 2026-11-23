@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { API_TOKEN_PREFIX, consumeRateLimit, generateApiToken, hashApiToken } from "./tokens";
+import {
+  API_TOKEN_PREFIX,
+  consumeIpRateLimit,
+  consumeRateLimit,
+  generateApiToken,
+  hashApiToken,
+} from "./tokens";
 
 describe("API tokens", () => {
   it("generates a prefixed token whose hash matches and whose prefix is a display stub", async () => {
@@ -28,5 +34,17 @@ describe("API tokens", () => {
     expect(blocked.allowed).toBe(false);
     expect(blocked.retryAfter).toBeGreaterThanOrEqual(1);
     expect(consumeRateLimit(id, start + 61_000).allowed).toBe(true);
+  });
+
+  it("limits a client address independently of any token and stays bounded", () => {
+    const start = 2_000_000;
+    let last = consumeIpRateLimit("203.0.113.9", start);
+    for (let i = 1; i < 600; i += 1) last = consumeIpRateLimit("203.0.113.9", start + i);
+    expect(last.allowed).toBe(true);
+    expect(consumeIpRateLimit("203.0.113.9", start + 700).allowed).toBe(false);
+    expect(consumeIpRateLimit("203.0.113.10", start + 700).allowed).toBe(true);
+    // Far more distinct keys than the table holds must not grow it without bound or throw.
+    for (let i = 0; i < 12_000; i += 1) consumeIpRateLimit(`198.51.100.${i}`, start + 800);
+    expect(consumeIpRateLimit("198.51.100.1", start + 900).allowed).toBe(true);
   });
 });

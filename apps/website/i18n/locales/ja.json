@@ -572,7 +572,9 @@
     "createFailed": "トークンを作成できませんでした。",
     "loadFailed": "トークンを読み込めませんでした。",
     "adminOnly": "APIトークンは管理者のみ利用できます。",
-    "newToken": "新しいトークン"
+    "newToken": "新しいトークン",
+    "revokeFailed": "トークンを無効化できませんでした。もう一度お試しください。",
+    "retry": "再試行"
   },
   "about": {
     "title": "概要",

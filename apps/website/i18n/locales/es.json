@@ -572,7 +572,9 @@
     "createFailed": "No se pudo crear el token.",
     "loadFailed": "No se pudieron cargar tus tokens.",
     "adminOnly": "Los tokens de API están disponibles para administradores.",
-    "newToken": "Nuevo token"
+    "newToken": "Nuevo token",
+    "revokeFailed": "No se pudo revocar el token. Inténtalo de nuevo.",
+    "retry": "Reintentar"
   },
   "about": {
     "title": "Acerca de",

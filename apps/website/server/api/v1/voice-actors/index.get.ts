@@ -1,6 +1,6 @@
 import * as v from "valibot";
 import { defineApiRoute } from "../../../utils/api-v1/define";
-import { VoiceActor, VOICE_ACTOR_COLUMNS } from "../../../utils/api-v1/voice-actors";
+import { positiveId, VoiceActor, VOICE_ACTOR_COLUMNS } from "../../../utils/api-v1/voice-actors";
 import { useSupabaseAdmin } from "../../../utils/db/client";
 
 const MAX_LIMIT = 100;
@@ -21,13 +21,7 @@ export const route = defineApiRoute({
       ),
       "25",
     ),
-    after: v.optional(
-      v.pipe(
-        v.string(),
-        v.regex(/^[1-9]\d{0,15}$/, "must be an id from next_cursor"),
-        v.transform(Number),
-      ),
-    ),
+    after: v.optional(positiveId),
   }),
   response: v.object({
     data: v.array(VoiceActor),

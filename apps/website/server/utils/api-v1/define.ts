@@ -10,11 +10,15 @@ import {
   setResponseStatus,
   type H3Event,
 } from "h3";
+import { isRecord } from "@app/shared-logic";
 import * as v from "valibot";
 import type { ApiScope } from "../../../shared/api-scopes";
+import { isUuid } from "../game-character-validation";
 import { ApiError } from "./errors";
 import {
   authenticateApiToken,
+  clientAddress,
+  consumeIpRateLimit,
   consumeRateLimit,
   readBearerToken,
   type ApiPrincipal,
@@ -22,8 +26,6 @@ import {
 
 type ObjectSchema = v.ObjectSchema<v.ObjectEntries, undefined>;
 type NoBody = v.UndefinedSchema<undefined>;
-
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 /**
  * One public API route, declared once. The same valibot schemas validate the request at
@@ -85,6 +87,12 @@ function issueMessages(issues: readonly v.BaseIssue<unknown>[]): string {
 }
 
 async function authorize(event: H3Event, scope: ApiScope): Promise<ApiPrincipal> {
+  const ipLimit = consumeIpRateLimit(clientAddress(event));
+  if (!ipLimit.allowed) {
+    throw new ApiError(429, "rate_limited", "Too many requests.", {
+      "Retry-After": String(ipLimit.retryAfter),
+    });
+  }
   const token = readBearerToken(event);
   const principal = token ? await authenticateApiToken(event, token) : null;
   if (!principal) {
@@ -135,7 +143,7 @@ export function defineApiRoute<
       let idempotencyKey: string | null = null;
       if (definition.idempotent) {
         const header = getHeader(event, "idempotency-key");
-        if (header !== undefined && !UUID.test(header)) {
+        if (header !== undefined && !isUuid(header)) {
           throw new ApiError(400, "invalid_request", "Idempotency-Key must be a UUID.");
         }
         idempotencyKey = header ?? crypto.randomUUID();
@@ -161,17 +169,48 @@ export function defineApiRoute<
   return { handler, docs: definition satisfies ApiRouteDocs };
 }
 
-function jsonSchema(schema: v.GenericSchema) {
-  const { $schema: _ignored, ...rest } = toJsonSchema(schema, { errorMode: "ignore" });
-  return rest;
+/** Named JSON Schemas shared by every operation; becomes `components.schemas`. */
+export type SchemaComponents = Record<string, unknown>;
+
+function rewriteRefs(node: unknown, rename: (name: string) => string): unknown {
+  if (Array.isArray(node)) return node.map((item) => rewriteRefs(item, rename));
+  if (!isRecord(node)) return node;
+  return Object.fromEntries(
+    Object.entries(node).map(([key, value]) => [
+      key,
+      key === "$ref" && typeof value === "string" && value.startsWith("#/$defs/")
+        ? `#/components/schemas/${rename(value.slice("#/$defs/".length))}`
+        : rewriteRefs(value, rename),
+    ]),
+  );
 }
 
-function parametersOf(schema: ObjectSchema, location: "path" | "query") {
+/**
+ * Converts a valibot schema to JSON Schema. Recursive schemas come back with local `#/$defs/…`
+ * references, which would dangle once the schema is embedded in an operation, so their
+ * definitions are hoisted into `components` under unique names and the references rewritten.
+ */
+function jsonSchema(schema: v.GenericSchema, components: SchemaComponents) {
+  const { $schema: _ignored, $defs, ...rest } = toJsonSchema(schema, { errorMode: "ignore" });
+  if (!$defs) return rest;
+  const prefix = `Schema${Object.keys(components).length}`;
+  const rename = (name: string) => `${prefix}_${name}`;
+  for (const [name, definition] of Object.entries($defs)) {
+    components[rename(name)] = rewriteRefs(definition, rename);
+  }
+  return rewriteRefs(rest, rename);
+}
+
+function parametersOf(
+  schema: ObjectSchema,
+  location: "path" | "query",
+  components: SchemaComponents,
+) {
   return Object.entries(schema.entries).map(([name, entry]) => ({
     name,
     in: location,
     required: location === "path" || entry.type !== "optional",
-    schema: jsonSchema(entry),
+    schema: jsonSchema(entry, components),
   }));
 }
 
@@ -194,7 +233,7 @@ const errorResponse = (description: string) => ({
   },
 });
 
-export function operationFor(docs: ApiRouteDocs) {
+export function operationFor(docs: ApiRouteDocs, components: SchemaComponents) {
   const idempotencyHeader = docs.idempotent
     ? [
         {
@@ -212,22 +251,22 @@ export function operationFor(docs: ApiRouteDocs) {
     tags: [...docs.tags],
     security: [{ bearerAuth: [docs.scope] }],
     parameters: [
-      ...parametersOf(docs.params, "path"),
-      ...parametersOf(docs.query, "query"),
+      ...parametersOf(docs.params, "path", components),
+      ...parametersOf(docs.query, "query", components),
       ...idempotencyHeader,
     ],
     ...(docs.body
       ? {
           requestBody: {
             required: true,
-            content: { "application/json": { schema: jsonSchema(docs.body) } },
+            content: { "application/json": { schema: jsonSchema(docs.body, components) } },
           },
         }
       : {}),
     responses: {
       200: {
         description: "OK",
-        content: { "application/json": { schema: jsonSchema(docs.response) } },
+        content: { "application/json": { schema: jsonSchema(docs.response, components) } },
       },
       400: errorResponse("Invalid request"),
       401: errorResponse("Missing, invalid, expired or revoked token"),
