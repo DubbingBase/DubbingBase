@@ -4,7 +4,6 @@
     :key="image.src"
     :src="image.src"
     :alt="alt"
-    :title="image.attribution"
     :data-character-image-source="image.source"
     class="w-full h-full object-cover"
     loading="lazy"

@@ -5,7 +5,6 @@ import { TMDBClient } from "../api/tmdb";
 import { SimpleCache } from "../cache";
 import { buildCacheKey } from "../cache/constants";
 import { MediaService } from "./media";
-import { createWikimediaCharacterImageResolver } from "./wikimedia-character-image";
 
 const values = new Map<string, unknown>();
 let now = 0;
@@ -30,7 +29,6 @@ let tvdbStatus = 200;
 let wikidataClaims: Record<string, unknown> = {};
 let characters: unknown[] = [];
 let malformed = false;
-let getWikimediaCharacterImage = createWikimediaCharacterImageResolver();
 const requests: URL[] = [];
 
 beforeEach(() => {
@@ -45,7 +43,6 @@ beforeEach(() => {
   wikidataClaims = {};
   characters = [];
   malformed = false;
-  getWikimediaCharacterImage = createWikimediaCharacterImageResolver();
   vi.stubGlobal("useEvent", () => event);
   vi.stubGlobal("useRuntimeConfig", () => ({ tvdbApiKey: "fixture", tmdbApiKey: "fixture" }));
   vi.spyOn(console, "error").mockImplementation(() => undefined);
@@ -108,57 +105,20 @@ describe("character image persistent cache and failures", () => {
       .spyOn(MediaService.prototype, "getMediaWithVoiceActors")
       .mockRejectedValue(new Error("TMDB unavailable"));
     vi.stubGlobal("defineEventHandler", defineEventHandler);
-    vi.stubGlobal("getQuery", () => ({ item: "movie:30:Role" }));
-    const handler = (await import("../../api/character-images.get")).default;
+    vi.stubGlobal("getQuery", () => ({ mediaType: "movie", mediaId: "30" }));
+    const handler = (await import("../../api/character-portraits.get")).default;
     const app = createApp();
     app.use("/", handler);
     for (let index = 0; index < 10; index++) {
       const response = await toWebHandler(app)(new Request("http://localhost/"));
       const body: unknown = await response.json();
       expect(body).toMatchObject({
-        images: { "movie:30:Role": { source: "tvdb", src: portrait.image } },
+        tvdbId: 123,
+        characters: [{ id: "77", name: "Role", image: portrait.image }],
       });
     }
     expect(metadata).not.toHaveBeenCalled();
   });
-
-  it.each([1, 4])(
-    "writes one TVDB miss and one Wikimedia production miss for 24 cold roles with %s name(s) each",
-    async (nameCount) => {
-      const metadata = vi
-        .spyOn(MediaService.prototype, "getMediaWithVoiceActors")
-        .mockResolvedValue({ media, collection: null });
-      const items = Array.from(
-        { length: 24 },
-        (_, role) =>
-          `movie:36:${Array.from({ length: nameCount }, (_, alias) => `Role ${role} alias ${alias}`).join("|")}`,
-      );
-      vi.stubGlobal("defineEventHandler", defineEventHandler);
-      vi.stubGlobal("getQuery", () => ({ item: items }));
-      const handler = (await import("../../api/character-images.get")).default;
-      const app = createApp();
-      app.use("/", handler);
-      const response = await toWebHandler(app)(new Request("http://localhost/"));
-      const body: unknown = await response.json();
-      expect(body).toMatchObject({ images: Object.fromEntries(items.map((item) => [item, null])) });
-      expect(metadata).toHaveBeenCalledTimes(1);
-      expect(count("www.wikidata.org")).toBe(2); // One TVDB mapping, one Wikimedia work.
-      expect(count("api4.thetvdb.com")).toBe(0);
-      // One read and one write each for the TVDB mapping and the Wikimedia
-      // production's character list, independent of the number of roles/names.
-      expect(kv.get).toHaveBeenCalledTimes(2);
-      expect(writes).toEqual([
-        expect.objectContaining({
-          key: expect.stringContaining("characters-mapped-by-tmdb-id"),
-          ttl: 86400,
-        }),
-        expect.objectContaining({
-          key: expect.stringContaining("production-characters"),
-          ttl: 86400,
-        }),
-      ]);
-    },
-  );
 
   it("does not persist a failed metadata load and recovers on the next request", async () => {
     characters = [portrait];
@@ -336,195 +296,4 @@ describe("character image persistent cache and failures", () => {
       if (failure !== "timeout") expect(count("www.wikidata.org")).toBe(2);
     },
   );
-
-  it("shares a Wikimedia miss only within a request and separates production/locale", async () => {
-    const input = {
-      contentType: "movie",
-      contentId: 6,
-      wikidataId: "Q42",
-      characterName: "Role",
-      language: "en-US",
-    } satisfies Parameters<typeof getWikimediaCharacterImage>[0];
-    for (let i = 0; i < 10; i++) expect(await getWikimediaCharacterImage(input)).toBeNull();
-    expect(count("www.wikidata.org")).toBe(1);
-    expect(writes).toHaveLength(0);
-    expect(kv.get).not.toHaveBeenCalled();
-    await getWikimediaCharacterImage({ ...input, contentType: "tv" });
-    await getWikimediaCharacterImage({ ...input, language: "fr-FR" });
-    expect(count("www.wikidata.org")).toBe(3);
-  });
-
-  it("measures a cold 24-role batch for a work without characters", async () => {
-    for (let index = 0; index < 24; index++) {
-      await getWikimediaCharacterImage({
-        contentType: "movie",
-        contentId: 20,
-        wikidataId: "Q42",
-        characterName: `Role ${index}`,
-        language: "en-US",
-      });
-    }
-    expect(count("www.wikidata.org")).toBe(1);
-    expect(kv.get).not.toHaveBeenCalled();
-    expect(writes).toHaveLength(0);
-  });
-
-  it("measures a cold 24-role batch for a work with only generic characters", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async (input: RequestInfo | URL) => {
-        const url = new URL(String(input));
-        requests.push(url);
-        const body =
-          url.searchParams.get("ids") === "Q42"
-            ? {
-                entities: {
-                  Q42: { claims: { P674: [{ mainsnak: { datavalue: { value: { id: "Q1" } } } }] } },
-                },
-              }
-            : {
-                entities: {
-                  Q1: {
-                    labels: { en: { value: "Role" } },
-                    claims: {
-                      P1441: ["Q42", "Q99"].map((id) => ({
-                        mainsnak: { datavalue: { value: { id } } },
-                      })),
-                      P18: [{ mainsnak: { datavalue: { value: "Role.jpg" } } }],
-                    },
-                  },
-                },
-              };
-        return new Response(JSON.stringify(body));
-      }),
-    );
-    for (let index = 0; index < 24; index++) {
-      await getWikimediaCharacterImage({
-        contentType: "movie",
-        contentId: 21,
-        wikidataId: "Q42",
-        characterName: `Role ${index}`,
-        language: "en-US",
-      });
-    }
-    expect(count("www.wikidata.org")).toBe(2);
-  });
-
-  it("shares candidates concurrently and retries Commons failures only on a new request", async () => {
-    let commonsFails = true;
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async (input: RequestInfo | URL) => {
-        const url = new URL(String(input));
-        requests.push(url);
-        if (url.hostname === "commons.wikimedia.org") {
-          return new Response(
-            JSON.stringify({
-              query: {
-                pages: {
-                  "1": {
-                    imageinfo: [
-                      {
-                        thumburl: "https://upload.wikimedia.org/role.jpg",
-                        descriptionurl: "https://commons.wikimedia.org/wiki/File:Role.jpg",
-                        extmetadata: {
-                          LicenseShortName: { value: "CC BY 4.0" },
-                          Artist: { value: "Artist" },
-                        },
-                      },
-                    ],
-                  },
-                },
-              },
-            }),
-            { status: commonsFails ? 503 : 200 },
-          );
-        }
-        const body =
-          url.searchParams.get("ids") === "Q42"
-            ? {
-                entities: {
-                  Q42: { claims: { P674: [{ mainsnak: { datavalue: { value: { id: "Q1" } } } }] } },
-                },
-              }
-            : {
-                entities: {
-                  Q1: {
-                    labels: { en: { value: "Role" } },
-                    claims: {
-                      P1441: [{ mainsnak: { datavalue: { value: { id: "Q42" } } } }],
-                      P18: [{ mainsnak: { datavalue: { value: "Role.jpg" } } }],
-                    },
-                  },
-                },
-              };
-        return new Response(JSON.stringify(body));
-      }),
-    );
-    const input = {
-      contentType: "movie",
-      contentId: 22,
-      wikidataId: "Q42",
-      characterName: "Role",
-      language: "en-US",
-    } satisfies Parameters<typeof getWikimediaCharacterImage>[0];
-    const results = await Promise.allSettled([
-      getWikimediaCharacterImage(input),
-      getWikimediaCharacterImage({ ...input, characterName: "Other role" }),
-    ]);
-    expect(results.map((result) => result.status)).toEqual(["rejected", "fulfilled"]);
-    expect(count("www.wikidata.org")).toBe(2);
-    // A failed file is not retried by every card in the same request.
-    await expect(getWikimediaCharacterImage(input)).rejects.toThrow();
-    expect(count("commons.wikimedia.org")).toBe(1);
-    commonsFails = false;
-    getWikimediaCharacterImage = createWikimediaCharacterImageResolver();
-    expect(await getWikimediaCharacterImage(input)).toMatchObject({
-      src: "https://upload.wikimedia.org/role.jpg",
-    });
-    expect(count("www.wikidata.org")).toBe(4);
-    expect(count("commons.wikimedia.org")).toBe(2);
-    expect(kv.get).not.toHaveBeenCalled();
-    expect(writes).toHaveLength(0);
-  });
-
-  it("starts fresh for each request and separates Wikidata identities", async () => {
-    const input = {
-      contentType: "movie",
-      contentId: 23,
-      wikidataId: "Q42",
-      characterName: "Role",
-      language: "en-US",
-    } satisfies Parameters<typeof getWikimediaCharacterImage>[0];
-    await getWikimediaCharacterImage(input);
-    await getWikimediaCharacterImage({ ...input, characterName: "Another role" });
-    expect(count("www.wikidata.org")).toBe(1);
-    getWikimediaCharacterImage = createWikimediaCharacterImageResolver();
-    await getWikimediaCharacterImage(input);
-    expect(count("www.wikidata.org")).toBe(2);
-    await expect(getWikimediaCharacterImage({ ...input, wikidataId: "Q99" })).rejects.toThrow(
-      "Invalid Wikidata work response",
-    );
-    expect(count("www.wikidata.org")).toBe(3);
-    expect(kv.get).not.toHaveBeenCalled();
-    expect(writes).toHaveLength(0);
-  });
-
-  it.each([429, 503])("keeps Wikimedia %s failures retryable and uncached", async (status) => {
-    wikidataStatus = status;
-    const input = {
-      contentType: "movie",
-      contentId: 7,
-      wikidataId: "Q42",
-      characterName: "Role",
-      language: "en-US",
-    } satisfies Parameters<typeof getWikimediaCharacterImage>[0];
-    await expect(getWikimediaCharacterImage(input)).rejects.toThrow();
-    await expect(getWikimediaCharacterImage(input)).rejects.toThrow();
-    expect(count("www.wikidata.org")).toBe(1);
-    getWikimediaCharacterImage = createWikimediaCharacterImageResolver();
-    await expect(getWikimediaCharacterImage(input)).rejects.toThrow();
-    expect(count("www.wikidata.org")).toBe(2);
-    expect(writes).toHaveLength(0);
-  });
 });

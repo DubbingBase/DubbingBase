@@ -59,3 +59,26 @@ export const findCharacter = (
   if (!characterName || !roleName) return false;
   return characterNamesMatch(splitCharacterNames(characterName), splitCharacterNames(roleName));
 };
+
+/**
+ * The single TVDB role of this production matching one of the candidate names
+ * (tried in order, existing role-name matcher). Several different matching
+ * roles are ambiguous and yield nothing. The image is optional: a role without
+ * one still identifies the character page.
+ */
+export function selectTvdbCharacter(
+  names: readonly string[],
+  characters: ReadonlyArray<{ id: number | string; name?: string | null; image?: string | null }>,
+): { id: string; image: string | null } | null {
+  for (const name of names) {
+    if (!name.trim()) continue;
+    const matches = createCharacterMatcher(name);
+    const candidates = characters.filter((character) => character.name && matches(character.name));
+    const [match] = candidates;
+    if (!match) continue;
+    if (new Set(candidates.map((candidate) => String(candidate.id))).size !== 1) return null;
+    const image = candidates.find((candidate) => candidate.image)?.image ?? null;
+    return { id: String(match.id), image: image && /^https?:\/\//.test(image) ? image : null };
+  }
+  return null;
+}

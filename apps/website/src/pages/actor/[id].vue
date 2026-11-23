@@ -387,14 +387,6 @@
                         >
                           {{ item.character || $t("details.unknownCharacter") }}
                         </span>
-                        <a
-                          v-if="imageFor(characterRequest(item))?.sourceUrl"
-                          :href="imageFor(characterRequest(item))?.sourceUrl"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          class="text-[10px] theme-text-muted underline line-clamp-1"
-                          >{{ imageFor(characterRequest(item))?.attribution }}</a
-                        >
                       </div>
                     </div>
                   </div>
