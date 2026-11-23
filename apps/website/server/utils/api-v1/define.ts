@@ -15,14 +15,7 @@ import * as v from "valibot";
 import type { ApiScope } from "../../../shared/api-scopes";
 import { isUuid } from "../game-character-validation";
 import { ApiError } from "./errors";
-import {
-  authenticateApiToken,
-  clientAddress,
-  consumeIpRateLimit,
-  consumeRateLimit,
-  readBearerToken,
-  type ApiPrincipal,
-} from "./tokens";
+import { authenticateApiToken, readBearerToken, type ApiPrincipal } from "./tokens";
 
 type ObjectSchema = v.ObjectSchema<v.ObjectEntries, undefined>;
 type NoBody = v.UndefinedSchema<undefined>;
@@ -87,25 +80,11 @@ function issueMessages(issues: readonly v.BaseIssue<unknown>[]): string {
 }
 
 async function authorize(event: H3Event, scope: ApiScope): Promise<ApiPrincipal> {
-  const ipLimit = consumeIpRateLimit(clientAddress(event));
-  if (!ipLimit.allowed) {
-    throw new ApiError(429, "rate_limited", "Too many requests.", {
-      "Retry-After": String(ipLimit.retryAfter),
-    });
-  }
   const token = readBearerToken(event);
   const principal = token ? await authenticateApiToken(event, token) : null;
   if (!principal) {
     throw new ApiError(401, "unauthorized", "Missing, invalid, expired or revoked API token.", {
       "WWW-Authenticate": 'Bearer realm="DubbingBase API"',
-    });
-  }
-  const limit = consumeRateLimit(principal.tokenId);
-  setHeader(event, "RateLimit-Limit", String(limit.limit));
-  setHeader(event, "RateLimit-Remaining", String(limit.remaining));
-  if (!limit.allowed) {
-    throw new ApiError(429, "rate_limited", "Too many requests.", {
-      "Retry-After": String(limit.retryAfter),
     });
   }
   if (!principal.scopes.includes(scope)) {
@@ -271,7 +250,6 @@ export function operationFor(docs: ApiRouteDocs, components: SchemaComponents) {
       400: errorResponse("Invalid request"),
       401: errorResponse("Missing, invalid, expired or revoked token"),
       403: errorResponse("The token lacks the required scope"),
-      429: errorResponse("Rate limited; see Retry-After"),
     },
   };
 }

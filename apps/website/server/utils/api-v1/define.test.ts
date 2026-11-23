@@ -64,21 +64,6 @@ function principal(scopes: ApiScope[]) {
 }
 
 describe("defineApiRoute", () => {
-  it("rate limits a client address before looking the token up", async () => {
-    const limited = (ip: string) =>
-      handle(
-        new Request("http://localhost/things/7", {
-          method: "PATCH",
-          headers: { authorization: "Bearer dbk_live_x", "cf-connecting-ip": ip },
-        }),
-      );
-    mocks.authenticateApiToken.mockResolvedValue(null);
-    let status = 0;
-    for (let i = 0; i < 601; i += 1) status = (await limited("192.0.2.77")).status;
-    expect(status).toBe(429);
-    expect(mocks.authenticateApiToken).toHaveBeenCalledTimes(600);
-  });
-
   it("rejects a missing or non-API token with 401 and WWW-Authenticate", async () => {
     const none = await call({});
     expect(none.status).toBe(401);
@@ -132,7 +117,7 @@ describe("defineApiRoute", () => {
       "id",
       "Idempotency-Key",
     ]);
-    expect(Object.keys(operation.responses)).toEqual(["200", "400", "401", "403", "429"]);
+    expect(Object.keys(operation.responses)).toEqual(["200", "400", "401", "403"]);
   });
 
   it("hoists recursive schema definitions into components so $refs resolve", () => {
