@@ -52,6 +52,9 @@
 - `GET` `/api/show/:id` params(id)
 - `POST` `/api/submit-task` [auth, db, upload] ✓
 - `POST` `/api/submit-user-report` [auth, db] ✓
+- `DELETE` `/api/tokens/:id` params(id) [auth, db, cache]
+- `GET` `/api/tokens/index` [auth, cache]
+- `POST` `/api/tokens/index` [auth, db, cache]
 - `GET` `/api/top-contributors` ✓
 - `GET` `/api/top-voice-actors` ✓
 - `GET` `/api/toy/:id` params(id)
@@ -63,7 +66,12 @@
 - `POST` `/api/update-voice-actor` [auth, cache, upload] ✓
 - `POST` `/api/update_user_role` [auth]
 - `POST` `/api/upload-profile-picture` [auth, cache, upload] ✓
+- `GET` `/api/v1/voice-actors/:id` params(id)
+- `PATCH` `/api/v1/voice-actors/:id` params(id) [auth]
+- `GET` `/api/v1/voice-actors/index`
 - `GET` `/api/voice-actor/:id` params(id)
+- `GET` `/routes/api/v1/docs`
+- `GET` `/routes/api/v1/openapi.json`
 - `ALL` `/routes/sitemap.xml`
 - `GET` `/routes/sitemaps/:file` params(file)
 - `ALL` `/routes/sitemaps/pages.xml`

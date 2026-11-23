@@ -10,7 +10,9 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 
 - [Overview](./overview.md)
 - [Database](./database.md)
+- [[id].delete](./[id].delete.md)
 - [[id].get](./[id].get.md)
+- [[id].patch](./[id].patch.md)
 - [[id].put](./[id].put.md)
 - [Admin](./admin.md)
 - [Career-grid.get](./career-grid.get.md)
@@ -19,6 +21,7 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 - [Dashboard-stats.get](./dashboard-stats.get.md)
 - [Delete_user.post](./delete_user.post.md)
 - [Detail-collections.get](./detail-collections.get.md)
+- [Docs.get](./docs.get.md)
 - [Entity-history.get](./entity-history.get.md)
 - [Find_duplicate_voice_actors.get](./find_duplicate_voice_actors.get.md)
 - [Game-characters.post](./game-characters.post.md)
@@ -28,6 +31,7 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 - [Get-studio-details.get](./get-studio-details.get.md)
 - [Home-stats.get](./home-stats.get.md)
 - [Index.get](./index.get.md)
+- [Index.post](./index.post.md)
 - [Internal-media-create.post](./internal-media-create.post.md)
 - [Internal-media-credits.get](./internal-media-credits.get.md)
 - [Link-user-voice-actor.post](./link-user-voice-actor.post.md)
@@ -38,6 +42,7 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 - [Media-queue.post](./media-queue.post.md)
 - [Merge_voice_actor_duplicates.post](./merge_voice_actor_duplicates.post.md)
 - [Movies.get](./movies.get.md)
+- [Openapi.json.get](./openapi.json.get.md)
 - [Prepare-trending-media.post](./prepare-trending-media.post.md)
 - [Prepare_game.post](./prepare_game.post.md)
 - [Process-media-queue.post](./process-media-queue.post.md)
@@ -65,8 +70,8 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 
 ## Quick Stats
 
-- Routes: **67**
-- Models: **28**
+- Routes: **75**
+- Models: **29**
 - Components: **145**
 - Env vars: **37** required, **16** with defaults
 
@@ -95,4 +100,4 @@ These exist in your codebase but are **not** reflected in wiki articles:
 When in doubt, search the source. The wiki is a starting point, not a complete inventory.
 
 ---
-_Last compiled: 2026-11-23 · 55 articles · [codesight](https://github.com/Houseofmvps/codesight)_
+_Last compiled: 2026-11-23 · 60 articles · [codesight](https://github.com/Houseofmvps/codesight)_

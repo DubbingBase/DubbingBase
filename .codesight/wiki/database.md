@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Schema shapes and field types extracted via AST. Read the actual schema source files before writing migrations or query logic.
 
-**unknown** — 28 models
+**unknown** — 29 models
 
 ### voice_actors
 
@@ -288,11 +288,24 @@ pk: `id` (uuid) · fk: igdb_game_id, igdb_character_id
 - `created_by`: uuid _(required)_
 - `updated_by`: uuid _(required)_
 
+### api_tokens
+
+pk: `id` (uuid) · fk: user_id
+
+- `id`: uuid _(pk)_
+- `user_id`: uuid _(required, fk)_
+- `name`: text _(required)_
+- `prefix`: text _(required)_
+- `token_hash`: text _(required)_
+- `expires_at`: timestamp(tz)
+- `last_used_at`: timestamp(tz)
+- `revoked_at`: timestamp(tz)
+
 ## Schema Source Files
 
 Read and edit these files when adding columns, creating migrations, or changing relations:
 
-- `apps/website/server/utils/db/client.ts` — imported by **51** files
+- `apps/website/server/utils/db/client.ts` — imported by **58** files
 - `apps/website/server/utils/db/queries.ts` — imported by **9** files
 
 ---

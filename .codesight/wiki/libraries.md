@@ -2,9 +2,9 @@
 
 > **Navigation aid.** Library inventory extracted via AST. Read the source files listed here before modifying exported functions.
 
-**137 library files** across 3 modules
+**143 library files** across 3 modules
 
-## Website (114 files)
+## Website (120 files)
 
 - `apps/website/server/utils/db/queries.ts` — getVoiceActorWithWork, getWorkByActor, getActorPageWorkByActor, getDubbingProjects, getDubbingProjectsForMediaEndpoint, getAdvertisementPageDubbingProjects, …
 - `apps/website/src/utils/dubbing-project-save.ts` — getEditableDubbingProjectStatus, serializeGameProjectCastRows, createRequestId, createStableRequestIdFactory, createDubbingProjectSaveClient, isDubbingProjectSaveConflict, …
@@ -27,11 +27,11 @@
 - `apps/website/server/utils/contribution/task-submission-validation.ts` — isTaskClaimId, authorizeTaskContribution, validateTaskContribution, TaskCategory, TaskUpload, TaskContributionInput, …
 - `apps/website/server/utils/search-ranking.ts` — rankSearchResults, getTmdbLocale, projectSearchResult, SearchItem, MEDIA_TYPE_WEIGHTS, DEFAULT_MEDIA_TYPE_WEIGHT, …
 - `apps/website/src/utils/cast-workspace.ts` — filterCastRows, summarizeCast, getInitials, CastWorkspaceRow, CastFilter, ORIGINAL_CAST_SEED_LIMIT, …
+- `apps/website/server/utils/api-v1/tokens.ts` — hashApiToken, generateApiToken, readBearerToken, authenticateApiToken, ApiPrincipal, API_TOKEN_PREFIX
 - `apps/website/server/utils/cache/http.ts` — getPublicCacheControl, getCloudflareCacheControl, setNoCacheHeaders, setPublicCacheHeaders, CacheProfile, NO_STORE_CACHE_CONTROL
 - `apps/website/src/composables/useContribute.ts` — fetchRandomTask, useContribute, ContributionTask, ContributionCategory, ClaimedCategory, ContributionClaim
 - `apps/website/server/utils/api/igdb.ts` — isIgdbGame, isIgdbCharacter, IgdbClient, IgdbTrendingGamesResult, IgdbPopularityPrimitive
-- `apps/website/server/utils/cache/constants.ts` — hashCacheValue, buildCacheKey, SimpleKeyValidator, CacheKeyInput, CACHE_SCHEMA_VERSION
-- _…and 89 more files_
+- _…and 95 more files_
 
 ## Shared-logic (22 files)
 

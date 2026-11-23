@@ -10,6 +10,7 @@
 - 01-cors — `apps/website/server/middleware/01-cors.ts`
 
 ## auth
+- authenticate.test — `apps/website/server/utils/api-v1/authenticate.test.ts`
 - auth-handlers.test — `apps/website/server/utils/auth-handlers.test.ts`
 - auth-handlers — `apps/website/server/utils/auth-handlers.ts`
 - auth-session.test — `apps/website/server/utils/auth-session.test.ts`

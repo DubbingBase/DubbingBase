@@ -8,11 +8,13 @@
 
 ## Scale
 
-67 API routes · 28 database models · 145 UI components · 137 library files · 14 middleware layers · 53 environment variables
+75 API routes · 29 database models · 145 UI components · 143 library files · 15 middleware layers · 53 environment variables
 
 ## Subsystems
 
-- **[[id].get](./[id].get.md)** — 11 routes — touches: auth, cache
+- **[[id].delete](./[id].delete.md)** — 1 routes — touches: auth, db, cache
+- **[[id].get](./[id].get.md)** — 12 routes — touches: auth, cache
+- **[[id].patch](./[id].patch.md)** — 1 routes — touches: auth
 - **[[id].put](./[id].put.md)** — 1 routes — touches: auth
 - **[Admin](./admin.md)** — 5 routes — touches: auth, queue, cache
 - **[Career-grid.get](./career-grid.get.md)** — 1 routes
@@ -21,6 +23,7 @@
 - **[Dashboard-stats.get](./dashboard-stats.get.md)** — 1 routes — touches: auth
 - **[Delete_user.post](./delete_user.post.md)** — 1 routes — touches: auth
 - **[Detail-collections.get](./detail-collections.get.md)** — 1 routes
+- **[Docs.get](./docs.get.md)** — 1 routes
 - **[Entity-history.get](./entity-history.get.md)** — 1 routes — touches: auth
 - **[Find_duplicate_voice_actors.get](./find_duplicate_voice_actors.get.md)** — 1 routes — touches: auth
 - **[Game-characters.post](./game-characters.post.md)** — 1 routes — touches: auth
@@ -29,7 +32,8 @@
 - **[Get-random-task.post](./get-random-task.post.md)** — 1 routes — touches: auth
 - **[Get-studio-details.get](./get-studio-details.get.md)** — 1 routes
 - **[Home-stats.get](./home-stats.get.md)** — 1 routes
-- **[Index.get](./index.get.md)** — 3 routes — touches: db
+- **[Index.get](./index.get.md)** — 5 routes — touches: db, auth, cache
+- **[Index.post](./index.post.md)** — 1 routes — touches: auth, db, cache
 - **[Internal-media-create.post](./internal-media-create.post.md)** — 1 routes — touches: auth
 - **[Internal-media-credits.get](./internal-media-credits.get.md)** — 1 routes
 - **[Link-user-voice-actor.post](./link-user-voice-actor.post.md)** — 1 routes — touches: auth
@@ -40,6 +44,7 @@
 - **[Media-queue.post](./media-queue.post.md)** — 1 routes — touches: auth, queue
 - **[Merge_voice_actor_duplicates.post](./merge_voice_actor_duplicates.post.md)** — 1 routes — touches: auth
 - **[Movies.get](./movies.get.md)** — 1 routes — touches: cache
+- **[Openapi.json.get](./openapi.json.get.md)** — 1 routes
 - **[Prepare-trending-media.post](./prepare-trending-media.post.md)** — 1 routes — touches: auth, queue
 - **[Prepare_game.post](./prepare_game.post.md)** — 1 routes — touches: auth
 - **[Process-media-queue.post](./process-media-queue.post.md)** — 1 routes — touches: auth, cache, queue
@@ -63,19 +68,19 @@
 - **[Upload-profile-picture.post](./upload-profile-picture.post.md)** — 1 routes — touches: auth, cache, upload
 - **[Voice-actors.get](./voice-actors.get.md)** — 1 routes
 
-**Database:** unknown, 28 models — see [database.md](./database.md)
+**Database:** unknown, 29 models — see [database.md](./database.md)
 
 **UI:** 145 components (vue) — see [ui.md](./ui.md)
 
-**Libraries:** 137 files — see [libraries.md](./libraries.md)
+**Libraries:** 143 files — see [libraries.md](./libraries.md)
 
 ## High-Impact Files
 
 Changes to these files have the widest blast radius across the codebase:
 
-- `apps/website/server/utils/db/client.ts` — imported by **51** files
+- `apps/website/server/utils/db/client.ts` — imported by **58** files
+- `apps/website/server/utils/auth-handlers.ts` — imported by **29** files
 - `apps/website/server/utils/index.ts` — imported by **28** files
-- `apps/website/server/utils/auth-handlers.ts` — imported by **26** files
 - `apps/website/server/utils/cache/index.ts` — imported by **18** files
 - `packages/shared-logic/src/types/index.ts` — imported by **12** files
 - `apps/website/server/utils/media-request.ts` — imported by **10** files

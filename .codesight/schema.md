@@ -199,3 +199,13 @@
     wikidata_qid is
 - created_by: uuid (required)
 - updated_by: uuid (required)
+
+### api_tokens
+- id: uuid (pk)
+- user_id: uuid (required, fk)
+- name: text (required)
+- prefix: text (required)
+- token_hash: text (required)
+- expires_at: timestamp(tz)
+- last_used_at: timestamp(tz)
+- revoked_at: timestamp(tz)

@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/website, @app/supabase, @app/locales, @app/shared-logic
 
-> 67 routes | 28 models | 145 components | 137 lib files | 53 env vars | 14 middleware | 57% test coverage
-> **Token savings:** this file is ~18,800 tokens. Without it, AI exploration would cost ~148,100 tokens. **Saves ~129,400 tokens per conversation.**
-> **Last scanned:** 2026-11-23 10:29 — re-run after significant changes
+> 75 routes | 29 models | 145 components | 143 lib files | 53 env vars | 15 middleware | 53% test coverage
+> **Token savings:** this file is ~19,200 tokens. Without it, AI exploration would cost ~154,500 tokens. **Saves ~135,300 tokens per conversation.**
+> **Last scanned:** 2026-11-23 15:02 — re-run after significant changes
 
 ---
 
@@ -63,6 +63,9 @@
 - `GET` `/api/show/:id` params(id)
 - `POST` `/api/submit-task` [auth, db, upload] ✓
 - `POST` `/api/submit-user-report` [auth, db] ✓
+- `DELETE` `/api/tokens/:id` params(id) [auth, db, cache]
+- `GET` `/api/tokens/index` [auth, cache]
+- `POST` `/api/tokens/index` [auth, db, cache]
 - `GET` `/api/top-contributors` ✓
 - `GET` `/api/top-voice-actors` ✓
 - `GET` `/api/toy/:id` params(id)
@@ -74,7 +77,12 @@
 - `POST` `/api/update-voice-actor` [auth, cache, upload] ✓
 - `POST` `/api/update_user_role` [auth]
 - `POST` `/api/upload-profile-picture` [auth, cache, upload] ✓
+- `GET` `/api/v1/voice-actors/:id` params(id)
+- `PATCH` `/api/v1/voice-actors/:id` params(id) [auth]
+- `GET` `/api/v1/voice-actors/index`
 - `GET` `/api/voice-actor/:id` params(id)
+- `GET` `/routes/api/v1/docs`
+- `GET` `/routes/api/v1/openapi.json`
 - `ALL` `/routes/sitemap.xml`
 - `GET` `/routes/sitemaps/:file` params(file)
 - `ALL` `/routes/sitemaps/pages.xml`
@@ -283,6 +291,16 @@
 - created_by: uuid (required)
 - updated_by: uuid (required)
 
+### api_tokens
+- id: uuid (pk)
+- user_id: uuid (required, fk)
+- name: text (required)
+- prefix: text (required)
+- token_hash: text (required)
+- expires_at: timestamp(tz)
+- last_used_at: timestamp(tz)
+- revoked_at: timestamp(tz)
+
 ---
 
 # Components
@@ -456,6 +474,21 @@
 - `apps/website/server/utils/api/tmdb.ts` — function tmdbEdgeCacheTtl: (endpoint) => number, class TMDBClient
 - `apps/website/server/utils/api/toy.ts` — class ToyClient
 - `apps/website/server/utils/api/tvdb.ts` — class TVDBClient, const TVDB_AUTH_TOKEN_NAMESPACE
+- `apps/website/server/utils/api-v1/define.ts`
+  - function defineApiRoute: (definition, TQuery, TResponse, TBody>) => void
+  - function operationFor: (docs, components) => void
+  - interface ApiRouteDefinition
+  - interface ApiRouteDocs
+  - type SchemaComponents
+- `apps/website/server/utils/api-v1/errors.ts` — class ApiError
+- `apps/website/server/utils/api-v1/spec.ts` — function buildOpenApiSpec: () => void
+- `apps/website/server/utils/api-v1/tokens.ts`
+  - function hashApiToken: (token) => Promise<string>
+  - function generateApiToken: () => void
+  - function readBearerToken: (event) => string | null
+  - function authenticateApiToken: (event, token) => Promise<ApiPrincipal | null>
+  - interface ApiPrincipal
+  - const API_TOKEN_PREFIX
 - `apps/website/server/utils/auth-handlers.ts` — function defineUserHandler: (handler, user) => void, function defineAdminHandler: (handler, admin) => void
 - `apps/website/server/utils/auth-session.ts` — function hasSupabaseAuthCookie: (cookieHeader, cookiePrefix) => boolean
 - `apps/website/server/utils/auth.ts`
@@ -681,6 +714,10 @@
   - type WikiCheckDisposition
 - `apps/website/server/utils/with-timeout.ts` — function withTimeout: (promise, timeoutMs, dependency) => Promise<T>
 - `apps/website/server/utils/work-role-identity.ts` — function findUniqueWorkRoleMatch: (works, matchingWorkIds) => T | undefined
+- `apps/website/shared/api-scopes.ts`
+  - function isApiScope: (value) => value is ApiScope
+  - type ApiScope
+  - const API_SCOPES
 - `apps/website/src/composables/getHydrationCachedData.ts` — function getHydrationCachedData: (key, nuxtApp) => T | undefined
 - `apps/website/src/composables/useAdminAuditLogs.ts` — function useAdminAuditLogs, type AdminAuditLog
 - `apps/website/src/composables/useAdminLookups.ts`
@@ -692,6 +729,10 @@
   - function useAdminReports
   - type UserReport
   - const ADMIN_REPORTS_PAGE_SIZE
+- `apps/website/src/composables/useApiTokens.ts`
+  - function useApiTokens: () => void
+  - interface CreatedApiToken
+  - interface CreateApiTokenInput
 - `apps/website/src/composables/useCharacterImageViewport.ts` — function useCharacterImageViewport: (requests) => void
 - `apps/website/src/composables/useCharacterImages.ts`
   - function resetSharedCharacterImages: () => void
@@ -999,6 +1040,7 @@
 - 01-cors — `apps/website/server/middleware/01-cors.ts`
 
 ## auth
+- authenticate.test — `apps/website/server/utils/api-v1/authenticate.test.ts`
 - auth-handlers.test — `apps/website/server/utils/auth-handlers.test.ts`
 - auth-handlers — `apps/website/server/utils/auth-handlers.ts`
 - auth-session.test — `apps/website/server/utils/auth-session.test.ts`
@@ -1015,9 +1057,9 @@
 
 ## Most Imported Files (change these carefully)
 
-- `apps/website/server/utils/db/client.ts` — imported by **51** files
+- `apps/website/server/utils/db/client.ts` — imported by **58** files
+- `apps/website/server/utils/auth-handlers.ts` — imported by **29** files
 - `apps/website/server/utils/index.ts` — imported by **28** files
-- `apps/website/server/utils/auth-handlers.ts` — imported by **26** files
 - `apps/website/server/utils/cache/index.ts` — imported by **18** files
 - `packages/shared-logic/src/types/index.ts` — imported by **12** files
 - `apps/website/server/utils/media-request.ts` — imported by **10** files
@@ -1031,16 +1073,16 @@
 - `apps/website/server/utils/cache/edge.ts` — imported by **7** files
 - `apps/website/server/utils/narrow.ts` — imported by **6** files
 - `apps/website/server/utils/api/igdb.ts` — imported by **6** files
+- `apps/website/shared/api-scopes.ts` — imported by **6** files
+- `apps/website/server/utils/api-v1/define.ts` — imported by **6** files
 - `apps/website/server/utils/cache/wikipedia.ts` — imported by **5** files
 - `apps/website/server/utils/dubbing-region-detection.ts` — imported by **5** files
-- `apps/website/server/utils/llm.ts` — imported by **5** files
-- `apps/website/server/utils/error-message.ts` — imported by **5** files
 
 ## Import Map (who imports what)
 
-- `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue.get.ts`, `apps/website/server/api/admin/work-duplicates/merge.post.ts`, `apps/website/server/api/admin/work-duplicates.get.ts` +46 more
+- `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue.get.ts`, `apps/website/server/api/admin/work-duplicates/merge.post.ts`, `apps/website/server/api/admin/work-duplicates.get.ts` +53 more
+- `apps/website/server/utils/auth-handlers.ts` ← `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue.get.ts`, `apps/website/server/api/admin/work-duplicates/merge.post.ts`, `apps/website/server/api/admin/work-duplicates.get.ts` +24 more
 - `apps/website/server/utils/index.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/character/[source]/[id].get.ts` +23 more
-- `apps/website/server/utils/auth-handlers.ts` ← `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue.get.ts`, `apps/website/server/api/admin/work-duplicates/merge.post.ts`, `apps/website/server/api/admin/work-duplicates.get.ts` +21 more
 - `apps/website/server/utils/cache/index.ts` ← `apps/website/server/utils/api/igdb.test.ts`, `apps/website/server/utils/api/igdb.ts`, `apps/website/server/utils/api/openlibrary.test.ts`, `apps/website/server/utils/api/openlibrary.ts`, `apps/website/server/utils/api/podcast.test.ts` +13 more
 - `packages/shared-logic/src/types/index.ts` ← `packages/shared-logic/src/composables/useAdvertisementData.ts`, `packages/shared-logic/src/composables/useAudiobookData.ts`, `packages/shared-logic/src/composables/useDetailCollections.ts`, `packages/shared-logic/src/composables/useDetailCollections.ts`, `packages/shared-logic/src/composables/useGameData.ts` +7 more
 - `apps/website/server/utils/media-request.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/character-portraits.get.ts`, `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/game/[id].get.ts` +5 more
@@ -1053,8 +1095,8 @@
 
 # Test Coverage
 
-> **57%** of routes and models are covered by tests
-> 165 test files found
+> **53%** of routes and models are covered by tests
+> 170 test files found
 
 ## Covered Routes
 
@@ -1115,6 +1157,7 @@
 - admin_credit_import_requests
 - user_voice_actor_link_requests
 - game_characters
+- api_tokens
 
 ---
 

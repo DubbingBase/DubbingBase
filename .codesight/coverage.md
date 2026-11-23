@@ -1,7 +1,7 @@
 # Test Coverage
 
-> **57%** of routes and models are covered by tests
-> 165 test files found
+> **53%** of routes and models are covered by tests
+> 170 test files found
 
 ## Covered Routes
 
@@ -62,3 +62,4 @@
 - admin_credit_import_requests
 - user_voice_actor_link_requests
 - game_characters
+- api_tokens

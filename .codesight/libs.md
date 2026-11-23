@@ -19,6 +19,21 @@
 - `apps/website/server/utils/api/tmdb.ts` — function tmdbEdgeCacheTtl: (endpoint) => number, class TMDBClient
 - `apps/website/server/utils/api/toy.ts` — class ToyClient
 - `apps/website/server/utils/api/tvdb.ts` — class TVDBClient, const TVDB_AUTH_TOKEN_NAMESPACE
+- `apps/website/server/utils/api-v1/define.ts`
+  - function defineApiRoute: (definition, TQuery, TResponse, TBody>) => void
+  - function operationFor: (docs, components) => void
+  - interface ApiRouteDefinition
+  - interface ApiRouteDocs
+  - type SchemaComponents
+- `apps/website/server/utils/api-v1/errors.ts` — class ApiError
+- `apps/website/server/utils/api-v1/spec.ts` — function buildOpenApiSpec: () => void
+- `apps/website/server/utils/api-v1/tokens.ts`
+  - function hashApiToken: (token) => Promise<string>
+  - function generateApiToken: () => void
+  - function readBearerToken: (event) => string | null
+  - function authenticateApiToken: (event, token) => Promise<ApiPrincipal | null>
+  - interface ApiPrincipal
+  - const API_TOKEN_PREFIX
 - `apps/website/server/utils/auth-handlers.ts` — function defineUserHandler: (handler, user) => void, function defineAdminHandler: (handler, admin) => void
 - `apps/website/server/utils/auth-session.ts` — function hasSupabaseAuthCookie: (cookieHeader, cookiePrefix) => boolean
 - `apps/website/server/utils/auth.ts`
@@ -244,6 +259,10 @@
   - type WikiCheckDisposition
 - `apps/website/server/utils/with-timeout.ts` — function withTimeout: (promise, timeoutMs, dependency) => Promise<T>
 - `apps/website/server/utils/work-role-identity.ts` — function findUniqueWorkRoleMatch: (works, matchingWorkIds) => T | undefined
+- `apps/website/shared/api-scopes.ts`
+  - function isApiScope: (value) => value is ApiScope
+  - type ApiScope
+  - const API_SCOPES
 - `apps/website/src/composables/getHydrationCachedData.ts` — function getHydrationCachedData: (key, nuxtApp) => T | undefined
 - `apps/website/src/composables/useAdminAuditLogs.ts` — function useAdminAuditLogs, type AdminAuditLog
 - `apps/website/src/composables/useAdminLookups.ts`
@@ -255,6 +274,10 @@
   - function useAdminReports
   - type UserReport
   - const ADMIN_REPORTS_PAGE_SIZE
+- `apps/website/src/composables/useApiTokens.ts`
+  - function useApiTokens: () => void
+  - interface CreatedApiToken
+  - interface CreateApiTokenInput
 - `apps/website/src/composables/useCharacterImageViewport.ts` — function useCharacterImageViewport: (requests) => void
 - `apps/website/src/composables/useCharacterImages.ts`
   - function resetSharedCharacterImages: () => void
