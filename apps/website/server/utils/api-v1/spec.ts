@@ -18,7 +18,11 @@ export function buildOpenApiSpec() {
       version: "1.0.0",
       description:
         "Admins create a token under Profile → API Key and send it as `Authorization: Bearer dbk_live_…`. " +
-        "Every response is `no-store`; errors are `{ error: { code, message } }`.",
+        "Every response is `no-store`; errors are `{ error: { code, message } }`. " +
+        "Media lives at `/api/v1/{movies|shows|games|podcasts|audiobooks|advertisements|toys}/{id}` " +
+        "(TMDB, IGDB, iTunes and Open Library ids; ads and toys use their DubbingBase id); " +
+        "follow the `path` fields in responses instead of building URLs. " +
+        "Credit writes behave as if the token's owner made them, and `?dry_run=true` previews a batch without writing.",
     },
     paths,
     components: {
