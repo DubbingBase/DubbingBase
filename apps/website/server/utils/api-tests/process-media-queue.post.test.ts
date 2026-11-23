@@ -47,6 +47,10 @@ const routeMocks = vi.hoisted(() => ({
 }));
 
 vi.mock("../notifications/discord", () => ({
+  beginDiscordDigest: vi.fn(),
+  errorFields: vi.fn(() => []),
+  shortText: vi.fn((text: string) => text),
+  flushDiscordDigest: vi.fn(async () => undefined),
   sendDiscordAdminNotification: routeMocks.sendDiscordAdminNotification,
 }));
 vi.mock("../services/media-preparation", () => ({

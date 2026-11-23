@@ -3,6 +3,7 @@ import { isWikipediaLanguage, readProperty } from "@app/shared-logic";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { requireUser } from "../utils/auth";
 import { sendDiscordAdminNotification } from "../utils/notifications/discord";
+import { scheduleBackgroundTask } from "../utils/background";
 
 // Reads an optional season/episode number. Non-numeric values are treated as absent.
 function parseOptionalInteger(value: unknown): number | undefined {
@@ -169,6 +170,16 @@ export default defineEventHandler(async (event) => {
         routine: true,
         event,
       },
+    );
+
+    // Start draining now instead of waiting for the next minute tick. runTask shares an
+    // already-running dispatcher in this isolate, so rapid manual adds do not stack up.
+    scheduleBackgroundTask(
+      event,
+      async () => {
+        await runTask("dispatcher", { context: event.context });
+      },
+      "manual-queue-kick",
     );
 
     return { success: true, alreadyQueued: false };
