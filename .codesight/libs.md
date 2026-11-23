@@ -71,14 +71,6 @@
   - function selectDubbingCandidateSections: (sections) => Promise<DubbingSectionCandidate[]>
   - function selectDubbingSections: (sections) => Promise<string[]>
   - _...6 more_
-- `apps/website/server/utils/character-images.ts`
-  - function isCharacterImageSource: (value) => value is CharacterImageSource
-  - function selectTvdbCharacter: (names, characters) => void
-  - function resolveCharacterImage: (resolvers, skip, onError?, error) => void
-  - type CharacterImageSource
-  - type CharacterImage
-  - type CharacterImageResolver
-  - _...2 more_
 - `apps/website/server/utils/contribution/task-submission-validation.ts`
   - function isTaskClaimId: (value) => value is string
   - function authorizeTaskContribution: (input) => void
@@ -232,7 +224,6 @@
   - function getValidatedExtractionSections: (options) => Promise<ValidatedExtractionSections>
   - interface ScanSectionMetadata
   - type ValidatedExtractionSections
-- `apps/website/server/utils/services/wikimedia-character-image.ts` — function createWikimediaCharacterImageResolver: (cache?) => (input: CharacterImageLookup) => Promise<WikimediaCharacterImage | null>, type WikimediaCharacterImage
 - `apps/website/server/utils/sitemap-data.ts` — function listSitemapChunks: (event) => Promise<, function loadSitemapChunk: (event, name, chunk) => Promise<SitemapRecord[]>
 - `apps/website/server/utils/sitemap-response.ts` — function getSitemapOrigin: (event) => string, function sendSitemapXml: (event, xml) => string
 - `apps/website/server/utils/sitemap.ts`
@@ -269,7 +260,6 @@
   - function resetSharedCharacterImages: () => void
   - function characterImageKey: (request) => string | null
   - function useCharacterImages: (requests) => void
-  - type CharacterImageSource
   - type CharacterImage
   - type CharacterImageRequest
 - `apps/website/src/composables/useClientUser.ts` — function useClientUser: () => void
@@ -472,6 +462,7 @@
   - const DEFAULT_DUBBING_LANGUAGE: DubbingLanguage
 - `packages/shared-logic/src/utils/character.ts`
   - function createCharacterMatcher: (roleName) => (characterName: string) => boolean
+  - function selectTvdbCharacter: (names, characters) => void
   - function normalizeCharacterName
   - function findCharacter
 - `packages/shared-logic/src/utils/media-image.ts`

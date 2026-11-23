@@ -2,9 +2,9 @@
 
 > **Navigation aid.** Library inventory extracted via AST. Read the source files listed here before modifying exported functions.
 
-**139 library files** across 3 modules
+**137 library files** across 3 modules
 
-## Website (116 files)
+## Website (114 files)
 
 - `apps/website/server/utils/db/queries.ts` — getVoiceActorWithWork, getWorkByActor, getActorPageWorkByActor, getDubbingProjects, getDubbingProjectsForMediaEndpoint, getAdvertisementPageDubbingProjects, …
 - `apps/website/src/utils/dubbing-project-save.ts` — getEditableDubbingProjectStatus, serializeGameProjectCastRows, createRequestId, createStableRequestIdFactory, createDubbingProjectSaveClient, isDubbingProjectSaveConflict, …
@@ -20,7 +20,6 @@
 - `apps/website/server/utils/queue-payload.ts` — queueRequester, queueRequesterRpcArgs, validateDiscoveryPayload, validateCheckPayload, validateExtractPayload, ValidQueueBase, …
 - `apps/website/server/utils/sitemap.ts` — localizedPath, renderUrlset, renderSitemapIndex, chunkCount, SitemapEntity, SitemapRecord, …
 - `apps/website/server/utils/cache/index.ts` — createCacheNamespace, CacheNamespace, SimpleCache, CacheKv, CachePolicy, CacheTTLPreset, …
-- `apps/website/server/utils/character-images.ts` — isCharacterImageSource, selectTvdbCharacter, resolveCharacterImage, CharacterImageSource, CharacterImage, CharacterImageResolver, …
 - `apps/website/src/composables/useEditorFormState.ts` — createEditorFormState, createUnsavedChangesLeaveGuard, useEditorFormState, createEditorRowKey, EditorFormStateOptions, EditorFormState, …
 - `apps/website/src/composables/useEntityHistory.ts` — useEntityHistory, HistoryEntityType, HistoryKind, HistoryChangeType, HistoryChange, HistoryEntry, …
 - `apps/website/src/utils/season-data.ts` — fetchSeasonPageData, fetchEpisodePageData, fetchEpisodeProjectWorks, EpisodePageDubbingProject, EpisodePageVoiceActor, EpisodePageDataResponse, …
@@ -29,9 +28,10 @@
 - `apps/website/server/utils/search-ranking.ts` — rankSearchResults, getTmdbLocale, projectSearchResult, SearchItem, MEDIA_TYPE_WEIGHTS, DEFAULT_MEDIA_TYPE_WEIGHT, …
 - `apps/website/src/utils/cast-workspace.ts` — filterCastRows, summarizeCast, getInitials, CastWorkspaceRow, CastFilter, ORIGINAL_CAST_SEED_LIMIT, …
 - `apps/website/server/utils/cache/http.ts` — getPublicCacheControl, getCloudflareCacheControl, setNoCacheHeaders, setPublicCacheHeaders, CacheProfile, NO_STORE_CACHE_CONTROL
-- `apps/website/src/composables/useCharacterImages.ts` — resetSharedCharacterImages, characterImageKey, useCharacterImages, CharacterImageSource, CharacterImage, CharacterImageRequest
 - `apps/website/src/composables/useContribute.ts` — fetchRandomTask, useContribute, ContributionTask, ContributionCategory, ClaimedCategory, ContributionClaim
-- _…and 91 more files_
+- `apps/website/server/utils/api/igdb.ts` — isIgdbGame, isIgdbCharacter, IgdbClient, IgdbTrendingGamesResult, IgdbPopularityPrimitive
+- `apps/website/server/utils/cache/constants.ts` — hashCacheValue, buildCacheKey, SimpleKeyValidator, CacheKeyInput, CACHE_SCHEMA_VERSION
+- _…and 89 more files_
 
 ## Shared-logic (22 files)
 
@@ -43,9 +43,9 @@
 - `packages/shared-logic/src/composables/useHomeData.ts` — fetchHomeData, useHomeData, HomeDataPayload, TrendingVoiceActorSummary, TopContributorSummary
 - `packages/shared-logic/src/composables/useVoiceActorData.ts` — fetchVoiceActorData, useVoiceActorData, VoiceActorResponse, EnhancedWorkItem, VoiceActorDataPayload
 - `packages/shared-logic/src/composables/useActorData.ts` — fetchActorData, useActorData, ActorResponse, ActorDataPayload
+- `packages/shared-logic/src/utils/character.ts` — createCharacterMatcher, selectTvdbCharacter, normalizeCharacterName, findCharacter
 - `packages/shared-logic/src/utils/media-image.ts` — getTmdbImagePath, resolveMediaImage, MediaImageOptions, VOICE_ACTOR_IMAGE_BUCKET
 - `packages/shared-logic/src/utils/narrow.ts` — isRecord, readProperty, readPath, isJson
-- `packages/shared-logic/src/utils/character.ts` — createCharacterMatcher, normalizeCharacterName, findCharacter
 - `packages/shared-logic/src/composables/useEpisodeData.ts` — fetchEpisodeData, EpisodeDataResponse
 - `packages/shared-logic/src/composables/useSearchData.ts` — fetchSearchData, SearchResult
 - `packages/shared-logic/src/composables/useSeasonData.ts` — fetchSeasonData, SeasonDataResponse

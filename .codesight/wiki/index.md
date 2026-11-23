@@ -14,7 +14,7 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 - [[id].put](./[id].put.md)
 - [Admin](./admin.md)
 - [Career-grid.get](./career-grid.get.md)
-- [Character-images.get](./character-images.get.md)
+- [Character-portraits.get](./character-portraits.get.md)
 - [Count-voice-actor-works.post](./count-voice-actor-works.post.md)
 - [Dashboard-stats.get](./dashboard-stats.get.md)
 - [Delete_user.post](./delete_user.post.md)

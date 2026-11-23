@@ -10,7 +10,7 @@
 - `GET` `/api/audiobook/:id` params(id)
 - `GET` `/api/career-grid` ✓
 - `GET` `/api/character/:source/:id` params(source, id)
-- `GET` `/api/character-images` [cache] ✓
+- `GET` `/api/character-portraits` [cache] ✓
 - `POST` `/api/count-voice-actor-works` ✓
 - `GET` `/api/dashboard-stats` [auth]
 - `POST` `/api/delete_user` [auth]
