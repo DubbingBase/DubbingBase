@@ -1,7 +1,26 @@
+import type { Tables } from "@app/shared-logic";
 import * as v from "valibot";
 
-export const VOICE_ACTOR_COLUMNS =
-  "id, firstname, lastname, bio, nationality, date_of_birth, awards, years_active, social_media_links, profile_picture, tmdb_id, wikidata_id, updated_at";
+type VoiceActorRow = Tables<"voice_actors">;
+
+/** The voice_actors columns the public API exposes; a name that is not a column fails to compile. */
+const VOICE_ACTOR_FIELDS = [
+  "id",
+  "firstname",
+  "lastname",
+  "bio",
+  "nationality",
+  "date_of_birth",
+  "awards",
+  "years_active",
+  "social_media_links",
+  "profile_picture",
+  "tmdb_id",
+  "wikidata_id",
+  "updated_at",
+] as const satisfies readonly (keyof VoiceActorRow)[];
+
+export const VOICE_ACTOR_COLUMNS = VOICE_ACTOR_FIELDS.join(", ");
 
 export type JsonValue =
   | string
@@ -22,7 +41,11 @@ export const Json: v.GenericSchema<JsonValue> = v.lazy(() =>
   ]),
 );
 
-export const VoiceActor = v.object({
+/**
+ * One schema per exposed column, each checked against that column's type in the generated
+ * database types: a missing, extra or mistyped entry fails to compile.
+ */
+const voiceActorShape = {
   id: v.number(),
   firstname: v.string(),
   lastname: v.string(),
@@ -36,7 +59,9 @@ export const VoiceActor = v.object({
   tmdb_id: v.nullable(v.number()),
   wikidata_id: v.nullable(v.string()),
   updated_at: v.nullable(v.string()),
-});
+} satisfies { [K in (typeof VOICE_ACTOR_FIELDS)[number]]: v.GenericSchema<VoiceActorRow[K]> };
+
+export const VoiceActor = v.object(voiceActorShape);
 
 /** A positive id from a path or cursor, rejected when `Number` could not hold it exactly. */
 export const positiveId = v.pipe(

@@ -37,11 +37,12 @@ export const route = defineApiRoute({
     if (query.after !== undefined) builder = builder.gt("id", query.after);
     const { data, error } = await builder;
     if (error) throw error;
-    const page = v.parse(v.array(VoiceActor), data.slice(0, query.limit));
+    const rows = v.parse(v.array(VoiceActor), data);
+    const page = rows.slice(0, query.limit);
     const last = page.at(-1);
     return {
       data: page,
-      next_cursor: data.length > query.limit && last ? String(last.id) : null,
+      next_cursor: rows.length > query.limit && last ? String(last.id) : null,
     };
   },
 });
