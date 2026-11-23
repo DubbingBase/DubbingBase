@@ -25,22 +25,31 @@ vi.mock("vue-i18n", async (importOriginal) => ({
   },
 }));
 
-// Responses are queued per test; the endpoint records each request's query string.
+// Casts are queued per test; the endpoint records each request's query string.
 type Pending = { respond: () => unknown | Promise<unknown> };
-const queue: Pending[] = [];
-const queries: Array<Record<string, unknown>> = [];
-registerEndpoint("/api/character-images", async (event) => {
-  queries.push(getQuery(event));
-  const next = queue.shift();
+type Roster = {
+  tvdbId?: number | null;
+  characters?: Array<{ id: string; name: string; image: string | null }>;
+  degraded?: boolean;
+};
+// TVDB casts: one queued answer per production request.
+const rosterQueue: Pending[] = [];
+const rosterQueries: Array<Record<string, unknown>> = [];
+registerEndpoint("/api/character-portraits", async (event) => {
+  rosterQueries.push(getQuery(event));
+  const next = rosterQueue.shift();
   if (!next) throw createError({ statusCode: 500 });
   return await next.respond();
 });
-const reply = (
-  images: Record<string, unknown>,
-  tvdbIds: Record<string, number> = {},
-  characterIds: Record<string, string> = {},
-) => queue.push({ respond: () => ({ images, characterIds, tvdbIds }) });
-
+const castOf = (roster: Roster = {}) => ({
+  tvdbId: null,
+  characters: [],
+  degraded: false,
+  ...roster,
+});
+const replyRoster = (roster: Roster = {}) => rosterQueue.push({ respond: () => castOf(roster) });
+const RON = { id: "55", name: "Ron Weasley", image: "https://t/ron.jpg" };
+const HERMIONE = { id: "56", name: "Hermione Granger", image: "https://t/hermione.jpg" };
 type Request = Parameters<typeof characterImageKey>[0];
 const unmounts: Array<() => void> = [];
 const ron = (mediaId: number): Request => ({ mediaType: "movie", mediaId, names: ["Ron Weasley"] });
@@ -50,7 +59,6 @@ const hermione = (mediaId: number): Request => ({
   mediaId,
   names: ["Hermione Granger"],
 });
-const tvdb = (src: string) => ({ src, source: "tvdb" });
 
 function setup(initial: Request[]) {
   const requests = ref<Request[]>(initial);
@@ -77,8 +85,8 @@ afterEach(() => {
 });
 
 beforeEach(() => {
-  queue.length = 0;
-  queries.length = 0;
+  rosterQueue.length = 0;
+  rosterQueries.length = 0;
   mockLocale.set("en");
 });
 
@@ -100,340 +108,217 @@ describe("useCharacterImages", () => {
     );
 
     await renderToString(app);
-    expect(queries).toHaveLength(0);
+    expect(rosterQueries).toHaveLength(0);
   });
 
-  it("loads after mount only the visible cards, once per card", async () => {
-    reply({ [key(671)]: tvdb("https://t/671.jpg") }, { "movie:671": 9 }, { [key(671)]: "55" });
+  it("matches visible cards against one cast request per production", async () => {
+    replyRoster({ tvdbId: 9, characters: [RON, HERMIONE] });
+    const { requests, api } = setup([ron(671), hermione(671)]);
+    await flushPromises();
+
+    expect(rosterQueries).toEqual([{ mediaType: "movie", mediaId: "671", lang: "en-US" }]);
+    expect(api.imageFor(ron(671))?.src).toBe("https://t/ron.jpg");
+    expect(api.imageFor(ron(671))?.source).toBe("tvdb");
+    expect(api.imageFor(hermione(671))?.src).toBe("https://t/hermione.jpg");
+    expect(api.characterIdFor(ron(671))).toBe("55");
+    expect(api.tvdbIds.value).toEqual({ "movie:671": 9 });
+
+    // Paging or filtering inside the production needs no request at all.
+    requests.value = [{ mediaType: "movie", mediaId: 671, names: ["Hermione"] }];
+    await nextTick();
+    await flushPromises();
+    expect(rosterQueries).toHaveLength(1);
+  });
+
+  it("uses the same cast request for cards that become visible while it is in flight", async () => {
+    let resolveCast!: (value: unknown) => void;
+    rosterQueue.push({ respond: () => new Promise((resolve) => (resolveCast = resolve)) });
     const { requests, api } = setup([ron(671)]);
     await flushPromises();
-
-    expect(queries).toHaveLength(1);
-    expect(queries[0]).toMatchObject({ item: key(671), lang: "en-US" });
-    expect(api.imageFor(ron(671))?.src).toBe("https://t/671.jpg");
-    expect(api.tvdbIds.value).toEqual({ "movie:671": 9 });
-    expect(api.characterIdFor(ron(671))).toBe("55");
-
-    // Same card again: no new request; a new card (next page): only that one.
-    reply({ [key(672)]: null });
-    requests.value = [ron(671), ron(672)];
+    requests.value = [ron(671), hermione(671)];
     await nextTick();
     await flushPromises();
-    expect(queries).toHaveLength(2);
-    expect(queries[1]).toMatchObject({ item: key(672) });
+    resolveCast(castOf({ characters: [RON, HERMIONE] }));
+    await flushPromises();
+
+    expect(rosterQueries).toHaveLength(1);
+    expect(api.imageFor(ron(671))?.src).toBe("https://t/ron.jpg");
+    expect(api.imageFor(hermione(671))?.src).toBe("https://t/hermione.jpg");
   });
 
-  it("keeps successful and negative results cached when a card leaves and returns", async () => {
-    reply({ [key(671)]: tvdb("https://t/671.jpg") });
-    reply({ [key(672)]: null });
-    const { requests, api } = setup([ron(671), ron(672)]);
-    await flushPromises();
-
-    requests.value = [];
-    await nextTick();
-    requests.value = [ron(671), ron(672)];
-    await nextTick();
-    await flushPromises();
-
-    expect(queries).toHaveLength(2);
-    expect(api.imageFor(ron(671))?.src).toBe("https://t/671.jpg");
-    expect(api.imageFor(ron(672))).toBeNull();
-  });
-
-  it("sends one request per production so the URL does not depend on neighbours", async () => {
-    reply({});
-    reply({});
+  it("sends one cast request per production", async () => {
+    replyRoster();
+    replyRoster();
     setup([ron(671), ron(672)]);
     await flushPromises();
-    expect(queries.map((query) => query.item)).toEqual([key(671), key(672)]);
+    expect(rosterQueries.map((query) => query.mediaId)).toEqual(["671", "672"]);
   });
 
-  it("limits concurrent production requests and queues the remaining cards", async () => {
+  it("limits concurrent cast requests and queues the remaining productions", async () => {
     const resolvers: Array<(value: unknown) => void> = [];
     for (let index = 0; index < 6; index += 1) {
-      queue.push({ respond: () => new Promise((resolve) => resolvers.push(resolve)) });
+      rosterQueue.push({ respond: () => new Promise((resolve) => resolvers.push(resolve)) });
     }
     setup(Array.from({ length: 6 }, (_, index) => ron(671 + index)));
     await flushPromises();
 
-    expect(queries).toHaveLength(4);
-    resolvers[0]?.({ images: {}, characterIds: {}, tvdbIds: {} });
+    expect(rosterQueries).toHaveLength(4);
+    resolvers[0]?.(castOf());
     await flushPromises();
-    expect(queries).toHaveLength(5);
+    expect(rosterQueries).toHaveLength(5);
   });
 
-  it("re-requests with the failed source skipped and ends on the placeholder", async () => {
-    reply({ [key(671)]: tvdb("https://t/broken.jpg") });
-    reply({ [key(671)]: { src: "https://upload.wikimedia.org/a.jpg", source: "wikimedia" } });
-    reply({ [key(671)]: null });
-    const { api } = setup([ron(671)]);
+  it("shows the placeholder, but keeps the character page, for a role TVDB has no image for", async () => {
+    replyRoster({ characters: [{ id: "56", name: "Hermione Granger", image: null }] });
+    const { api } = setup([hermione(671)]);
     await flushPromises();
+    expect(api.imageFor(hermione(671))).toBeNull();
+    expect(api.characterIdFor(hermione(671))).toBe("56");
+  });
 
-    api.reportImageError(ron(671));
+  it("shows the placeholder when the browser cannot load a portrait, and does not remember it", async () => {
+    replyRoster({ characters: [RON] });
+    const first = setup([ron(671)]);
     await flushPromises();
-    expect(queries[1]).toMatchObject({ skip: "tvdb" });
-    expect(api.imageFor(ron(671))?.source).toBe("wikimedia");
+    first.api.reportImageError(ron(671));
+    expect(first.api.imageFor(ron(671))).toBeNull();
+    unmounts.pop()?.();
 
-    api.reportImageError(ron(671));
+    // The cast is remembered, so the next page matches it again without a request.
+    const second = setup([ron(671)]);
     await flushPromises();
-    expect(queries[2]).toMatchObject({ skip: "tvdb,wikimedia" });
-    expect(api.imageFor(ron(671))).toBeNull();
+    expect(rosterQueries).toHaveLength(1);
+    expect(second.api.imageFor(ron(671))?.src).toBe("https://t/ron.jpg");
   });
 
   it("keeps the placeholder on provider failure and retries when the card is shown again", async () => {
     const { requests, api } = setup([ron(671)]);
     await flushPromises();
-    expect(queries.length).toBeGreaterThan(0);
+    expect(rosterQueries.length).toBeGreaterThan(0);
     expect(api.imageFor(ron(671))).toBeNull();
 
-    queue.length = 0;
-    reply({ [key(671)]: tvdb("https://t/671.jpg") });
+    replyRoster({ characters: [RON] });
     requests.value = [];
     await nextTick();
     requests.value = [ron(671)];
     await nextTick();
     await flushPromises();
-    expect(api.imageFor(ron(671))?.src).toBe("https://t/671.jpg");
+    expect(api.imageFor(ron(671))?.src).toBe("https://t/ron.jpg");
+  });
+
+  it("does not trust a degraded cast: no shared cast and a retry when shown again", async () => {
+    replyRoster({ degraded: true });
+    const { requests, api } = setup([ron(671)]);
+    await flushPromises();
+    expect(api.imageFor(ron(671))).toBeNull();
+
+    replyRoster({ characters: [RON] });
+    requests.value = [];
+    await nextTick();
+    requests.value = [ron(671)];
+    await nextTick();
+    await flushPromises();
+    expect(rosterQueries).toHaveLength(2);
+    expect(api.imageFor(ron(671))?.src).toBe("https://t/ron.jpg");
   });
 
   it("reloads in the selected locale and clears locale-specific card metadata", async () => {
-    reply({ [key(671)]: tvdb("https://t/en.jpg") }, { "movie:671": 9 }, { [key(671)]: "55" });
+    replyRoster({ tvdbId: 9, characters: [RON] });
     const { api } = setup([ron(671)]);
     await flushPromises();
     expect(api.characterIdFor(ron(671))).toBe("55");
 
-    reply({ [key(671)]: tvdb("https://t/fr.jpg") }, { "movie:671": 10 }, { [key(671)]: "56" });
+    replyRoster({
+      tvdbId: 10,
+      characters: [{ id: "56", name: "Ron Weasley", image: "https://t/fr.jpg" }],
+    });
     mockLocale.set("fr");
     await nextTick();
     await flushPromises();
 
-    expect(queries.filter((query) => query.lang === "fr-FR")).toHaveLength(1);
-    expect(queries[1]).toMatchObject({ lang: "fr-FR", item: key(671) });
+    expect(rosterQueries[1]).toMatchObject({ lang: "fr-FR", mediaId: "671" });
     expect(api.imageFor(ron(671))?.src).toBe("https://t/fr.jpg");
     expect(api.characterIdFor(ron(671))).toBe("56");
     expect(api.tvdbIds.value).toEqual({ "movie:671": 10 });
   });
 
-  it("ignores stale response images and metadata after a locale reload", async () => {
+  it("ignores a stale cast response after a locale reload", async () => {
     let resolveOld!: (value: unknown) => void;
-    queue.push({ respond: () => new Promise((resolve) => (resolveOld = resolve)) });
-    const { requests, api } = setup([ron(671)]);
-    await flushPromises();
-
-    reply({ [key(671)]: tvdb("https://t/fr.jpg") }, { "movie:671": 10 }, { [key(671)]: "56" });
-    mockLocale.set("fr");
-    await nextTick();
-    await flushPromises();
-    resolveOld({
-      images: { [key(671)]: tvdb("https://t/stale.jpg") },
-      characterIds: { [key(671)]: "stale" },
-      tvdbIds: { "movie:671": 9 },
-    });
-    await flushPromises();
-
-    requests.value = [];
-    await nextTick();
-    requests.value = [ron(671)];
-    await nextTick();
-    await flushPromises();
-
-    expect(queries.filter((query) => query.lang === "fr-FR")).toHaveLength(1);
-    expect(api.imageFor(ron(671))?.src).toBe("https://t/fr.jpg");
-    expect(api.characterIdFor(ron(671))).toBe("56");
-    expect(api.tvdbIds.value).toEqual({ "movie:671": 10 });
-  });
-
-  it("keeps completed same-locale images and metadata when a card leaves and returns", async () => {
-    let resolvePending!: (value: unknown) => void;
-    queue.push({ respond: () => new Promise((resolve) => (resolvePending = resolve)) });
-    const { requests, api } = setup([ron(671)]);
-    await flushPromises();
-    requests.value = [];
-    await nextTick();
-    resolvePending({
-      images: { [key(671)]: tvdb("https://t/671.jpg") },
-      characterIds: { [key(671)]: "55" },
-      tvdbIds: { "movie:671": 9 },
-    });
-    await flushPromises();
-
-    requests.value = [ron(671)];
-    await nextTick();
-    await flushPromises();
-    expect(queries).toHaveLength(1);
-    expect(api.imageFor(ron(671))?.src).toBe("https://t/671.jpg");
-    expect(api.characterIdFor(ron(671))).toBe("55");
-    expect(api.tvdbIds.value).toEqual({ "movie:671": 9 });
-  });
-
-  it("reuses a completed negative lookup after paging A to B and back to A", async () => {
-    let resolveOld!: (value: unknown) => void;
-    queue.push({ respond: () => new Promise((resolve) => (resolveOld = resolve)) });
-    const { requests, api } = setup([ron(671)]);
-    await flushPromises();
-    reply({ [key(672)]: tvdb("https://t/672.jpg") }, { "movie:672": 10 }, { [key(672)]: "56" });
-    requests.value = [ron(672)];
-    await nextTick();
-    await flushPromises();
-
-    resolveOld({
-      images: { [key(671)]: null },
-      characterIds: { [key(671)]: "55" },
-      tvdbIds: { "movie:671": 9 },
-    });
-    await flushPromises();
-    expect(api.imageFor(ron(671))).toBeNull();
-    expect(api.imageFor(ron(672))?.src).toBe("https://t/672.jpg");
-
-    requests.value = [ron(671)];
-    await nextTick();
-    await flushPromises();
-
-    expect(queries).toHaveLength(2);
-    expect(api.imageFor(ron(671))).toBeNull();
-    expect(api.characterIdFor(ron(671))).toBe("55");
-    expect(api.tvdbIds.value).toEqual({ "movie:671": 9, "movie:672": 10 });
-  });
-
-  it("reuses an in-flight lookup when a card returns before it finishes", async () => {
-    let resolvePending!: (value: unknown) => void;
-    queue.push({ respond: () => new Promise((resolve) => (resolvePending = resolve)) });
-    const { requests, api } = setup([ron(671)]);
-    await flushPromises();
-
-    requests.value = [];
-    await nextTick();
-    requests.value = [ron(671)];
-    await nextTick();
-    resolvePending({
-      images: { [key(671)]: tvdb("https://t/671.jpg") },
-      characterIds: { [key(671)]: "55" },
-      tvdbIds: { "movie:671": 9 },
-    });
-    await flushPromises();
-
-    expect(queries).toHaveLength(1);
-    expect(api.imageFor(ron(671))?.src).toBe("https://t/671.jpg");
-    expect(api.characterIdFor(ron(671))).toBe("55");
-  });
-
-  it("clears failed-source history when starting a new locale lookup", async () => {
-    reply({ [key(671)]: tvdb("https://t/broken.jpg") });
-    reply({ [key(671)]: { src: "https://upload.wikimedia.org/a.jpg", source: "wikimedia" } });
+    rosterQueue.push({ respond: () => new Promise((resolve) => (resolveOld = resolve)) });
     const { api } = setup([ron(671)]);
     await flushPromises();
-    api.reportImageError(ron(671));
-    await flushPromises();
-    expect(queries[1]).toMatchObject({ skip: "tvdb" });
 
-    reply({ [key(671)]: tvdb("https://t/fr.jpg") });
+    replyRoster({
+      tvdbId: 10,
+      characters: [{ id: "56", name: "Ron Weasley", image: "https://t/fr.jpg" }],
+    });
     mockLocale.set("fr");
     await nextTick();
     await flushPromises();
-    expect(queries[2]).toMatchObject({ lang: "fr-FR", item: key(671) });
-    expect(queries[2]).not.toHaveProperty("skip");
-  });
-
-  it("keeps failed-source history when a fallback request fails and the card is shown again", async () => {
-    reply({ [key(671)]: tvdb("https://t/broken.jpg") });
-    const { requests, api } = setup([ron(671)]);
-    await flushPromises();
-
-    queue.push({ respond: () => Promise.reject(createError({ statusCode: 500 })) });
-    api.reportImageError(ron(671));
-    await flushPromises();
-    expect(queries.at(-1)).toMatchObject({ skip: "tvdb" });
-
-    reply({ [key(671)]: { src: "https://upload.wikimedia.org/a.jpg", source: "wikimedia" } });
-    requests.value = [];
-    await nextTick();
-    requests.value = [ron(671)];
-    await nextTick();
-    await flushPromises();
-
-    expect(queries.at(-1)).toMatchObject({ item: key(671), skip: "tvdb" });
-    expect(api.imageFor(ron(671))?.source).toBe("wikimedia");
-  });
-
-  it("keeps fallback histories separate for neighboring roles in one production", async () => {
-    reply({ [key(671)]: tvdb("https://t/broken.jpg") });
-    const { requests, api } = setup([ron(671)]);
-    await flushPromises();
-
-    queue.push({ respond: () => Promise.reject(createError({ statusCode: 500 })) });
-    api.reportImageError(ron(671));
-    await flushPromises();
-
-    const hermioneRequest = hermione(671);
-    const hermioneKey = "movie:671:Hermione Granger";
-    reply({ [key(671)]: { src: "https://upload.wikimedia.org/a.jpg", source: "wikimedia" } });
-    reply({ [hermioneKey]: tvdb("https://t/hermione.jpg") });
-    requests.value = [ron(671), hermioneRequest];
-    await nextTick();
-    await flushPromises();
-
-    const retryQueries = queries.slice(-2);
-    expect(retryQueries).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ item: key(671), skip: "tvdb" }),
-        expect.objectContaining({ item: hermioneKey }),
-      ]),
+    resolveOld(
+      castOf({ tvdbId: 9, characters: [{ ...RON, id: "stale", image: "https://t/s.jpg" }] }),
     );
-    expect(retryQueries.find((query) => query.item === hermioneKey)).not.toHaveProperty("skip");
-    expect(api.imageFor(hermioneRequest)?.source).toBe("tvdb");
+    await flushPromises();
+
+    expect(api.imageFor(ron(671))?.src).toBe("https://t/fr.jpg");
+    expect(api.characterIdFor(ron(671))).toBe("56");
+    expect(api.tvdbIds.value).toEqual({ "movie:671": 10 });
+  });
+
+  it("keeps resolved cards when they leave and return, without asking again", async () => {
+    replyRoster({ tvdbId: 9, characters: [RON] });
+    const { requests, api } = setup([ron(671)]);
+    await flushPromises();
+
+    requests.value = [];
+    await nextTick();
+    requests.value = [ron(671)];
+    await nextTick();
+    await flushPromises();
+
+    expect(rosterQueries).toHaveLength(1);
+    expect(api.imageFor(ron(671))?.src).toBe("https://t/ron.jpg");
+    expect(api.characterIdFor(ron(671))).toBe("55");
   });
 
   it("shows portraits resolved on a previous page immediately, without asking again", async () => {
-    reply({ [key(671)]: tvdb("https://img/ron.jpg") }, { "movie:671": 66 }, { [key(671)]: "9" });
-    const first = setup([ron(671), hermione(671)]);
-    await flushPromises();
-    expect(first.api.imageFor(ron(671))?.src).toBe("https://img/ron.jpg");
-    const callsAfterFirst = queries.length;
-    unmounts.pop()?.();
-
-    // Back to the page: a new instance seeds from the shared store after mount.
-    const second = setup([ron(671)]);
-    await nextTick();
-    expect(second.api.imageFor(ron(671))?.src).toBe("https://img/ron.jpg");
-    expect(second.api.characterIdFor(ron(671))).toBe("9");
-    expect(second.api.tvdbIds.value["movie:671"]).toBe(66);
-    await flushPromises();
-    expect(queries.length).toBe(callsAfterFirst);
-  });
-
-  it("does not keep a portrait that failed to load", async () => {
-    reply({ [key(671)]: tvdb("https://img/dead.jpg") });
+    replyRoster({ tvdbId: 66, characters: [RON, HERMIONE] });
     const first = setup([ron(671)]);
     await flushPromises();
-    reply({ [key(671)]: null });
-    first.api.reportImageError(ron(671));
-    await flushPromises();
+    expect(first.api.imageFor(ron(671))?.src).toBe("https://t/ron.jpg");
     unmounts.pop()?.();
 
-    reply({ [key(671)]: null });
-    const second = setup([ron(671)]);
+    // Back to the page: a new instance seeds from the shared store after mount,
+    // and a card it never showed is matched against the remembered cast.
+    const second = setup([ron(671), hermione(671)]);
+    await nextTick();
+    expect(second.api.imageFor(ron(671))?.src).toBe("https://t/ron.jpg");
+    expect(second.api.characterIdFor(ron(671))).toBe("55");
+    expect(second.api.tvdbIds.value["movie:671"]).toBe(66);
     await flushPromises();
-    expect(second.api.imageFor(ron(671))).toBeNull();
+    expect(second.api.imageFor(hermione(671))?.src).toBe("https://t/hermione.jpg");
+    expect(rosterQueries).toHaveLength(1);
   });
 
   it("remembers a server answer of no image for a few minutes, then asks again", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
-    reply({ [key(671)]: null });
+    replyRoster({ characters: [] });
     setup([ron(671)]);
     await flushPromises();
-    const calls = queries.length;
+    const calls = rosterQueries.length;
     unmounts.pop()?.();
 
     setup([ron(671)]);
     await flushPromises();
-    expect(queries.length).toBe(calls);
+    expect(rosterQueries.length).toBe(calls);
     unmounts.pop()?.();
 
     vi.setSystemTime(Date.now() + 6 * 60 * 1000);
-    reply({ [key(671)]: null });
+    resetSharedCharacterImages();
+    replyRoster({ characters: [] });
     setup([ron(671)]);
     await flushPromises();
-    expect(queries.length).toBe(calls + 1);
+    expect(rosterQueries.length).toBe(calls + 1);
     vi.useRealTimers();
   });
 });

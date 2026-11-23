@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { normalizeCharacterName, findCharacter } from "./character";
+import { normalizeCharacterName, findCharacter, selectTvdbCharacter } from "./character";
 
 describe("normalizeCharacterName", () => {
   it("should return empty string for empty input", () => {
@@ -71,5 +71,40 @@ describe("findCharacter", () => {
     // Test with quotes
     expect(findCharacter('James "Logan" Howlett', "James Howlett")).toBe(true);
     expect(findCharacter('James "Logan" Howlett', "Logan")).toBe(false); // "Logan" is removed in normalization
+  });
+});
+
+describe("selectTvdbCharacter", () => {
+  const movie671 = [
+    { id: 1, name: "Ron Weasley", image: "https://artworks.thetvdb.com/ron-2001.jpg" },
+    { id: 2, name: "Harry Potter", image: "https://artworks.thetvdb.com/harry.jpg" },
+  ];
+  const movie672 = [
+    { id: 9, name: "Ron Weasley", image: "https://artworks.thetvdb.com/ron-2002.jpg" },
+  ];
+
+  it("resolves the two Ron Weasley movies separately from their own production", () => {
+    expect(selectTvdbCharacter(["Ron Weasley"], movie671)).toEqual({
+      id: "1",
+      image: "https://artworks.thetvdb.com/ron-2001.jpg",
+    });
+    expect(selectTvdbCharacter(["ron weasley (voice)"], movie672)).toEqual({
+      id: "9",
+      image: "https://artworks.thetvdb.com/ron-2002.jpg",
+    });
+  });
+
+  it("tries candidate names in order", () => {
+    expect(selectTvdbCharacter(["Unknown", "Harry Potter"], movie671)?.id).toBe("2");
+  });
+
+  it("rejects ambiguous, missing and non-http matches", () => {
+    expect(selectTvdbCharacter(["Ron Weasley"], [...movie671, ...movie672])).toBeNull();
+    expect(selectTvdbCharacter(["Hermione Granger"], movie671)).toBeNull();
+    // Non-http images are dropped, but the role itself still identifies the character.
+    expect(selectTvdbCharacter(["Ron"], [{ id: 3, name: "Ron", image: "javascript:x" }])).toEqual({
+      id: "3",
+      image: null,
+    });
   });
 });

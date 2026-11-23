@@ -1462,11 +1462,11 @@ export default defineEventHandler(async (event) => {
     return send(event, JSON.stringify(response), "application/json");
   }
 
-  // Character images are lazy and best-effort: the e2e mocks have no provider data.
-  if (path === "/api/character-images") {
+  // Character portraits are lazy and best-effort: the e2e mocks have no provider data.
+  if (path === "/api/character-portraits") {
     return send(
       event,
-      JSON.stringify({ images: {}, characterIds: {}, tvdbIds: {} }),
+      JSON.stringify({ tvdbId: null, characters: [], degraded: false }),
       "application/json",
     );
   }

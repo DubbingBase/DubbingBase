@@ -1,13 +1,9 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch, type Ref } from "vue";
-import { APP_LOCALES } from "@app/shared-logic";
-
-export type CharacterImageSource = "tvdb" | "wikimedia" | "dubbingbase";
+import { APP_LOCALES, selectTvdbCharacter } from "@app/shared-logic";
 
 export type CharacterImage = {
   src: string;
-  source: CharacterImageSource;
-  attribution?: string;
-  sourceUrl?: string;
+  source: "tvdb";
 };
 
 /** One card: the production it belongs to and the role names to look for. */
@@ -17,10 +13,12 @@ export type CharacterImageRequest = {
   names: readonly (string | null | undefined)[];
 };
 
-type CharacterImagesResponse = {
-  images: Record<string, CharacterImage | null>;
-  characterIds: Record<string, string>;
-  tvdbIds: Record<string, number>;
+/** `/api/character-portraits`: the whole TVDB cast of one production. */
+type CharacterRoster = {
+  tvdbId: number | null;
+  characters: Array<{ id: string; name: string; image: string | null }>;
+  /** A provider failed, so an empty cast may not be the real answer. */
+  degraded: boolean;
 };
 
 /**
@@ -28,8 +26,7 @@ type CharacterImagesResponse = {
  * so cards do not drop to placeholders and refetch every production. Browser-only:
  * nothing is written during server rendering, so no state crosses requests.
  * Found images are kept for the session. "No image" answers are kept briefly,
- * because the response does not say whether a provider failure produced them;
- * failed requests are never kept.
+ * because a missing TVDB image can appear later; failed requests are never kept.
  */
 const MISS_TTL_MS = 5 * 60 * 1000;
 type SharedCharacterImages = {
@@ -37,14 +34,23 @@ type SharedCharacterImages = {
   misses: Map<string, number>;
   characterIds: Map<string, string>;
   tvdbIds: Map<string, number>;
+  /** Complete, healthy TVDB casts by production: later pages match names without a request. */
+  rosters: Map<string, CharacterRoster>;
 };
 const MAX_SHARED_IMAGES = 600;
+const MAX_SHARED_ROSTERS = 40;
 const sharedByLanguage = new Map<string, SharedCharacterImages>();
 
 function sharedFor(language: string): SharedCharacterImages {
   let shared = sharedByLanguage.get(language);
   if (!shared) {
-    shared = { images: new Map(), misses: new Map(), characterIds: new Map(), tvdbIds: new Map() };
+    shared = {
+      images: new Map(),
+      misses: new Map(),
+      characterIds: new Map(),
+      tvdbIds: new Map(),
+      rosters: new Map(),
+    };
     sharedByLanguage.set(language, shared);
   }
   return shared;
@@ -55,7 +61,6 @@ export function resetSharedCharacterImages(): void {
   sharedByLanguage.clear();
 }
 
-const MAX_BATCH = 24;
 const MAX_CONCURRENT_REQUESTS = 4;
 const NAME_SEPARATOR = "|";
 
@@ -69,12 +74,25 @@ export function characterImageKey(request: CharacterImageRequest): string | null
     : null;
 }
 
+function productionOf(key: string): string {
+  return key.split(":", 2).join(":");
+}
+
+/** Role names of a card key, in the order they were requested. */
+function namesOf(key: string): string[] {
+  const first = key.indexOf(":");
+  const second = key.indexOf(":", first + 1);
+  return key.slice(second + 1).split(NAME_SEPARATOR);
+}
+
 /**
- * The one way pages get production-scoped character images (TVDB → Wikimedia
- * Commons → DubbingBase → placeholder): lazily, after hydration, only for the
- * cards currently shown, through /api/character-images. Never blocks SSR. A
- * failed image is re-requested with its source skipped so the server continues
- * down the chain.
+ * The one way pages get production-scoped character images (TVDB): lazily,
+ * after hydration, only for the cards currently shown. Never blocks SSR.
+ *
+ * One /api/character-portraits request per production returns its whole TVDB
+ * cast. That URL does not depend on the visible cards, so it is edge-cached for
+ * everyone; role names are matched here, and paging or filtering inside a
+ * production costs no request. An image that fails to load becomes a placeholder.
  */
 export function useCharacterImages(requests: Ref<readonly CharacterImageRequest[]>) {
   const { locale } = useI18n();
@@ -130,7 +148,7 @@ export function useCharacterImages(requests: Ref<readonly CharacterImageRequest[
     shared.images.set(key, image);
     const characterId = characterIds[key];
     if (characterId !== undefined) shared.characterIds.set(key, characterId);
-    const production = key.split(":", 2).join(":");
+    const production = productionOf(key);
     const tvdbId = tvdbIds.value[production];
     if (tvdbId !== undefined) shared.tvdbIds.set(production, tvdbId);
     while (shared.images.size > MAX_SHARED_IMAGES) {
@@ -140,63 +158,79 @@ export function useCharacterImages(requests: Ref<readonly CharacterImageRequest[
       shared.characterIds.delete(oldest);
     }
   }
-  const skipped = new Map<string, CharacterImageSource[]>();
-  // Latest request per card wins, so a slow stale response cannot restore a failed image.
+  // Latest request per card wins, so a slow stale response cannot overwrite a newer one.
   const generations = new Map<string, number>();
-  const pendingLoads: Array<{
+  type PendingLoad = {
+    production: string;
     keys: string[];
-    skip: CharacterImageSource[];
     language: string;
     localeGeneration: number;
-  }> = [];
+  };
+  const pendingLoads: PendingLoad[] = [];
+  const rosterRequests = new Map<string, Promise<CharacterRoster>>();
   const activeLoads = new Set<AbortController>();
   let localeGeneration = 0;
   let mounted = false;
   let active = true;
 
-  async function load(
+  /** Shows what the TVDB cast says about each card. */
+  function applyRoster(production: string, keys: string[], roster: CharacterRoster): void {
+    if (roster.tvdbId !== null) {
+      tvdbIds.value = { ...tvdbIds.value, [production]: roster.tvdbId };
+    }
+    for (const key of keys) {
+      const match = selectTvdbCharacter(namesOf(key), roster.characters);
+      if (match) characterIds[key] = match.id;
+      if (match?.image) images[key] = { src: match.image, source: "tvdb" };
+      else images[key] = null;
+      remember(key, images[key], !roster.degraded);
+      // A degraded answer is not the real one: ask again the next time the card is shown.
+      if (roster.degraded && !images[key]) requested.delete(key);
+    }
+  }
+
+  async function loadRoster(
+    production: string,
     keys: string[],
-    skip: CharacterImageSource[],
     requestLanguage: string,
     startedLocale: number,
     signal: AbortSignal,
   ): Promise<void> {
-    if (keys.length === 0) return;
-    // A stable order keeps the URL, and so the edge cache key, identical for the same cards.
-    keys = [...keys].sort();
-    skip = [...skip].sort();
     const started = new Map(keys.map((key) => [key, (generations.get(key) ?? 0) + 1]));
     for (const [key, generation] of started) generations.set(key, generation);
-    // Paging away does not invalidate a completed production/role lookup in this locale.
+    // Paging away does not invalidate a completed production lookup in this locale.
     const isCurrent = (key: string) =>
       active && localeGeneration === startedLocale && generations.get(key) === started.get(key);
     try {
-      const response = await $fetch<CharacterImagesResponse>("/api/character-images", {
-        query: {
-          item: keys,
-          lang: requestLanguage,
-          ...(skip.length > 0 ? { skip: skip.join(",") } : {}),
-        },
-        signal,
-      });
-      const responseKeys = keys.filter(isCurrent);
-      const currentProductions = new Set(responseKeys.map((key) => key.split(":", 2).join(":")));
-      tvdbIds.value = {
-        ...tvdbIds.value,
-        ...Object.fromEntries(
-          Object.entries(response.tvdbIds).filter(([production]) =>
-            currentProductions.has(production),
-          ),
-        ),
-      };
-      for (const key of responseKeys) {
-        const characterId = response.characterIds[key];
-        if (characterId !== undefined) characterIds[key] = characterId;
+      const store = sharedFor(requestLanguage);
+      let roster = store.rosters.get(production);
+      if (!roster) {
+        let request = rosterRequests.get(production);
+        if (!request) {
+          const [mediaType, mediaId] = production.split(":");
+          request = $fetch<CharacterRoster>("/api/character-portraits", {
+            query: { mediaType, mediaId, lang: requestLanguage },
+            signal,
+          });
+          rosterRequests.set(production, request);
+          const forget = () => {
+            if (rosterRequests.get(production) === request) rosterRequests.delete(production);
+          };
+          request.then(forget, forget);
+        }
+        roster = await request;
+        if (!roster.degraded && import.meta.client) {
+          store.rosters.delete(production);
+          store.rosters.set(production, roster);
+          while (store.rosters.size > MAX_SHARED_ROSTERS) {
+            const oldest = store.rosters.keys().next().value;
+            if (oldest === undefined) break;
+            store.rosters.delete(oldest);
+          }
+        }
       }
-      for (const key of responseKeys) {
-        images[key] = response.images[key] ?? null;
-        remember(key, images[key]);
-      }
+      const current = keys.filter(isCurrent);
+      if (current.length > 0) applyRoster(production, current, roster);
     } catch {
       // Provider or network failure: keep the placeholder; the card is requested again
       // the next time it is shown (page change or filter).
@@ -218,9 +252,9 @@ export function useCharacterImages(requests: Ref<readonly CharacterImageRequest[
       if (keys.length === 0 || pending.localeGeneration !== localeGeneration) continue;
       const controller = new AbortController();
       activeLoads.add(controller);
-      void load(
+      void loadRoster(
+        pending.production,
         keys,
-        pending.skip,
         pending.language,
         pending.localeGeneration,
         controller.signal,
@@ -229,16 +263,6 @@ export function useCharacterImages(requests: Ref<readonly CharacterImageRequest[
         drainLoads();
       });
     }
-  }
-
-  function enqueueLoad(keys: string[], skip: CharacterImageSource[] = []): void {
-    pendingLoads.push({
-      keys,
-      skip: [...new Set(skip)],
-      language: language.value,
-      localeGeneration,
-    });
-    drainLoads();
   }
 
   function discardInactiveLoads(): void {
@@ -265,34 +289,34 @@ export function useCharacterImages(requests: Ref<readonly CharacterImageRequest[
     if (!mounted) return;
     const keys = currentKeys().filter((key) => !requested.has(key));
     for (const key of keys) requested.add(key);
-    // One request per production and fallback history keeps cache keys stable
-    // without skipping a source for a healthy neighboring character.
-    const groups = new Map<string, { keys: string[]; skip: CharacterImageSource[] }>();
+    // One cast request per production: the URL never depends on the visible cards.
+    const byProduction = new Map<string, string[]>();
     for (const key of keys) {
-      const production = key.split(":", 2).join(":");
-      const skip = [...new Set(skipped.get(key) ?? [])].sort();
-      const groupKey = `${production}|${skip.join(",")}`;
-      const group = groups.get(groupKey) ?? { keys: [], skip };
-      group.keys.push(key);
-      groups.set(groupKey, group);
+      const production = productionOf(key);
+      byProduction.set(production, [...(byProduction.get(production) ?? []), key]);
     }
-    for (const group of groups.values()) {
-      for (let index = 0; index < group.keys.length; index += MAX_BATCH) {
-        const batch = group.keys.slice(index, index + MAX_BATCH);
-        enqueueLoad(batch, group.skip);
+    for (const [production, productionKeys] of byProduction) {
+      const roster = shared.rosters.get(production);
+      if (roster) {
+        applyRoster(production, productionKeys, roster);
+        continue;
       }
+      pendingLoads.push({
+        production,
+        keys: productionKeys,
+        language: language.value,
+        localeGeneration,
+      });
     }
+    drainLoads();
   }
 
+  /** The browser could not load a card's image: show the placeholder and do not remember it. */
   function reportImageError(request: CharacterImageRequest): void {
     const key = characterImageKey(request);
-    const failed = key ? images[key] : null;
-    if (!key || !failed) return;
-    const skip = [...new Set([...(skipped.get(key) ?? []), failed.source])];
-    skipped.set(key, skip);
+    if (!key || !images[key]) return;
     images[key] = null;
     remember(key, null, false);
-    enqueueLoad([key], skip);
   }
 
   /** The loaded image for a card, or null while loading / when none exists. */
@@ -325,7 +349,7 @@ export function useCharacterImages(requests: Ref<readonly CharacterImageRequest[
     pendingLoads.length = 0;
     for (const controller of activeLoads.keys()) controller.abort();
     requested.clear();
-    skipped.clear();
+    rosterRequests.clear();
     for (const key of Object.keys(images)) delete images[key];
     for (const key of Object.keys(characterIds)) delete characterIds[key];
     tvdbIds.value = {};
