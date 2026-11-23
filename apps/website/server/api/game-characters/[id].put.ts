@@ -93,7 +93,7 @@ export default defineAdminHandler(async (event, admin) => {
     if (error.code === "42501") {
       throw gameCharacterError(403, "Game character reference update is not authorized");
     }
-    if (["23505", "55000", "40001"].includes(error.code)) {
+    if (["23505", "55000", "40001", "PT409"].includes(error.code)) {
       throw gameCharacterError(
         409,
         "Game character references changed or conflict with another mapping",

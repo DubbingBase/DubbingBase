@@ -264,7 +264,7 @@ function mapRpcError(code: string) {
   if (code === "42501" || code === "28000") {
     throw linkError(403, "Voice actor work link is not authorized");
   }
-  if (["55000", "23505", "40001", "40P01"].includes(code)) {
+  if (["55000", "23505", "40001", "PT409", "40P01"].includes(code)) {
     throw linkError(409, "Work changed or the request id was reused; reload and retry");
   }
   if (["22023", "23503", "22P02", "22003"].includes(code)) {

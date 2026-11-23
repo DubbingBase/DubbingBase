@@ -135,7 +135,7 @@ export default defineUserHandler(async (event, user) => {
     if (error.code === "P0002") {
       throw createError({ statusCode: 404, message: "Studio not found" });
     }
-    if (error.code === "40001" || error.code === "23505") {
+    if (error.code === "40001" || error.code === "PT409" || error.code === "23505") {
       throw createError({
         statusCode: 409,
         message: "Studio changed or already exists. Reload and try again.",

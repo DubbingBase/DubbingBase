@@ -203,4 +203,12 @@ describe("POST /api/internal-media-create", () => {
     });
     expect(rpc).toHaveBeenCalledOnce();
   });
+
+  it.each(["40001", "PT409"])("maps a stale request (%s) to a conflict", async (code) => {
+    createSupabaseMock({ data: null, error: { code } });
+
+    const response = await post(validBody());
+
+    expect(response.status).toBe(409);
+  });
 });

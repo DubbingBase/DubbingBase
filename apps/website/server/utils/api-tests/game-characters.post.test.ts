@@ -120,4 +120,12 @@ describe("POST /api/game-characters", () => {
 
     expect(response.status).toBe(409);
   });
+
+  it.each(["40001", "PT409"])("returns a conflict for a stale request (%s)", async (code) => {
+    mockCreate({ data: null, error: { code } });
+
+    const response = await post(validBody);
+
+    expect(response.status).toBe(409);
+  });
 });

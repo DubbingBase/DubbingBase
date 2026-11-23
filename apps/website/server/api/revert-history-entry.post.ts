@@ -16,7 +16,13 @@ function revertError(statusCode: number, message: string) {
 function mapRpcError(code: string | undefined): never {
   if (code === "42501" || code === "28000") throw revertError(403, "This revert is not authorized");
   if (code === "P0002") throw revertError(404, "The item no longer exists");
-  if (code === "40001" || code === "23505" || code === "55000" || code === "23503") {
+  if (
+    code === "40001" ||
+    code === "PT409" ||
+    code === "23505" ||
+    code === "55000" ||
+    code === "23503"
+  ) {
     throw revertError(409, "This changed since it was loaded, or is referenced elsewhere");
   }
   if (code === "22023" || code === "22P02" || code === "22003") {
