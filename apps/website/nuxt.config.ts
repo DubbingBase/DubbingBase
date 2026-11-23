@@ -78,6 +78,14 @@ export default defineNuxtConfig({
     devProxy: supabaseUrl
       ? { "/supabase": { target: supabaseUrl, changeOrigin: true, ws: true } }
       : {},
+    // Not a file route: Nitro does not scan dot-directories such as /.well-known.
+    handlers: [
+      {
+        route: "/.well-known/api-catalog",
+        method: "get",
+        handler: "./server/handlers/api-catalog.ts",
+      },
+    ],
     prerender: {
       routes: [...ABOUT_PRERENDER_ROUTES, "/robots.txt"],
     },
