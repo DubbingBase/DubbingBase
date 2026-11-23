@@ -2,12 +2,13 @@
 
 > **Navigation aid.** Library inventory extracted via AST. Read the source files listed here before modifying exported functions.
 
-**137 library files** across 3 modules
+**139 library files** across 3 modules
 
-## Website (114 files)
+## Website (116 files)
 
 - `apps/website/server/utils/db/queries.ts` — getVoiceActorWithWork, getWorkByActor, getActorPageWorkByActor, getDubbingProjects, getDubbingProjectsForMediaEndpoint, getAdvertisementPageDubbingProjects, …
 - `apps/website/src/utils/dubbing-project-save.ts` — getEditableDubbingProjectStatus, serializeGameProjectCastRows, createRequestId, createStableRequestIdFactory, createDubbingProjectSaveClient, isDubbingProjectSaveConflict, …
+- `apps/website/server/utils/notifications/discord.ts` — shortText, errorFields, normalizeDiscordUrl, buildDiscordEmbed, beginDiscordDigest, severityOf, …
 - `apps/website/src/utils/voice-actor-profile-save.ts` — voiceActorProfilePayload, changedVoiceActorProfileFields, displayedSocialLinks, mergeDisplayedSocialLinks, profileUnchangedExceptPicture, refreshVoiceActorProfilePicture, …
 - `apps/website/server/utils/entity-history.ts` — isHistoryEntityType, displayValue, changedFields, safeHttpUrl, diffSnapshots, toHistoryEntry, …
 - `apps/website/server/utils/cache/wikipedia.ts` — sortLanguagesByPopularity, extractAvailableLanguages, cleanHeadingText, isDubbingSectionHeading, selectDubbingCandidateSections, selectDubbingSections, …
@@ -28,10 +29,9 @@
 - `apps/website/server/utils/search-ranking.ts` — rankSearchResults, getTmdbLocale, projectSearchResult, SearchItem, MEDIA_TYPE_WEIGHTS, DEFAULT_MEDIA_TYPE_WEIGHT, …
 - `apps/website/src/utils/cast-workspace.ts` — filterCastRows, summarizeCast, getInitials, CastWorkspaceRow, CastFilter, ORIGINAL_CAST_SEED_LIMIT, …
 - `apps/website/server/utils/cache/http.ts` — getPublicCacheControl, getCloudflareCacheControl, setNoCacheHeaders, setPublicCacheHeaders, CacheProfile, NO_STORE_CACHE_CONTROL
-- `apps/website/server/utils/notifications/discord.ts` — normalizeDiscordUrl, buildDiscordEmbed, sendDiscordAdminNotification, DiscordWebhookOptions, QueueName, DiscordNotificationCategory
 - `apps/website/src/composables/useCharacterImages.ts` — resetSharedCharacterImages, characterImageKey, useCharacterImages, CharacterImageSource, CharacterImage, CharacterImageRequest
 - `apps/website/src/composables/useContribute.ts` — fetchRandomTask, useContribute, ContributionTask, ContributionCategory, ClaimedCategory, ContributionClaim
-- _…and 89 more files_
+- _…and 91 more files_
 
 ## Shared-logic (22 files)
 

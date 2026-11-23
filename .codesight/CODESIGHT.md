@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/website, @app/supabase, @app/locales, @app/shared-logic
 
-> 67 routes | 28 models | 145 components | 137 lib files | 53 env vars | 14 middleware | 57% test coverage
-> **Token savings:** this file is ~18,800 tokens. Without it, AI exploration would cost ~148,100 tokens. **Saves ~129,400 tokens per conversation.**
-> **Last scanned:** 2026-11-22 19:40 — re-run after significant changes
+> 67 routes | 28 models | 145 components | 139 lib files | 53 env vars | 14 middleware | 57% test coverage
+> **Token savings:** this file is ~18,900 tokens. Without it, AI exploration would cost ~148,700 tokens. **Saves ~129,700 tokens per conversation.**
+> **Last scanned:** 2026-11-23 10:27 — re-run after significant changes
 
 ---
 
@@ -576,11 +576,17 @@
   - function useIgdbClient: (cache?) => IgdbClient
   - function useOpenLibraryClient: () => OpenLibraryClient
   - _...4 more_
+- `apps/website/server/utils/internal-secret.ts` — function resolveInternalSecret: (runtimeSecret, cloudflareEnv) => string, function internalRequestHeaders: (secretKey) => Record<string, string>
 - `apps/website/server/utils/llm.ts`
   - function areAllLlmQuotasExhausted: () => boolean
   - function getLlmQuotaCache: () => void
   - function llmGenerateObject: (prompt, schema, options?) => Promise<
 - `apps/website/server/utils/media-page-credits.ts` — function mediaPageMovieCredits: (credits) => void, function mediaPageAggregateCredits: (credits) => void
+- `apps/website/server/utils/media-queue-drain.ts`
+  - function drainMediaQueues: (deps) => Promise<DrainSummary>
+  - interface QueueLaneResult
+  - interface DrainDependencies
+  - interface DrainSummary
 - `apps/website/server/utils/media-queue-readiness.ts`
   - function getReadyMediaQueueNames: (value) => MediaQueueName[]
   - type MediaQueueName
@@ -594,12 +600,13 @@
 - `apps/website/server/utils/normalize.ts` — function normalizeString: (input) => string, function isExploitableVoiceActorName: (input) => boolean
 - `apps/website/server/utils/notifications/contribution.ts` — function notifyContributionEdit: (event, user, edit) => void, type ContributionEdit
 - `apps/website/server/utils/notifications/discord.ts`
+  - function shortText: (text, max) => string
+  - function errorFields: (operation, error, extra) => DiscordField[]
   - function normalizeDiscordUrl: (url) => string
   - function buildDiscordEmbed: (title, message, options?) => Record<string, unknown>
-  - function sendDiscordAdminNotification: (title, message, options?) => void
-  - interface DiscordWebhookOptions
-  - type QueueName
-  - type DiscordNotificationCategory
+  - function beginDiscordDigest: (event) => void
+  - function severityOf: (title, options?) => DiscordSeverity
+  - _...10 more_
 - `apps/website/server/utils/pagination.ts`
   - function parsePagination: (options) => ParsedPagination
   - function paginateArray: (items, options) => void
@@ -1033,10 +1040,10 @@
 - `apps/website/server/utils/dubbing-language.ts` — imported by **7** files
 - `apps/website/server/utils/narrow.ts` — imported by **6** files
 - `apps/website/server/utils/api/igdb.ts` — imported by **6** files
-- `apps/website/server/utils/notifications/discord.ts` — imported by **6** files
 - `apps/website/server/utils/with-timeout.ts` — imported by **5** files
 - `apps/website/server/utils/cache/wikipedia.ts` — imported by **5** files
 - `apps/website/server/utils/dubbing-region-detection.ts` — imported by **5** files
+- `apps/website/server/utils/llm.ts` — imported by **5** files
 
 ## Import Map (who imports what)
 
@@ -1056,7 +1063,7 @@
 # Test Coverage
 
 > **57%** of routes and models are covered by tests
-> 166 test files found
+> 167 test files found
 
 ## Covered Routes
 

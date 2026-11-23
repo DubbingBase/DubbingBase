@@ -8,7 +8,7 @@
 
 ## Scale
 
-67 API routes · 28 database models · 145 UI components · 137 library files · 14 middleware layers · 53 environment variables
+67 API routes · 28 database models · 145 UI components · 139 library files · 14 middleware layers · 53 environment variables
 
 ## Subsystems
 
@@ -67,7 +67,7 @@
 
 **UI:** 145 components (vue) — see [ui.md](./ui.md)
 
-**Libraries:** 137 files — see [libraries.md](./libraries.md)
+**Libraries:** 139 files — see [libraries.md](./libraries.md)
 
 ## High-Impact Files
 
@@ -97,4 +97,4 @@ Changes to these files have the widest blast radius across the codebase:
 - _...25 more_
 
 ---
-_Back to [index.md](./index.md) · Generated 2026-11-22_
+_Back to [index.md](./index.md) · Generated 2026-11-23_

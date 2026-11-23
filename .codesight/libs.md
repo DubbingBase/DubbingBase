@@ -139,11 +139,17 @@
   - function useIgdbClient: (cache?) => IgdbClient
   - function useOpenLibraryClient: () => OpenLibraryClient
   - _...4 more_
+- `apps/website/server/utils/internal-secret.ts` — function resolveInternalSecret: (runtimeSecret, cloudflareEnv) => string, function internalRequestHeaders: (secretKey) => Record<string, string>
 - `apps/website/server/utils/llm.ts`
   - function areAllLlmQuotasExhausted: () => boolean
   - function getLlmQuotaCache: () => void
   - function llmGenerateObject: (prompt, schema, options?) => Promise<
 - `apps/website/server/utils/media-page-credits.ts` — function mediaPageMovieCredits: (credits) => void, function mediaPageAggregateCredits: (credits) => void
+- `apps/website/server/utils/media-queue-drain.ts`
+  - function drainMediaQueues: (deps) => Promise<DrainSummary>
+  - interface QueueLaneResult
+  - interface DrainDependencies
+  - interface DrainSummary
 - `apps/website/server/utils/media-queue-readiness.ts`
   - function getReadyMediaQueueNames: (value) => MediaQueueName[]
   - type MediaQueueName
@@ -157,12 +163,13 @@
 - `apps/website/server/utils/normalize.ts` — function normalizeString: (input) => string, function isExploitableVoiceActorName: (input) => boolean
 - `apps/website/server/utils/notifications/contribution.ts` — function notifyContributionEdit: (event, user, edit) => void, type ContributionEdit
 - `apps/website/server/utils/notifications/discord.ts`
+  - function shortText: (text, max) => string
+  - function errorFields: (operation, error, extra) => DiscordField[]
   - function normalizeDiscordUrl: (url) => string
   - function buildDiscordEmbed: (title, message, options?) => Record<string, unknown>
-  - function sendDiscordAdminNotification: (title, message, options?) => void
-  - interface DiscordWebhookOptions
-  - type QueueName
-  - type DiscordNotificationCategory
+  - function beginDiscordDigest: (event) => void
+  - function severityOf: (title, options?) => DiscordSeverity
+  - _...10 more_
 - `apps/website/server/utils/pagination.ts`
   - function parsePagination: (options) => ParsedPagination
   - function paginateArray: (items, options) => void
