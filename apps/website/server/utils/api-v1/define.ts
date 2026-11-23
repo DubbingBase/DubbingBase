@@ -64,6 +64,10 @@ export interface ApiRouteDocs {
   response: v.GenericSchema;
 }
 
+/** Points clients, including agents that only see a 401, at the spec and the human docs. */
+const API_DISCOVERY_LINK =
+  '</api/v1/openapi.json>; rel="service-desc"; type="application/openapi+json", </api/v1/docs>; rel="service-doc"; type="text/html"';
+
 function respondWithError(event: H3Event, error: ApiError) {
   setResponseStatus(event, error.status);
   for (const [name, value] of Object.entries(error.headers)) setHeader(event, name, value);
@@ -102,6 +106,7 @@ export function defineApiRoute<
   const handler = defineEventHandler(async (event) => {
     setHeader(event, "Cache-Control", "no-store");
     setHeader(event, "X-Request-Id", crypto.randomUUID());
+    setHeader(event, "Link", API_DISCOVERY_LINK);
     try {
       const auth = await authorize(event, definition.scope);
       const params = v.safeParse(definition.params, getRouterParams(event, { decode: true }));

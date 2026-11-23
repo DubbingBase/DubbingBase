@@ -11,3 +11,11 @@ This website provides a web interface for the DubbingBase platform, featuring da
 - [Terms](https://dubbingbase.com/terms) - Terms of Service.
 - [Privacy](https://dubbingbase.com/privacy) - Privacy Policy.
 - [Guidelines](https://dubbingbase.com/guidelines) - Community Guidelines.
+
+## API
+
+A token-authenticated REST API (read and edit voice actors) is available for admins. Create a token under Profile → API Key, then send it as `Authorization: Bearer <token>`.
+
+- [OpenAPI spec](https://dubbingbase.com/api/v1/openapi.json) - Machine-readable description of every endpoint, scope and schema.
+- [API docs](https://dubbingbase.com/api/v1/docs) - Interactive reference for humans.
+- [API catalog](https://dubbingbase.com/.well-known/api-catalog) - RFC 9727 discovery document.

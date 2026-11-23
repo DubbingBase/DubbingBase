@@ -5,6 +5,11 @@ const SCALAR_INTEGRITY = "sha384-CbswbrhDJdJco8Bly6aK28bNRmItaYY60FH39FPNb/cjgKH
 
 export default defineEventHandler((event) => {
   setHeader(event, "Content-Type", "text/html; charset=utf-8");
+  setHeader(
+    event,
+    "Link",
+    '</api/v1/openapi.json>; rel="service-desc"; type="application/openapi+json"',
+  );
   return `<!doctype html>
 <html lang="en">
   <head>
