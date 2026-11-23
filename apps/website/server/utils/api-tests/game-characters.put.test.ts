@@ -127,4 +127,17 @@ describe("PUT /api/game-characters/:id", () => {
       expect.objectContaining({ p_references: { wikidata_qid: "Q12345" } }),
     );
   });
+
+  it.each(["40001", "PT409"])("maps a stale reference update (%s) to a conflict", async (code) => {
+    const { rpc } = mockDatabase();
+    rpc.mockResolvedValueOnce({ data: null, error: { code } });
+
+    const response = await put({
+      request_id: validBody.request_id,
+      expected_updated_at: validBody.expected_updated_at,
+      wikidata_qid: "Q12345",
+    });
+
+    expect(response.status).toBe(409);
+  });
 });

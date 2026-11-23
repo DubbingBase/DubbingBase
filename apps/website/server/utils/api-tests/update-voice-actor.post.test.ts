@@ -255,6 +255,7 @@ describe("POST /api/update-voice-actor", () => {
 
   it.each([
     ["stale update", "40001", 409],
+    ["stale update (PT409)", "PT409", 409],
     ["invalid field", "22023", 400],
     ["missing actor", "P0002", 404],
   ])("maps %s from the atomic operation", async (_name, code, statusCode) => {

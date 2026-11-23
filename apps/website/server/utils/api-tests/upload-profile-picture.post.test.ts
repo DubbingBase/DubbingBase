@@ -184,6 +184,7 @@ describe("POST /api/upload-profile-picture", () => {
   it.each([
     ["42501", 403],
     ["40001", 409],
+    ["PT409", 409],
     ["P0002", 404],
     ["XX000", 500],
   ])("maps database error %s to %i and removes the staged upload", async (code, status) => {

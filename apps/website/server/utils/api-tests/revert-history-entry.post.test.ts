@@ -146,12 +146,15 @@ describe("POST /api/revert-history-entry", () => {
     expect(unsupported.response.status).toBe(422);
   });
 
-  it("maps a concurrent change to 409 and does not mark the entry reverted", async () => {
-    const { response, marked } = await post(
-      { audit_log_id: auditId },
-      { current: matchingCurrent, rpcError: { code: "40001" } },
-    );
-    expect(response.status).toBe(409);
-    expect(marked).toEqual([]);
-  });
+  it.each(["40001", "PT409"])(
+    "maps a concurrent change (%s) to 409 and does not mark the entry reverted",
+    async (code) => {
+      const { response, marked } = await post(
+        { audit_log_id: auditId },
+        { current: matchingCurrent, rpcError: { code } },
+      );
+      expect(response.status).toBe(409);
+      expect(marked).toEqual([]);
+    },
+  );
 });

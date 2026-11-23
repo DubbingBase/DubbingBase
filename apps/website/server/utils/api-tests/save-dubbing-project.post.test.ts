@@ -600,4 +600,15 @@ describe("POST /api/save-dubbing-project", () => {
     expect(response.status).toBe(422);
     expect(rpc).not.toHaveBeenCalled();
   });
+
+  it.each(["40001", "PT409"])(
+    "returns a conflict for a stale project version (%s)",
+    async (code) => {
+      createSupabaseMock({ data: null, error: { code } });
+
+      const response = await post(validBody());
+
+      expect(response.status).toBe(409);
+    },
+  );
 });

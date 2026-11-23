@@ -48,7 +48,7 @@ export default defineAdminHandler(async (event, admin) => {
     p_admin_id: admin.id,
   });
 
-  if (error?.code === "40001") {
+  if (error?.code === "40001" || error?.code === "PT409") {
     throw createError({
       statusCode: 409,
       statusMessage: "DUPLICATE_GROUP_CHANGED",
