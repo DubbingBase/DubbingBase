@@ -16,7 +16,7 @@ export function buildOpenApiSpec() {
       title: "DubbingBase API",
       version: "1.0.0",
       description:
-        "Create a token in the admin dashboard and send it as `Authorization: Bearer dbk_live_…`. " +
+        "Admins create a token under Profile → API Key and send it as `Authorization: Bearer dbk_live_…`. " +
         "Every response is `no-store`; errors are `{ error: { code, message } }`.",
     },
     paths,

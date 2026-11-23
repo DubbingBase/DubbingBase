@@ -24,6 +24,7 @@
             >{{ $t("profile.title") }}</NuxtLink
           >
           <NuxtLink
+            v-if="isAdmin"
             :to="localePath('/profile/api-key')"
             class="flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors"
             active-class="theme-selected"
@@ -83,6 +84,7 @@ useSeoMeta({
 });
 
 const route = useRoute();
+const { isAdmin } = useClientUser();
 const router = useRouter();
 const supabase = useSupabaseClient();
 

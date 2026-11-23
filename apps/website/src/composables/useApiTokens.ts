@@ -22,7 +22,7 @@ export interface CreateApiTokenInput {
   expires_in_days?: number;
 }
 
-/** Admin-only token management; the routes accept the signed-in session, never an API token. */
+/** Admin token management (profile → API Key); the routes accept the signed-in session, never an API token. */
 export function useApiTokens() {
   const listTokens = () => $fetch<{ tokens: ApiTokenRecord[] }>("/api/tokens");
   const createToken = (input: CreateApiTokenInput) =>
