@@ -133,19 +133,22 @@ describe("POST /api/save-studio", () => {
     expect(response.status).toBe(403);
   });
 
-  it("returns a conflict when the persisted studio changed", async () => {
-    const { response } = await post({
-      user: { id: "member-1" },
-      body: {
-        id: "7",
-        expectedUpdatedAt: "2026-10-15T12:00:00",
-        requestId,
-        updates: { city: "Paris" },
-      },
-      rpcResult: { data: null, error: { code: "40001" } },
-    });
-    expect(response.status).toBe(409);
-  });
+  it.each(["40001", "PT409"])(
+    "returns a conflict when the persisted studio changed (%s)",
+    async (code) => {
+      const { response } = await post({
+        user: { id: "member-1" },
+        body: {
+          id: "7",
+          expectedUpdatedAt: "2026-10-15T12:00:00",
+          requestId,
+          updates: { city: "Paris" },
+        },
+        rpcResult: { data: null, error: { code } },
+      });
+      expect(response.status).toBe(409);
+    },
+  );
 
   it("returns the prior mutation result for an idempotent retry", async () => {
     const { response } = await post({

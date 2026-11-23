@@ -85,7 +85,7 @@ export default defineAdminHandler(async (event, user) => {
     if (error.code === "42501") {
       throw internalMediaError(403, "Internal media creation is not authorized");
     }
-    if (["55000", "23505", "40001"].includes(error.code)) {
+    if (["55000", "23505", "40001", "PT409"].includes(error.code)) {
       throw internalMediaError(409, "This internal media request is stale or was reused");
     }
     if (["22023", "23503", "22P02", "22003"].includes(error.code)) {

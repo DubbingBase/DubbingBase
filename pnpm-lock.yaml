@@ -246,6 +246,9 @@ importers:
       '@supabase/supabase-js':
         specifier: 2.119.0
         version: 2.119.0(@opentelemetry/api@1.9.0)
+      '@valibot/to-json-schema':
+        specifier: 1.8.0
+        version: 1.8.0(valibot@1.5.0(typescript@5.9.3))
       '@vueuse/core':
         specifier: ^15.0.0
         version: 15.0.0(vue@3.5.45(typescript@5.9.3))
@@ -270,6 +273,9 @@ importers:
       sitemap:
         specifier: ^10.0.0
         version: 10.0.0
+      valibot:
+        specifier: 1.5.0
+        version: 1.5.0(typescript@5.9.3)
       vue:
         specifier: 3.5.45
         version: 3.5.45(typescript@5.9.3)
@@ -3287,6 +3293,11 @@ packages:
         optional: true
       webpack:
         optional: true
+
+  '@valibot/to-json-schema@1.8.0':
+    resolution: {integrity: sha512-a0M+uwCuQZEPAo65NYkFSJ14O5c213KoSZmPdoCfuFvUhfULi4T2Z6Tpjv6lTVMW9RoLm74RpRAjNEa43KcN+g==}
+    peerDependencies:
+      valibot: ^1.5.0
 
   '@vercel/nft@1.11.1':
     resolution: {integrity: sha512-RXQA08MdBy9WdKKXf1JCAM6HlZUOUDPDBjwHSz0ZaPcQDVisPR5hPJs2iLHVdfjHq36YIlS9AkzDceegukpqGA==}
@@ -6306,6 +6317,14 @@ packages:
 
   uzip@0.20201231.0:
     resolution: {integrity: sha512-OZeJfZP+R0z9D6TmBgLq2LHzSSptGMGDGigGiEe0pr8UBe/7fdflgHlHBNDASTXB5jnFuxHpNaJywSg8YFeGng==}
+
+  valibot@1.5.0:
+    resolution: {integrity: sha512-nil6AkP2TChWL43Z5uJ6GTxX01CUA+g8LWUM+N/rB9NBbkUMaUsi9PUNzlUPgoKASgmx9f7eGOYpJ04/fSa6FQ==}
+    peerDependencies:
+      typescript: '>=5'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
 
   verkit@0.5.0:
     resolution: {integrity: sha512-u4J1hr6Y+C/hit34GwL3eIcUf3wngT8TlYUjK7tk0jxydKLAq3sYvifjdTDA6U3KCKRcQCQDGf/srjxfZF3l7g==}
@@ -9771,6 +9790,10 @@ snapshots:
       - rolldown
       - rollup
       - unloader
+
+  '@valibot/to-json-schema@1.8.0(valibot@1.5.0(typescript@5.9.3))':
+    dependencies:
+      valibot: 1.5.0(typescript@5.9.3)
 
   '@vercel/nft@1.11.1(rollup@4.68.2)(supports-color@10.2.2)':
     dependencies:
@@ -13291,6 +13314,10 @@ snapshots:
   util-deprecate@1.0.2: {}
 
   uzip@0.20201231.0: {}
+
+  valibot@1.5.0(typescript@5.9.3):
+    optionalDependencies:
+      typescript: 5.9.3
 
   verkit@0.5.0: {}
 

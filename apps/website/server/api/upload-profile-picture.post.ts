@@ -228,7 +228,7 @@ export default defineEventHandler(async (event) => {
           message: "Only trusted contributors and admins can replace a profile picture",
         });
       }
-      if (code === "40001") {
+      if (code === "40001" || code === "PT409") {
         throw createError({
           statusCode: 409,
           message: "Profile picture changed during upload. Try again.",

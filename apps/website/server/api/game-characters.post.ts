@@ -35,7 +35,7 @@ export default defineAdminHandler(async (event, admin) => {
     if (error.code === "42501") {
       throw gameCharacterError(403, "Game character creation is not authorized");
     }
-    if (["23505", "55000", "40001"].includes(error.code)) {
+    if (["23505", "55000", "40001", "PT409"].includes(error.code)) {
       throw gameCharacterError(409, "This game character request is stale or was reused");
     }
     if (["22023", "23503", "22P02", "22003"].includes(error.code)) {

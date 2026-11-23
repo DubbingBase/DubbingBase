@@ -80,7 +80,7 @@ BEGIN
     '$expected_updated_at', '$stale_request_id'
   );
   RAISE EXCEPTION 'stale competing update unexpectedly succeeded';
-EXCEPTION WHEN SQLSTATE '40001' THEN
+EXCEPTION WHEN SQLSTATE 'PT409' THEN
   NULL;
 END;
 \$x\$;

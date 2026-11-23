@@ -366,4 +366,12 @@ describe("POST /api/link-voice-actor", () => {
     expect(response.status).toBe(500);
     expect(rpc).toHaveBeenCalledOnce();
   });
+
+  it.each(["40001", "PT409"])("maps a stale work link (%s) to a conflict", async (code) => {
+    createSupabaseMock({ rpcResult: { data: null, error: { code } } });
+
+    const response = await post(validBody());
+
+    expect(response.status).toBe(409);
+  });
 });
