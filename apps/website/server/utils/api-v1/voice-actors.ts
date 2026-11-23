@@ -63,6 +63,39 @@ const voiceActorShape = {
 
 export const VoiceActor = v.object(voiceActorShape);
 
+/** Columns a client may change. Picture and workflow `status` changes are deliberately not exposed. */
+const EDITABLE_FIELDS = [
+  "firstname",
+  "lastname",
+  "bio",
+  "nationality",
+  "date_of_birth",
+  "awards",
+  "years_active",
+  "social_media_links",
+  "tmdb_id",
+  "wikidata_id",
+] as const satisfies readonly (keyof VoiceActorRow)[];
+
+/** One validator per editable column, each accepting only values the column can store. */
+const editableShape = {
+  firstname: v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(200)),
+  lastname: v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(200)),
+  bio: v.nullable(v.pipe(v.string(), v.maxLength(10_000))),
+  nationality: v.nullable(v.pipe(v.string(), v.maxLength(200))),
+  date_of_birth: v.nullable(v.pipe(v.string(), v.isoDate())),
+  awards: v.nullable(v.pipe(v.string(), v.maxLength(5_000))),
+  years_active: v.nullable(v.pipe(v.string(), v.maxLength(200))),
+  social_media_links: v.nullable(Json),
+  tmdb_id: v.nullable(v.pipe(v.number(), v.integer(), v.minValue(1))),
+  wikidata_id: v.nullable(v.pipe(v.string(), v.regex(/^Q\d+$/))),
+} satisfies { [K in (typeof EDITABLE_FIELDS)[number]]: v.GenericSchema<VoiceActorRow[K]> };
+
+export const VoiceActorUpdates = v.pipe(
+  v.partial(v.strictObject(editableShape)),
+  v.check((updates) => Object.keys(updates).length > 0, "at least one field is required"),
+);
+
 /** A positive id from a path or cursor, rejected when `Number` could not hold it exactly. */
 export const positiveId = v.pipe(
   v.string(),

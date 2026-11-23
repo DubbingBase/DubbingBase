@@ -1,3 +1,4 @@
+import type { ApiTokenRecord } from "../../../shared/api-tokens";
 import { defineAdminHandler } from "../../utils/auth-handlers";
 import { useSupabaseAdmin } from "../../utils/db/client";
 
@@ -11,6 +12,8 @@ export default defineAdminHandler(async (event, admin) => {
   if (error) {
     throw createError({ statusCode: 500, message: "Failed to list API tokens" });
   }
+  // Compile-time check: the selected columns must be exactly what the client expects.
+  const tokens: ApiTokenRecord[] = data;
   setHeader(event, "Cache-Control", "no-store");
-  return { tokens: data };
+  return { tokens };
 });

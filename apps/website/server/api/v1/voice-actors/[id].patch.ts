@@ -1,27 +1,8 @@
 import * as v from "valibot";
 import { defineApiRoute } from "../../../utils/api-v1/define";
 import { ApiError } from "../../../utils/api-v1/errors";
-import { Json, VoiceActor, positiveId } from "../../../utils/api-v1/voice-actors";
+import { VoiceActor, VoiceActorUpdates, positiveId } from "../../../utils/api-v1/voice-actors";
 import { useSupabaseAdmin } from "../../../utils/db/client";
-
-// Picture and workflow `status` changes are deliberately not exposed in v1.
-const VoiceActorUpdates = v.pipe(
-  v.partial(
-    v.strictObject({
-      firstname: v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(200)),
-      lastname: v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(200)),
-      bio: v.nullable(v.pipe(v.string(), v.maxLength(10_000))),
-      nationality: v.nullable(v.pipe(v.string(), v.maxLength(200))),
-      date_of_birth: v.nullable(v.pipe(v.string(), v.isoDate())),
-      awards: v.nullable(v.pipe(v.string(), v.maxLength(5_000))),
-      years_active: v.nullable(v.pipe(v.string(), v.maxLength(200))),
-      social_media_links: v.nullable(Json),
-      tmdb_id: v.nullable(v.pipe(v.number(), v.integer(), v.minValue(1))),
-      wikidata_id: v.nullable(v.pipe(v.string(), v.regex(/^Q\d+$/))),
-    }),
-  ),
-  v.check((updates) => Object.keys(updates).length > 0, "at least one field is required"),
-);
 
 export const route = defineApiRoute({
   summary: "Update a voice actor",

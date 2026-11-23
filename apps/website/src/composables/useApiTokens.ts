@@ -1,15 +1,7 @@
 import { API_SCOPES, type ApiScope } from "#shared/api-scopes";
+import type { ApiTokenRecord } from "#shared/api-tokens";
 
-export interface ApiTokenRecord {
-  id: string;
-  name: string;
-  prefix: string;
-  scopes: string[];
-  expires_at: string | null;
-  last_used_at: string | null;
-  revoked_at: string | null;
-  created_at: string;
-}
+export type { ApiTokenRecord };
 
 export interface CreatedApiToken {
   token: string;

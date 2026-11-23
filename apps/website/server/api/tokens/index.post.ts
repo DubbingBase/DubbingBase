@@ -1,5 +1,6 @@
 import * as v from "valibot";
 import { API_SCOPES } from "../../../shared/api-scopes";
+import type { ApiTokenRecord } from "../../../shared/api-tokens";
 import { defineAdminHandler } from "../../utils/auth-handlers";
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { generateApiToken } from "../../utils/api-v1/tokens";
@@ -56,5 +57,7 @@ export default defineAdminHandler(async (event, admin) => {
   }
   setHeader(event, "Cache-Control", "no-store");
   setResponseStatus(event, 201);
-  return { token, record: data };
+  // Compile-time check: the selected columns must be exactly what the client expects.
+  const record: ApiTokenRecord = data;
+  return { token, record };
 });
