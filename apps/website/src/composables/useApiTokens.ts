@@ -1,4 +1,4 @@
-import { API_SCOPES, type ApiScope } from "../../shared/api-scopes";
+import { API_SCOPES, type ApiScope } from "#shared/api-scopes";
 
 export interface ApiTokenRecord {
   id: string;

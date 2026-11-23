@@ -134,7 +134,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ApiScope } from "../../../shared/api-scopes";
+import type { ApiScope } from "#shared/api-scopes";
 import type { ApiTokenRecord } from "../../composables/useApiTokens";
 
 const { t } = useI18n();
