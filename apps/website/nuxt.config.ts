@@ -1,4 +1,5 @@
 import tailwindcss from "@tailwindcss/vite";
+import { readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { defineNuxtConfig } from "nuxt/config";
 import { APP_LOCALES, DEFAULT_LOCALE } from "@app/shared-logic";
@@ -29,6 +30,27 @@ const ADMIN_SPA_ROUTE_RULES = Object.fromEntries(
     { ssr: false },
   ]),
 );
+
+/**
+ * Source of the `#api-v1-manifest` virtual module: one entry per route file under
+ * `server/api/v1`, so the OpenAPI document covers every public route without a hand-kept list.
+ * Route paths follow Nitro's file naming (`[id]` is a parameter, `index` is the folder itself).
+ */
+function apiV1ManifestSource(): string {
+  const apiRoot = resolve(import.meta.dirname, "server/api/v1");
+  const files = readdirSync(apiRoot, { recursive: true, encoding: "utf8" })
+    .filter((file) => /\.(get|post|put|patch|delete)\.ts$/.test(file))
+    .sort();
+  const imports = files.map(
+    (file, i) => `import * as m${i} from ${JSON.stringify(resolve(apiRoot, file))};`,
+  );
+  const entries = files.map((file, i) => {
+    const [, name = "", method = "get"] = /^(.*)\.(\w+)\.ts$/.exec(file) ?? [];
+    const route = `/api/v1/${name.replace(/\[(\w+)\]/g, ":$1").replace(/(^|\/)index$/, "")}`;
+    return `{ route: ${JSON.stringify(route.replace(/\/$/, ""))}, method: ${JSON.stringify(method)}, module: m${i} }`;
+  });
+  return `${imports.join("\n")}\nexport default [${entries.join(",")}];`;
+}
 
 export default defineNuxtConfig({
   rootDir: resolve(import.meta.dirname),
@@ -236,6 +258,11 @@ export default defineNuxtConfig({
   css: ["~/assets/main.css"],
 
   modules: [
+    (_options, nuxt) => {
+      nuxt.hook("nitro:config", (config) => {
+        config.virtual = { ...config.virtual, "#api-v1-manifest": apiV1ManifestSource };
+      });
+    },
     "@nuxt/fonts",
     "@nuxtjs/i18n",
     "@nuxtjs/supabase",

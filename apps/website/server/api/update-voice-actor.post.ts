@@ -212,7 +212,7 @@ export default defineUserHandler(async (event, user) => {
     if (error.code === "P0002") {
       throw createError({ statusCode: 404, message: "Voice actor not found" });
     }
-    if (["40001", "23505"].includes(error.code ?? "")) {
+    if (["40001", "PT409", "23505"].includes(error.code ?? "")) {
       throw createError({
         statusCode: 409,
         message: "Voice actor changed or request conflicts",
