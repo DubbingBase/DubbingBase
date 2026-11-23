@@ -115,4 +115,15 @@ describe("dispatcher", () => {
 
     expect(mocks.localFetch).toHaveBeenCalledTimes(1);
   });
+
+  it("parks a queue whose response body reports ok: false", async () => {
+    mocks.rpc.mockResolvedValue({ data: ["wiki_extract"], error: null });
+    mocks.localFetch.mockImplementation(
+      async () => new Response(JSON.stringify({ ok: false, processed: 1 }), { status: 200 }),
+    );
+
+    await runDispatcher({ context: {} });
+
+    expect(mocks.localFetch).toHaveBeenCalledTimes(1);
+  });
 });

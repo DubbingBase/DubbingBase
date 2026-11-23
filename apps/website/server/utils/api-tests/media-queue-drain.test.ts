@@ -91,4 +91,54 @@ describe("drainMediaQueues", () => {
     });
     expect(budgetRuns).toBe(1);
   });
+
+  it("does not start a lane when readiness resolves after the budget", async () => {
+    let clock = 0;
+    const started: string[] = [];
+    await drainMediaQueues({
+      getReady: async () => {
+        clock = 100;
+        return { queues: ["wiki_scan"], failed: false };
+      },
+      runLane: async (queue) => {
+        started.push(queue);
+        return { processed: 1, ok: true };
+      },
+      now: () => clock,
+      budgetMs: 50,
+      pollMs: 10,
+    });
+    expect(started).toEqual([]);
+  });
+
+  it("re-checks readiness when a lane settled during the readiness call", async () => {
+    let calls = 0;
+    const started: string[] = [];
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await drainMediaQueues({
+      getReady: async () => {
+        calls++;
+        if (calls === 1) return { queues: ["wiki_scan"], failed: false };
+        if (calls === 2) {
+          // The scan lane finishes (and enqueues extraction) while this check is pending.
+          release();
+          await sleep(10);
+          return { queues: [], failed: false };
+        }
+        return { queues: calls === 3 ? ["wiki_extract"] : [], failed: false };
+      },
+      runLane: async (queue) => {
+        started.push(queue);
+        if (queue === "wiki_scan") await gate;
+        return { processed: 1, ok: true };
+      },
+      now: () => performance.now(),
+      budgetMs: 5_000,
+      pollMs: 1_000,
+    });
+    expect(started).toEqual(["wiki_scan", "wiki_extract"]);
+  });
 });

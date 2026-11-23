@@ -2,6 +2,7 @@ import type { H3Event } from "h3";
 import {
   beginDiscordDigest,
   errorFields,
+  shortText,
   flushDiscordDigest,
   sendDiscordAdminNotification,
 } from "../utils/notifications/discord";
@@ -344,7 +345,15 @@ async function handleQueueRequest(event: H3Event) {
             {
               event,
               summary: `Invalid payload: ${errorMessage}`,
-              fields: errorFields("validate queue payload", errorMessage),
+              fields: errorFields("validate queue payload", errorMessage, [
+                {
+                  name: "Archive",
+                  value: shortText(
+                    `${archiveState}${archiveError ? `: ${archiveError.message}` : ""}`,
+                    300,
+                  ),
+                },
+              ]),
               queue: "wiki_scan",
               color: 0xed4245,
             },

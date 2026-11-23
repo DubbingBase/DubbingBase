@@ -63,6 +63,24 @@ function normalizeFields(fields?: DiscordField[]): DiscordField[] | undefined {
   return usable.length > 0 ? usable : undefined;
 }
 
+/** Trims fields to a total character budget so one row can never exceed a message by itself. */
+function boundFields(
+  fields: DiscordField[] | undefined,
+  budget: number,
+): DiscordField[] | undefined {
+  if (!fields) return undefined;
+  const kept: DiscordField[] = [];
+  let used = 0;
+  for (const field of fields) {
+    const room = budget - used - field.name.length;
+    if (room <= 0) break;
+    const value = field.value.slice(0, room);
+    kept.push({ ...field, value });
+    used += field.name.length + value.length;
+  }
+  return kept.length > 0 ? kept : undefined;
+}
+
 function shouldSkipRoutine(options?: DiscordWebhookOptions): boolean {
   if (options?.routine !== true) return false;
 
@@ -324,6 +342,8 @@ const MAX_EMBEDS = 10;
 const MAX_EMBED_CHARS = 6000;
 const MAX_DESCRIPTION_CHARS = 4096;
 const MAX_ROW_CHARS = 140;
+const MAX_SUBJECT_CHARS = 120;
+const MAX_DETAIL_FIELD_CHARS = 2400;
 const MAX_DETAIL_CHARS = 700;
 /** Follow-up messages are capped so one noisy batch cannot flood the channel or webhook rate limit. */
 const MAX_MESSAGES = 4;
@@ -377,7 +397,7 @@ export function buildDigestMessages(entries: DigestEntry[]): Record<string, unkn
   const rows: DigestRow[] = [...grouped.values()]
     .map(({ entry, count }): DigestRow => {
       const severity = severityOf(entry.title, entry.options);
-      const subject = entry.options?.subject ?? entry.title;
+      const subject = shortText(entry.options?.subject ?? entry.title, MAX_SUBJECT_CHARS);
       const linked = entry.options?.url
         ? `[${subject}](${normalizeDiscordUrl(entry.options.url)})`
         : `**${subject}**`;
@@ -388,7 +408,10 @@ export function buildDigestMessages(entries: DigestEntry[]): Record<string, unkn
       const what = entry.options?.summary ?? condenseMessage(entry.message, MAX_ROW_CHARS);
       const line = `${SEVERITY_ICON[severity]} ${linked}${tag}${times}\n  ↳ ${kind}${shortText(what, MAX_ROW_CHARS)}`;
       // Problems get an embed of their own, with labelled fields when the caller provided them.
-      const detailFields = normalizeFields(entry.options?.fields);
+      const detailFields = boundFields(
+        normalizeFields(entry.options?.fields),
+        MAX_DETAIL_FIELD_CHARS,
+      );
       // A summary without fields already says everything; repeating the raw text is noise.
       const needsDetail =
         SEVERITY_RANK[severity] >= SEVERITY_RANK.warning &&

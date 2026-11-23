@@ -64,7 +64,8 @@ export default defineTask({
         console.log(
           `[Dispatcher] Queue ${queueName} processed=${processedCount} duration_ms=${durationMs}.`,
         );
-        return { processed: processedCount, ok: true };
+        // A 200 can still carry `ok: false` (e.g. extraction failed); park the queue then.
+        return { processed: processedCount, ok: readProperty(responseBody, "ok") !== false };
       } catch (err) {
         console.error(`[Dispatcher] Error processing queue ${queueName}:`, err);
         return { processed: 0, ok: false };

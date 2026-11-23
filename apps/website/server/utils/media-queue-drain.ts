@@ -39,6 +39,7 @@ export async function drainMediaQueues(deps: DrainDependencies): Promise<DrainSu
   const parked = new Set<MediaQueueName>();
   const summary: DrainSummary = { lanesStarted: 0, processed: 0, readinessChecks: 0 };
 
+  let settled = 0;
   const startLane = (queue: MediaQueueName) => {
     summary.lanesStarted++;
     const lane = deps
@@ -52,6 +53,7 @@ export async function drainMediaQueues(deps: DrainDependencies): Promise<DrainSu
       })
       .finally(() => {
         inFlight.delete(queue);
+        settled++;
       });
     inFlight.set(queue, lane);
   };
@@ -60,14 +62,24 @@ export async function drainMediaQueues(deps: DrainDependencies): Promise<DrainSu
     if (deps.now() - startedAt >= deps.budgetMs) break;
 
     summary.readinessChecks++;
+    const settledBefore = settled;
     const ready = await deps.getReady();
-    for (const queue of ready.queues) {
-      if (!inFlight.has(queue) && !parked.has(queue)) startLane(queue);
+    // Readiness may resolve after the budget; never launch new work past the deadline.
+    const pastBudget = deps.now() - startedAt >= deps.budgetMs;
+    if (!pastBudget) {
+      for (const queue of ready.queues) {
+        if (!inFlight.has(queue) && !parked.has(queue)) startLane(queue);
+      }
     }
 
     // Without a trustworthy readiness signal, run each queue once and stop.
     if (ready.failed) break;
-    if (inFlight.size === 0) break;
+    if (pastBudget) break;
+    if (inFlight.size === 0) {
+      // A lane that settled during the check may have enqueued work the check missed.
+      if (settled > settledBefore) continue;
+      break;
+    }
 
     let timer: ReturnType<typeof setTimeout> | undefined;
     const tick = new Promise<void>((resolve) => {
