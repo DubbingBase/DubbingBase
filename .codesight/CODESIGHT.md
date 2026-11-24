@@ -5,7 +5,7 @@
 
 > 86 routes | 30 models | 145 components | 148 lib files | 53 env vars | 15 middleware | 48% test coverage
 > **Token savings:** this file is ~19,900 tokens. Without it, AI exploration would cost ~161,900 tokens. **Saves ~142,000 tokens per conversation.**
-> **Last scanned:** 2026-11-24 16:16 — re-run after significant changes
+> **Last scanned:** 2026-11-24 16:19 — re-run after significant changes
 
 ---
 
@@ -345,7 +345,7 @@
 - **PwaLifecycleBanner** [client] — `apps/website/src/components/PwaLifecycleBanner.vue`
 - **ReportModal** [client] — props: open, targetUrl — `apps/website/src/components/ReportModal.vue`
 - **SearchFilters** [client] — props: modelValue — `apps/website/src/components/SearchFilters.vue`
-- **SearchResultItem** [client] — props: result, mediaTypeLabel, selected, disabled — `apps/website/src/components/SearchResultItem.vue`
+- **SearchResultItem** [client] — props: result, href, mediaTypeLabel, selected, disabled — `apps/website/src/components/SearchResultItem.vue`
 - **UnderConstruction** [client] — `apps/website/src/components/UnderConstruction.vue`
 - **AsyncAutocomplete** [client] — props: modelValue, options, loading, placeholder, ariaLabel, disabled, allowCreate, displayFn, searchFn — `apps/website/src/components/admin/AsyncAutocomplete.vue`
 - **CastAvatar** [client] — props: name — `apps/website/src/components/admin/CastAvatar.vue`

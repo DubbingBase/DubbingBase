@@ -28,7 +28,7 @@
 - **PwaLifecycleBanner** — `apps/website/src/components/PwaLifecycleBanner.vue`
 - **ReportModal** — props: open, targetUrl — `apps/website/src/components/ReportModal.vue`
 - **SearchFilters** — props: modelValue — `apps/website/src/components/SearchFilters.vue`
-- **SearchResultItem** — props: result, mediaTypeLabel, selected, disabled — `apps/website/src/components/SearchResultItem.vue`
+- **SearchResultItem** — props: result, href, mediaTypeLabel, selected, disabled — `apps/website/src/components/SearchResultItem.vue`
 - **UnderConstruction** — `apps/website/src/components/UnderConstruction.vue`
 - **AsyncAutocomplete** — props: modelValue, options, loading, placeholder, ariaLabel, disabled, allowCreate, displayFn, searchFn — `apps/website/src/components/admin/AsyncAutocomplete.vue`
 - **CastAvatar** — props: name — `apps/website/src/components/admin/CastAvatar.vue`
