@@ -3,7 +3,7 @@
 **Stack:** nuxt | none | typescript
 **Monorepo:** @app/website, @app/supabase, @app/locales, @app/shared-logic
 
-86 routes | 30 models | 53 env vars | 610 import links
+86 routes | 30 models | 53 env vars | 611 import links
 
 **API areas:** /api/actor, /api/admin, /api/advertisement, /api/audiobook, /api/career-grid, /api/character, /api/character-portraits, /api/count-voice-actor-works, /api/dashboard-stats, /api/delete_user
 
