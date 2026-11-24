@@ -1,4 +1,4 @@
-import { isDubbingLanguage, type DubbingLanguage } from "@app/shared-logic";
+import { DUBBING_LANGUAGE_OPTIONS } from "@app/shared-logic";
 import * as v from "valibot";
 import type { DubbingProjectMediaType } from "../../../src/utils/dubbing-project-save";
 import { positiveId } from "./voice-actors";
@@ -31,9 +31,15 @@ export const internalSegment = v.picklist(["advertisements", "toys"]);
 
 export const mediaParams = v.object({ type: mediaSegment, id: positiveId });
 
-export const dubbingLanguage = v.custom<DubbingLanguage>(
-  isDubbingLanguage,
-  "must be a regional dubbing language such as fr-FR",
+/** Regional dubbing language: a picklist, so the OpenAPI document lists every allowed value. */
+export const dubbingLanguage = v.pipe(
+  v.picklist(
+    DUBBING_LANGUAGE_OPTIONS,
+    `must be a regional dubbing language code such as fr-FR (one of: ${DUBBING_LANGUAGE_OPTIONS.join(", ")})`,
+  ),
+  v.description(
+    "Regional dubbing language code, language-REGION such as fr-FR or fr-CA (not a bare language like fr).",
+  ),
 );
 
 export const PERFORMANCES = [

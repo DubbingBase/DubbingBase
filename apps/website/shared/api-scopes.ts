@@ -4,9 +4,14 @@
  */
 export const API_SCOPES = [
   "voice-actors:read",
-  "voice-actors:write",
+  "voice-actors:create",
+  "voice-actors:update",
   "credits:read",
-  "credits:write",
+  "credits:create",
+  "credits:update",
+  "characters:read",
+  "characters:create",
+  "characters:update",
 ] as const;
 
 export type ApiScope = (typeof API_SCOPES)[number];

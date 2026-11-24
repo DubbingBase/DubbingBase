@@ -71,7 +71,7 @@ const API_DISCOVERY_LINK =
 function respondWithError(event: H3Event, error: ApiError) {
   setResponseStatus(event, error.status);
   for (const [name, value] of Object.entries(error.headers)) setHeader(event, name, value);
-  return { error: { code: error.code, message: error.message } };
+  return { error: { code: error.code, message: error.message, ...error.details } };
 }
 
 function issueMessages(issues: readonly v.BaseIssue<unknown>[]): string {
@@ -92,7 +92,11 @@ async function authorize(event: H3Event, scope: ApiScope): Promise<ApiPrincipal>
     });
   }
   if (!principal.scopes.includes(scope)) {
-    throw new ApiError(403, "insufficient_scope", `This token lacks the "${scope}" scope.`);
+    throw new ApiError(
+      403,
+      "insufficient_scope",
+      `This token lacks the "${scope}" scope. Its scopes: ${principal.scopes.join(", ") || "none"}.`,
+    );
   }
   return principal;
 }

@@ -18,7 +18,7 @@ import { positiveId } from "../../../../../utils/api-v1/voice-actors";
 export const route = defineApiRoute({
   summary: "Change a credit's performance",
   tags: ["Credits"],
-  scope: "credits:write",
+  scope: "credits:update",
   params: v.object({ type: mediaSegment, id: positiveId, workId: positiveId }),
   query: v.object({}),
   body: v.strictObject({ performance: performanceSchema }),

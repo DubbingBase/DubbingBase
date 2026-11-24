@@ -7,7 +7,7 @@ import { useSupabaseAdmin } from "../../../utils/db/client";
 export const route = defineApiRoute({
   summary: "Update a voice actor",
   tags: ["Voice actors"],
-  scope: "voice-actors:write",
+  scope: "voice-actors:update",
   idempotent: true,
   params: v.object({ id: positiveId }),
   query: v.object({}),
