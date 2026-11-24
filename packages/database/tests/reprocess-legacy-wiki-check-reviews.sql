@@ -42,7 +42,7 @@ BEGIN
   END IF;
 
   IF EXISTS (SELECT 1 FROM pgmq.q_wiki_extract WHERE message->>'tmdb_id' = '-1492640')
-    OR EXISTS (SELECT 1 FROM public.dubbing_projects WHERE content_id = -11492640) THEN
+    OR EXISTS (SELECT 1 FROM public.dubbing_projects WHERE media_id = private.find_media_id('movie', 911492640)) THEN
     RAISE EXCEPTION 'Synthetic extract or project uniqueness fixture IDs are already present';
   END IF;
 
@@ -175,21 +175,21 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_constraint
     WHERE conrelid = 'public.dubbing_projects'::regclass
-      AND conname = 'dubbing_projects_media_region_key'
+      AND conname = 'dubbing_projects_media_language_key'
       AND contype = 'u'
   ) THEN
     RAISE EXCEPTION 'Authoritative media+region project uniqueness constraint is missing';
   END IF;
 
-  INSERT INTO public.dubbing_projects(content_id, content_type, language)
-  VALUES (-11492640, 'movie', 'fr-FR');
+  INSERT INTO public.dubbing_projects(media_id, language)
+  VALUES (private.resolve_media('movie', 911492640), 'fr-FR');
 
   BEGIN
-    INSERT INTO public.dubbing_projects(content_id, content_type, language)
-    VALUES (-11492640, 'movie', 'fr-FR');
+    INSERT INTO public.dubbing_projects(media_id, language)
+    VALUES (private.resolve_media('movie', 911492640), 'fr-FR');
   EXCEPTION WHEN unique_violation THEN
     GET STACKED DIAGNOSTICS v_constraint_name = CONSTRAINT_NAME;
-    IF v_constraint_name <> 'dubbing_projects_media_region_key' THEN
+    IF v_constraint_name <> 'dubbing_projects_media_language_key' THEN
       RAISE EXCEPTION 'Duplicate project was rejected by unexpected constraint %', v_constraint_name;
     END IF;
     v_duplicate_blocked := true;

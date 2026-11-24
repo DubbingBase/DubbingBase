@@ -5,7 +5,7 @@ set -euo pipefail
 # sessions to prove stale review-status writers serialize on the work row.
 DB_HOST=127.0.0.1
 DB_PORT=${T10_TEST_DB_PORT:-55322}
-DB_NAME=postgres
+DB_NAME=${PGDATABASE:-postgres}
 DB_USER=postgres
 DB_PASSWORD=${T10_TEST_DB_PASSWORD:-postgres}
 export PGPASSWORD="$DB_PASSWORD"
@@ -31,7 +31,8 @@ cleanup() {
 SET session_replication_role = replica;
 DELETE FROM public.audit_logs WHERE user_id IN ('$admin_id', '$owner_id');
 DELETE FROM public.work WHERE voice_actor_id = $voice_actor_id;
-DELETE FROM public.dubbing_projects WHERE content_id = $content_id AND content_type = 'movie';
+DELETE FROM public.dubbing_projects WHERE media_id IN (SELECT id FROM public.media WHERE kind = 'movie' AND content_id = $content_id);
+DELETE FROM public.media WHERE kind = 'movie' AND content_id = $content_id;
 DELETE FROM public.user_voice_actor_links WHERE user_id = '$owner_id' AND voice_actor_id = $voice_actor_id;
 DELETE FROM public.voice_actors WHERE id = $voice_actor_id;
 DELETE FROM auth.users WHERE id IN ('$admin_id', '$owner_id');
@@ -46,7 +47,7 @@ DO \$\$
 BEGIN
   IF EXISTS (SELECT 1 FROM auth.users WHERE id IN ('$admin_id', '$owner_id'))
      OR EXISTS (SELECT 1 FROM public.voice_actors WHERE id = $voice_actor_id)
-     OR EXISTS (SELECT 1 FROM public.dubbing_projects WHERE content_id = $content_id AND content_type = 'movie') THEN
+     OR EXISTS (SELECT 1 FROM public.dubbing_projects WHERE media_id IN (SELECT id FROM public.media WHERE kind = 'movie' AND content_id = $content_id)) THEN
     RAISE EXCEPTION 'T10 review concurrency fixture ids are already in use';
   END IF;
 END;

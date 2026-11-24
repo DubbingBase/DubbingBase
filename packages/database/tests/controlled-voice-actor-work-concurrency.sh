@@ -5,7 +5,7 @@ set -euo pipefail
 # Supabase port. It opens independent psql sessions for every racing request.
 DB_HOST=127.0.0.1
 DB_PORT=${T08_TEST_DB_PORT:-55322}
-DB_NAME=postgres
+DB_NAME=${PGDATABASE:-postgres}
 DB_USER=postgres
 DB_PASSWORD=${T08_TEST_DB_PASSWORD:-postgres}
 export PGPASSWORD="$DB_PASSWORD"
@@ -29,7 +29,8 @@ DELETE FROM public.audit_logs
 WHERE user_id = '00000000-0000-0000-0000-000056368201';
 DELETE FROM public.work WHERE voice_actor_id = 563682001;
 DELETE FROM public.dubbing_projects
-WHERE content_type = 'movie' AND content_id BETWEEN 563682101 AND 563682103;
+WHERE media_id IN (SELECT id FROM public.media WHERE kind = 'movie' AND content_id BETWEEN 563682101 AND 563682103);
+DELETE FROM public.media WHERE kind = 'movie' AND content_id BETWEEN 563682101 AND 563682103;
 DELETE FROM public.user_voice_actor_links
 WHERE user_id = '00000000-0000-0000-0000-000056368201';
 DELETE FROM public.voice_actors WHERE id = 563682001;
@@ -45,7 +46,7 @@ DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM auth.users WHERE id = '00000000-0000-0000-0000-000056368201')
      OR EXISTS (SELECT 1 FROM public.voice_actors WHERE id = 563682001)
-     OR EXISTS (SELECT 1 FROM public.dubbing_projects WHERE content_id BETWEEN 563682101 AND 563682103) THEN
+     OR EXISTS (SELECT 1 FROM public.dubbing_projects WHERE media_id IN (SELECT id FROM public.media WHERE kind = 'movie' AND content_id BETWEEN 563682101 AND 563682103)) THEN
     RAISE EXCEPTION 'T08 concurrency fixture ids are already in use';
   END IF;
 END;
@@ -83,7 +84,7 @@ same_role_b=$!
 wait "$same_role_a"
 wait "$same_role_b"
 
-same_role_rows=$(psql_local -At -c "SELECT count(*) FROM public.work AS work JOIN public.dubbing_projects AS project ON project.id = work.dubbing_project_id WHERE project.content_id = 563682101 AND work.voice_actor_id = 563682001 AND public.work_role_identity_key(work.character_id, work.character_name) = 'name:concurrent role';")
+same_role_rows=$(psql_local -At -c "SELECT count(*) FROM public.work AS work JOIN public.dubbing_projects AS project ON project.id = work.dubbing_project_id WHERE project.media_id = (SELECT id FROM public.media WHERE kind = 'movie' AND content_id = 563682101) AND work.voice_actor_id = 563682001 AND public.work_role_identity_key(work.character_id, work.character_name) = 'name:concurrent role';")
 if [[ "$same_role_rows" != "1" ]]; then
   printf 'same-role concurrency persisted %s rows, expected 1\n' "$same_role_rows" >&2
   exit 1
@@ -98,7 +99,7 @@ distinct_b=$!
 wait "$distinct_a"
 wait "$distinct_b"
 
-distinct_rows=$(psql_local -At -c "SELECT count(*) FROM public.work AS work JOIN public.dubbing_projects AS project ON project.id = work.dubbing_project_id WHERE project.content_id = 563682102 AND work.voice_actor_id = 563682001;")
+distinct_rows=$(psql_local -At -c "SELECT count(*) FROM public.work AS work JOIN public.dubbing_projects AS project ON project.id = work.dubbing_project_id WHERE project.media_id = (SELECT id FROM public.media WHERE kind = 'movie' AND content_id = 563682102) AND work.voice_actor_id = 563682001;")
 if [[ "$distinct_rows" != "2" ]]; then
   printf 'distinct-role concurrency persisted %s rows, expected 2\n' "$distinct_rows" >&2
   exit 1
@@ -133,7 +134,7 @@ DECLARE
 BEGIN
   SELECT work.* INTO v_work FROM public.work AS work
   JOIN public.dubbing_projects AS project ON project.id = work.dubbing_project_id
-  WHERE project.content_id = 563682101 AND work.character_name ILIKE '%concurrent role%'
+  WHERE project.media_id = (SELECT id FROM public.media WHERE kind = 'movie' AND content_id = 563682101) AND work.character_name ILIKE '%concurrent role%'
   LIMIT 1;
   PERFORM pg_sleep(0.25);
   BEGIN
@@ -142,7 +143,7 @@ BEGIN
       '56368200-0000-4000-8000-000000000111', v_work.id, v_work.updated_at, 'voice'
     );
     RAISE NOTICE 'RESULT=updated';
-  EXCEPTION WHEN serialization_failure THEN
+  EXCEPTION WHEN SQLSTATE 'PT409' THEN
     RAISE NOTICE 'RESULT=stale';
   END;
 END;
@@ -157,7 +158,7 @@ DECLARE
 BEGIN
   SELECT work.* INTO v_work FROM public.work AS work
   JOIN public.dubbing_projects AS project ON project.id = work.dubbing_project_id
-  WHERE project.content_id = 563682101 AND work.character_name ILIKE '%concurrent role%'
+  WHERE project.media_id = (SELECT id FROM public.media WHERE kind = 'movie' AND content_id = 563682101) AND work.character_name ILIKE '%concurrent role%'
   LIMIT 1;
   PERFORM pg_sleep(0.25);
   BEGIN
@@ -166,7 +167,7 @@ BEGIN
       '56368200-0000-4000-8000-000000000112', v_work.id, v_work.updated_at, 'ambiances'
     );
     RAISE NOTICE 'RESULT=updated';
-  EXCEPTION WHEN serialization_failure THEN
+  EXCEPTION WHEN SQLSTATE 'PT409' THEN
     RAISE NOTICE 'RESULT=stale';
   END;
 END;
@@ -196,7 +197,7 @@ DECLARE
 BEGIN
   SELECT work.* INTO v_work FROM public.work AS work
   JOIN public.dubbing_projects AS project ON project.id = work.dubbing_project_id
-  WHERE project.content_id = 563682102 AND work.character_name = 'Distinct Alpha';
+  WHERE project.media_id = (SELECT id FROM public.media WHERE kind = 'movie' AND content_id = 563682102) AND work.character_name = 'Distinct Alpha';
   PERFORM * FROM public.update_voice_actor_work_performance(
     '00000000-0000-0000-0000-000056368201',
     '56368200-0000-4000-8000-000000000121', v_work.id, v_work.updated_at, 'chant'
@@ -241,7 +242,7 @@ DECLARE
 BEGIN
   SELECT work.* INTO v_work FROM public.work AS work
   JOIN public.dubbing_projects AS project ON project.id = work.dubbing_project_id
-  WHERE project.content_id = 563682102 AND work.character_name = 'Distinct Alpha';
+  WHERE project.media_id = (SELECT id FROM public.media WHERE kind = 'movie' AND content_id = 563682102) AND work.character_name = 'Distinct Alpha';
   BEGIN
     PERFORM * FROM public.update_voice_actor_work_performance(
       '00000000-0000-0000-0000-000056368201',

@@ -8,7 +8,8 @@ import { createCacheNamespace } from "../cache";
 import { edgeCache } from "../cache/edge";
 import { CHARACTER_IMAGE_POSITIVE_TTL } from "../character-images";
 import { buildCacheKey, hashCacheValue } from "../cache/constants";
-import { isRecord, readPath, readProperty } from "@app/shared-logic";
+import { MEDIA_EMBED, isRecord, readPath, readProperty } from "@app/shared-logic";
+import { withContentRef } from "../db/queries";
 
 const WIKIPEDIA_USER_AGENT = "DubbingBase/1.0 (https://dubbingbase.com; contact@dubbingbase.com)";
 
@@ -353,7 +354,7 @@ export class MediaService {
     const { data: voiceActor, error: vaError } = await supabase
       .from("voice_actors")
       .select(
-        "*, work(id, actor_id, performance, note, character_name, reviewed_status, dubbing_projects(content_id, content_type, studios(id, name, logo_url)))",
+        `*, work(id, actor_id, performance, note, character_name, reviewed_status, dubbing_projects(${MEDIA_EMBED}, studios(id, name, logo_url)))`,
       )
       .eq("id", voiceActorId)
       .single();
@@ -377,7 +378,11 @@ export class MediaService {
       });
     }
 
-    const workItems = voiceActor.work || [];
+    // Expose the provider reference of each project as `content_id`/`content_type` (kept in the response).
+    const workItems = (voiceActor.work || []).map((work) => ({
+      ...work,
+      dubbing_projects: work.dubbing_projects ? withContentRef(work.dubbing_projects) : null,
+    }));
     const relevantActorIds = new Set<number>();
     for (const work of workItems) {
       if (typeof work.actor_id === "number") relevantActorIds.add(work.actor_id);
@@ -894,7 +899,7 @@ export class MediaService {
     const potentialWikipediaUrl: string | null = await wikipediaPromise;
 
     return {
-      voiceActor,
+      voiceActor: { ...voiceActor, work: workItems },
       enhancedWorks,
       medias: Array.from(compactMediasMap.values()),
       potentialWikipediaUrl,

@@ -38,7 +38,7 @@ function latest(current: string | null | undefined, next: string | null | undefi
   return next > current ? next : current;
 }
 
-/** Row count for an entity; for media this counts projects, so it is an upper bound on pages. */
+/** Row count for an entity; for media this counts the media that have at least one dubbing project. */
 async function countRows(event: H3Event, name: EntityName): Promise<number> {
   const supabase = useSupabaseAdmin(event);
   const query =
@@ -47,9 +47,9 @@ async function countRows(event: H3Event, name: EntityName): Promise<number> {
       : name === "studios"
         ? supabase.from("studios").select("id", { count: "exact", head: true })
         : supabase
-            .from("dubbing_projects")
-            .select("content_id", { count: "exact", head: true })
-            .eq("content_type", MEDIA_CONTENT_TYPES[name].contentType);
+            .from("media")
+            .select("id, dubbing_projects!inner(id)", { count: "exact", head: true })
+            .eq("kind", MEDIA_CONTENT_TYPES[name].contentType);
   const { count, error } = await query;
   if (error) throw error;
   return count ?? 0;
@@ -99,33 +99,26 @@ export async function loadSitemapChunk(
     }));
   }
 
-  // Media pages are keyed by external content id and several projects (languages) can share one,
-  // so collapse duplicates. A group straddling a chunk boundary is listed by the earlier chunk:
-  // we start one row early and drop leading rows that repeat the previous chunk's last id.
+  // Media pages are keyed by media.content_id, which is unique per kind, so each row is one page; its lastmod is
+  // the latest update among the media's dubbing projects.
   const { contentType, pathPrefix } = MEDIA_CONTENT_TYPES[name];
-  const start = Math.max(from - 1, 0);
   const rows = await fetchPaged(
     (rangeStart, rangeEnd) =>
       supabase
-        .from("dubbing_projects")
-        .select("content_id, updated_at")
-        .eq("content_type", contentType)
+        .from("media")
+        .select("content_id, dubbing_projects!inner(updated_at)")
+        .eq("kind", contentType)
         .order("content_id", { ascending: true })
-        .order("id", { ascending: true })
         .range(rangeStart, rangeEnd),
-    start,
+    from,
     to,
   );
-  let skipId: number | null = null;
-  if (from > 0 && rows.length > 0) skipId = rows.shift()?.content_id ?? null;
 
-  const lastmodById = new Map<number, string | null>();
-  for (const row of rows) {
-    if (row.content_id === skipId) continue;
-    lastmodById.set(row.content_id, latest(lastmodById.get(row.content_id), row.updated_at));
-  }
-  return [...lastmodById].map(([id, lastmod]) => ({
-    path: `${pathPrefix}/${id}`,
-    lastmod,
+  return rows.map((row) => ({
+    path: `${pathPrefix}/${row.content_id}`,
+    lastmod: row.dubbing_projects.reduce<string | null>(
+      (newest, project) => latest(newest, project.updated_at),
+      null,
+    ),
   }));
 }

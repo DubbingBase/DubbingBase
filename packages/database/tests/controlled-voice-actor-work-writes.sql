@@ -364,7 +364,7 @@ BEGIN
       v_expected_updated_at + INTERVAL '1 second', 'dialogues'
     );
     RAISE EXCEPTION 'stale performance update unexpectedly succeeded';
-  EXCEPTION WHEN serialization_failure THEN
+  EXCEPTION WHEN SQLSTATE 'PT409' THEN
     NULL;
   END;
   BEGIN
@@ -514,8 +514,8 @@ BEGIN
   END IF;
   PERFORM pg_catalog.set_config('test.voice_actor_duplicate_work_id', v_duplicate_work_id::TEXT, TRUE);
 
-  INSERT INTO public.dubbing_projects (content_id, content_type, language)
-  VALUES (563681105, 'movie', 'fr-FR')
+  INSERT INTO public.dubbing_projects (media_id, language)
+  VALUES (private.resolve_media('movie', 563681105), 'fr-FR')
   RETURNING id INTO v_voice_merge_project_id;
   INSERT INTO public.work (
     dubbing_project_id, actor_id, voice_actor_id, character_name, performance, status
@@ -613,8 +613,9 @@ ALTER TABLE public.work DROP CONSTRAINT controlled_voice_work_test_reject_insert
 DO $$
 BEGIN
   IF EXISTS (
-    SELECT 1 FROM public.dubbing_projects
-    WHERE content_id = 563681301 AND content_type = 'movie'
+    SELECT 1 FROM public.dubbing_projects AS project
+    JOIN public.media AS media ON media.id = project.media_id
+    WHERE media.content_id = 563681301 AND media.kind = 'movie'
   ) OR EXISTS (
     SELECT 1 FROM public.audit_logs
     WHERE request_id = '56368100-0000-4000-8000-000000000031'
@@ -678,8 +679,9 @@ ALTER TABLE public.audit_logs DROP CONSTRAINT controlled_voice_audit_test_reject
 DO $$
 BEGIN
   IF EXISTS (
-    SELECT 1 FROM public.dubbing_projects
-    WHERE content_id = 563681302 AND content_type = 'movie'
+    SELECT 1 FROM public.dubbing_projects AS project
+    JOIN public.media AS media ON media.id = project.media_id
+    WHERE media.content_id = 563681302 AND media.kind = 'movie'
   ) OR EXISTS (
     SELECT 1 FROM public.work WHERE character_name = 'Audit failure rolls back project'
   ) OR EXISTS (

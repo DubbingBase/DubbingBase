@@ -13,6 +13,7 @@ export type {
   ShowDetailResponse,
 } from "./types/media-detail";
 export * from "./constants";
+export * from "./media-ref";
 export * from "./dubbing-languages";
 export * from "./wikipedia-language";
 export * from "./composables/useHomeData";

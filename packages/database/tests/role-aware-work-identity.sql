@@ -53,8 +53,8 @@ BEGIN
     RAISE EXCEPTION 'role key normalization failed';
   END IF;
 
-  INSERT INTO public.dubbing_projects(content_id, content_type, language)
-  VALUES (987654321, 'movie', 'fr-FR') RETURNING id INTO project_id;
+  INSERT INTO public.dubbing_projects(media_id, language)
+  VALUES (private.resolve_media('movie', 987654321), 'fr-FR') RETURNING id INTO project_id;
   INSERT INTO auth.users(id) VALUES (admin_id), (voter_id);
 
   INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_id, character_name)
@@ -190,8 +190,8 @@ DECLARE
   voter_two uuid := gen_random_uuid();
   merge_result jsonb;
 BEGIN
-  INSERT INTO public.dubbing_projects(content_id, content_type, language)
-  VALUES (987654322, 'movie', 'fr-FR') RETURNING id INTO project_id;
+  INSERT INTO public.dubbing_projects(media_id, language)
+  VALUES (private.resolve_media('movie', 987654322), 'fr-FR') RETURNING id INTO project_id;
   INSERT INTO auth.users(id) VALUES (voter_one), (voter_two);
 
   INSERT INTO public.voice_actors(firstname, lastname)

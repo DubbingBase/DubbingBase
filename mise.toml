@@ -81,9 +81,9 @@ dir = "packages/database"
 run = "npx supabase db reset --local --no-seed --yes"
 
 [tasks.backup-db]
-description = "Backups the database"
+description = "Dumps the linked production database (read-only) to backup_<timestamp>/ using the password from Doppler prd"
 depends = ["database-install"]
-run = "./backup_db.sh"
+run = "doppler run --project dubbingbase --config prd -- ./backup_db.sh"
 
 [tasks.website]
 description = "Starts the local Supabase backend and runs the website"
@@ -148,9 +148,15 @@ depends = ["fetch-seed", "backend"]
 dir = "packages/database"
 # The CLI loads the whole seed into memory (~2.6 GB for the 80 MB dump) and gets OOM-killed,
 # so reset without seeding and stream the seed through psql instead.
+# The dump has production's schema, so reset only up to the newest migration production has applied, load the
+# data, then apply the migrations production does not have yet on top of it (a migration that changes columns
+# cannot receive a dump taken before it).
 run = """
-npx supabase db reset --local --no-seed --yes
+set -e
+PROD_VERSION=$(doppler run --project dubbingbase --config prd -- npx supabase migration list --linked --output-format json | node scripts/production-schema-version.mjs)
+npx supabase db reset --local --no-seed --yes --version "$PROD_VERSION"
 PGPASSWORD=postgres psql -h 127.0.0.1 -p 55322 -U postgres -d postgres -v ON_ERROR_STOP=1 -q -1 -f supabase/seed.sql
+npx supabase migration up --local
 npx supabase seed buckets --local
 """
 

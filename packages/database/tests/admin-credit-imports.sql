@@ -186,7 +186,7 @@ BEGIN
   END;
   IF EXISTS (
        SELECT 1 FROM public.dubbing_projects
-       WHERE content_id = 563684102 AND content_type = 'movie' AND language = 'en-US'
+       WHERE media_id = private.find_media_id('movie', 563684102) AND language = 'en-US'
      )
      OR EXISTS (
        SELECT 1 FROM public.voice_actors
@@ -199,15 +199,14 @@ BEGIN
     RAISE EXCEPTION 'Failed first credit left a project, voice actor, or retry record';
   END IF;
 
-  INSERT INTO public.dubbing_projects(content_id, content_type, language)
-  VALUES (563684103, 'movie', 'en-US');
+  INSERT INTO public.dubbing_projects(media_id, language)
+  VALUES (private.resolve_media('movie', 563684103), 'en-US');
   INSERT INTO public.work (
     dubbing_project_id, character_name, performance, status
   )
   SELECT project.id, 'Unrelated Existing', 'voice', 'validated'
   FROM public.dubbing_projects AS project
-  WHERE project.content_id = 563684103
-    AND project.content_type = 'movie'
+  WHERE project.media_id = private.find_media_id('movie', 563684103)
     AND project.language = 'en-US'
   RETURNING id INTO v_unrelated_work_id;
   SELECT pg_catalog.to_jsonb(work) INTO v_unrelated_before

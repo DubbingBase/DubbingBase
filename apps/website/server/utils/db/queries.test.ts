@@ -3,6 +3,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const queryMocks = vi.hoisted(() => ({
   useSupabaseAdmin: vi.fn(),
   selectedColumns: new Array<string>(),
+  /** `.eq(column, value)` / `.in(column, values)` calls of every query, in order. */
+  eqCalls: new Array<[string, unknown]>(),
+  inCalls: new Array<[string, unknown]>(),
 }));
 
 vi.mock("./client", () => ({
@@ -28,7 +31,12 @@ function createSupabaseMock(rows: unknown[], error: unknown = null) {
       queryMocks.selectedColumns.push(columns);
       return builder;
     },
-    eq() {
+    eq(column: string, value: unknown) {
+      queryMocks.eqCalls.push([column, value]);
+      return builder;
+    },
+    in(column: string, values: unknown) {
+      queryMocks.inCalls.push([column, values]);
       return builder;
     },
     then(resolve: (value: typeof result) => unknown, reject: (reason: unknown) => unknown) {
@@ -41,10 +49,28 @@ function createSupabaseMock(rows: unknown[], error: unknown = null) {
   };
 }
 
+const MEDIA_FILTER_SELECT = "media:media_id!inner(id,kind,content_id)";
+
+/** The select joins `media` as an inner join (a left join would silently return every project). */
+function expectInnerMediaJoin() {
+  expect(queryMocks.selectedColumns).toHaveLength(1);
+  expect(queryMocks.selectedColumns[0]).toContain(MEDIA_FILTER_SELECT);
+}
+
+/** The media filters are applied, in this order, on the embedded `media` columns. */
+function expectMediaFilter(kind: string, contentId: number) {
+  expect(queryMocks.eqCalls.slice(0, 2)).toEqual([
+    ["media.kind", kind],
+    ["media.content_id", contentId],
+  ]);
+}
+
 describe("dubbing project detail queries", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     queryMocks.selectedColumns.length = 0;
+    queryMocks.eqCalls.length = 0;
+    queryMocks.inCalls.length = 0;
   });
 
   it("deduplicates media-page voice actors and omits unused work fields", async () => {
@@ -135,6 +161,8 @@ describe("dubbing project detail queries", () => {
     expect(queryMocks.selectedColumns[0]).toContain("studio_data:studios");
     expect(queryMocks.selectedColumns[0]).not.toContain("performance");
     expect(queryMocks.selectedColumns[0]).not.toContain("voice_actor_name");
+    expectInnerMediaJoin();
+    expectMediaFilter("tv", 1);
   });
 
   it("returns project summaries and selected episode works with unique voice actors", async () => {
@@ -185,6 +213,9 @@ describe("dubbing project detail queries", () => {
 
     const result = await getEpisodePageDubbingProjectData(1);
 
+    expectInnerMediaJoin();
+    expectMediaFilter("tv", 1);
+
     expect(result.dubbingProjects).toEqual([
       {
         id: 17,
@@ -233,6 +264,8 @@ describe("dubbing project detail queries", () => {
 
     await getDubbingProjects(1, "toy");
 
+    expectInnerMediaJoin();
+    expectMediaFilter("toy", 1);
     expect(queryMocks.selectedColumns[0]).toContain("crew:dubbing_project_crew");
     expect(queryMocks.selectedColumns[0]).toContain("person:voice_actors(*)");
   });
@@ -240,6 +273,7 @@ describe("dubbing project detail queries", () => {
   it("projects podcast detail projects while retaining cast, studio, and crew data", async () => {
     const rows = [
       {
+        media: { id: 900, kind: "podcast", content_id: 1 },
         id: 17,
         language: "fr-FR",
         studio_data: {
@@ -275,16 +309,20 @@ describe("dubbing project detail queries", () => {
 
     const projects = await getDubbingProjectsForMediaEndpoint(1, "podcast", "podcast-page");
 
+    expectInnerMediaJoin();
+    expectMediaFilter("podcast", 1);
+    expect(projects[0]).not.toHaveProperty("media");
     expect(queryMocks.selectedColumns[0]).not.toContain("*");
     expect(queryMocks.selectedColumns[0]).toContain("studio_data:studios");
     expect(queryMocks.selectedColumns[0]).toContain("crew:dubbing_project_crew");
     expect(queryMocks.selectedColumns[0]).toContain("voice_actor:voice_actors");
-    expect(projects).toMatchObject(rows);
+    expect(projects).toMatchObject(rows.map(({ media: _media, ...project }) => project));
   });
 
   it("projects advertisement detail projects while retaining cast, studio, and crew data", async () => {
     const rows = [
       {
+        media: { id: 900, kind: "advertisement", content_id: 31 },
         id: 17,
         language: "fr-FR",
         studio_data: {
@@ -327,7 +365,9 @@ describe("dubbing project detail queries", () => {
 
     const projects = await getAdvertisementPageDubbingProjects(31);
 
-    expect(projects).toEqual(rows);
+    expectInnerMediaJoin();
+    expectMediaFilter("advertisement", 31);
+    expect(projects).toEqual(rows.map(({ media: _media, ...project }) => project));
     expect(queryMocks.selectedColumns[0]).not.toContain("*");
     expect(queryMocks.selectedColumns[0]).toContain("voice_actor:voice_actors");
     expect(queryMocks.selectedColumns[0]).toContain("studio_data:studios");
@@ -339,6 +379,9 @@ describe("dubbing project detail queries", () => {
 
     await getDubbingProjectsForMediaEndpoint(31, "advertisement", "advertisement-page");
 
+    expectInnerMediaJoin();
+    expectMediaFilter("advertisement", 31);
+
     expect(queryMocks.selectedColumns[0]).not.toContain("*");
     expect(queryMocks.selectedColumns[0]).toContain("studio_data:studios");
   });
@@ -347,8 +390,7 @@ describe("dubbing project detail queries", () => {
     const rows = [
       {
         id: 17,
-        content_id: 1,
-        content_type: "movie",
+        media: { id: 900, kind: "movie", content_id: 1 },
         language: "fr-FR",
         extra: "project metadata",
         studio_data: {
@@ -393,7 +435,12 @@ describe("dubbing project detail queries", () => {
 
     const projects = await getDubbingProjectsForMediaEndpoint(1, "movie", undefined);
 
-    expect(projects).toEqual(rows);
+    const { media: _media, ...publicRow } = rows[0] ?? {};
+    // The database only returns `media`; the payload keeps the legacy content_id/content_type and hides `media`.
+    expect(projects).toEqual([{ ...publicRow, content_id: 1, content_type: "movie" }]);
+    expect(projects[0]).not.toHaveProperty("media");
+    expectInnerMediaJoin();
+    expectMediaFilter("movie", 1);
     expect(queryMocks.selectedColumns[0]).toContain("*,");
     expect(queryMocks.selectedColumns[0]).toContain("crew:dubbing_project_crew");
     expect(projects[0]?.crew[0]?.person).toMatchObject({
@@ -408,6 +455,8 @@ describe("dubbing project detail queries", () => {
 
     await expect(getDubbingProjectsForMediaEndpoint(1, "movie", "media-page")).resolves.toEqual([]);
 
+    expectInnerMediaJoin();
+    expectMediaFilter("movie", 1);
     expect(queryMocks.selectedColumns[0]).not.toContain("*");
     expect(queryMocks.selectedColumns[0]).toContain("studio_data:studios");
     expect(queryMocks.selectedColumns[0]).toContain("voice_actor:voice_actors");
@@ -416,6 +465,7 @@ describe("dubbing project detail queries", () => {
   it("selects toy page fields while retaining crew, cast, and studio data", async () => {
     const rows = [
       {
+        media: { id: 900, kind: "toy", content_id: 31 },
         id: 17,
         language: "fr-FR",
         studio_data: { id: 3, name: "Studio" },
@@ -447,7 +497,10 @@ describe("dubbing project detail queries", () => {
 
     const projects = await getToyPageDubbingProjects(31);
 
-    expect(projects).toMatchObject(rows);
+    expectInnerMediaJoin();
+    expectMediaFilter("toy", 31);
+    expect(projects[0]).not.toHaveProperty("media");
+    expect(projects).toMatchObject(rows.map(({ media: _media, ...project }) => project));
     expect(projects[0]?.crew?.[0]?.person).not.toHaveProperty("profile_picture");
     expect(queryMocks.selectedColumns[0]).not.toContain("*");
     expect(queryMocks.selectedColumns[0]).toContain("studio_data:studios(id, name)");
@@ -459,6 +512,7 @@ describe("dubbing project detail queries", () => {
   it("selects game page fields while retaining character links and studio data", async () => {
     const rows = [
       {
+        media: { id: 900, kind: "video_game", content_id: 31 },
         id: 21,
         language: "fr-FR",
         studio_data: {
@@ -486,7 +540,12 @@ describe("dubbing project detail queries", () => {
 
     const projects = await getGamePageDubbingProjects(31);
 
-    expect(projects).toMatchObject([{ ...rows[0], crew: [] }]);
+    expectInnerMediaJoin();
+    expectMediaFilter("video_game", 31);
+    expect(projects[0]).not.toHaveProperty("media");
+    expect(projects).toMatchObject(
+      rows.map(({ media: _media, ...project }) => ({ ...project, crew: [] })),
+    );
     expect(queryMocks.selectedColumns[0]).not.toContain("*");
     expect(queryMocks.selectedColumns[0]).toContain("studio_data:studios(id, name, logo_url)");
     expect(queryMocks.selectedColumns[0]).toContain("character_id");
@@ -528,6 +587,9 @@ describe("dubbing project detail queries", () => {
 
     const projects = await getSeasonPageDubbingProjects(31, "tv");
 
+    expectInnerMediaJoin();
+    expectMediaFilter("tv", 31);
+
     expect(projects).toEqual([
       {
         id: 17,
@@ -555,6 +617,8 @@ describe("actor page work query", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     queryMocks.selectedColumns.length = 0;
+    queryMocks.eqCalls.length = 0;
+    queryMocks.inCalls.length = 0;
   });
 
   it("selects reviewed_status for page roles", async () => {

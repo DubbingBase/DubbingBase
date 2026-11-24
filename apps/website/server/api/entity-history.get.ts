@@ -1,3 +1,4 @@
+import { MEDIA_EMBED, mediaRefFromEmbed } from "@app/shared-logic";
 import { resolveUser } from "../utils/auth";
 import { useSupabaseAdmin } from "../utils/db/client";
 import {
@@ -50,13 +51,14 @@ export default defineEventHandler(async (event): Promise<HistoryResponse> => {
   if (projectIds.size > 0) {
     const { data: projects, error: projectsError } = await supabase
       .from("dubbing_projects")
-      .select("id, content_id, content_type")
+      .select(`id, ${MEDIA_EMBED}`)
       .in("id", [...projectIds]);
     if (projectsError) {
       console.error("Failed to resolve history media links", { code: projectsError.code });
     }
     for (const project of projects ?? []) {
-      const path = mediaPath(project.content_type, project.content_id);
+      const ref = mediaRefFromEmbed(project.media);
+      const path = ref ? mediaPath(ref.contentType, ref.contentId) : null;
       if (path) mediaByProject.set(project.id, path);
     }
   }

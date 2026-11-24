@@ -1,10 +1,11 @@
 import type { IgdbCharacter, Tables } from "@app/shared-logic";
 import { useSupabaseAdmin } from "./db/client";
 
+// `igdb_game_id` is the IGDB id of the character's game (the database stores the game's `media_id`).
 type LocalGameCharacter = Pick<
   Tables<"game_characters">,
-  "id" | "igdb_game_id" | "name" | "igdb_character_id" | "wikidata_qid" | "updated_at"
->;
+  "id" | "name" | "igdb_character_id" | "wikidata_qid" | "updated_at"
+> & { igdb_game_id: number };
 
 export interface ResolvedGameCharacter extends Omit<IgdbCharacter, "id"> {
   id: number | null;
@@ -106,13 +107,19 @@ export async function loadGameCharacterCatalog(
   try {
     const { data, error } = await useSupabaseAdmin(event)
       .from("game_characters")
-      .select("id, igdb_game_id, name, igdb_character_id, wikidata_qid, updated_at")
-      .eq("igdb_game_id", gameId)
+      .select(
+        "id, name, igdb_character_id, wikidata_qid, updated_at, media:media_id!inner(content_id)",
+      )
+      .eq("media.kind", "video_game")
+      .eq("media.content_id", gameId)
       .order("name")
       .order("id");
 
     if (error) throw error;
-    localCharacters = data;
+    localCharacters = data.map(({ media: _media, ...character }) => ({
+      ...character,
+      igdb_game_id: gameId,
+    }));
   } catch (error) {
     localStatus = "unavailable";
     console.error("Failed to load local game characters", {

@@ -9,7 +9,7 @@ import {
 import { normalizeString } from "../../utils/normalize";
 import { processMedia } from "../../utils/urls/tmdb";
 import { useSupabaseAdmin } from "../../utils/db/client";
-import { readProperty } from "@app/shared-logic";
+import { mediaRefFromEmbed, readProperty } from "@app/shared-logic";
 import {
   getTmdbLocale,
   projectSearchResult,
@@ -282,9 +282,9 @@ export default defineEventHandler(async (event) => {
         for (let from = 0; ; from += pageSize) {
           const { data: projects, error } = await supabase
             .from("dubbing_projects")
-            .select("id, content_id, content_type, studios(name)")
-            .in("content_id", tmdbIds)
-            .in("content_type", ["movie", "tv"])
+            .select("id, studios(name), media:media_id!inner(id,kind,content_id)")
+            .in("media.kind", ["movie", "tv"])
+            .in("media.content_id", tmdbIds)
             .order("id", { ascending: true })
             .range(from, from + pageSize - 1);
           if (error) throw error;
@@ -292,7 +292,9 @@ export default defineEventHandler(async (event) => {
           for (const project of projects ?? []) {
             const studioName = project.studios?.name;
             if (!studioName) continue;
-            const key = `${project.content_type}:${project.content_id}`;
+            const ref = mediaRefFromEmbed(project.media);
+            if (!ref) continue;
+            const key = `${ref.contentType}:${ref.contentId}`;
             const names = studioNamesByMedia.get(key) ?? new Set<string>();
             names.add(studioName);
             studioNamesByMedia.set(key, names);

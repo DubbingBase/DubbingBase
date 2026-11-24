@@ -8,7 +8,7 @@ import {
   DUBBING_PROJECT_MEDIA_TYPES,
   type DubbingProjectMediaType,
 } from "../../src/utils/dubbing-project-save";
-import { isRecord } from "@app/shared-logic";
+import { eqMediaRef, isRecord, MEDIA_FILTER_EMBED } from "@app/shared-logic";
 
 type MediaType = DubbingProjectMediaType;
 
@@ -179,12 +179,14 @@ async function validateMediaReference(event: H3Event, body: LinkBody) {
   if (body.media_type === "video_game") {
     if (body.game_character_id) {
       const supabase = event.context.supabaseAdmin || useSupabaseAdmin(event);
-      const { data, error } = await supabase
-        .from("game_characters")
-        .select("id")
-        .eq("id", body.game_character_id)
-        .eq("igdb_game_id", body.media_id)
-        .maybeSingle();
+      const { data, error } = await eqMediaRef(
+        supabase
+          .from("game_characters")
+          .select(`id, ${MEDIA_FILTER_EMBED}`)
+          .eq("id", body.game_character_id),
+        "video_game",
+        body.media_id,
+      ).maybeSingle();
       if (error) throw linkError(500, "Local game character could not be verified");
       if (!data) throw linkError(422, "The selected character does not belong to this game");
       return;
@@ -242,11 +244,11 @@ async function validateMediaReference(event: H3Event, body: LinkBody) {
   }
 
   const supabase = event.context.supabaseAdmin || useSupabaseAdmin(event);
-  const { data, error } = await supabase
-    .from("dubbing_projects")
-    .select("id")
-    .eq("content_id", body.media_id)
-    .eq("content_type", body.media_type)
+  const { data, error } = await eqMediaRef(
+    supabase.from("dubbing_projects").select(`id, ${MEDIA_FILTER_EMBED}`),
+    body.media_type,
+    body.media_id,
+  )
     .limit(1)
     .maybeSingle();
   if (error) {

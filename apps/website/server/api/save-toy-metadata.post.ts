@@ -84,9 +84,9 @@ function isToyMetadataInput(value: unknown): value is ToyMetadataInput {
 function isToyMetadataRow(value: unknown): value is ToyMetadataRow {
   return (
     isRecord(value) &&
-    typeof value.content_id === "number" &&
-    Number.isSafeInteger(value.content_id) &&
-    value.content_id !== 0 &&
+    typeof value.media_id === "number" &&
+    Number.isSafeInteger(value.media_id) &&
+    value.media_id !== 0 &&
     typeof value.name === "string" &&
     (typeof value.manufacturer === "string" || value.manufacturer === null) &&
     (typeof value.product_line === "string" || value.product_line === null) &&
@@ -102,7 +102,7 @@ function isToyMetadataRow(value: unknown): value is ToyMetadataRow {
 
 function mapToy(row: ToyMetadataRow): Toy {
   return {
-    id: row.content_id,
+    id: row.media_id,
     name: row.name,
     manufacturer: row.manufacturer,
     ...(row.product_line === null ? {} : { product_line: row.product_line }),

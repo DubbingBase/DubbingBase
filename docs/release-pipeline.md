@@ -19,3 +19,13 @@ Required checks must report `success`; a skipped or cancelled check cannot satis
 Main-branch runs are not cancelled by newer commits, so a production migration is not interrupted by the workflow concurrency setting. Non-main runs remain cancellable. The production Supabase token is scoped to the main-only migration job; local migration validation has no production credentials.
 
 CI replays migrations on an empty local database and runs the repository's pgTAP tests. Data-dependent migrations still need realistic isolated local fixtures or a migration-checkpoint rehearsal. Production migrations should use backwards-compatible expand/contract steps when the current website may continue serving requests during the schema change. Do not assume a production migration can be rolled back.
+
+## Media identity cut-over (`20261123160000_media_identity.sql`)
+
+This migration drops `dubbing_projects.content_id/content_type`, `toy_metadata.content_id` and `game_characters.igdb_game_id`, so it is not an expand/contract change: the previous website build reads those columns and returns errors on uncached media, actor, studio, search and admin routes from the moment the migration commits until the new Worker is live. The RPC signatures are unchanged, so old callers of the save functions keep working.
+
+- Deploy the migration and the Worker back to back, during low traffic, and pause the cron triggers in `apps/website/wrangler.toml` and the queue consumers around the switch.
+- The migration sets `lock_timeout = '5s'` and runs in one transaction: if it cannot take its table locks it applies nothing and can simply be rerun.
+- There is no down migration. Take a database backup or PITR marker first; recovery is a restore.
+- Toys and advertisements keep their positive legacy ids as `media.id`; negative legacy ids get new ids.
+- `mise run reseed` loads the production dump at production's schema version and then applies newer migrations on top of the data, so a column-changing migration can be rehearsed against real data locally.

@@ -1,27 +1,42 @@
 import { useSupabaseAdmin } from "./client";
-import type { MediaDetailVoiceActor, ToyDubbingProject } from "@app/shared-logic";
+import {
+  MEDIA_EMBED,
+  MEDIA_FILTER_EMBED,
+  isMediaKind,
+  eqMediaRef,
+  mediaRefFromEmbed,
+  type MediaDetailVoiceActor,
+  type ToyDubbingProject,
+} from "@app/shared-logic";
 
-export async function getVoiceActorWithWork(id: number) {
-  const supabase = useSupabaseAdmin();
-  const { data, error } = await supabase
-    .from("voice_actors")
-    .select("*, work(id, dubbing_projects(content_id, content_type))")
-    .eq("id", id)
-    .single();
+function omitMedia<T extends { media: unknown }>({ media: _media, ...rest }: T): Omit<T, "media"> {
+  return rest;
+}
 
-  if (error) return null;
-  return data;
+/** Re-expose the provider reference of an embedded media as the legacy `content_id`/`content_type` pair. */
+export function withContentRef<T extends { media: Parameters<typeof mediaRefFromEmbed>[0] }>(
+  project: T,
+) {
+  const ref = mediaRefFromEmbed(project.media);
+  return {
+    ...omitMedia(project),
+    content_id: ref?.contentId ?? null,
+    content_type: ref?.contentType ?? null,
+  };
 }
 
 export async function getWorkByActor(actorId: number) {
   const supabase = useSupabaseAdmin();
   const { data, error } = await supabase
     .from("work")
-    .select("*, voice_actors(*), dubbing_projects(*)")
+    .select(`*, voice_actors(*), dubbing_projects(*, ${MEDIA_EMBED})`)
     .eq("actor_id", actorId);
 
   if (error) return [];
-  return data || [];
+  return (data || []).map((row) => ({
+    ...row,
+    dubbing_projects: row.dubbing_projects ? withContentRef(row.dubbing_projects) : null,
+  }));
 }
 
 export async function getActorPageWorkByActor(actorId: number) {
@@ -33,20 +48,23 @@ export async function getActorPageWorkByActor(actorId: number) {
       performance,
       reviewed_status,
       voice_actors(id, firstname, lastname, profile_picture),
-      dubbing_projects(language, content_id)`,
+      dubbing_projects(language, ${MEDIA_EMBED})`,
     )
     .eq("actor_id", actorId);
 
   if (error) throw error;
-  return data || [];
+  return (data || []).map((row) => ({
+    ...row,
+    dubbing_projects: row.dubbing_projects ? withContentRef(row.dubbing_projects) : null,
+  }));
 }
 
 export async function getDubbingProjects(contentId: number, contentType: string) {
   const supabase = useSupabaseAdmin();
-  const { data, error } = await supabase
-    .from("dubbing_projects")
-    .select(
-      `*,
+  if (!isMediaKind(contentType)) return [];
+  const kind = contentType;
+  const { data, error } = await eqMediaRef(
+    supabase.from("dubbing_projects").select(`*,
        studio_data:studios(*),
        works:work(
          *,
@@ -58,15 +76,18 @@ export async function getDubbingProjects(contentId: number, contentType: string)
          job_id,
          job:jobs(*),
          person:voice_actors(*)
-       )`,
-    )
-    .eq("content_id", contentId)
-    .eq("content_type", contentType);
+       ),
+       ${MEDIA_FILTER_EMBED}`),
+    kind,
+    contentId,
+  );
 
   if (error) return [];
 
   return (data || []).map((project) => ({
-    ...project,
+    ...omitMedia(project),
+    content_id: contentId,
+    content_type: kind,
     works: (project.works || []).map((work) => ({
       ...work,
       voice_actor: work.voice_actor ?? null,
@@ -147,16 +168,18 @@ const ADVERTISEMENT_PAGE_DUBBING_PROJECTS_SELECT = `id,
 
 export async function getAdvertisementPageDubbingProjects(contentId: number) {
   const supabase = useSupabaseAdmin();
-  const { data, error } = await supabase
-    .from("dubbing_projects")
-    .select(ADVERTISEMENT_PAGE_DUBBING_PROJECTS_SELECT)
-    .eq("content_id", contentId)
-    .eq("content_type", "advertisement");
+  const { data, error } = await eqMediaRef(
+    supabase
+      .from("dubbing_projects")
+      .select(`${ADVERTISEMENT_PAGE_DUBBING_PROJECTS_SELECT}, ${MEDIA_FILTER_EMBED}`),
+    "advertisement",
+    contentId,
+  );
 
   if (error) return [];
 
   return (data || []).map((project) => ({
-    ...project,
+    ...omitMedia(project),
     works: (project.works || []).map((work) => ({
       ...work,
       voice_actor: work.voice_actor ?? null,
@@ -171,11 +194,15 @@ export async function getAdvertisementPageDubbingProjects(contentId: number) {
 
 export async function getMediaPageDubbingProjectData(contentId: number, contentType: string) {
   const supabase = useSupabaseAdmin();
-  const { data, error } = await supabase
-    .from("dubbing_projects")
-    .select(MEDIA_DETAIL_PAGE_DUBBING_PROJECTS_SELECT)
-    .eq("content_id", contentId)
-    .eq("content_type", contentType);
+  if (!isMediaKind(contentType)) return { dubbingProjects: [], voiceActors: [] };
+  const kind = contentType;
+  const { data, error } = await eqMediaRef(
+    supabase
+      .from("dubbing_projects")
+      .select(`${MEDIA_DETAIL_PAGE_DUBBING_PROJECTS_SELECT}, ${MEDIA_FILTER_EMBED}`),
+    kind,
+    contentId,
+  );
 
   if (error) return { dubbingProjects: [], voiceActors: [] };
 
@@ -216,11 +243,15 @@ export async function getMediaPageDubbingProjects(
   projectId?: number,
 ) {
   const supabase = useSupabaseAdmin();
-  let query = supabase
-    .from("dubbing_projects")
-    .select(MEDIA_PAGE_DUBBING_PROJECTS_SELECT)
-    .eq("content_id", contentId)
-    .eq("content_type", contentType);
+  if (!isMediaKind(contentType)) return [];
+  const kind = contentType;
+  let query = eqMediaRef(
+    supabase
+      .from("dubbing_projects")
+      .select(`${MEDIA_PAGE_DUBBING_PROJECTS_SELECT}, ${MEDIA_FILTER_EMBED}`),
+    kind,
+    contentId,
+  );
 
   if (projectId !== undefined) query = query.eq("id", projectId);
 
@@ -229,7 +260,7 @@ export async function getMediaPageDubbingProjects(
   if (error) return [];
 
   return (data || []).map((project) => ({
-    ...project,
+    ...omitMedia(project),
     works: (project.works || []).map((work) => ({
       ...work,
       voice_actor: work.voice_actor ?? null,
@@ -241,10 +272,10 @@ export async function getMediaPageDubbingProjects(
 
 export async function getMediaPageDubbingProjectSummaries(contentId: number, contentType: string) {
   const supabase = useSupabaseAdmin();
-  const { data, error } = await supabase
-    .from("dubbing_projects")
-    .select(
-      `id,
+  if (!isMediaKind(contentType)) return [];
+  const kind = contentType;
+  const { data, error } = await eqMediaRef(
+    supabase.from("dubbing_projects").select(`id,
       language,
       studio_data:studios(id, name, logo_url),
       works:work(actor_id),
@@ -252,10 +283,11 @@ export async function getMediaPageDubbingProjectSummaries(contentId: number, con
         id,
         job:jobs(name),
         person:voice_actors(id, firstname, lastname)
-      )`,
-    )
-    .eq("content_id", contentId)
-    .eq("content_type", contentType);
+      ),
+       ${MEDIA_FILTER_EMBED}`),
+    kind,
+    contentId,
+  );
 
   if (error) return [];
 
@@ -299,16 +331,18 @@ const PODCAST_PAGE_DUBBING_PROJECTS_SELECT = `id,
 
 export async function getPodcastPageDubbingProjects(contentId: number) {
   const supabase = useSupabaseAdmin();
-  const { data, error } = await supabase
-    .from("dubbing_projects")
-    .select(PODCAST_PAGE_DUBBING_PROJECTS_SELECT)
-    .eq("content_id", contentId)
-    .eq("content_type", "podcast");
+  const { data, error } = await eqMediaRef(
+    supabase
+      .from("dubbing_projects")
+      .select(`${PODCAST_PAGE_DUBBING_PROJECTS_SELECT}, ${MEDIA_FILTER_EMBED}`),
+    "podcast",
+    contentId,
+  );
 
   if (error) return [];
 
   return (data || []).map((project) => ({
-    ...project,
+    ...omitMedia(project),
     works: (project.works || []).map((work) => ({
       ...work,
       voice_actor: work.voice_actor ?? null,
@@ -340,16 +374,18 @@ const TOY_PAGE_DUBBING_PROJECTS_SELECT = `id,
 
 export async function getToyPageDubbingProjects(contentId: number): Promise<ToyDubbingProject[]> {
   const supabase = useSupabaseAdmin();
-  const { data, error } = await supabase
-    .from("dubbing_projects")
-    .select(TOY_PAGE_DUBBING_PROJECTS_SELECT)
-    .eq("content_id", contentId)
-    .eq("content_type", "toy");
+  const { data, error } = await eqMediaRef(
+    supabase
+      .from("dubbing_projects")
+      .select(`${TOY_PAGE_DUBBING_PROJECTS_SELECT}, ${MEDIA_FILTER_EMBED}`),
+    "toy",
+    contentId,
+  );
 
   if (error) return [];
 
   return (data || []).map((project) => ({
-    ...project,
+    ...omitMedia(project),
     works: (project.works || []).map((work) => ({
       ...work,
       voice_actor: work.voice_actor ?? null,
@@ -378,16 +414,18 @@ const GAME_PAGE_DUBBING_PROJECTS_SELECT = `id,
 
 export async function getGamePageDubbingProjects(contentId: number) {
   const supabase = useSupabaseAdmin();
-  const { data, error } = await supabase
-    .from("dubbing_projects")
-    .select(GAME_PAGE_DUBBING_PROJECTS_SELECT)
-    .eq("content_id", contentId)
-    .eq("content_type", "video_game");
+  const { data, error } = await eqMediaRef(
+    supabase
+      .from("dubbing_projects")
+      .select(`${GAME_PAGE_DUBBING_PROJECTS_SELECT}, ${MEDIA_FILTER_EMBED}`),
+    "video_game",
+    contentId,
+  );
 
   if (error) return [];
 
   return (data || []).map((project) => ({
-    ...project,
+    ...omitMedia(project),
     works: (project.works || []).map((work) => ({
       ...work,
       voice_actor: work.voice_actor ?? null,
@@ -415,11 +453,13 @@ export async function getEpisodePageDubbingProjectData(
   locale?: string,
 ) {
   const supabase = useSupabaseAdmin();
-  const { data, error } = await supabase
-    .from("dubbing_projects")
-    .select(EPISODE_PAGE_DUBBING_PROJECTS_SELECT)
-    .eq("content_id", contentId)
-    .eq("content_type", "tv");
+  const { data, error } = await eqMediaRef(
+    supabase
+      .from("dubbing_projects")
+      .select(`${EPISODE_PAGE_DUBBING_PROJECTS_SELECT}, ${MEDIA_FILTER_EMBED}`),
+    "tv",
+    contentId,
+  );
 
   if (error) throw new Error("Failed to load episode dubbing projects");
 
@@ -433,7 +473,7 @@ export async function getEpisodePageDubbingProjectData(
     }
   >();
   const projectsWithWorks = (data || []).map((project) => ({
-    ...project,
+    ...omitMedia(project),
     works: (project.works || []).map((work) => {
       const voiceActorId = work.voice_actor?.id ?? null;
       if (voiceActorId !== null && !voiceActorsById.has(voiceActorId) && work.voice_actor) {
@@ -496,15 +536,16 @@ export async function getEpisodePageDubbingProjectData(
 
 export async function getEpisodePageProjectWorks(contentId: number, projectId: number) {
   const supabase = useSupabaseAdmin();
-  const { data, error } = await supabase
-    .from("dubbing_projects")
-    .select(
-      "id, works:work(id, actor_id, character_name, note, voice_actor:voice_actors(id, firstname, lastname, profile_picture))",
-    )
-    .eq("id", projectId)
-    .eq("content_id", contentId)
-    .eq("content_type", "tv")
-    .maybeSingle();
+  const { data, error } = await eqMediaRef(
+    supabase
+      .from("dubbing_projects")
+      .select(
+        `id, works:work(id, actor_id, character_name, note, voice_actor:voice_actors(id, firstname, lastname, profile_picture)), ${MEDIA_FILTER_EMBED}`,
+      )
+      .eq("id", projectId),
+    "tv",
+    contentId,
+  ).maybeSingle();
 
   if (error) throw new Error("Failed to load episode project works");
   if (!data) return { projectId, works: [], voiceActors: [] };
@@ -548,11 +589,15 @@ const SEASON_PAGE_DUBBING_PROJECTS_SELECT = `id,
 
 export async function getSeasonPageDubbingProjects(contentId: number, contentType: string) {
   const supabase = useSupabaseAdmin();
-  const { data, error } = await supabase
-    .from("dubbing_projects")
-    .select(SEASON_PAGE_DUBBING_PROJECTS_SELECT)
-    .eq("content_id", contentId)
-    .eq("content_type", contentType);
+  if (!isMediaKind(contentType)) return [];
+  const kind = contentType;
+  const { data, error } = await eqMediaRef(
+    supabase
+      .from("dubbing_projects")
+      .select(`${SEASON_PAGE_DUBBING_PROJECTS_SELECT}, ${MEDIA_FILTER_EMBED}`),
+    kind,
+    contentId,
+  );
 
   if (error) return [];
 

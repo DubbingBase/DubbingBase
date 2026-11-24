@@ -1,3 +1,4 @@
+import type { MediaEmbed } from "@app/shared-logic";
 import type { Tables } from "@app/supabase/types";
 import type { WorkExpectedValues } from "./dubbing-project-save";
 
@@ -43,8 +44,10 @@ export type EditorProjectWork = Pick<
 
 export type EditorProjectRecord = Pick<
   Tables<"dubbing_projects">,
-  "id" | "content_id" | "content_type" | "language" | "status" | "studio_id" | "updated_at"
+  "id" | "language" | "status" | "studio_id" | "updated_at"
 > & {
+  /** Embedded `MEDIA_EMBED` of the project. */
+  media: MediaEmbed | null;
   studios: Pick<Tables<"studios">, "name"> | null;
   work: EditorProjectWork[];
 };

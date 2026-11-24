@@ -17,8 +17,8 @@ VALUES ('Regional Audit', 'Two') RETURNING id AS va_two \gset
 INSERT INTO public.voice_actors(firstname, lastname)
 VALUES ('Regional Audit', 'Three') RETURNING id AS va_three \gset
 
-INSERT INTO public.dubbing_projects(content_id, content_type, language, status)
-VALUES (999995, 'movie', 'fr-FR', 'validated') RETURNING id AS unrelated_project_id \gset
+INSERT INTO public.dubbing_projects(media_id, language, status)
+VALUES (private.resolve_media('movie', 999995), 'fr-FR', 'validated') RETURNING id AS unrelated_project_id \gset
 INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, performance, status)
 VALUES (:'unrelated_project_id'::BIGINT, 720002, :'va_one'::BIGINT, 'voice', 'validated')
 RETURNING id AS unrelated_work_id \gset
@@ -150,7 +150,7 @@ BEGIN
       '00000000-0000-4000-8000-000000563671'::UUID
     );
     RAISE EXCEPTION 'A request ID was accepted with a different payload';
-  EXCEPTION WHEN SQLSTATE '40001' THEN
+  EXCEPTION WHEN SQLSTATE 'PT409' THEN
     NULL;
   END;
 
@@ -161,14 +161,14 @@ BEGIN
       'fr-FR',
       jsonb_build_array(jsonb_build_object(
         'actor_id', 720002,
-        'work_id', (SELECT id FROM public.work WHERE dubbing_project_id = (SELECT id FROM public.dubbing_projects WHERE content_id = 999995 AND content_type = 'movie' AND language = 'fr-FR')),
+        'work_id', (SELECT id FROM public.work WHERE dubbing_project_id = (SELECT project.id FROM public.dubbing_projects AS project JOIN public.media AS media ON media.id = project.media_id WHERE media.kind = 'movie' AND media.content_id = 999995 AND project.language = 'fr-FR')),
         'expected_voice_actor_id', (SELECT id FROM public.voice_actors WHERE firstname = 'Regional Audit' AND lastname = 'One'),
         'voice_actor_id', (SELECT id FROM public.voice_actors WHERE firstname = 'Regional Audit' AND lastname = 'Two')
       )),
       '00000000-0000-4000-8000-000000563672'::UUID
     );
     RAISE EXCEPTION 'A work from another project was accepted';
-  EXCEPTION WHEN SQLSTATE '40001' THEN
+  EXCEPTION WHEN SQLSTATE 'PT409' THEN
     NULL;
   END;
 
@@ -342,7 +342,7 @@ DECLARE
 BEGIN
   SELECT id INTO v_project_id
   FROM public.dubbing_projects
-  WHERE content_id = 999992 AND content_type = 'movie' AND language = 'fr-FR';
+  WHERE media_id = private.find_media_id('movie', 999992) AND language = 'fr-FR';
   SELECT id INTO v_work_id
   FROM public.work
   WHERE dubbing_project_id = v_project_id AND actor_id = 720001;
@@ -353,11 +353,15 @@ BEGIN
 
   IF EXISTS (
     SELECT 1 FROM public.dubbing_projects
-    WHERE content_id IN (999991, 999993, 999994) AND content_type = 'movie'
+    WHERE media_id IN (
+      SELECT id FROM public.media WHERE kind = 'movie' AND content_id IN (999991, 999993, 999994)
+    )
   ) OR EXISTS (
     SELECT 1 FROM public.audit_logs
     WHERE entity_type = 'dubbing_project'
-      AND new_value ->> 'content_id' IN ('999991', '999993', '999994')
+      AND new_value ->> 'media_id' IN (
+        SELECT id::TEXT FROM public.media WHERE kind = 'movie' AND content_id IN (999991, 999993, 999994)
+      )
   ) THEN
     RAISE EXCEPTION 'A mutation or audit failure left partial project/audit rows';
   END IF;
@@ -387,7 +391,7 @@ BEGIN
   IF v_project_audit.id IS NULL OR v_project_audit.user_id IS DISTINCT FROM '00000000-0000-4000-8000-000000563661'::UUID
     OR v_project_audit.action IS DISTINCT FROM 'create'
     OR v_project_audit.previous_value IS NOT NULL
-    OR v_project_audit.new_value ->> 'content_id' IS DISTINCT FROM '999992'
+    OR v_project_audit.new_value ->> 'media_id' IS DISTINCT FROM private.find_media_id('movie', 999992)::TEXT
     OR v_project_audit.new_value ->> 'language' IS DISTINCT FROM 'fr-FR'
     OR v_project_audit.created_at IS NULL THEN
     RAISE EXCEPTION 'Project audit lacks its actor, complete creation snapshot, or timestamp';
@@ -453,8 +457,9 @@ BEGIN
   SELECT id INTO v_audit_id
   FROM public.audit_logs
   WHERE entity_type = 'dubbing_project' AND entity_id = (
-    SELECT id::TEXT FROM public.dubbing_projects
-    WHERE content_id = 999992 AND content_type = 'movie' AND language = 'fr-FR'
+    SELECT project.id::TEXT FROM public.dubbing_projects AS project
+    JOIN public.media AS media ON media.id = project.media_id
+    WHERE media.kind = 'movie' AND media.content_id = 999992 AND project.language = 'fr-FR'
   );
 
   BEGIN
@@ -483,8 +488,9 @@ BEGIN
   SELECT id INTO v_audit_id
   FROM public.audit_logs
   WHERE entity_type = 'dubbing_project' AND entity_id = (
-    SELECT id::TEXT FROM public.dubbing_projects
-    WHERE content_id = 999992 AND content_type = 'movie' AND language = 'fr-FR'
+    SELECT project.id::TEXT FROM public.dubbing_projects AS project
+    JOIN public.media AS media ON media.id = project.media_id
+    WHERE media.kind = 'movie' AND media.content_id = 999992 AND project.language = 'fr-FR'
   );
 
   BEGIN

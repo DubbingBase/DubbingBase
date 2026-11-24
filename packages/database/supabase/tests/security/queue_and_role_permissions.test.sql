@@ -50,7 +50,7 @@ SELECT set_config(
   true
 );
 SELECT throws_ok(
-  $$INSERT INTO public.dubbing_projects (content_id, content_type) VALUES (910001, 'security_test_user_metadata')$$,
+  $$INSERT INTO public.dubbing_projects (media_id) VALUES (1)$$,
   '42501',
   NULL,
   'user_metadata admin cannot grant direct table write access'
@@ -62,7 +62,7 @@ SELECT set_config(
   true
 );
 SELECT throws_ok(
-  $$INSERT INTO public.dubbing_projects (content_id, content_type) VALUES (910002, 'security_test_app_admin')$$,
+  $$INSERT INTO public.dubbing_projects (media_id) VALUES (1)$$,
   '42501',
   NULL,
   'app_metadata admin cannot bypass controlled project writes'
@@ -74,7 +74,7 @@ SELECT set_config(
   true
 );
 SELECT throws_ok(
-  $$INSERT INTO public.dubbing_projects (content_id, content_type) VALUES (910003, 'security_test_app_editor')$$,
+  $$INSERT INTO public.dubbing_projects (media_id) VALUES (1)$$,
   '42501',
   NULL,
   'app_metadata editor cannot bypass controlled project writes'

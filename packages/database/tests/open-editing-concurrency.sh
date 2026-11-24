@@ -8,7 +8,7 @@ set -euo pipefail
 #   3. two simultaneous first picture uploads leave exactly one winner and one audit row.
 DB_HOST=127.0.0.1
 DB_PORT=${T10_TEST_DB_PORT:-55322}
-DB_NAME=postgres
+DB_NAME=${PGDATABASE:-postgres}
 DB_USER=postgres
 export PGPASSWORD=${T10_TEST_DB_PASSWORD:-postgres}
 
@@ -31,7 +31,8 @@ cleanup() {
 SET session_replication_role = replica;
 DELETE FROM public.audit_logs WHERE user_id IN ('$community_a', '$community_b', '$trusted_id');
 DELETE FROM public.work WHERE voice_actor_id = $voice_actor_id;
-DELETE FROM public.dubbing_projects WHERE content_id = $content_id AND content_type = 'movie';
+DELETE FROM public.dubbing_projects WHERE media_id IN (SELECT id FROM public.media WHERE kind = 'movie' AND content_id = $content_id);
+DELETE FROM public.media WHERE kind = 'movie' AND content_id = $content_id;
 DELETE FROM public.voice_actors WHERE id IN ($voice_actor_id, $picture_actor_id);
 DELETE FROM auth.users WHERE id IN ('$community_a', '$community_b', '$trusted_id');
 SQL
@@ -45,7 +46,7 @@ DO \$\$
 BEGIN
   IF EXISTS (SELECT 1 FROM auth.users WHERE id IN ('$community_a', '$community_b', '$trusted_id'))
      OR EXISTS (SELECT 1 FROM public.voice_actors WHERE id IN ($voice_actor_id, $picture_actor_id))
-     OR EXISTS (SELECT 1 FROM public.dubbing_projects WHERE content_id = $content_id AND content_type = 'movie') THEN
+     OR EXISTS (SELECT 1 FROM public.dubbing_projects WHERE media_id IN (SELECT id FROM public.media WHERE kind = 'movie' AND content_id = $content_id)) THEN
     RAISE EXCEPTION 'open editing concurrency fixture ids are already in use';
   END IF;
 END;

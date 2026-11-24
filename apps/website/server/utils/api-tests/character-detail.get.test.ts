@@ -158,7 +158,11 @@ describe("GET /api/character/:source/:id", () => {
           maybeSingle: vi.fn().mockResolvedValue({
             data: {
               id: gameCharacterId,
-              igdb_game_id: 456,
+              media: {
+                id: 456,
+                kind: "video_game",
+                content_id: 456,
+              },
               name: "Custom hero",
               igdb_character_id: 77,
             },

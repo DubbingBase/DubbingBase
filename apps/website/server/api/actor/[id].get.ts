@@ -131,12 +131,13 @@ async function getActorPageVoiceRoles(
         ...(row.reviewed_status === "accepted" || row.reviewed_status === "rejected"
           ? { reviewed_status: row.reviewed_status }
           : {}),
-        dubbing_projects: isRecord(row.dubbing_projects)
-          ? {
-              language: row.dubbing_projects.language,
-              content_id: row.dubbing_projects.content_id,
-            }
-          : null,
+        dubbing_projects:
+          row.dubbing_projects?.content_id != null
+            ? {
+                language: row.dubbing_projects.language,
+                content_id: row.dubbing_projects.content_id,
+              }
+            : null,
         voice_actors: row.voice_actors
           ? [
               {

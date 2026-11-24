@@ -10,16 +10,16 @@ export class AdvertisementClient {
       // Search in dubbing projects or custom ads stored in the database
       const { data, error } = await supabase
         .from("dubbing_projects")
-        .select("content_id, created_at, studios(name)")
-        .eq("content_type", "advertisement")
+        .select("media_id, created_at, studios(name), media:media_id!inner(kind)")
+        .eq("media.kind", "advertisement")
         .limit(limit);
       if (error) throw error;
 
       if (!data) return [];
 
       return data.map((item): Advertisement => ({
-        id: item.content_id,
-        title: `Spot Publicitaire #${item.content_id}`,
+        id: item.media_id,
+        title: `Spot Publicitaire #${item.media_id}`,
         brand: item.studios?.name || "Marque inconnue",
         media_type: "advertisement",
       }));
@@ -34,9 +34,9 @@ export class AdvertisementClient {
       const supabase = useSupabaseAdmin();
       const { data: project, error } = await supabase
         .from("dubbing_projects")
-        .select("*, studios(id, name)")
-        .eq("content_id", id)
-        .eq("content_type", "advertisement")
+        .select("*, studios(id, name), media:media_id!inner(kind)")
+        .eq("media_id", id)
+        .eq("media.kind", "advertisement")
         .order("created_at", { ascending: false, nullsFirst: false })
         .limit(1)
         .maybeSingle();

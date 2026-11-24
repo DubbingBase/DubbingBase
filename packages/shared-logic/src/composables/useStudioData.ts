@@ -3,16 +3,20 @@ import type { Tables } from "../types";
 
 export type Studio = Omit<Tables<"studios">, "social_media_links">;
 
-export type StudioDubbedProject = Pick<
-  Tables<"dubbing_projects">,
-  "id" | "content_type" | "content_id" | "language"
-> & {
-  media: {
-    title?: string | null;
-    name?: string | null;
-    poster_path?: string | null;
-  } | null;
-};
+/** Provider reference of a project (API vocabulary; the database stores `media_id`). */
+export interface ProjectMediaRef {
+  content_type: string;
+  content_id: number;
+}
+
+export type StudioDubbedProject = Pick<Tables<"dubbing_projects">, "id" | "language"> &
+  ProjectMediaRef & {
+    media: {
+      title?: string | null;
+      name?: string | null;
+      poster_path?: string | null;
+    } | null;
+  };
 
 export type StudioVoiceActor = Pick<
   Tables<"voice_actors">,

@@ -57,8 +57,7 @@ async function oldPath() {
     const actors = await request(`voice_actors?${actorQuery}`);
     const projectQuery = new URLSearchParams({
       select: "id",
-      content_id: `eq.${contentId}`,
-      content_type: "eq.movie",
+      media_id: `eq.${mediaId}`,
       language: "eq.fr-FR",
     });
     await request(`dubbing_projects?${projectQuery}`);
@@ -92,15 +91,21 @@ async function bulkPath() {
   }
 }
 
+let mediaId;
 let projectId;
 let voiceActorIds = [];
 try {
+  const medias = await request("media", {
+    method: "POST",
+    headers: { Prefer: "return=representation" },
+    body: JSON.stringify({ kind: "movie", content_id: contentId }),
+  });
+  mediaId = medias[0].id;
   const projects = await request("dubbing_projects", {
     method: "POST",
     headers: { Prefer: "return=representation" },
     body: JSON.stringify({
-      content_id: contentId,
-      content_type: "movie",
+      media_id: mediaId,
       language: "fr-FR",
     }),
   });
@@ -161,6 +166,9 @@ try {
       method: "DELETE",
     });
     await request(`dubbing_projects?id=eq.${projectId}`, { method: "DELETE" });
+  }
+  if (mediaId) {
+    await request(`media?id=eq.${mediaId}`, { method: "DELETE" });
   }
   if (voiceActorIds.length > 0) {
     await request(`voice_actors?id=in.(${voiceActorIds.join(",")})`, {

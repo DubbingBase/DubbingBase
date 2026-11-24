@@ -10,13 +10,24 @@ vi.mock("../db/client", () => ({
   useSupabaseAdmin: serviceMocks.useSupabaseAdmin,
 }));
 
+// Embedded media of a dubbing project, as returned by the `media:media_id(...)` select.
+function projectFor(kind: "movie" | "tv", externalId: number) {
+  return {
+    media: {
+      id: externalId,
+      kind,
+      content_id: externalId,
+    },
+  };
+}
+
 type VoiceActorWorkFixture = {
   id: number;
   actor_id: number | null;
   performance: string;
   character_name: string | null;
   note: string | null;
-  dubbing_projects: { content_id: number; content_type: "movie" | "tv" };
+  dubbing_projects: ReturnType<typeof projectFor>;
 };
 
 const duplicateMovieWorks: VoiceActorWorkFixture[] = [
@@ -26,7 +37,7 @@ const duplicateMovieWorks: VoiceActorWorkFixture[] = [
     performance: "First role",
     character_name: null,
     note: null,
-    dubbing_projects: { content_id: 900, content_type: "movie" },
+    dubbing_projects: projectFor("movie", 900),
   },
   {
     id: 102,
@@ -34,7 +45,7 @@ const duplicateMovieWorks: VoiceActorWorkFixture[] = [
     performance: "Second role",
     character_name: null,
     note: null,
-    dubbing_projects: { content_id: 900, content_type: "movie" },
+    dubbing_projects: projectFor("movie", 900),
   },
 ];
 
@@ -135,6 +146,17 @@ describe("MediaService voice actor media indexing", () => {
         profile_picture: "/first.jpg",
       },
     ]);
+    // The public payload keeps the provider reference on each work's project and does not expose the media embed.
+    expect(result.voiceActor.work.length).toBeGreaterThan(0);
+    for (const work of result.voiceActor.work) {
+      expect(work.dubbing_projects).toEqual(
+        expect.objectContaining({
+          content_type: expect.any(String),
+          content_id: expect.any(Number),
+        }),
+      );
+      expect(work.dubbing_projects).not.toHaveProperty("media");
+    }
   });
 
   it("omits regular credits when loading show details", async () => {
@@ -406,7 +428,7 @@ describe("MediaService voice actor media indexing", () => {
         performance: "Movie role",
         character_name: null,
         note: null,
-        dubbing_projects: { content_id: 900, content_type: "movie" },
+        dubbing_projects: projectFor("movie", 900),
       },
       {
         id: 202,
@@ -414,7 +436,7 @@ describe("MediaService voice actor media indexing", () => {
         performance: "TV role",
         character_name: null,
         note: null,
-        dubbing_projects: { content_id: 900, content_type: "tv" },
+        dubbing_projects: projectFor("tv", 900),
       },
     ];
     serviceMocks.useSupabaseAdmin.mockReturnValue(createSupabaseMock(works));
@@ -471,7 +493,7 @@ describe("MediaService voice actor media indexing", () => {
         performance: "Role",
         character_name: null,
         note: null,
-        dubbing_projects: { content_id: 900 + index, content_type: "movie" },
+        dubbing_projects: projectFor("movie", 900 + index),
       };
       serviceMocks.useSupabaseAdmin.mockReturnValue(createSupabaseMock([work]));
       vi.stubGlobal(

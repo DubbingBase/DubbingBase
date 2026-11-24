@@ -11,7 +11,7 @@ import {
   type DubbingProjectSaveRequest,
   type WorkExpectedValues,
 } from "../../src/utils/dubbing-project-save";
-import { isRecord } from "@app/shared-logic";
+import { eqMediaRef, isRecord } from "@app/shared-logic";
 
 function projectSaveError(statusCode: number, message: string) {
   return createError({ statusCode, statusMessage: message, message });
@@ -360,11 +360,13 @@ async function validateExternalReferences(body: ProjectSaveBody, event: H3EventT
       ),
     ];
     if (requestedLocalIds.length > 0) {
-      const { data, error } = await useSupabaseAdmin(event)
-        .from("game_characters")
-        .select("id, igdb_character_id")
-        .eq("igdb_game_id", contentId)
-        .in("id", requestedLocalIds);
+      const { data, error } = await eqMediaRef(
+        useSupabaseAdmin(event)
+          .from("game_characters")
+          .select("id, igdb_character_id, media:media_id!inner(id,kind,content_id)"),
+        "video_game",
+        contentId,
+      ).in("id", requestedLocalIds);
       if (error) {
         throw projectSaveError(503, "Local game characters could not be verified; try again");
       }
