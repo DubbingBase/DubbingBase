@@ -46,6 +46,9 @@ export const route = defineApiRoute({
         entityId: `${key.contentType}/${key.contentId}`,
         detail: `game character "${result.name}" registered`,
         path: sitePath(key.segment, key.contentId),
+        subject: `${key.contentType} #${key.contentId}`,
+        tag: "API · character registered",
+        fields: [{ name: "Character", value: result.name }],
       });
     }
     return result;

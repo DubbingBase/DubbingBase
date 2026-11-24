@@ -1,7 +1,7 @@
 import type { User } from "@supabase/supabase-js";
 import type { H3Event } from "h3";
 import { scheduleBackgroundTask } from "../background";
-import { sendDiscordAdminNotification } from "./discord";
+import { sendDiscordAdminNotification, type DiscordField } from "./discord";
 
 export type ContributionEdit = {
   /** Human-readable entity kind, for example "voice actor". */
@@ -13,6 +13,12 @@ export type ContributionEdit = {
   path: string;
   /** Set for edits made through the public API, which are always reported, admin tokens included. */
   via?: "api";
+  /** What was edited, shown first and linked to `path` (for example "Larian Studios · game"). */
+  subject?: string;
+  /** Short context after the subject, for example "API · fr-FR". */
+  tag?: string;
+  /** Labelled details, one per change, rendered as embed fields. */
+  fields?: DiscordField[];
 };
 
 /**
@@ -32,7 +38,7 @@ export function notifyContributionEdit(
       sendDiscordAdminNotification(
         "Community edit",
         `User ${user.id} edited ${edit.entity} #${edit.entityId}${edit.via === "api" ? " through the API" : ""}: ${edit.detail}`,
-        { event, url: edit.path },
+        { event, url: edit.path, subject: edit.subject, tag: edit.tag, fields: edit.fields },
       ),
     "contribution-edit-notification",
   );
