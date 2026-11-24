@@ -9,6 +9,10 @@ The Media-catalog.get subsystem handles **1 routes** and touches: db.
 - `GET` `/api/media-catalog` [db]
   `apps/website/server/api/media-catalog.get.ts`
 
+## Related Models
+
+- **media** (2 fields) → [database.md](./database.md)
+
 ## Source Files
 
 Read these before implementing or modifying this subsystem:

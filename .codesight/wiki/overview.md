@@ -8,7 +8,7 @@
 
 ## Scale
 
-75 API routes · 29 database models · 145 UI components · 143 library files · 15 middleware layers · 53 environment variables
+75 API routes · 30 database models · 145 UI components · 145 library files · 15 middleware layers · 53 environment variables
 
 ## Subsystems
 
@@ -68,11 +68,11 @@
 - **[Upload-profile-picture.post](./upload-profile-picture.post.md)** — 1 routes — touches: auth, cache, upload
 - **[Voice-actors.get](./voice-actors.get.md)** — 1 routes
 
-**Database:** unknown, 29 models — see [database.md](./database.md)
+**Database:** unknown, 30 models — see [database.md](./database.md)
 
 **UI:** 145 components (vue) — see [ui.md](./ui.md)
 
-**Libraries:** 143 files — see [libraries.md](./libraries.md)
+**Libraries:** 145 files — see [libraries.md](./libraries.md)
 
 ## High-Impact Files
 
@@ -83,7 +83,7 @@ Changes to these files have the widest blast radius across the codebase:
 - `apps/website/server/utils/index.ts` — imported by **28** files
 - `apps/website/server/utils/cache/index.ts` — imported by **18** files
 - `packages/shared-logic/src/types/index.ts` — imported by **12** files
-- `apps/website/server/utils/media-request.ts` — imported by **10** files
+- `apps/website/server/utils/db/queries.ts` — imported by **10** files
 
 ## Required Environment Variables
 
@@ -102,4 +102,4 @@ Changes to these files have the widest blast radius across the codebase:
 - _...25 more_
 
 ---
-_Back to [index.md](./index.md) · Generated 2026-11-23_
+_Back to [index.md](./index.md) · Generated 2026-11-24_

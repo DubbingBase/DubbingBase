@@ -97,13 +97,13 @@
 - `apps/website/server/utils/db/client.ts` — function useSupabaseAdmin: (event?) => SupabaseClient<Database>
 - `apps/website/server/utils/db/dubbing-project.ts` — function findOrCreateDubbingProject: (contentId, contentType, dubbingLanguage, actorId, voiceActorId, requestId) => Promise<number>
 - `apps/website/server/utils/db/queries.ts`
-  - function getVoiceActorWithWork: (id) => void
   - function getWorkByActor: (actorId) => void
   - function getActorPageWorkByActor: (actorId) => void
   - function getDubbingProjects: (contentId, contentType) => void
   - function getDubbingProjectsForMediaEndpoint: (contentId, contentType, projection) => void
   - function getAdvertisementPageDubbingProjects: (contentId) => void
-  - _...11 more_
+  - function getMediaPageDubbingProjectData: (contentId, contentType) => void
+  - _...10 more_
 - `apps/website/server/utils/dubbing-language.ts` — function requireDubbingLanguage: (value) => DubbingLanguage
 - `apps/website/server/utils/dubbing-region-detection.ts` — function detectDubbingRegionFromWikitext: ({...}, sections, }) => DubbingEvidence, type DubbingEvidence
 - `apps/website/server/utils/entity-history.ts`
@@ -297,6 +297,7 @@
 - `apps/website/src/composables/useDisplayLanguage.ts` — function useDisplayLanguage
 - `apps/website/src/composables/useDragScroll.ts` — function useDragScroll: (scrollRef) => void
 - `apps/website/src/composables/useDubbingLanguageLabel.ts` — function useDubbingLanguageLabel: () => void
+- `apps/website/src/composables/useDubbingProjectTabs.ts` — function useDubbingProjectTabs: () => void, type ProjectTabRow
 - `apps/website/src/composables/useEditorFormState.ts`
   - function createEditorFormState: (options) => EditorFormState
   - function createUnsavedChangesLeaveGuard: (isDirty) => void
@@ -457,10 +458,10 @@
   - function fetchStudioDetails: (studioId, projection?) => Promise<StudioDetailsResponse | null>
   - function fetchStudiosData: () => Promise<Studio[]>
   - function useStudioData: (initialStudios?, initialStudioDetails?) => void
+  - interface ProjectMediaRef
   - type Studio
   - type StudioDubbedProject
-  - type StudioVoiceActor
-  - _...1 more_
+  - _...2 more_
 - `packages/shared-logic/src/composables/useToyData.ts` — function fetchToyData: (id, locale?, projection?) => Promise<ToyResponse | null>
 - `packages/shared-logic/src/composables/useVoiceActorData.ts`
   - function fetchVoiceActorData: (id, lang?) => Promise<VoiceActorDataPayload | null>
@@ -483,6 +484,14 @@
   - type DubbingLanguage
   - const DUBBING_LANGUAGE_OPTIONS
   - const DEFAULT_DUBBING_LANGUAGE: DubbingLanguage
+- `packages/shared-logic/src/media-ref.ts`
+  - function isMediaKind: (value) => value is MediaKind
+  - function mediaRefFromEmbed: (media) => MediaRef | null
+  - function mediaRefFilters: (kind, contentId) => readonly (readonly [string, string | number])[]
+  - interface MediaEmbed
+  - interface MediaRef
+  - type MediaKind
+  - _...3 more_
 - `packages/shared-logic/src/utils/character.ts`
   - function createCharacterMatcher: (roleName) => (characterName: string) => boolean
   - function selectTvdbCharacter: (names, characters) => void

@@ -9,6 +9,10 @@ The Media-queue.post subsystem handles **1 routes** and touches: auth, queue.
 - `POST` `/api/media-queue` [auth, queue]
   `apps/website/server/api/media-queue.post.ts`
 
+## Related Models
+
+- **media** (2 fields) → [database.md](./database.md)
+
 ## Source Files
 
 Read these before implementing or modifying this subsystem:

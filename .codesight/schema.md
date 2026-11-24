@@ -209,3 +209,7 @@
 - expires_at: timestamp(tz)
 - last_used_at: timestamp(tz)
 - revoked_at: timestamp(tz)
+
+### media
+- id: bigint (pk)
+- kind: text (required)

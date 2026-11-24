@@ -9,6 +9,10 @@ The Internal-media-create.post subsystem handles **1 routes** and touches: auth.
 - `POST` `/api/internal-media-create` [auth]
   `apps/website/server/api/internal-media-create.post.ts`
 
+## Related Models
+
+- **media** (2 fields) → [database.md](./database.md)
+
 ## Source Files
 
 Read these before implementing or modifying this subsystem:

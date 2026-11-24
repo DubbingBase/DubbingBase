@@ -9,6 +9,10 @@ The Process-media-queue.post subsystem handles **1 routes** and touches: auth, c
 - `POST` `/api/process-media-queue` [auth, cache, queue]
   `apps/website/server/api/process-media-queue.post.ts`
 
+## Related Models
+
+- **media** (2 fields) → [database.md](./database.md)
+
 ## Source Files
 
 Read these before implementing or modifying this subsystem:

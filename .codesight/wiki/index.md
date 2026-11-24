@@ -1,6 +1,6 @@
 # dubbing-base-monorepo — Wiki
 
-_Generated 2026-11-23 — re-run `npx codesight --wiki` if the codebase has changed._
+_Generated 2026-11-24 — re-run `npx codesight --wiki` if the codebase has changed._
 
 Structural map compiled from source code via AST. No LLM — deterministic, 200ms.
 
@@ -71,7 +71,7 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 ## Quick Stats
 
 - Routes: **75**
-- Models: **29**
+- Models: **30**
 - Components: **145**
 - Env vars: **37** required, **16** with defaults
 
@@ -100,4 +100,4 @@ These exist in your codebase but are **not** reflected in wiki articles:
 When in doubt, search the source. The wiki is a starting point, not a complete inventory.
 
 ---
-_Last compiled: 2026-11-23 · 60 articles · [codesight](https://github.com/Houseofmvps/codesight)_
+_Last compiled: 2026-11-24 · 60 articles · [codesight](https://github.com/Houseofmvps/codesight)_
