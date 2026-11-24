@@ -8,7 +8,7 @@
 
 ## Scale
 
-75 API routes · 30 database models · 145 UI components · 145 library files · 15 middleware layers · 53 environment variables
+83 API routes · 30 database models · 145 UI components · 147 library files · 15 middleware layers · 53 environment variables
 
 ## Subsystems
 
@@ -16,10 +16,15 @@
 - **[[id].get](./[id].get.md)** — 12 routes — touches: auth, cache
 - **[[id].patch](./[id].patch.md)** — 1 routes — touches: auth
 - **[[id].put](./[id].put.md)** — 1 routes — touches: auth
+- **[[workId].get](./[workid].get.md)** — 1 routes
+- **[[workId].patch](./[workid].patch.md)** — 1 routes — touches: auth
 - **[Admin](./admin.md)** — 5 routes — touches: auth, queue, cache
+- **[Batch.post](./batch.post.md)** — 1 routes — touches: auth
 - **[Career-grid.get](./career-grid.get.md)** — 1 routes
 - **[Character-portraits.get](./character-portraits.get.md)** — 1 routes — touches: cache
+- **[Characters.get](./characters.get.md)** — 1 routes
 - **[Count-voice-actor-works.post](./count-voice-actor-works.post.md)** — 1 routes
+- **[Credits.get](./credits.get.md)** — 1 routes
 - **[Dashboard-stats.get](./dashboard-stats.get.md)** — 1 routes — touches: auth
 - **[Delete_user.post](./delete_user.post.md)** — 1 routes — touches: auth
 - **[Detail-collections.get](./detail-collections.get.md)** — 1 routes
@@ -32,8 +37,8 @@
 - **[Get-random-task.post](./get-random-task.post.md)** — 1 routes — touches: auth
 - **[Get-studio-details.get](./get-studio-details.get.md)** — 1 routes
 - **[Home-stats.get](./home-stats.get.md)** — 1 routes
-- **[Index.get](./index.get.md)** — 5 routes — touches: db, auth, cache
-- **[Index.post](./index.post.md)** — 1 routes — touches: auth, db, cache
+- **[Index.get](./index.get.md)** — 7 routes — touches: db, auth, cache
+- **[Index.post](./index.post.md)** — 2 routes — touches: auth, db, cache
 - **[Internal-media-create.post](./internal-media-create.post.md)** — 1 routes — touches: auth
 - **[Internal-media-credits.get](./internal-media-credits.get.md)** — 1 routes
 - **[Link-user-voice-actor.post](./link-user-voice-actor.post.md)** — 1 routes — touches: auth
@@ -72,18 +77,18 @@
 
 **UI:** 145 components (vue) — see [ui.md](./ui.md)
 
-**Libraries:** 145 files — see [libraries.md](./libraries.md)
+**Libraries:** 147 files — see [libraries.md](./libraries.md)
 
 ## High-Impact Files
 
 Changes to these files have the widest blast radius across the codebase:
 
-- `apps/website/server/utils/db/client.ts` — imported by **58** files
+- `apps/website/server/utils/db/client.ts` — imported by **65** files
 - `apps/website/server/utils/auth-handlers.ts` — imported by **29** files
 - `apps/website/server/utils/index.ts` — imported by **28** files
 - `apps/website/server/utils/cache/index.ts` — imported by **18** files
+- `apps/website/server/utils/api-v1/define.ts` — imported by **14** files
 - `packages/shared-logic/src/types/index.ts` — imported by **12** files
-- `apps/website/server/utils/db/queries.ts` — imported by **10** files
 
 ## Required Environment Variables
 

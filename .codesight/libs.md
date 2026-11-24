@@ -19,6 +19,14 @@
 - `apps/website/server/utils/api/tmdb.ts` — function tmdbEdgeCacheTtl: (endpoint) => number, class TMDBClient
 - `apps/website/server/utils/api/toy.ts` — class ToyClient
 - `apps/website/server/utils/api/tvdb.ts` — class TVDBClient, const TVDB_AUTH_TOKEN_NAMESPACE
+- `apps/website/server/utils/api-v1/credits.ts`
+  - function toCredit: (row, segment, contentId) => CreditOutput
+  - function requireMedia: (event, key) => Promise<void>
+  - function requireCredit: (event, key, workId) => void
+  - function errorCode: (error) => string
+  - function mutateCredits: (event, userId, operation, items, label) => void
+  - function notifyCreditChange: (event, userId, edit) => void
+  - _...5 more_
 - `apps/website/server/utils/api-v1/define.ts`
   - function defineApiRoute: (definition, TQuery, TResponse, TBody>) => void
   - function operationFor: (docs, components) => void
@@ -26,6 +34,14 @@
   - interface ApiRouteDocs
   - type SchemaComponents
 - `apps/website/server/utils/api-v1/errors.ts` — class ApiError
+- `apps/website/server/utils/api-v1/media.ts`
+  - function mediaKey: (segment, id) => MediaKey
+  - function sitePath: (segment, contentId) => string
+  - function apiMediaPath: (segment, contentId) => string
+  - function segmentOf: (contentType) => MediaSegment | null
+  - interface MediaKey
+  - type MediaSegment
+  - _...7 more_
 - `apps/website/server/utils/api-v1/spec.ts` — function buildOpenApiSpec: () => void
 - `apps/website/server/utils/api-v1/tokens.ts`
   - function hashApiToken: (token) => Promise<string>
@@ -168,7 +184,7 @@
   - function withMediaServiceTimeout: (request) => void
 - `apps/website/server/utils/narrow.ts` — function asString: (value) => string | undefined
 - `apps/website/server/utils/normalize.ts` — function normalizeString: (input) => string, function isExploitableVoiceActorName: (input) => boolean
-- `apps/website/server/utils/notifications/contribution.ts` — function notifyContributionEdit: (event, user, edit) => void, type ContributionEdit
+- `apps/website/server/utils/notifications/contribution.ts` — function notifyContributionEdit: (event, user, "id" | "app_metadata">, edit) => void, type ContributionEdit
 - `apps/website/server/utils/notifications/discord.ts`
   - function shortText: (text, max) => string
   - function errorFields: (operation, error, extra) => DiscordField[]

@@ -66,6 +66,14 @@
 - `POST` `/api/update-voice-actor` [auth, cache, upload] ✓
 - `POST` `/api/update_user_role` [auth]
 - `POST` `/api/upload-profile-picture` [auth, cache, upload] ✓
+- `GET` `/api/v1/:type/:id/characters` params(type, id)
+- `GET` `/api/v1/:type/:id/credits/:workId` params(type, id, workId)
+- `PATCH` `/api/v1/:type/:id/credits/:workId` params(type, id, workId) [auth]
+- `POST` `/api/v1/:type/:id/credits/batch` params(type, id) [auth]
+- `GET` `/api/v1/:type/:id/credits/index` params(type, id)
+- `GET` `/api/v1/:type/:id/index` params(type, id)
+- `POST` `/api/v1/:type/index` params(type) [auth]
+- `GET` `/api/v1/voice-actors/:id/credits` params(id)
 - `GET` `/api/v1/voice-actors/:id` params(id)
 - `PATCH` `/api/v1/voice-actors/:id` params(id) [auth]
 - `GET` `/api/v1/voice-actors/index`

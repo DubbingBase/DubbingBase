@@ -14,10 +14,15 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 - [[id].get](./[id].get.md)
 - [[id].patch](./[id].patch.md)
 - [[id].put](./[id].put.md)
+- [[workid].get](./[workid].get.md)
+- [[workid].patch](./[workid].patch.md)
 - [Admin](./admin.md)
+- [Batch.post](./batch.post.md)
 - [Career-grid.get](./career-grid.get.md)
 - [Character-portraits.get](./character-portraits.get.md)
+- [Characters.get](./characters.get.md)
 - [Count-voice-actor-works.post](./count-voice-actor-works.post.md)
+- [Credits.get](./credits.get.md)
 - [Dashboard-stats.get](./dashboard-stats.get.md)
 - [Delete_user.post](./delete_user.post.md)
 - [Detail-collections.get](./detail-collections.get.md)
@@ -70,7 +75,7 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 
 ## Quick Stats
 
-- Routes: **75**
+- Routes: **83**
 - Models: **30**
 - Components: **145**
 - Env vars: **37** required, **16** with defaults
@@ -100,4 +105,4 @@ These exist in your codebase but are **not** reflected in wiki articles:
 When in doubt, search the source. The wiki is a starting point, not a complete inventory.
 
 ---
-_Last compiled: 2026-11-24 · 60 articles · [codesight](https://github.com/Houseofmvps/codesight)_
+_Last compiled: 2026-11-24 · 65 articles · [codesight](https://github.com/Houseofmvps/codesight)_

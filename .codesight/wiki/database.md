@@ -312,7 +312,7 @@ pk: `id` (bigint)
 
 Read and edit these files when adding columns, creating migrations, or changing relations:
 
-- `apps/website/server/utils/db/client.ts` — imported by **58** files
+- `apps/website/server/utils/db/client.ts` — imported by **65** files
 - `apps/website/server/utils/db/queries.ts` — imported by **10** files
 
 ---
