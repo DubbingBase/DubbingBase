@@ -42,7 +42,8 @@ export function buildOpenApiSpec() {
           "3. Preview with `POST /{type}/{id}/credits/batch?dry_run=true` (up to 50 credits), which writes nothing and reports `create` or `unchanged` per item; " +
           "a `create` item carries `would_create` (character, voice actor, language, performance, cast ids).\n" +
           "4. Send the same body without `dry_run`. The batch is all or nothing: if one item is rejected, " +
-          "nothing is written and the error names it (`credits.2`). Sending a batch again is safe: roles that exist come back `unchanged`.\n" +
+          "nothing is written and the error names it (`credits.2`). Sending a batch again is safe: roles that exist come back `unchanged`. " +
+          "If you leave `game_character_id` out and one credit with that name, voice actor and cast id is already linked to a game character, it comes back `unchanged` with that `linked_game_character_id` and nothing is added; several such credits give 409 `ambiguous_credit`.\n" +
           "5. Fix a credit with `PATCH /{type}/{id}/credits/{workId}` (only `performance`). " +
           "The API cannot delete credits or change a character name; leave those to the website.",
         "## Rules",

@@ -4,7 +4,7 @@ import { asString } from "../narrow";
 import type { Json } from "@app/supabase/types";
 import * as v from "valibot";
 import { useSupabaseAdmin } from "../db/client";
-import { notifyContributionEdit } from "../notifications/contribution";
+import { notifyContributionEdit, type ContributionEdit } from "../notifications/contribution";
 import { ApiError } from "./errors";
 import { apiMediaPath, performanceSchema, type MediaKey } from "./media";
 
@@ -188,7 +188,7 @@ export async function mutateCredits(
 export function notifyCreditChange(
   event: H3Event,
   userId: string,
-  edit: { entity?: string; entityId: string | number; detail: string; path: string },
+  edit: Omit<ContributionEdit, "via" | "entity"> & { entity?: string },
 ): void {
   notifyContributionEdit(
     event,

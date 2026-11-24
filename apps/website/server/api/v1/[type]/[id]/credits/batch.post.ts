@@ -16,6 +16,7 @@ import {
   performanceSchema,
 } from "../../../../../utils/api-v1/media";
 import { useSupabaseAdmin } from "../../../../../utils/db/client";
+import { shortText } from "../../../../../utils/notifications/discord";
 
 const MAX_ITEMS = 50;
 
@@ -49,6 +50,11 @@ export const route = defineApiRoute({
         /** `create` adds a credit; `unchanged` means that voice actor already holds that role. */
         action: v.picklist(["create", "unchanged"]),
         credit: v.nullable(v.string()),
+        /**
+         * Set when `game_character_id` was omitted and the credit that matched by name is linked to
+         * a game character: that character's id. Null otherwise.
+         */
+        linked_game_character_id: v.nullable(v.string()),
         /** Dry run only: the credit a `create` item would add; null otherwise. */
         would_create: v.nullable(
           v.object({
@@ -69,7 +75,7 @@ export const route = defineApiRoute({
     const supabase = useSupabaseAdmin(event);
 
     // Everything is checked before the first write, so a bad item rejects the whole request.
-    const existing: (number | null)[] = [];
+    const existing: ({ id: number; linked: string | null } | null)[] = [];
     const actors: { id: number; firstname: string; lastname: string }[] = [];
     for (const [index, item] of body.credits.entries()) {
       if (item.game_character_id !== null && key.contentType !== "video_game") {
@@ -127,7 +133,7 @@ export const route = defineApiRoute({
         .eq("language", item.language)
         .maybeSingle();
       if (projectError) throw projectError;
-      let match: number | null = null;
+      let match: { id: number; linked: string | null } | null = null;
       if (project) {
         const { data: works, error: worksError } = await supabase
           .from("work")
@@ -136,13 +142,26 @@ export const route = defineApiRoute({
           .eq("voice_actor_id", item.voice_actor_id);
         if (worksError) throw worksError;
         const wanted = item.character_name.toLowerCase();
-        match =
-          (works ?? []).find(
-            (work) =>
-              work.actor_id === item.actor_id &&
-              work.game_character_id === item.game_character_id &&
-              work.character_name?.trim().toLowerCase() === wanted,
-          )?.id ?? null;
+        const sameRole = (works ?? []).filter(
+          (work) =>
+            work.actor_id === item.actor_id && work.character_name?.trim().toLowerCase() === wanted,
+        );
+        const exact = sameRole.find((work) => work.game_character_id === item.game_character_id);
+        if (exact) {
+          match = { id: exact.id, linked: null };
+        } else if (item.game_character_id === null && sameRole.length > 0) {
+          // The credit exists but is linked to a character this item left out: a retry that
+          // drops the id must not add a second credit for the same role.
+          if (sameRole.length > 1) {
+            throw new ApiError(
+              409,
+              "ambiguous_credit",
+              `credits.${index}: several credits with this name are linked to different game characters; send game_character_id.`,
+            );
+          }
+          const [only] = sameRole;
+          if (only) match = { id: only.id, linked: only.game_character_id };
+        }
       }
       existing.push(match);
     }
@@ -157,7 +176,8 @@ export const route = defineApiRoute({
           if (match !== null) {
             return {
               action: "unchanged" as const,
-              credit: `${base}/credits/${match}`,
+              credit: `${base}/credits/${match.id}`,
+              linked_game_character_id: match.linked,
               would_create: null,
             };
           }
@@ -166,6 +186,7 @@ export const route = defineApiRoute({
           return {
             action: "create" as const,
             credit: null,
+            linked_game_character_id: null,
             would_create: {
               character_name: item.character_name,
               voice_actor: actor,
@@ -179,34 +200,76 @@ export const route = defineApiRoute({
       };
     }
 
-    // One transaction: a rejected item rolls the whole batch back.
-    const written = await mutateCredits(
-      event,
-      auth.userId,
-      "create",
-      body.credits.map((item) => ({
-        voice_actor_id: item.voice_actor_id,
-        content_id: key.contentId,
-        content_type: key.contentType,
-        language: item.language,
-        actor_person_id: item.actor_id,
-        game_character_id: item.game_character_id,
-        character_name: item.character_name,
-        performance: item.performance,
-      })),
-      (index) => `credits.${index}`,
+    // One transaction: a rejected item rolls the whole batch back. Items that matched an
+    // existing credit by name are not sent, so they cannot be duplicated.
+    const toWrite = body.credits
+      .map((item, index) => ({ item, index }))
+      .filter(({ index }) => existing[index]?.linked == null);
+    const written = toWrite.length
+      ? await mutateCredits(
+          event,
+          auth.userId,
+          "create",
+          toWrite.map(({ item }) => ({
+            voice_actor_id: item.voice_actor_id,
+            content_id: key.contentId,
+            content_type: key.contentType,
+            language: item.language,
+            actor_person_id: item.actor_id,
+            game_character_id: item.game_character_id,
+            character_name: item.character_name,
+            performance: item.performance,
+          })),
+          (position) => `credits.${toWrite[position]?.index ?? position}`,
+        )
+      : [];
+    const writtenByIndex = new Map(
+      toWrite.map(({ index }, position) => [index, written[position]]),
     );
-    const results = written.map((credit) => ({
-      action: credit.created ? ("create" as const) : ("unchanged" as const),
-      credit: `${base}/credits/${credit.work_id}`,
-      would_create: null,
-    }));
+    const results = body.credits.map((_, index) => {
+      const name = existing[index];
+      if (name?.linked != null) {
+        return {
+          action: "unchanged" as const,
+          credit: `${base}/credits/${name.id}`,
+          linked_game_character_id: name.linked,
+          would_create: null,
+        };
+      }
+      const credit = writtenByIndex.get(index);
+      if (!credit) throw new Error("Credit missing after write");
+      return {
+        action: credit.created ? ("create" as const) : ("unchanged" as const),
+        credit: `${base}/credits/${credit.work_id}`,
+        linked_game_character_id: null,
+        would_create: null,
+      };
+    });
     const created = written.filter((credit) => credit.created).length;
     if (created > 0) {
       notifyCreditChange(event, auth.userId, {
         entityId: `${key.contentType}/${key.contentId}`,
         detail: `${created} cast credit${created === 1 ? "" : "s"} added`,
         path: sitePath(key.segment, key.contentId),
+        subject: `${key.contentType} #${key.contentId}`,
+        tag: "API · credits added",
+        // One line per new credit: who voices whom, so the admin can judge it without opening the page.
+        fields: written
+          .flatMap((credit, position) => {
+            const entry = toWrite[position];
+            const actor = entry ? actors[entry.index] : undefined;
+            if (!credit.created || !entry || !actor) return [];
+            return [
+              {
+                name: shortText(`${actor.firstname} ${actor.lastname}`.trim(), 80),
+                value: shortText(
+                  `${entry.item.character_name} · ${entry.item.language}${entry.item.performance ? ` · ${entry.item.performance}` : ""}`,
+                  200,
+                ),
+              },
+            ];
+          })
+          .slice(0, 10),
       });
     }
     return { dry_run: false, data: results };
