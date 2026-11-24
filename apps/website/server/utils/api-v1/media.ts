@@ -63,6 +63,20 @@ export function mediaKey(segment: MediaSegment, id: number): MediaKey {
   };
 }
 
+/** The website page of a media entry, for links sent to people (the API path needs a token). */
+export function sitePath(segment: MediaSegment, contentId: number): string {
+  const page = {
+    movies: "movie",
+    shows: "show",
+    games: "game",
+    podcasts: "podcast",
+    audiobooks: "audiobook",
+    advertisements: "advertisement",
+    toys: "toy",
+  } as const satisfies Record<MediaSegment, string>;
+  return `/${page[segment]}/${contentId}`;
+}
+
 export function apiMediaPath(segment: MediaSegment, contentId: number): string {
   return `/api/v1/${segment}/${contentId}`;
 }

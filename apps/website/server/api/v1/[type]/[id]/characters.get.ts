@@ -51,9 +51,10 @@ export const route = defineApiRoute({
           .range(from, from + PAGE - 1);
         if (error) throw error;
         for (const row of data ?? []) {
-          const name = row.character_name?.trim();
-          if (!name) continue;
-          const id = `${row.game_character_id ?? ""}|${name.toLowerCase()}`;
+          const name = row.character_name?.trim() ?? "";
+          // A game credit is identified by its registered character even when it has no name.
+          if (!name && !row.game_character_id) continue;
+          const id = row.game_character_id ?? `|${name.toLowerCase()}`;
           const group = groups.get(id) ?? {
             name,
             game_character_id: row.game_character_id,
@@ -70,22 +71,29 @@ export const route = defineApiRoute({
     }
     if (key.contentType === "video_game") {
       // Characters registered for the game appear even before they have a credit.
-      const { data, error } = await eqMediaRef(
-        supabase.from("game_characters").select(`id, name, ${MEDIA_FILTER_EMBED}`),
-        key.contentType,
-        key.contentId,
-      );
-      if (error) throw error;
-      for (const character of data ?? []) {
-        const id = `${character.id}|${character.name.trim().toLowerCase()}`;
-        if (!groups.has(id)) {
-          groups.set(id, {
+      for (let from = 0; ; from += PAGE) {
+        const { data, error } = await eqMediaRef(
+          supabase.from("game_characters").select(`id, name, ${MEDIA_FILTER_EMBED}`),
+          key.contentType,
+          key.contentId,
+        )
+          .order("id", { ascending: true })
+          .range(from, from + PAGE - 1);
+        if (error) throw error;
+        for (const character of data ?? []) {
+          const group = groups.get(character.id);
+          if (group) {
+            if (!group.name) group.name = character.name.trim();
+            continue;
+          }
+          groups.set(character.id, {
             name: character.name.trim(),
             game_character_id: character.id,
             languages: new Set<string>(),
             credits: 0,
           });
         }
+        if (!data || data.length < PAGE) break;
       }
     }
     return {

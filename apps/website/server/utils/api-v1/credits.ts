@@ -126,7 +126,14 @@ export function errorCode(error: unknown): string {
   return asString(readProperty(error, "code")) || "unknown";
 }
 
-const MutationResults = v.array(v.object({ work_id: v.number(), created: v.boolean() }));
+const MutationResults = v.array(
+  v.object({
+    work_id: v.number(),
+    created: v.boolean(),
+    /** The credit row as the transaction wrote it. */
+    after: v.nullable(v.record(v.string(), v.unknown())),
+  }),
+);
 
 type CreditOperation = "create" | "update";
 
@@ -186,6 +193,6 @@ export function notifyCreditChange(
   notifyContributionEdit(
     event,
     { id: userId, app_metadata: {} },
-    { entity: "cast credits of media", via: "api", ...edit },
+    { entity: "media", via: "api", ...edit },
   );
 }

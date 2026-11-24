@@ -8,7 +8,7 @@ import {
   toCredit,
 } from "../../../../../utils/api-v1/credits";
 import {
-  apiMediaPath,
+  sitePath,
   mediaKey,
   mediaSegment,
   performanceSchema,
@@ -26,7 +26,7 @@ export const route = defineApiRoute({
   handler: async ({ event, auth, params, body }) => {
     const key = mediaKey(params.type, params.id);
     const row = await requireCredit(event, key, params.workId);
-    await mutateCredits(
+    const [written] = await mutateCredits(
       event,
       auth.userId,
       "update",
@@ -42,9 +42,23 @@ export const route = defineApiRoute({
     notifyCreditChange(event, auth.userId, {
       entityId: `${key.contentType}/${key.contentId}`,
       detail: `credit #${params.workId} performance set to ${body.performance}`,
-      path: apiMediaPath(key.segment, key.contentId),
+      path: sitePath(key.segment, key.contentId),
     });
-    return toCredit(await requireCredit(event, key, params.workId), key.segment, key.contentId);
+    // Answer from the row the transaction wrote, not a second read another request may have changed.
+    const after = v.parse(
+      v.object({
+        performance: v.nullable(v.string()),
+        updated_at: v.string(),
+        note: v.nullable(v.string()),
+        highlight: v.nullable(v.boolean()),
+        reviewed_status: v.nullable(v.string()),
+        character_name: v.nullable(v.string()),
+        actor_id: v.nullable(v.number()),
+        game_character_id: v.nullable(v.string()),
+      }),
+      written?.after,
+    );
+    return toCredit({ ...row, ...after }, key.segment, key.contentId);
   },
 });
 

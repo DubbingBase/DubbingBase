@@ -12,6 +12,7 @@ import {
   mediaKey,
   mediaParams,
   apiMediaPath,
+  sitePath,
   performanceSchema,
 } from "../../../../../utils/api-v1/media";
 import { useSupabaseAdmin } from "../../../../../utils/db/client";
@@ -26,7 +27,7 @@ const BatchItem = v.strictObject({
   /** TMDB person id (movies, shows) or IGDB character id (games) of the on-screen cast member. */
   actor_id: v.optional(v.nullable(v.pipe(v.number(), v.integer(), v.minValue(1))), null),
   /** A character registered for this game (see the characters endpoint). Games only. */
-  game_character_id: v.optional(v.nullable(v.pipe(v.string(), v.uuid())), null),
+  game_character_id: v.optional(v.nullable(v.pipe(v.string(), v.uuid(), v.toLowerCase())), null),
 });
 
 export const route = defineApiRoute({
@@ -76,6 +77,24 @@ export const route = defineApiRoute({
           "invalid_request",
           `credits.${index}: use either actor_id or game_character_id.`,
         );
+      }
+      if (item.game_character_id !== null) {
+        // Same rule as the write: the character must be registered for this game.
+        const { data: character, error: characterError } = await eqMediaRef(
+          supabase.from("game_characters").select(`id, ${MEDIA_FILTER_EMBED}`),
+          key.contentType,
+          key.contentId,
+        )
+          .eq("id", item.game_character_id)
+          .maybeSingle();
+        if (characterError) throw characterError;
+        if (!character) {
+          throw new ApiError(
+            422,
+            "invalid_reference",
+            `credits.${index}: game character not found for this game.`,
+          );
+        }
       }
       const { data: actor, error: actorError } = await supabase
         .from("voice_actors")
@@ -155,7 +174,7 @@ export const route = defineApiRoute({
       notifyCreditChange(event, auth.userId, {
         entityId: `${key.contentType}/${key.contentId}`,
         detail: `${created} cast credit${created === 1 ? "" : "s"} added`,
-        path: base,
+        path: sitePath(key.segment, key.contentId),
       });
     }
     return { dry_run: false, data: results };

@@ -1,8 +1,13 @@
 import * as v from "valibot";
 import { defineApiRoute } from "../../../utils/api-v1/define";
-import { errorCode } from "../../../utils/api-v1/credits";
+import { errorCode, notifyCreditChange } from "../../../utils/api-v1/credits";
 import { ApiError } from "../../../utils/api-v1/errors";
-import { dubbingLanguage, internalSegment, apiMediaPath } from "../../../utils/api-v1/media";
+import {
+  dubbingLanguage,
+  internalSegment,
+  apiMediaPath,
+  sitePath,
+} from "../../../utils/api-v1/media";
 import { useSupabaseAdmin } from "../../../utils/db/client";
 
 const optionalText = v.optional(v.nullable(v.pipe(v.string(), v.trim(), v.maxLength(2000))), null);
@@ -38,7 +43,7 @@ export const route = defineApiRoute({
       throw new ApiError(400, "invalid_request", "Advertisements have no product line or year.");
     }
     const { data, error } = await (event.context.supabaseAdmin || useSupabaseAdmin(event)).rpc(
-      "create_internal_dubbing_project_with_metadata",
+      "api_create_internal_media",
       {
         p_actor_id: auth.userId,
         p_request_id: idempotencyKey,
@@ -49,7 +54,6 @@ export const route = defineApiRoute({
         p_manufacturer: body.manufacturer,
         p_product_line: body.product_line,
         p_release_year: body.release_year,
-        p_cover_url: null,
         p_description: body.description,
       },
     );
@@ -68,7 +72,7 @@ export const route = defineApiRoute({
         case "22003":
           throw new ApiError(422, "invalid_request", "The entry is invalid.");
         default:
-          console.error("create_internal_dubbing_project_with_metadata failed", errorCode(error));
+          console.error("api_create_internal_media failed", errorCode(error));
           throw new ApiError(500, "internal_error", "Internal server error.");
       }
     }
@@ -76,6 +80,13 @@ export const route = defineApiRoute({
       v.pipe(v.array(v.object({ content_id: v.number(), replayed: v.boolean() })), v.length(1)),
       data,
     );
+    if (created && !created.replayed) {
+      notifyCreditChange(event, auth.userId, {
+        entityId: `${params.type}/${created.content_id}`,
+        detail: `${isAd ? "advertisement" : "toy"} "${body.name}" created`,
+        path: sitePath(params.type, created.content_id),
+      });
+    }
     return {
       path: apiMediaPath(params.type, created?.content_id ?? 0),
       replayed: created?.replayed ?? false,
