@@ -1,3 +1,4 @@
+import { eqMediaRef, MEDIA_FILTER_EMBED } from "@app/shared-logic";
 import * as v from "valibot";
 import { defineApiRoute } from "../../../../utils/api-v1/define";
 import { requireMedia } from "../../../../utils/api-v1/credits";
@@ -28,11 +29,11 @@ export const route = defineApiRoute({
     const key = mediaKey(params.type, params.id);
     await requireMedia(event, key);
     const supabase = useSupabaseAdmin(event);
-    const { data: projects, error: projectError } = await supabase
-      .from("dubbing_projects")
-      .select("id, language")
-      .eq("content_type", key.contentType)
-      .eq("content_id", key.contentId);
+    const { data: projects, error: projectError } = await eqMediaRef(
+      supabase.from("dubbing_projects").select(`id, language, ${MEDIA_FILTER_EMBED}`),
+      key.contentType,
+      key.contentId,
+    );
     if (projectError) throw projectError;
     const languageOf = new Map((projects ?? []).map((project) => [project.id, project.language]));
 
@@ -69,10 +70,11 @@ export const route = defineApiRoute({
     }
     if (key.contentType === "video_game") {
       // Characters registered for the game appear even before they have a credit.
-      const { data, error } = await supabase
-        .from("game_characters")
-        .select("id, name")
-        .eq("igdb_game_id", key.contentId);
+      const { data, error } = await eqMediaRef(
+        supabase.from("game_characters").select(`id, name, ${MEDIA_FILTER_EMBED}`),
+        key.contentType,
+        key.contentId,
+      );
       if (error) throw error;
       for (const character of data ?? []) {
         const id = `${character.id}|${character.name.trim().toLowerCase()}`;

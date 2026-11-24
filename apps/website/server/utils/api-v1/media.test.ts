@@ -2,16 +2,16 @@ import { describe, expect, it } from "vitest";
 import { apiMediaPath, deriveRequestId, mediaKey, segmentOf } from "./media";
 
 describe("media addressing", () => {
-  it("maps provider media to its stored id and internal media to a negative one", () => {
+  it("maps each public segment to its media kind and reference id", () => {
     expect(mediaKey("movies", 603)).toMatchObject({ contentType: "movie", contentId: 603 });
     expect(mediaKey("shows", 1399)).toMatchObject({ contentType: "tv", contentId: 1399 });
     expect(mediaKey("games", 7)).toMatchObject({ contentType: "video_game", contentId: 7 });
-    expect(mediaKey("toys", 5)).toMatchObject({ contentType: "toy", contentId: -5 });
-    expect(mediaKey("advertisements", 9)).toMatchObject({ contentId: -9 });
+    expect(mediaKey("toys", 5)).toMatchObject({ contentType: "toy", contentId: 5 });
+    expect(mediaKey("advertisements", 9)).toMatchObject({ contentId: 9 });
   });
 
-  it("shows internal ids unsigned in paths and maps stored types back", () => {
-    expect(apiMediaPath("toys", -5)).toBe("/api/v1/toys/5");
+  it("builds paths and maps kinds back to segments", () => {
+    expect(apiMediaPath("toys", 5)).toBe("/api/v1/toys/5");
     expect(apiMediaPath("movies", 603)).toBe("/api/v1/movies/603");
     expect(segmentOf("video_game")).toBe("games");
     expect(segmentOf("tv")).toBe("shows");

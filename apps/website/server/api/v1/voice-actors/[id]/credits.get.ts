@@ -55,13 +55,13 @@ export const route = defineApiRoute({
     const last = page.at(-1);
     return {
       data: page.flatMap((row) => {
-        const project = row.dubbing_projects;
-        const segment = project ? segmentOf(project.content_type) : null;
-        if (!project || !segment) return [];
+        const media = row.dubbing_projects?.media;
+        const segment = media ? segmentOf(media.kind) : null;
+        if (!media || !segment) return [];
         return [
           {
-            ...toCredit(row, segment, project.content_id),
-            media: apiMediaPath(segment, project.content_id),
+            ...toCredit(row, segment, media.content_id),
+            media: apiMediaPath(segment, media.content_id),
           },
         ];
       }),

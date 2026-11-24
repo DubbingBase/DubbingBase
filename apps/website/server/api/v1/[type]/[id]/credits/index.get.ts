@@ -1,3 +1,4 @@
+import { eqMediaRef, MEDIA_FILTER_EMBED } from "@app/shared-logic";
 import * as v from "valibot";
 import { defineApiRoute } from "../../../../../utils/api-v1/define";
 import {
@@ -47,11 +48,11 @@ export const route = defineApiRoute({
     const key = mediaKey(params.type, params.id);
     await requireMedia(event, key);
     const supabase = useSupabaseAdmin(event);
-    let projects = supabase
-      .from("dubbing_projects")
-      .select("id")
-      .eq("content_type", key.contentType)
-      .eq("content_id", key.contentId);
+    let projects = eqMediaRef(
+      supabase.from("dubbing_projects").select(`id, ${MEDIA_FILTER_EMBED}`),
+      key.contentType,
+      key.contentId,
+    );
     if (query.language) projects = projects.eq("language", query.language);
     const { data: projectRows, error: projectError } = await projects;
     if (projectError) throw projectError;

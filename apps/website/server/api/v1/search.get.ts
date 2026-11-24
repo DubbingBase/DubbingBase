@@ -59,7 +59,7 @@ export const route = defineApiRoute({
       return [
         {
           type: segment,
-          id: Math.abs(parsed.output.id),
+          id: parsed.output.id,
           title,
           year,
           path: apiMediaPath(segment, parsed.output.id),

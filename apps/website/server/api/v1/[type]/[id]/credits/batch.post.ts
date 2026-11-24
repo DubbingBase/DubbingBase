@@ -1,3 +1,4 @@
+import { eqMediaRef, MEDIA_FILTER_EMBED } from "@app/shared-logic";
 import * as v from "valibot";
 import { defineApiRoute } from "../../../../../utils/api-v1/define";
 import { ApiError } from "../../../../../utils/api-v1/errors";
@@ -58,6 +59,8 @@ export const route = defineApiRoute({
 
     // Everything is checked before the first write, so a bad item rejects the whole request.
     const existing: (number | null)[] = [];
+    // One provider lookup per distinct cast reference, however many items share it.
+    const verified = new Set<string>();
     for (const [index, item] of body.credits.entries()) {
       if (item.game_character_id !== null && key.contentType !== "video_game") {
         throw new ApiError(400, "invalid_request", `credits.${index}: only games have characters.`);
@@ -86,13 +89,17 @@ export const route = defineApiRoute({
       if (!actor) {
         throw new ApiError(404, "not_found", `credits.${index}: voice actor not found.`);
       }
+      const reference = `${item.actor_id ?? ""}|${item.game_character_id ?? ""}`;
       try {
-        await validateMediaReference(event, {
-          media_type: key.contentType,
-          media_id: key.contentId,
-          actor_id: item.actor_id,
-          game_character_id: item.game_character_id,
-        });
+        if (!verified.has(reference)) {
+          await validateMediaReference(event, {
+            media_type: key.contentType,
+            media_id: key.contentId,
+            actor_id: item.actor_id,
+            game_character_id: item.game_character_id,
+          });
+          verified.add(reference);
+        }
       } catch (cause) {
         if (isStatus(cause, 422)) {
           throw new ApiError(
@@ -105,11 +112,11 @@ export const route = defineApiRoute({
       }
 
       // The same role is one credit: same project, voice actor, cast id and character name.
-      const { data: project, error: projectError } = await supabase
-        .from("dubbing_projects")
-        .select("id")
-        .eq("content_type", key.contentType)
-        .eq("content_id", key.contentId)
+      const { data: project, error: projectError } = await eqMediaRef(
+        supabase.from("dubbing_projects").select(`id, ${MEDIA_FILTER_EMBED}`),
+        key.contentType,
+        key.contentId,
+      )
         .eq("language", item.language)
         .maybeSingle();
       if (projectError) throw projectError;
@@ -164,7 +171,7 @@ export const route = defineApiRoute({
         p_performance: item.performance,
       });
       if (error) {
-        const progress = `${index} of ${body.credits.length} credits were written; retry with the same Idempotency-Key.`;
+        const progress = `${index} of ${body.credits.length} credits were written. Retry with the same Idempotency-Key and the same body to finish; a different body needs a new key.`;
         switch (errorCode(error)) {
           case "42501":
           case "28000":

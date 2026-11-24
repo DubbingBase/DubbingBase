@@ -1,5 +1,5 @@
 import type { H3Event } from "h3";
-import { readProperty } from "@app/shared-logic";
+import { eqMediaRef, MEDIA_EMBED, MEDIA_FILTER_EMBED, readProperty } from "@app/shared-logic";
 import { asString } from "../narrow";
 import * as v from "valibot";
 import { useSupabaseAdmin } from "../db/client";
@@ -34,8 +34,7 @@ export const Credit = v.object({
 
 export type CreditOutput = v.InferOutput<typeof Credit>;
 
-export const CREDIT_SELECT =
-  "id, dubbing_project_id, character_name, actor_id, game_character_id, performance, note, highlight, reviewed_status, updated_at, voice_actors(id, firstname, lastname), dubbing_projects(language, content_id, content_type)";
+export const CREDIT_SELECT = `id, dubbing_project_id, character_name, actor_id, game_character_id, performance, note, highlight, reviewed_status, updated_at, voice_actors(id, firstname, lastname), dubbing_projects(language, ${MEDIA_EMBED})`;
 
 const CreditRow = v.object({
   id: v.number(),
@@ -51,7 +50,10 @@ const CreditRow = v.object({
     v.object({ id: v.number(), firstname: v.string(), lastname: v.string() }),
   ),
   dubbing_projects: v.nullable(
-    v.object({ language: v.string(), content_id: v.number(), content_type: v.string() }),
+    v.object({
+      language: v.string(),
+      media: v.nullable(v.object({ id: v.number(), kind: v.string(), content_id: v.number() })),
+    }),
   ),
 });
 
@@ -87,16 +89,16 @@ export function toCredit(
  */
 export async function requireMedia(event: H3Event, key: MediaKey): Promise<void> {
   const supabase = useSupabaseAdmin(event);
-  const { data, error } = await supabase
-    .from("dubbing_projects")
-    .select("id")
-    .eq("content_type", key.contentType)
-    .eq("content_id", key.contentId)
+  const { data, error } = await eqMediaRef(
+    supabase.from("dubbing_projects").select(`id, ${MEDIA_FILTER_EMBED}`),
+    key.contentType,
+    key.contentId,
+  )
     .limit(1)
     .maybeSingle();
   if (error) throw error;
   if (data) return;
-  if (key.contentId > 0) {
+  if (key.contentType !== "advertisement" && key.contentType !== "toy") {
     try {
       await validateMediaReference(event, {
         media_type: key.contentType,
@@ -136,8 +138,8 @@ export async function requireCredit(event: H3Event, key: MediaKey, workId: numbe
   if (
     !row ||
     !project ||
-    project.content_type !== key.contentType ||
-    project.content_id !== key.contentId
+    project.media?.kind !== key.contentType ||
+    project.media.content_id !== key.contentId
   ) {
     throw new ApiError(404, "not_found", "Credit not found.");
   }

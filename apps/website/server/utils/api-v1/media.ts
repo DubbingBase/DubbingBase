@@ -3,7 +3,7 @@ import * as v from "valibot";
 import type { DubbingProjectMediaType } from "../../../src/utils/dubbing-project-save";
 import { positiveId } from "./voice-actors";
 
-/** Public path segment of each media type → the `dubbing_projects.content_type` it is stored under. */
+/** Public path segment of each media type → the `media.kind` it is stored under. */
 export const MEDIA_TYPES = {
   movies: "movie",
   shows: "tv",
@@ -25,9 +25,6 @@ const SEGMENTS = [
   "advertisements",
   "toys",
 ] as const satisfies readonly MediaSegment[];
-
-/** Ads and toys are internal entries stored under negative ids; the API shows them unsigned. */
-const INTERNAL_SEGMENTS: readonly MediaSegment[] = ["advertisements", "toys"];
 
 export const mediaSegment = v.picklist(SEGMENTS);
 export const internalSegment = v.picklist(["advertisements", "toys"]);
@@ -54,7 +51,7 @@ export const performanceSchema = v.picklist(PERFORMANCES);
 export interface MediaKey {
   segment: MediaSegment;
   contentType: DubbingProjectMediaType;
-  /** The `content_id` stored on dubbing projects (negative for internal media). */
+  /** The reference id: the provider id, or `media.id` for advertisements and toys. */
   contentId: number;
 }
 
@@ -62,12 +59,12 @@ export function mediaKey(segment: MediaSegment, id: number): MediaKey {
   return {
     segment,
     contentType: MEDIA_TYPES[segment],
-    contentId: INTERNAL_SEGMENTS.includes(segment) ? -id : id,
+    contentId: id,
   };
 }
 
 export function apiMediaPath(segment: MediaSegment, contentId: number): string {
-  return `/api/v1/${segment}/${Math.abs(contentId)}`;
+  return `/api/v1/${segment}/${contentId}`;
 }
 
 export function segmentOf(contentType: string): MediaSegment | null {

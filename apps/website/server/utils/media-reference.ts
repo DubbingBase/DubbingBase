@@ -62,7 +62,8 @@ export async function validateMediaReference(event: H3Event, body: MediaReferenc
         body.media_id,
       ).maybeSingle();
       if (error) throw mediaReferenceError(500, "Local game character could not be verified");
-      if (!data) throw mediaReferenceError(422, "The selected character does not belong to this game");
+      if (!data)
+        throw mediaReferenceError(422, "The selected character does not belong to this game");
       return;
     }
     const igdb = useIgdbClient();
