@@ -96,7 +96,17 @@ function parseWikipediaSections(value: unknown): WikipediaSectionsResponse {
   const parse = root.parse;
   const parseSections = (value: unknown): WikipediaSection[] | undefined => {
     if (!Array.isArray(value)) return undefined;
-    return value.map((section) => {
+    const parsed: WikipediaSection[] = [];
+    for (const section of value) {
+      // Sections transcluded from templates carry indexes like "T-1". They cannot be
+      // fetched by index, so they are not candidates rather than a malformed response.
+      if (
+        isJsonObject(section) &&
+        typeof section.index === "string" &&
+        /^T-\d+$/.test(section.index)
+      ) {
+        continue;
+      }
       if (
         !isJsonObject(section) ||
         typeof section.line !== "string" ||
@@ -109,8 +119,9 @@ function parseWikipediaSections(value: unknown): WikipediaSectionsResponse {
       if (!Number.isInteger(index)) {
         throw new Error("Wikipedia returned an invalid section list response");
       }
-      return { index, line: section.line };
-    });
+      parsed.push({ index, line: section.line });
+    }
+    return parsed;
   };
   const tocdata = isJsonObject(parse.tocdata) ? parse.tocdata : undefined;
   const sections = parseSections(parse.sections);

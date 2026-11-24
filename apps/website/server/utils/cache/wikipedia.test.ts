@@ -238,4 +238,26 @@ describe("extractAvailableLanguages", () => {
       }),
     ).toEqual(["fr", "en"]);
   });
+
+  it("ignores template-transcluded sections with T- indexes", async () => {
+    vi.stubGlobal(
+      "fetch",
+      async () =>
+        new Response(
+          JSON.stringify({
+            parse: {
+              sections: [
+                { index: "T-1", line: "Transcluded" },
+                { index: "2", line: "Casting" },
+              ],
+            },
+          }),
+        ),
+    );
+    const cache = new WikipediaCache(new SimpleCache(() => null));
+
+    const result = await cache.getPageSections(1, "pt");
+    expect(JSON.stringify(result)).toContain("Casting");
+    expect(JSON.stringify(result)).not.toContain("Transcluded");
+  });
 });
