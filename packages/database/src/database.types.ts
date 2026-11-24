@@ -933,6 +933,10 @@ export type Database = {
           replayed: boolean;
         }[];
       };
+      api_mutate_credits: {
+        Args: { p_items: Json; p_operation: string; p_user_id: string };
+        Returns: Json;
+      };
       apply_extracted_credits: {
         Args: {
           p_content_id: number;

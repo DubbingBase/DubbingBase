@@ -2,9 +2,12 @@ import { eqMediaRef, MEDIA_FILTER_EMBED } from "@app/shared-logic";
 import * as v from "valibot";
 import { defineApiRoute } from "../../../../../utils/api-v1/define";
 import { ApiError } from "../../../../../utils/api-v1/errors";
-import { errorCode, isStatus, requireMedia } from "../../../../../utils/api-v1/credits";
 import {
-  deriveRequestId,
+  mutateCredits,
+  notifyCreditChange,
+  requireMedia,
+} from "../../../../../utils/api-v1/credits";
+import {
   dubbingLanguage,
   mediaKey,
   mediaParams,
@@ -12,7 +15,6 @@ import {
   performanceSchema,
 } from "../../../../../utils/api-v1/media";
 import { useSupabaseAdmin } from "../../../../../utils/db/client";
-import { validateMediaReference } from "../../../../../utils/media-reference";
 
 const MAX_ITEMS = 50;
 
@@ -31,7 +33,6 @@ export const route = defineApiRoute({
   summary: "Add credits",
   tags: ["Credits"],
   scope: "credits:write",
-  idempotent: true,
   params: mediaParams,
   query: v.object({
     /** `true` validates everything and reports what would happen without writing. */
@@ -50,17 +51,13 @@ export const route = defineApiRoute({
       }),
     ),
   }),
-  handler: async ({ event, auth, params, query, body, idempotencyKey }) => {
-    if (idempotencyKey === null)
-      throw new ApiError(500, "internal_error", "Internal server error.");
+  handler: async ({ event, auth, params, query, body }) => {
     const key = mediaKey(params.type, params.id);
     await requireMedia(event, key);
     const supabase = useSupabaseAdmin(event);
 
     // Everything is checked before the first write, so a bad item rejects the whole request.
     const existing: (number | null)[] = [];
-    // One provider lookup per distinct cast reference, however many items share it.
-    const verified = new Set<string>();
     for (const [index, item] of body.credits.entries()) {
       if (item.game_character_id !== null && key.contentType !== "video_game") {
         throw new ApiError(400, "invalid_request", `credits.${index}: only games have characters.`);
@@ -89,28 +86,6 @@ export const route = defineApiRoute({
       if (!actor) {
         throw new ApiError(404, "not_found", `credits.${index}: voice actor not found.`);
       }
-      const reference = `${item.actor_id ?? ""}|${item.game_character_id ?? ""}`;
-      try {
-        if (!verified.has(reference)) {
-          await validateMediaReference(event, {
-            media_type: key.contentType,
-            media_id: key.contentId,
-            actor_id: item.actor_id,
-            game_character_id: item.game_character_id,
-          });
-          verified.add(reference);
-        }
-      } catch (cause) {
-        if (isStatus(cause, 422)) {
-          throw new ApiError(
-            422,
-            "invalid_reference",
-            `credits.${index}: the media, actor or character is not known to its provider.`,
-          );
-        }
-        throw new ApiError(503, "provider_unavailable", "The media provider could not be reached.");
-      }
-
       // The same role is one credit: same project, voice actor, cast id and character name.
       const { data: project, error: projectError } = await eqMediaRef(
         supabase.from("dubbing_projects").select(`id, ${MEDIA_FILTER_EMBED}`),
@@ -140,68 +115,50 @@ export const route = defineApiRoute({
       existing.push(match);
     }
 
-    // The generated argument types make nullable parameters non-null, which the functions accept.
-    const rpcClient = event.context.supabaseAdmin || useSupabaseAdmin(event);
     const base = apiMediaPath(key.segment, key.contentId);
     const dryRun = query.dry_run === "true";
-    const results: { action: "create" | "unchanged"; credit: string | null }[] = [];
-    for (const [index, item] of body.credits.entries()) {
-      const match = existing[index] ?? null;
-      if (dryRun) {
-        results.push(
-          match === null
-            ? { action: "create", credit: null }
-            : { action: "unchanged", credit: `${base}/credits/${match}` },
-        );
-        continue;
-      }
-      // Each item is written by an idempotent database function keyed by a request id derived
-      // from the key and position, so retrying a request that stopped midway with the same
-      // Idempotency-Key finishes it without duplicating anything.
-      const { data, error } = await rpcClient.rpc("create_voice_actor_work_link", {
-        p_user_id: auth.userId,
-        p_request_id: await deriveRequestId(idempotencyKey, index),
-        p_voice_actor_id: item.voice_actor_id,
-        p_content_id: key.contentId,
-        p_content_type: key.contentType,
-        p_language: item.language,
-        p_actor_person_id: item.actor_id,
-        p_game_character_id: item.game_character_id,
-        p_character_name: item.character_name,
-        p_performance: item.performance,
-      });
-      if (error) {
-        const progress = `${index} of ${body.credits.length} credits were written. Retry with the same Idempotency-Key and the same body to finish; a different body needs a new key.`;
-        switch (errorCode(error)) {
-          case "42501":
-          case "28000":
-            throw new ApiError(403, "forbidden", "Not allowed to add credits.");
-          case "55000":
-          case "23505":
-          case "40001":
-          case "40P01":
-          case "PT409":
-            throw new ApiError(409, "conflict", `Conflicting change. ${progress}`);
-          case "22023":
-          case "23503":
-          case "22P02":
-          case "22003":
-            throw new ApiError(422, "invalid_reference", `credits.${index} was rejected.`);
-          default:
-            console.error("create_voice_actor_work_link failed", errorCode(error));
-            throw new ApiError(500, "internal_error", "Internal server error.");
-        }
-      }
-      const [created] = v.parse(
-        v.pipe(v.array(v.object({ work_id: v.number() })), v.length(1)),
-        data,
-      );
-      results.push({
-        action: match === null ? "create" : "unchanged",
-        credit: `${base}/credits/${created?.work_id}`,
+    if (dryRun) {
+      return {
+        dry_run: true,
+        data: body.credits.map((_, index) => {
+          const match = existing[index] ?? null;
+          return match === null
+            ? { action: "create" as const, credit: null }
+            : { action: "unchanged" as const, credit: `${base}/credits/${match}` };
+        }),
+      };
+    }
+
+    // One transaction: a rejected item rolls the whole batch back.
+    const written = await mutateCredits(
+      event,
+      auth.userId,
+      "create",
+      body.credits.map((item) => ({
+        voice_actor_id: item.voice_actor_id,
+        content_id: key.contentId,
+        content_type: key.contentType,
+        language: item.language,
+        actor_person_id: item.actor_id,
+        game_character_id: item.game_character_id,
+        character_name: item.character_name,
+        performance: item.performance,
+      })),
+      (index) => `credits.${index}`,
+    );
+    const results = written.map((credit) => ({
+      action: credit.created ? ("create" as const) : ("unchanged" as const),
+      credit: `${base}/credits/${credit.work_id}`,
+    }));
+    const created = written.filter((credit) => credit.created).length;
+    if (created > 0) {
+      notifyCreditChange(event, auth.userId, {
+        entityId: `${key.contentType}/${key.contentId}`,
+        detail: `${created} cast credit${created === 1 ? "" : "s"} added`,
+        path: base,
       });
     }
-    return { dry_run: dryRun, data: results };
+    return { dry_run: false, data: results };
   },
 });
 

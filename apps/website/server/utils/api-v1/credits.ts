@@ -1,11 +1,12 @@
 import type { H3Event } from "h3";
-import { eqMediaRef, MEDIA_EMBED, MEDIA_FILTER_EMBED, readProperty } from "@app/shared-logic";
+import { MEDIA_EMBED, readProperty } from "@app/shared-logic";
 import { asString } from "../narrow";
+import type { Json } from "@app/supabase/types";
 import * as v from "valibot";
 import { useSupabaseAdmin } from "../db/client";
+import { notifyContributionEdit } from "../notifications/contribution";
 import { ApiError } from "./errors";
 import { apiMediaPath, performanceSchema, type MediaKey } from "./media";
-import { validateMediaReference } from "../media-reference";
 
 export const CreditActor = v.object({
   id: v.number(),
@@ -84,44 +85,18 @@ export function toCredit(
 }
 
 /**
- * Confirms the media exists: it needs dubbing projects already, or (for provider media) to
- * exist at the provider so a first credit may create its project. Unknown media is a 404.
+ * Confirms the media is known to DubbingBase. The API never calls the media providers, so
+ * media nobody has opened on the website yet is a 404.
  */
 export async function requireMedia(event: H3Event, key: MediaKey): Promise<void> {
-  const supabase = useSupabaseAdmin(event);
-  const { data, error } = await eqMediaRef(
-    supabase.from("dubbing_projects").select(`id, ${MEDIA_FILTER_EMBED}`),
-    key.contentType,
-    key.contentId,
-  )
-    .limit(1)
+  const { data, error } = await useSupabaseAdmin(event)
+    .from("media")
+    .select("id")
+    .eq("kind", key.contentType)
+    .eq("content_id", key.contentId)
     .maybeSingle();
   if (error) throw error;
-  if (data) return;
-  if (key.contentType !== "advertisement" && key.contentType !== "toy") {
-    try {
-      await validateMediaReference(event, {
-        media_type: key.contentType,
-        media_id: key.contentId,
-        actor_id: null,
-        game_character_id: null,
-      });
-      return;
-    } catch (cause) {
-      if (isStatus(cause, 422)) throw new ApiError(404, "not_found", "Media not found.");
-      throw new ApiError(503, "provider_unavailable", "The media provider could not be reached.");
-    }
-  }
-  throw new ApiError(404, "not_found", "Media not found.");
-}
-
-export function isStatus(error: unknown, status: number): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "statusCode" in error &&
-    error.statusCode === status
-  );
+  if (!data) throw new ApiError(404, "not_found", "Media not found.");
 }
 
 /** Looks up the credit and checks it belongs to the media in the path. */
@@ -149,4 +124,68 @@ export async function requireCredit(event: H3Event, key: MediaKey, workId: numbe
 /** The SQLSTATE of a failed database call, or "unknown". */
 export function errorCode(error: unknown): string {
   return asString(readProperty(error, "code")) || "unknown";
+}
+
+const MutationResults = v.array(v.object({ work_id: v.number(), created: v.boolean() }));
+
+type CreditOperation = "create" | "update" | "delete";
+
+/**
+ * Applies credit changes as the token's owner through `api_mutate_credits`: one transaction,
+ * so either every item is written or none is. Database failures become API errors; `label`
+ * names the item that was rejected.
+ */
+export async function mutateCredits(
+  event: H3Event,
+  userId: string,
+  operation: CreditOperation,
+  items: Json[],
+  label: (index: number) => string,
+): Promise<v.InferOutput<typeof MutationResults>> {
+  // The generated argument types make nullable parameters non-null, which the functions accept.
+  const client = event.context.supabaseAdmin || useSupabaseAdmin(event);
+  const { data, error } = await client.rpc("api_mutate_credits", {
+    p_user_id: userId,
+    p_operation: operation,
+    p_items: items,
+  });
+  if (error) {
+    const index = Number.parseInt(error.hint ?? "", 10);
+    const where = Number.isInteger(index) ? label(index) : "A credit";
+    switch (errorCode(error)) {
+      case "42501":
+      case "28000":
+        throw new ApiError(403, "forbidden", `${where}: not allowed.`);
+      case "P0002":
+        throw new ApiError(404, "not_found", `${where}: credit not found.`);
+      case "55000":
+      case "23505":
+      case "40001":
+      case "40P01":
+      case "PT409":
+        throw new ApiError(409, "conflict", `${where}: conflicting change; nothing was written.`);
+      case "22023":
+      case "23503":
+      case "22P02":
+      case "22003":
+        throw new ApiError(422, "invalid_reference", `${where} was rejected; nothing was written.`);
+      default:
+        console.error("api_mutate_credits failed", errorCode(error));
+        throw new ApiError(500, "internal_error", "Internal server error.");
+    }
+  }
+  return v.parse(MutationResults, data);
+}
+
+/** Reports an API credit change to the admin channel like a website contribution, once per request. */
+export function notifyCreditChange(
+  event: H3Event,
+  userId: string,
+  edit: { entityId: string | number; detail: string; path: string },
+): void {
+  notifyContributionEdit(
+    event,
+    { id: userId, app_metadata: {} },
+    { entity: "cast credits of media", via: "api", ...edit },
+  );
 }

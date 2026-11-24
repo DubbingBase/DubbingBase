@@ -70,18 +70,3 @@ export function apiMediaPath(segment: MediaSegment, contentId: number): string {
 export function segmentOf(contentType: string): MediaSegment | null {
   return SEGMENTS.find((segment) => MEDIA_TYPES[segment] === contentType) ?? null;
 }
-
-/** A fresh UUID per batch item, stable across retries: the same key and index give the same id. */
-export async function deriveRequestId(key: string, index: number): Promise<string> {
-  const digest = await crypto.subtle.digest(
-    "SHA-256",
-    new TextEncoder().encode(`api-v1-credit:${key}:${index}`),
-  );
-  const hex = Array.from(new Uint8Array(digest).slice(0, 16), (byte) =>
-    byte.toString(16).padStart(2, "0"),
-  );
-  hex[6] = ((Number.parseInt(hex[6] ?? "0", 16) & 0x0f) | 0x40).toString(16).padStart(2, "0");
-  hex[8] = ((Number.parseInt(hex[8] ?? "0", 16) & 0x3f) | 0x80).toString(16).padStart(2, "0");
-  const joined = hex.join("");
-  return `${joined.slice(0, 8)}-${joined.slice(8, 12)}-${joined.slice(12, 16)}-${joined.slice(16, 20)}-${joined.slice(20, 32)}`;
-}
