@@ -8,10 +8,11 @@
 
 ## Scale
 
-83 API routes · 30 database models · 145 UI components · 147 library files · 15 middleware layers · 53 environment variables
+86 API routes · 30 database models · 145 UI components · 148 library files · 15 middleware layers · 53 environment variables
 
 ## Subsystems
 
+- **[[characterId].patch](./[characterid].patch.md)** — 1 routes — touches: auth
 - **[[id].delete](./[id].delete.md)** — 1 routes — touches: auth, db, cache
 - **[[id].get](./[id].get.md)** — 12 routes — touches: auth, cache
 - **[[id].patch](./[id].patch.md)** — 1 routes — touches: auth
@@ -23,6 +24,7 @@
 - **[Career-grid.get](./career-grid.get.md)** — 1 routes
 - **[Character-portraits.get](./character-portraits.get.md)** — 1 routes — touches: cache
 - **[Characters.get](./characters.get.md)** — 1 routes
+- **[Characters.post](./characters.post.md)** — 1 routes — touches: auth
 - **[Count-voice-actor-works.post](./count-voice-actor-works.post.md)** — 1 routes
 - **[Credits.get](./credits.get.md)** — 1 routes
 - **[Dashboard-stats.get](./dashboard-stats.get.md)** — 1 routes — touches: auth
@@ -38,7 +40,7 @@
 - **[Get-studio-details.get](./get-studio-details.get.md)** — 1 routes
 - **[Home-stats.get](./home-stats.get.md)** — 1 routes
 - **[Index.get](./index.get.md)** — 7 routes — touches: db, auth, cache
-- **[Index.post](./index.post.md)** — 2 routes — touches: auth, db, cache
+- **[Index.post](./index.post.md)** — 3 routes — touches: auth, db, cache, email
 - **[Internal-media-create.post](./internal-media-create.post.md)** — 1 routes — touches: auth
 - **[Internal-media-credits.get](./internal-media-credits.get.md)** — 1 routes
 - **[Link-user-voice-actor.post](./link-user-voice-actor.post.md)** — 1 routes — touches: auth
@@ -77,17 +79,17 @@
 
 **UI:** 145 components (vue) — see [ui.md](./ui.md)
 
-**Libraries:** 147 files — see [libraries.md](./libraries.md)
+**Libraries:** 148 files — see [libraries.md](./libraries.md)
 
 ## High-Impact Files
 
 Changes to these files have the widest blast radius across the codebase:
 
-- `apps/website/server/utils/db/client.ts` — imported by **65** files
+- `apps/website/server/utils/db/client.ts` — imported by **68** files
 - `apps/website/server/utils/auth-handlers.ts` — imported by **29** files
 - `apps/website/server/utils/index.ts` — imported by **28** files
 - `apps/website/server/utils/cache/index.ts` — imported by **18** files
-- `apps/website/server/utils/api-v1/define.ts` — imported by **14** files
+- `apps/website/server/utils/api-v1/define.ts` — imported by **17** files
 - `packages/shared-logic/src/types/index.ts` — imported by **12** files
 
 ## Required Environment Variables

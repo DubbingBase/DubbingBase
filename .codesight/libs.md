@@ -34,6 +34,10 @@
   - interface ApiRouteDocs
   - type SchemaComponents
 - `apps/website/server/utils/api-v1/errors.ts` — class ApiError
+- `apps/website/server/utils/api-v1/game-characters.ts`
+  - function characterError: (error, rpc) => ApiError
+  - const GameCharacter
+  - const GameCharacterWrite
 - `apps/website/server/utils/api-v1/media.ts`
   - function mediaKey: (segment, id) => MediaKey
   - function sitePath: (segment, contentId) => string

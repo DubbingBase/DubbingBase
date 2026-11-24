@@ -1,5 +1,11 @@
 # Routes
 
+## CRUD Resources
+
+- **`/api/v1/:type/:id/characters`** GET | POST | GET/:id | PATCH/:id → Character
+
+## Other Routes
+
 - `GET` `/api/actor/:id` params(id) [auth, cache]
 - `POST` `/api/admin/queue/clear` [auth, queue]
 - `DELETE` `/api/admin/queue/item` [auth, queue]
@@ -66,7 +72,6 @@
 - `POST` `/api/update-voice-actor` [auth, cache, upload] ✓
 - `POST` `/api/update_user_role` [auth]
 - `POST` `/api/upload-profile-picture` [auth, cache, upload] ✓
-- `GET` `/api/v1/:type/:id/characters` params(type, id)
 - `GET` `/api/v1/:type/:id/credits/:workId` params(type, id, workId)
 - `PATCH` `/api/v1/:type/:id/credits/:workId` params(type, id, workId) [auth]
 - `POST` `/api/v1/:type/:id/credits/batch` params(type, id) [auth]
@@ -77,6 +82,7 @@
 - `GET` `/api/v1/voice-actors/:id` params(id)
 - `PATCH` `/api/v1/voice-actors/:id` params(id) [auth]
 - `GET` `/api/v1/voice-actors/index`
+- `POST` `/api/v1/voice-actors/index` [auth, email]
 - `GET` `/api/voice-actor/:id` params(id)
 - `GET` `/routes/api/v1/docs`
 - `GET` `/routes/api/v1/openapi.json`
