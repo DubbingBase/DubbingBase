@@ -14,7 +14,7 @@ This website provides a web interface for the DubbingBase platform, featuring da
 
 ## API
 
-A token-authenticated REST API (read and edit voice actors) is available for admins. Create a token under Profile → API Key, then send it as `Authorization: Bearer <token>`.
+A token-authenticated REST API (voice actors, cast credits, advertisements and toys) is available for admins. Create a token under Profile → API Key, then send it as `Authorization: Bearer <token>`. The OpenAPI description explains the workflow for maintaining credits: find the voice actor, read existing credits and characters, preview a batch with `?dry_run=true`, then write it (all or nothing). The API never calls media providers, so media must already exist on DubbingBase.
 
 - [OpenAPI spec](https://dubbingbase.com/api/v1/openapi.json) - Machine-readable description of every endpoint, scope and schema.
 - [API docs](https://dubbingbase.com/api/v1/docs) - Interactive reference for humans.

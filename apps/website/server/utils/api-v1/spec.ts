@@ -16,13 +16,34 @@ export function buildOpenApiSpec() {
     info: {
       title: "DubbingBase API",
       version: "1.0.0",
-      description:
+      description: [
         "Admins create a token under Profile → API Key and send it as `Authorization: Bearer dbk_live_…`. " +
-        "Every response is `no-store`; errors are `{ error: { code, message } }`. " +
-        "Media lives at `/api/v1/{movies|shows|games|podcasts|audiobooks|advertisements|toys}/{id}` " +
-        "(TMDB, IGDB, iTunes and Open Library ids; ads and toys use their DubbingBase id); " +
-        "follow the `path` fields in responses instead of building URLs. " +
-        "Credit writes behave as if the token's owner made them, and `?dry_run=true` previews a batch without writing.",
+          "Every response is `no-store`; errors are `{ error: { code, message } }`.",
+        "## Addressing media",
+        "Media lives at `/api/v1/{movies|shows|games|podcasts|audiobooks|advertisements|toys}/{id}`: " +
+          "TMDB (movies, shows), IGDB (games), iTunes (podcasts) or Open Library (audiobooks) ids; " +
+          "ads and toys use their DubbingBase id. Follow the `path` fields in responses instead of building URLs. " +
+          "The API never calls those providers: media that DubbingBase does not know yet is a 404 " +
+          "(it has to be opened on the website once), and cast ids (`actor_id`) are stored as given. " +
+          "Ads and toys are created with `POST /advertisements` and `POST /toys`.",
+        "## Maintaining credits",
+        "1. Find the voice actor with `GET /voice-actors?q=` (name search). A new actor cannot be created here; a missing actor is a 404.\n" +
+          "2. Read what exists: `GET /{type}/{id}` (languages), `GET /{type}/{id}/credits?language=` and " +
+          "`GET /{type}/{id}/characters` (character names already used, and a game's registered characters). " +
+          "Reuse existing character names exactly: a credit is identified by media, language, voice actor, cast id and character name.\n" +
+          "3. Preview with `POST /{type}/{id}/credits/batch?dry_run=true` (up to 50 credits), which writes nothing and reports `create` or `unchanged` per item.\n" +
+          "4. Send the same body without `dry_run`. The batch is all or nothing: if one item is rejected, " +
+          "nothing is written and the error names it (`credits.2`). Sending a batch again is safe: roles that exist come back `unchanged`.\n" +
+          "5. Fix a credit with `PATCH /{type}/{id}/credits/{workId}` (only `performance`) or remove it with `DELETE`. " +
+          "To change a character name, delete the credit and add it again.",
+        "## Rules",
+        "Writes behave as if the token's owner made them and credits are `accepted` straight away; each change is " +
+          "audited as made through the API and reported to the DubbingBase admins. " +
+          "A credit for a language with no dubbing project yet creates that project. " +
+          "Characters are free text, except games, where `game_character_id` may reference a registered character " +
+          "(use either `actor_id` or `game_character_id`, not both). Only add credits you can source; " +
+          "do not guess names or ids.",
+      ].join("\n\n"),
     },
     paths,
     components: {
