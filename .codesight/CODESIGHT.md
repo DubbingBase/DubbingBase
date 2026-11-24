@@ -5,7 +5,7 @@
 
 > 75 routes | 30 models | 145 components | 145 lib files | 53 env vars | 15 middleware | 53% test coverage
 > **Token savings:** this file is ~19,400 tokens. Without it, AI exploration would cost ~155,400 tokens. **Saves ~136,000 tokens per conversation.**
-> **Last scanned:** 2026-11-24 09:36 — re-run after significant changes
+> **Last scanned:** 2026-11-24 10:39 — re-run after significant changes
 
 ---
 
@@ -635,7 +635,7 @@
   - function buildDiscordEmbed: (title, message, options?) => Record<string, unknown>
   - function beginDiscordDigest: (event) => void
   - function severityOf: (title, options?) => DiscordSeverity
-  - _...10 more_
+  - _...12 more_
 - `apps/website/server/utils/pagination.ts`
   - function parsePagination: (options) => ParsedPagination
   - function paginateArray: (items, options) => void

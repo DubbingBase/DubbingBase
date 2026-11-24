@@ -176,7 +176,7 @@
   - function buildDiscordEmbed: (title, message, options?) => Record<string, unknown>
   - function beginDiscordDigest: (event) => void
   - function severityOf: (title, options?) => DiscordSeverity
-  - _...10 more_
+  - _...12 more_
 - `apps/website/server/utils/pagination.ts`
   - function parsePagination: (options) => ParsedPagination
   - function paginateArray: (items, options) => void
