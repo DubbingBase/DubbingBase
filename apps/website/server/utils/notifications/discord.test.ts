@@ -53,7 +53,7 @@ describe("Discord admin notifications", () => {
     ["wiki_extract", "Extract"],
   ] as const)("identifies %s notifications", (queue, label) => {
     const embed = buildDiscordEmbed("Queue event", "Details", { queue });
-    expect(embed.title).toBe(`[${label}] Queue event`);
+    expect(embed.title).toBe("Queue event");
     expect(embed.author).toEqual({ name: `DubbingBase • ${label}` });
     expect(embed.footer).toEqual({
       text: "DubbingBase Admin Notifications",
@@ -221,7 +221,7 @@ describe("Discord digest grouping", () => {
       { title: "Queue event", message: "Details", options: { queue: "wiki_check" } },
     ]);
     expect(rest).toHaveLength(0);
-    expect(embed?.title).toBe("[Check] Queue event");
+    expect(embed?.title).toBe("Queue event");
   });
 
   it("collapses identical notifications into one counted row", () => {
@@ -328,5 +328,25 @@ describe("Discord digest grouping", () => {
       { title: "Other", message: "ok", options: { subject: "Dune", summary: "fine" } },
     ]);
     expect(embeds).toHaveLength(1);
+  });
+
+  it("escapes markdown in digest rows and keeps parenthesized wiki URLs inside the link", () => {
+    const [[summary]] = buildDigestMessages([
+      {
+        title: "Wikipedia Check Archived — No Dubbing",
+        message: "x",
+        options: {
+          subject: "Avengers: Doomsday",
+          tag: "movie · DE",
+          summary: "no_dubbing_evidence",
+          url: "https://ru.wikipedia.org/wiki/Doomsday_(film)",
+          color: 0xfee75c,
+        },
+      },
+      { title: "Other", message: "y", options: { subject: "B", summary: "ok" } },
+    ]);
+    const description = String(summary?.description);
+    expect(description).toContain("no\\_dubbing\\_evidence");
+    expect(description).toContain("(https://ru.wikipedia.org/wiki/Doomsday_%28film%29)");
   });
 });

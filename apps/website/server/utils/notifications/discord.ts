@@ -208,7 +208,7 @@ export function buildDiscordEmbed(
   const description =
     message.length > 2000 ? message.slice(0, 1980) + "\n... (truncated)" : message;
   const embed: Record<string, unknown> = {
-    title: `[${label}] ${title}`.slice(0, 250),
+    title: title.slice(0, 250),
     description,
     color: options?.color ?? 0x2a2a2a,
     timestamp: new Date().toISOString(),
@@ -326,6 +326,16 @@ export function severityOf(title: string, options?: DiscordWebhookOptions): Disc
   return "info";
 }
 
+/** Escapes Discord markdown so plain text (reason codes, titles) renders literally. */
+export function escapeDiscordMarkdown(text: string): string {
+  return text.replace(/[\\*_`~|>[\]]/g, "\\$&");
+}
+
+/** Makes a URL safe inside a markdown link: parentheses would otherwise end the link early. */
+export function escapeDiscordLinkUrl(url: string): string {
+  return url.replace(/\(/g, "%28").replace(/\)/g, "%29");
+}
+
 /** Folds a multi-line bullet message into one short line for a digest row. */
 export function condenseMessage(message: string, max: number): string {
   const folded = message
@@ -397,16 +407,21 @@ export function buildDigestMessages(entries: DigestEntry[]): Record<string, unkn
   const rows: DigestRow[] = [...grouped.values()]
     .map(({ entry, count }): DigestRow => {
       const severity = severityOf(entry.title, entry.options);
-      const subject = shortText(entry.options?.subject ?? entry.title, MAX_SUBJECT_CHARS);
+      const subject = escapeDiscordMarkdown(
+        shortText(entry.options?.subject ?? entry.title, MAX_SUBJECT_CHARS),
+      );
       const linked = entry.options?.url
-        ? `[${subject}](${normalizeDiscordUrl(entry.options.url)})`
+        ? `[${subject}](${escapeDiscordLinkUrl(normalizeDiscordUrl(entry.options.url))})`
         : `**${subject}**`;
-      const tag = entry.options?.tag ? ` · ${entry.options.tag}` : "";
+      const tag = entry.options?.tag ? ` · ${escapeDiscordMarkdown(entry.options.tag)}` : "";
       const times = count > 1 ? ` ×${count}` : "";
       // A hand-written summary is self-contained; otherwise lead with the event title.
-      const kind = entry.options?.summary || !entry.options?.subject ? "" : `${entry.title}: `;
+      const kind =
+        entry.options?.summary || !entry.options?.subject
+          ? ""
+          : `${escapeDiscordMarkdown(entry.title)}: `;
       const what = entry.options?.summary ?? condenseMessage(entry.message, MAX_ROW_CHARS);
-      const line = `${SEVERITY_ICON[severity]} ${linked}${tag}${times}\n  ↳ ${kind}${shortText(what, MAX_ROW_CHARS)}`;
+      const line = `${SEVERITY_ICON[severity]} ${linked}${tag}${times}\n  ↳ ${kind}${escapeDiscordMarkdown(shortText(what.replace(/\*\*/g, ""), MAX_ROW_CHARS))}`;
       // Problems get an embed of their own, with labelled fields when the caller provided them.
       const detailFields = boundFields(
         normalizeFields(entry.options?.fields),
