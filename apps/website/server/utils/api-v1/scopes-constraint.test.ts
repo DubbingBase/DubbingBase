@@ -11,7 +11,7 @@ const MIGRATIONS = resolve(
 describe("api_tokens.scopes", () => {
   it("accepts exactly the scopes the API defines", () => {
     // The newest migration that mentions the constraint is the one in force.
-    const sql = readFileSync(resolve(MIGRATIONS, "20261123122412_api_tokens.sql"), "utf8");
+    const sql = readFileSync(resolve(MIGRATIONS, "20261123180000_api_credit_scopes.sql"), "utf8");
     const list = /scopes <@ array\[([^\]]+)\]/.exec(sql)?.[1] ?? "";
     const allowed = [...list.matchAll(/'([^']+)'/g)].map((match) => match[1]);
     expect([...allowed].sort()).toEqual([...API_SCOPES].sort());

@@ -933,6 +933,25 @@ export type Database = {
           replayed: boolean;
         }[];
       };
+      api_create_internal_media: {
+        Args: {
+          p_actor_id: string;
+          p_brand: string;
+          p_description: string;
+          p_language: string;
+          p_manufacturer: string;
+          p_media_type: string;
+          p_name: string;
+          p_product_line: string;
+          p_release_year: number;
+          p_request_id: string;
+        };
+        Returns: Json;
+      };
+      api_mutate_credits: {
+        Args: { p_items: Json; p_operation: string; p_user_id: string };
+        Returns: Json;
+      };
       apply_extracted_credits: {
         Args: {
           p_content_id: number;

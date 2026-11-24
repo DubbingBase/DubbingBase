@@ -22,6 +22,8 @@ export const route = defineApiRoute({
       "25",
     ),
     after: v.optional(positiveId),
+    /** Matches first or last names, every word of it, case-insensitively. */
+    q: v.optional(v.pipe(v.string(), v.trim(), v.minLength(2), v.maxLength(100))),
   }),
   response: v.object({
     data: v.array(VoiceActor),
@@ -35,6 +37,15 @@ export const route = defineApiRoute({
       .order("id", { ascending: true })
       .limit(query.limit + 1);
     if (query.after !== undefined) builder = builder.gt("id", query.after);
+    // Only letters, digits, spaces, hyphens and apostrophes reach the filter, so the text
+    // cannot add its own conditions to the `or` expression.
+    const words = (query.q ?? "")
+      .replace(/[^\p{L}\p{N}\s'-]/gu, " ")
+      .split(/\s+/)
+      .filter(Boolean);
+    for (const word of words) {
+      builder = builder.or(`firstname.ilike.%${word}%,lastname.ilike.%${word}%`);
+    }
     const { data, error } = await builder;
     if (error) throw error;
     const rows = v.parse(v.array(VoiceActor), data);

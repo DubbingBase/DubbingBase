@@ -11,6 +11,8 @@ export type ContributionEdit = {
   detail: string;
   /** Site path of the edited page, linked from the notification. */
   path: string;
+  /** Set for edits made through the public API, which are always reported, admin tokens included. */
+  via?: "api";
 };
 
 /**
@@ -18,14 +20,18 @@ export type ContributionEdit = {
  * Discord channel for after-the-fact review. Admin edits are skipped, and delivery runs in
  * the background so a webhook failure never affects the edit itself.
  */
-export function notifyContributionEdit(event: H3Event, user: User, edit: ContributionEdit): void {
-  if (user.app_metadata?.role === "admin") return;
+export function notifyContributionEdit(
+  event: H3Event,
+  user: Pick<User, "id" | "app_metadata">,
+  edit: ContributionEdit,
+): void {
+  if (edit.via !== "api" && user.app_metadata?.role === "admin") return;
   scheduleBackgroundTask(
     event,
     () =>
       sendDiscordAdminNotification(
         "Community edit",
-        `User ${user.id} edited ${edit.entity} #${edit.entityId}: ${edit.detail}`,
+        `User ${user.id} edited ${edit.entity} #${edit.entityId}${edit.via === "api" ? " through the API" : ""}: ${edit.detail}`,
         { event, url: edit.path },
       ),
     "contribution-edit-notification",
