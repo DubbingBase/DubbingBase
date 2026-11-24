@@ -46,7 +46,7 @@ REVOKE ALL ON FUNCTION public.audit_voice_actor_work_mutation(UUID, UUID, TEXT, 
 -- Applies up to 50 credit changes as the token owner, all or nothing. `create` items hold
 -- voice_actor_id, content_id, content_type, language, actor_person_id, game_character_id,
 -- character_name and performance; `update` items work_id, expected_updated_at and performance;
--- `delete` items work_id and expected_updated_at. Returns one {work_id, created} per item. A
+-- Returns one {work_id, created} per item. A
 -- rejected item aborts everything and names its position in the error HINT.
 CREATE OR REPLACE FUNCTION public.api_mutate_credits(p_user_id UUID, p_operation TEXT, p_items JSONB)
 RETURNS JSONB
@@ -62,7 +62,7 @@ DECLARE
   v_results JSONB := '[]'::JSONB;
 BEGIN
   IF p_user_id IS NULL
-     OR p_operation IS NULL OR p_operation NOT IN ('create', 'update', 'delete')
+     OR p_operation IS NULL OR p_operation NOT IN ('create', 'update')
      OR p_items IS NULL OR pg_catalog.jsonb_typeof(p_items) <> 'array'
      OR pg_catalog.jsonb_array_length(p_items) NOT BETWEEN 1 AND 50 THEN
     RAISE EXCEPTION 'Credit mutation request is invalid' USING ERRCODE = '22023';
@@ -92,12 +92,6 @@ BEGIN
           (v_item ->> 'work_id')::BIGINT,
           (v_item ->> 'expected_updated_at')::TIMESTAMPTZ,
           v_item ->> 'performance'
-        );
-      ELSE
-        SELECT * INTO v_row FROM public.delete_voice_actor_work_link(
-          p_user_id, pg_catalog.gen_random_uuid(),
-          (v_item ->> 'work_id')::BIGINT,
-          (v_item ->> 'expected_updated_at')::TIMESTAMPTZ
         );
       END IF;
       v_results := v_results || pg_catalog.jsonb_build_array(

@@ -128,7 +128,7 @@ export function errorCode(error: unknown): string {
 
 const MutationResults = v.array(v.object({ work_id: v.number(), created: v.boolean() }));
 
-type CreditOperation = "create" | "update" | "delete";
+type CreditOperation = "create" | "update";
 
 /**
  * Applies credit changes as the token's owner through `api_mutate_credits`: one transaction,
