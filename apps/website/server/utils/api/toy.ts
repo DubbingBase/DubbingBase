@@ -3,7 +3,7 @@ import { useSupabaseAdmin } from "../db/client";
 
 type ToyMetadataRow = Pick<
   Tables<"toy_metadata">,
-  | "content_id"
+  | "media_id"
   | "name"
   | "manufacturer"
   | "product_line"
@@ -15,7 +15,7 @@ type ToyMetadataRow = Pick<
 
 function mapToy(row: ToyMetadataRow): Toy {
   return {
-    id: row.content_id,
+    id: row.media_id,
     name: row.name,
     manufacturer: row.manufacturer,
     ...(row.product_line === null ? {} : { product_line: row.product_line }),
@@ -43,7 +43,7 @@ export class ToyClient {
       const { data, error } = await supabase
         .from("toy_metadata")
         .select(
-          "content_id, name, manufacturer, product_line, release_year, cover_url, description, updated_at",
+          "media_id, name, manufacturer, product_line, release_year, cover_url, description, updated_at",
         )
         .or(
           `name.ilike.${ilikePattern},manufacturer.ilike.${ilikePattern},product_line.ilike.${ilikePattern}`,
@@ -63,9 +63,9 @@ export class ToyClient {
     const { data, error } = await supabase
       .from("toy_metadata")
       .select(
-        "content_id, name, manufacturer, product_line, release_year, cover_url, description, updated_at",
+        "media_id, name, manufacturer, product_line, release_year, cover_url, description, updated_at",
       )
-      .eq("content_id", id)
+      .eq("media_id", id)
       .maybeSingle();
 
     if (error) throw error;

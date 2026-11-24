@@ -7,14 +7,14 @@ set -euo pipefail
 db_host="${DB_HOST:-127.0.0.1}"
 db_port="${DB_PORT:-55322}"
 db_user="${DB_USER:-postgres}"
-db_name="${DB_NAME:-postgres}"
+db_name="${DB_NAME:-${PGDATABASE:-postgres}}"
 export PGPASSWORD="${PGPASSWORD:-postgres}"
 
 if [[ "$db_host" != "127.0.0.1" && "$db_host" != "localhost" ]] \
   || [[ ! "$db_port" =~ ^[0-9]{1,5}$ ]] \
   || (( db_port < 1024 || db_port > 65535 )) \
-  || [[ "$db_name" != "postgres" ]]; then
-  printf '%s\n' 'Use a loopback PostgreSQL database named postgres.' >&2
+  || [[ ! "$db_name" =~ ^[A-Za-z0-9_]+$ ]]; then
+  printf '%s\n' 'Use a loopback PostgreSQL database (DB_NAME or PGDATABASE, default postgres).' >&2
   exit 2
 fi
 
@@ -163,7 +163,7 @@ if [[ "$first_status" != "0" || "$second_status" != "0" ]]; then
   exit 1
 fi
 
-project_id="$(psql_local -c "SELECT id FROM public.dubbing_projects WHERE content_id = ${content_id} AND content_type = 'movie' AND language = 'fr-FR'")"
+project_id="$(psql_local -c "SELECT id FROM public.dubbing_projects WHERE media_id = private.find_media_id('movie', ${content_id}) AND language = 'fr-FR'")"
 work_id="$(psql_local -c "SELECT id FROM public.work WHERE dubbing_project_id = ${project_id} AND actor_id = ${actor_new}")"
 duplicate_state="$(psql_local -c "SELECT
   (SELECT count(*) FROM public.work WHERE id = ${work_id})::TEXT

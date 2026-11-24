@@ -1,12 +1,14 @@
 import { asString } from "../utils/narrow";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { useTmdbClient } from "../utils";
-import type { StudioVoiceActor, Tables } from "@app/shared-logic";
+import { MEDIA_EMBED, mediaRefFromEmbed, type StudioVoiceActor } from "@app/shared-logic";
 
-type StudioProject = Pick<
-  Tables<"dubbing_projects">,
-  "id" | "content_type" | "content_id" | "language"
->;
+interface StudioProject {
+  id: number;
+  language: string;
+  content_type: string;
+  content_id: number;
+}
 type TmdbMediaDetails = Awaited<ReturnType<ReturnType<typeof useTmdbClient>["fetchMediaDetails"]>>;
 interface StudioMediaSummary {
   title?: string | null;
@@ -123,11 +125,18 @@ export default defineEventHandler(async (event) => {
     const { data: projectRows } = studioPageProjection
       ? await supabase
           .from("dubbing_projects")
-          .select("id,content_type,content_id,language")
+          .select(`id,language,${MEDIA_EMBED}`)
           .eq("studio_id", projectStudioId)
-      : await supabase.from("dubbing_projects").select("*").eq("studio_id", projectStudioId);
+      : await supabase
+          .from("dubbing_projects")
+          .select(`*,${MEDIA_EMBED}`)
+          .eq("studio_id", projectStudioId);
 
-    const projects: StudioProject[] = projectRows ?? [];
+    // Projects reference media by media_id; the API keeps exposing the provider reference.
+    const projects: StudioProject[] = (projectRows ?? []).flatMap(({ media, ...project }) => {
+      const ref = mediaRefFromEmbed(media);
+      return ref ? [{ ...project, content_type: ref.contentType, content_id: ref.contentId }] : [];
+    });
 
     // 3. Fetch media info for projects (deduplicated & batched)
     const tmdbClient = useTmdbClient();

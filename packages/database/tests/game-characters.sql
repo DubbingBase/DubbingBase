@@ -82,7 +82,7 @@ BEGIN
 
   SELECT count(*) INTO v_count
   FROM public.game_characters AS character
-  WHERE character.id = v_character_id AND character.igdb_game_id = 563691001
+  WHERE character.id = v_character_id AND character.media_id = (SELECT media.id FROM public.media AS media WHERE media.kind = 'video_game' AND media.content_id = 563691001)
     AND character.name = 'Same Name' AND character.created_by = v_admin;
   IF v_count <> 1 THEN
     RAISE EXCEPTION 'game character did not store normalized identity and provenance';
@@ -99,7 +99,7 @@ BEGIN
     AND audit.previous_value IS NULL
     AND audit.new_value ->> 'id' = v_character_id::TEXT
     AND audit.new_value ->> 'name' = 'Same Name'
-    AND audit.changed_fields @> ARRAY['igdb_game_id', 'name']::TEXT[];
+    AND audit.changed_fields @> ARRAY['media_id', 'name']::TEXT[];
   IF v_count <> 1 THEN
     RAISE EXCEPTION 'game character audit lacks actor, request, provenance, or snapshots';
   END IF;
@@ -299,7 +299,7 @@ BEGIN
       v_admin
     );
     RAISE EXCEPTION 'duplicate moderation merged distinct local homonyms';
-  EXCEPTION WHEN serialization_failure THEN
+  EXCEPTION WHEN SQLSTATE 'PT409' THEN
     NULL;
   END;
 END;
@@ -310,9 +310,9 @@ SET LOCAL ROLE service_role;
 DO $$
 BEGIN
   BEGIN
-    INSERT INTO public.game_characters (igdb_game_id, name, created_by, updated_by)
+    INSERT INTO public.game_characters (media_id, name, created_by, updated_by)
     VALUES (
-      563691003, 'Bypass',
+      (SELECT media.id FROM public.media AS media WHERE media.kind = 'video_game' AND media.content_id = 563691001), 'Bypass',
       '00000000-0000-0000-0000-000000563691',
       '00000000-0000-0000-0000-000000563691'
     );
@@ -331,7 +331,7 @@ DECLARE
 BEGIN
   SELECT count(*) INTO v_count
   FROM public.game_characters AS character
-  WHERE character.igdb_game_id = 563691001 AND character.name = 'Same Name';
+  WHERE character.media_id = (SELECT media.id FROM public.media AS media WHERE media.kind = 'video_game' AND media.content_id = 563691001) AND character.name = 'Same Name';
   IF v_count <> 2 THEN
     RAISE EXCEPTION 'public local character reads or same-game homonyms failed';
   END IF;

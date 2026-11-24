@@ -56,8 +56,8 @@ BEGIN
   EXCEPTION WHEN foreign_key_violation THEN NULL;
   END;
 
-  IF EXISTS (SELECT 1 FROM public.game_characters WHERE igdb_game_id = 563701001)
-     OR EXISTS (SELECT 1 FROM public.dubbing_projects WHERE content_id = 563701001)
+  IF EXISTS (SELECT 1 FROM public.game_characters WHERE media_id = (SELECT media.id FROM public.media AS media WHERE media.kind = 'video_game' AND media.content_id = 563701001))
+     OR EXISTS (SELECT 1 FROM public.dubbing_projects AS project JOIN public.media AS media ON media.id = project.media_id WHERE media.kind = 'video_game' AND media.content_id = 563701001)
      OR EXISTS (SELECT 1 FROM public.audit_logs WHERE user_id = v_admin) THEN
     RAISE EXCEPTION 'A rejected save left a character, project, or audit entry behind';
   END IF;
@@ -66,7 +66,7 @@ BEGIN
     v_admin, v_request, NULL, NULL, v_project, '[]', v_cast, v_drafts
   );
   SELECT id INTO STRICT v_character_id FROM public.game_characters
-  WHERE igdb_game_id = 563701001 AND name = 'Draft Role' AND created_by = v_admin;
+  WHERE media_id = (SELECT media.id FROM public.media AS media WHERE media.kind = 'video_game' AND media.content_id = 563701001) AND name = 'Draft Role' AND created_by = v_admin;
   IF v_saved.replayed OR (SELECT count(*) FROM public.work
     WHERE dubbing_project_id = v_saved.project_id AND game_character_id = v_character_id
       AND character_id IS NULL AND voice_actor_id IN (563701101, 563701102)) <> 2 THEN
@@ -78,7 +78,7 @@ BEGIN
   );
   IF NOT v_retry.replayed OR v_retry.audit_log_id IS DISTINCT FROM v_saved.audit_log_id
      OR (SELECT count(*) FROM public.audit_logs WHERE user_id = v_admin) <> 2
-     OR (SELECT count(*) FROM public.game_characters WHERE igdb_game_id = 563701001) <> 1 THEN
+     OR (SELECT count(*) FROM public.game_characters WHERE media_id = (SELECT media.id FROM public.media AS media WHERE media.kind = 'video_game' AND media.content_id = 563701001)) <> 1 THEN
     RAISE EXCEPTION 'Retry duplicated the save or the character';
   END IF;
 END;

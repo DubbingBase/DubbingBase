@@ -52,8 +52,8 @@ BEGIN
   END;
 
   BEGIN
-    INSERT INTO public.dubbing_projects (content_id, content_type, language)
-    VALUES (563651901, 'movie', 'fr-FR');
+    INSERT INTO public.dubbing_projects (media_id, language)
+    VALUES (1, 'fr-FR');
     RAISE EXCEPTION 'authenticated unexpectedly wrote a project directly';
   EXCEPTION WHEN insufficient_privilege THEN
     NULL;
@@ -154,7 +154,7 @@ BEGIN
     AND audit.previous_value -> 'project' = 'null'::JSONB
     AND audit.previous_value -> 'crew' = '[]'::JSONB
     AND audit.previous_value -> 'cast' = '[]'::JSONB
-    AND jsonb_typeof(audit.new_value -> 'project' -> 'content_id') = 'number'
+    AND jsonb_typeof(audit.new_value -> 'project' -> 'media_id') = 'number'
     AND jsonb_typeof(audit.new_value -> 'project' -> 'created_at') = 'string'
     AND jsonb_array_length(audit.new_value -> 'crew') = 1
     AND jsonb_array_length(audit.new_value -> 'cast') = 2
@@ -629,12 +629,15 @@ BEGIN
     END IF;
     IF EXISTS (
       SELECT 1 FROM public.dubbing_projects
-      WHERE content_id = CASE v_request
-        WHEN '21000000-0000-4000-8000-000000563651'::UUID THEN 563651920
-        WHEN '21000000-0000-4000-8000-000000563652'::UUID THEN 563651921
-        WHEN '21000000-0000-4000-8000-000000563653'::UUID THEN 563651922
-        ELSE 563651923 END
-        AND content_type = 'movie'
+      WHERE media_id IN (
+        SELECT media.id FROM public.media AS media
+        WHERE media.kind = 'movie'
+          AND media.content_id = CASE v_request
+            WHEN '21000000-0000-4000-8000-000000563651'::UUID THEN 563651920
+            WHEN '21000000-0000-4000-8000-000000563652'::UUID THEN 563651921
+            WHEN '21000000-0000-4000-8000-000000563653'::UUID THEN 563651922
+            ELSE 563651923 END
+      )
     ) OR EXISTS (SELECT 1 FROM public.audit_logs WHERE request_id = v_request) THEN
       RAISE EXCEPTION 'a failed project save left a project or audit event behind';
     END IF;
@@ -642,7 +645,8 @@ BEGIN
 
   SELECT project.id, project.updated_at INTO v_project_id, v_project_updated_at
   FROM public.dubbing_projects AS project
-  WHERE project.content_id = 563651911 AND project.content_type = 'movie';
+  JOIN public.media AS media ON media.id = project.media_id
+  WHERE media.kind = 'movie' AND media.content_id = 563651911;
   SELECT work.id INTO v_work_id FROM public.work AS work
   WHERE work.dubbing_project_id = v_project_id AND work.character_name = 'Rôle: Navigateur';
 
@@ -688,12 +692,12 @@ RESET ROLE;
 INSERT INTO public.voice_actors (id, firstname, lastname) VALUES
   (563651004, 'Project Save Guard', 'Keep'),
   (563651005, 'Project Save Guard', 'Merge');
-INSERT INTO public.dubbing_projects (content_id, content_type, language)
-VALUES (563651924, 'movie', 'fr-FR');
+INSERT INTO public.dubbing_projects (media_id, language)
+VALUES (private.resolve_media('movie', 563651924), 'fr-FR');
 INSERT INTO public.dubbing_project_crew (dubbing_project_id, job_id, person_id)
 SELECT project.id, 1, 563651005
 FROM public.dubbing_projects AS project
-WHERE project.content_id = 563651924 AND project.content_type = 'movie';
+WHERE project.media_id = private.find_media_id('movie', 563651924);
 
 SET LOCAL ROLE service_role;
 SELECT pg_catalog.to_regprocedure(
@@ -730,8 +734,7 @@ BEGIN
     FROM public.dubbing_projects AS project
     JOIN public.dubbing_project_crew AS crew
       ON crew.dubbing_project_id = project.id
-    WHERE project.content_id = 563651924
-      AND project.content_type = 'movie'
+    WHERE project.media_id = private.find_media_id('movie', 563651924)
       AND crew.job_id = 1
       AND crew.person_id = 563651004
   ) OR EXISTS (

@@ -64,8 +64,11 @@ describe("Game project draft characters", () => {
     loadProject.mockResolvedValue({
       data: {
         id: 51,
-        content_id: 42,
-        content_type: "video_game",
+        media: {
+          id: 7,
+          kind: "video_game",
+          content_id: 42,
+        },
         language: "fr-FR",
         status: "draft",
         studio_id: null,

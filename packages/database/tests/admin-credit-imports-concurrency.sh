@@ -3,7 +3,7 @@ set -euo pipefail
 
 DB_HOST=127.0.0.1
 DB_PORT=${T84_TEST_DB_PORT:-55322}
-DB_NAME=postgres
+DB_NAME=${PGDATABASE:-postgres}
 DB_USER=postgres
 DB_PASSWORD=${T84_TEST_DB_PASSWORD:-postgres}
 ADMIN_ID=56368400-0000-4000-8000-000000000021
@@ -33,10 +33,13 @@ DELETE FROM public.audit_logs WHERE user_id = '$ADMIN_ID';
 DELETE FROM public.work
 WHERE dubbing_project_id IN (
   SELECT id FROM public.dubbing_projects
-  WHERE content_id IN (563684201, 563684202) AND content_type = 'movie' AND language = 'en-US'
+  WHERE media_id IN (SELECT id FROM public.media WHERE kind = 'movie' AND content_id IN (563684201, 563684202))
+    AND language = 'en-US'
 );
 DELETE FROM public.dubbing_projects
-WHERE content_id IN (563684201, 563684202) AND content_type = 'movie' AND language = 'en-US';
+WHERE media_id IN (SELECT id FROM public.media WHERE kind = 'movie' AND content_id IN (563684201, 563684202))
+  AND language = 'en-US';
+DELETE FROM public.media WHERE kind = 'movie' AND content_id IN (563684201, 563684202);
 DELETE FROM public.voice_actors
 WHERE firstname = '$VOICE_FIRSTNAME' AND lastname = '$VOICE_LASTNAME';
 DELETE FROM auth.users WHERE id = '$ADMIN_ID';
@@ -53,8 +56,8 @@ DO \$\$
 BEGIN
   IF EXISTS (SELECT 1 FROM auth.users WHERE id = '$ADMIN_ID')
      OR EXISTS (
-       SELECT 1 FROM public.dubbing_projects
-       WHERE content_id IN (563684201, 563684202)
+       SELECT 1 FROM public.media
+       WHERE kind = 'movie' AND content_id IN (563684201, 563684202)
      )
      OR EXISTS (
        SELECT 1 FROM public.voice_actors
@@ -118,8 +121,7 @@ counts=$(psql_local -t -A -c "
     (SELECT count(*) FROM public.work AS work
      JOIN public.dubbing_projects AS project ON project.id = work.dubbing_project_id
      JOIN public.voice_actors AS actor ON actor.id = work.voice_actor_id
-     WHERE project.content_id = 563684202
-       AND project.content_type = 'movie'
+     WHERE project.media_id = private.find_media_id('movie', 563684202)
        AND project.language = 'en-US'
        AND lower(actor.firstname) = lower('$VOICE_FIRSTNAME')
        AND lower(actor.lastname) = lower('$VOICE_LASTNAME')) || ':' ||

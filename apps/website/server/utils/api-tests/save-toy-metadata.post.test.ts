@@ -36,7 +36,7 @@ function createSupabaseMock(
   result: RpcResult = {
     data: {
       record: {
-        content_id: 1,
+        media_id: 1,
         name: "Lunii Storyteller",
         manufacturer: "Lunii",
         product_line: "My Fabulous Storyteller",

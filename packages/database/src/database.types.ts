@@ -190,36 +190,40 @@ export type Database = {
       };
       dubbing_projects: {
         Row: {
-          content_id: number;
-          content_type: string;
           created_at: string | null;
           id: number;
           language: string;
+          media_id: number;
           status: string | null;
           studio_id: number | null;
           updated_at: string | null;
         };
         Insert: {
-          content_id: number;
-          content_type: string;
           created_at?: string | null;
           id?: number;
           language: string;
+          media_id: number;
           status?: string | null;
           studio_id?: number | null;
           updated_at?: string | null;
         };
         Update: {
-          content_id?: number;
-          content_type?: string;
           created_at?: string | null;
           id?: number;
           language?: string;
+          media_id?: number;
           status?: string | null;
           studio_id?: number | null;
           updated_at?: string | null;
         };
         Relationships: [
+          {
+            foreignKeyName: "dubbing_projects_media_id_fkey";
+            columns: ["media_id"];
+            isOneToOne: false;
+            referencedRelation: "media";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "dubbing_projects_studio_id_fkey";
             columns: ["studio_id"];
@@ -235,7 +239,7 @@ export type Database = {
           created_by: string;
           id: string;
           igdb_character_id: number | null;
-          igdb_game_id: number;
+          media_id: number;
           name: string;
           updated_at: string;
           updated_by: string;
@@ -246,7 +250,7 @@ export type Database = {
           created_by: string;
           id?: string;
           igdb_character_id?: number | null;
-          igdb_game_id: number;
+          media_id: number;
           name: string;
           updated_at?: string;
           updated_by: string;
@@ -257,13 +261,21 @@ export type Database = {
           created_by?: string;
           id?: string;
           igdb_character_id?: number | null;
-          igdb_game_id?: number;
+          media_id?: number;
           name?: string;
           updated_at?: string;
           updated_by?: string;
           wikidata_qid?: string | null;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "game_characters_media_id_fkey";
+            columns: ["media_id"];
+            isOneToOne: false;
+            referencedRelation: "media";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       gamification_task_locks: {
         Row: {
@@ -358,6 +370,30 @@ export type Database = {
           processed_at?: string;
           queued_msg_id?: number;
           tmdb_id?: number;
+        };
+        Relationships: [];
+      };
+      media: {
+        Row: {
+          content_id: number;
+          created_at: string;
+          id: number;
+          kind: string;
+          wikidata_qid: string | null;
+        };
+        Insert: {
+          content_id: number;
+          created_at?: string;
+          id?: never;
+          kind: string;
+          wikidata_qid?: string | null;
+        };
+        Update: {
+          content_id?: number;
+          created_at?: string;
+          id?: never;
+          kind?: string;
+          wikidata_qid?: string | null;
         };
         Relationships: [];
       };
@@ -461,12 +497,12 @@ export type Database = {
       };
       toy_metadata: {
         Row: {
-          content_id: number;
           cover_url: string | null;
           created_at: string;
           created_by: string | null;
           description: string | null;
           manufacturer: string | null;
+          media_id: number;
           name: string;
           product_line: string | null;
           release_year: number | null;
@@ -474,12 +510,12 @@ export type Database = {
           updated_by: string | null;
         };
         Insert: {
-          content_id: number;
           cover_url?: string | null;
           created_at?: string;
           created_by?: string | null;
           description?: string | null;
           manufacturer?: string | null;
+          media_id: number;
           name: string;
           product_line?: string | null;
           release_year?: number | null;
@@ -487,19 +523,27 @@ export type Database = {
           updated_by?: string | null;
         };
         Update: {
-          content_id?: number;
           cover_url?: string | null;
           created_at?: string;
           created_by?: string | null;
           description?: string | null;
           manufacturer?: string | null;
+          media_id?: number;
           name?: string;
           product_line?: string | null;
           release_year?: number | null;
           updated_at?: string;
           updated_by?: string | null;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "toy_metadata_media_id_fkey";
+            columns: ["media_id"];
+            isOneToOne: true;
+            referencedRelation: "media";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       user_profiles: {
         Row: {

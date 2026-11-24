@@ -1,3 +1,4 @@
+import { mediaRefFromEmbed } from "@app/shared-logic";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { sendDiscordAdminNotification } from "../utils/notifications/discord";
 import { requireAdmin } from "../utils/auth";
@@ -106,15 +107,19 @@ export default defineEventHandler(async (event) => {
     const contentIds = itemsToProcess.map((item) => item.id);
     const { data: existingProjects, error: projectsError } = await supabaseAdmin
       .from("dubbing_projects")
-      .select("content_id, content_type")
-      .in("content_id", contentIds);
+      .select("media:media_id!inner(id,kind,content_id)")
+      .in("media.kind", ["movie", "tv"])
+      .in("media.content_id", contentIds);
 
     if (projectsError) {
       throw new Error(`Failed to fetch existing projects: ${projectsError.message}`);
     }
 
     const itemsWithVoiceActors = new Set(
-      (existingProjects || []).map((p) => `${p.content_type}-${p.content_id}`),
+      (existingProjects || []).flatMap((p) => {
+        const ref = mediaRefFromEmbed(p.media);
+        return ref ? [`${ref.contentType}-${ref.contentId}`] : [];
+      }),
     );
 
     let enqueuedCount = 0;

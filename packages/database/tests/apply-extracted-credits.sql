@@ -26,8 +26,7 @@ BEGIN
   FROM public.work AS work
   JOIN public.dubbing_projects AS project ON project.id = work.dubbing_project_id
   JOIN public.voice_actors AS voice_actor ON voice_actor.id = work.voice_actor_id
-  WHERE project.content_id = 991234567
-    AND project.content_type = 'movie'
+  WHERE project.media_id = private.find_media_id('movie', 991234567)
     AND project.language = 'fr-FR'
     AND voice_actor.firstname = 'Bulk'
     AND voice_actor.lastname = 'Fixture';
@@ -105,7 +104,7 @@ BEGIN
   SELECT count(*) INTO v_ambiguous_count
   FROM public.work AS work
   JOIN public.dubbing_projects AS project ON project.id = work.dubbing_project_id
-  WHERE project.content_id = 991234567 AND project.content_type = 'movie'
+  WHERE project.media_id = private.find_media_id('movie', 991234567)
     AND project.language = 'fr-FR' AND work.actor_id = 999999996;
   IF v_ambiguous_count <> 2 THEN
     RAISE EXCEPTION 'Distinct ambiguous credits were collapsed: %', v_ambiguous_count;
@@ -129,11 +128,11 @@ BEGIN
     OR v_replay->>'credits_mismatched' <> '2'
     OR (SELECT count(*) FROM public.work AS work
       JOIN public.dubbing_projects AS project ON project.id = work.dubbing_project_id
-      WHERE project.content_id = 991234567 AND project.content_type = 'movie'
+      WHERE project.media_id = private.find_media_id('movie', 991234567)
         AND project.language = 'fr-FR' AND work.actor_id = 999999996) <> 2
     OR (SELECT count(*) FROM public.work AS work
         JOIN public.dubbing_projects AS project ON project.id = work.dubbing_project_id
-        WHERE project.content_id = 991234567 AND project.content_type = 'movie'
+        WHERE project.media_id = private.find_media_id('movie', 991234567)
           AND project.language = 'fr-FR' AND work.actor_id = 999999996
           AND work.performance IN ('anonymous whitespace', 'anonymous null')) <> 2 THEN
     RAISE EXCEPTION 'Ambiguous credit replay overwrote or duplicated existing rows';

@@ -3,7 +3,7 @@ set -euo pipefail
 
 db_port="${LOCAL_SUPABASE_DB_PORT:-55322}"
 db_password="${LOCAL_SUPABASE_DB_PASSWORD:-postgres}"
-connection=( -h 127.0.0.1 -p "$db_port" -U postgres -d postgres -v ON_ERROR_STOP=1 )
+connection=( -h 127.0.0.1 -p "$db_port" -U postgres -d "${PGDATABASE:-postgres}" -v ON_ERROR_STOP=1 )
 content_id="$(date +%s)000"
 project_id=""
 first_pid=""
@@ -20,7 +20,7 @@ cleanup() {
 trap cleanup EXIT
 
 project_id="$(PGPASSWORD="$db_password" psql -qAt "${connection[@]}" -c \
-  "INSERT INTO public.dubbing_projects(content_id, content_type, language) VALUES (${content_id}, 'movie', 'fr-FR') RETURNING id")"
+  "INSERT INTO public.dubbing_projects(media_id, language) VALUES (private.resolve_media('movie', ${content_id}), 'fr-FR') RETURNING id")"
 
 PGPASSWORD="$db_password" psql "${connection[@]}" -c \
   "BEGIN; INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_id, character_name) VALUES (${project_id}, NULL, NULL, NULL, 'Race Role'); SELECT pg_sleep(2); COMMIT;" \

@@ -1,6 +1,6 @@
 import { useSupabaseAdmin } from "../../../utils/db/client";
 import { useIgdbClient, useTmdbClient, useTvdbClient } from "../../../utils";
-import { isRecord, readProperty } from "@app/shared-logic";
+import { isRecord, MEDIA_EMBED, mediaRefFromEmbed, readProperty } from "@app/shared-logic";
 import { MediaService } from "../../../utils/services/media";
 import { getDubbingProjects, getGamePageDubbingProjects } from "../../../utils/db/queries";
 import { loadGameCharacterCatalog } from "../../../utils/game-characters";
@@ -135,17 +135,21 @@ export default defineEventHandler(async (event) => {
     }
     const { data: character, error } = await supabase
       .from("game_characters")
-      .select("id, igdb_game_id, name, igdb_character_id")
+      .select(`id, name, igdb_character_id, ${MEDIA_EMBED}`)
       .eq("id", id)
       .maybeSingle();
     if (error)
       throw createError({ statusCode: 500, statusMessage: "Character could not be loaded" });
     if (!character) throw createError({ statusCode: 404, statusMessage: "Character not found" });
+    const igdbGameId = mediaRefFromEmbed(character.media)?.contentId;
+    if (igdbGameId === undefined) {
+      throw createError({ statusCode: 500, statusMessage: "Character could not be loaded" });
+    }
 
-    const characterCatalog = await loadGameCharacterCatalog(event, character.igdb_game_id, () =>
-      useIgdbClient().getGameCharacters(character.igdb_game_id),
+    const characterCatalog = await loadGameCharacterCatalog(event, igdbGameId, () =>
+      useIgdbClient().getGameCharacters(igdbGameId),
     );
-    const gameProjects = await getGamePageDubbingProjects(character.igdb_game_id);
+    const gameProjects = await getGamePageDubbingProjects(igdbGameId);
     const localCharacter = characterCatalog.characters.find(
       (entry) => entry.game_character_id === character.id,
     );
@@ -170,14 +174,14 @@ export default defineEventHandler(async (event) => {
       image: localCharacter?.mug_shot?.image_id,
       description: localCharacter?.description ?? null,
       externalUrl: null,
-      gameId: character.igdb_game_id,
+      gameId: igdbGameId,
       igdbCharacterId: character.igdb_character_id,
       appearances: scopedProjects.flatMap(({ project, cards }) =>
         cards.map((card) => ({
           project: {
             id: project.id,
             language: project.language,
-            content_id: character.igdb_game_id,
+            content_id: igdbGameId,
             content_type: "video_game",
             title: null,
             studio_data: project.studio_data,

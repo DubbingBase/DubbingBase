@@ -39,7 +39,7 @@ describe("ToyClient", () => {
   it("returns persisted toy metadata for a detail page", async () => {
     const { from } = createSupabaseMock({
       data: {
-        content_id: 1,
+        media_id: 1,
         name: "Lunii Storyteller",
         manufacturer: "Lunii",
         product_line: "My Fabulous Storyteller",
@@ -80,7 +80,7 @@ describe("ToyClient", () => {
       limit: vi.fn(async () => ({
         data: [
           {
-            content_id: 1,
+            media_id: 1,
             name: "Storyteller",
             manufacturer: "Lunii",
             product_line: "My Fabulous Storyteller",

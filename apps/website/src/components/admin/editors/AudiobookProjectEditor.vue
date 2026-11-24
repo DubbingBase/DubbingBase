@@ -168,6 +168,7 @@ const route = useRoute();
 const router = useRouter();
 const localePath = useLocalePath();
 const supabase = useSupabaseClient();
+const { fetchProjectTabs } = useDubbingProjectTabs();
 const saveDubbingProject = createDubbingProjectSaveClient((body) =>
   $fetch<DubbingProjectSaveResponse>("/api/save-dubbing-project", {
     method: "POST",
@@ -323,13 +324,7 @@ onMounted(async () => {
       await fetchBookMetadata();
 
       // 2. Fetch other dubbing projects for tabs
-      const { data: projects } = await supabase
-        .from("dubbing_projects")
-        .select("*, studios(id, name)")
-        .eq("content_id", openLibraryBookId.value)
-        .eq("content_type", "audiobook");
-
-      bookDubbingProjects.value = projects || [];
+      bookDubbingProjects.value = await fetchProjectTabs("audiobook", openLibraryBookId.value);
     }
 
     if (isEditMode.value) {

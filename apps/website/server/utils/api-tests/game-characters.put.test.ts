@@ -46,7 +46,13 @@ function mockDatabase() {
     error: null,
   }));
   const maybeSingle = vi.fn(async () => ({
-    data: { igdb_game_id: 42 },
+    data: {
+      media: {
+        id: 42,
+        kind: "video_game",
+        content_id: 42,
+      },
+    },
     error: null,
   }));
   const builder = {

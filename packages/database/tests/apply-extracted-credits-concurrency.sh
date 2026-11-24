@@ -15,23 +15,23 @@ if ! pg_isready -h "${db_host}" -p "${db_port}" -U postgres >/dev/null 2>&1; the
 fi
 
 cleanup() {
-  PGPASSWORD=postgres psql -v ON_ERROR_STOP=1 -h "${db_host}" -p "${db_port}" -U postgres -d postgres \
-    -c "DELETE FROM public.dubbing_projects WHERE content_id = ${content_id} AND content_type = 'movie' AND language = 'fr-FR'; DELETE FROM public.voice_actors WHERE firstname = '${firstname}' AND lastname = '${lastname}';" \
+  PGPASSWORD=postgres psql -v ON_ERROR_STOP=1 -h "${db_host}" -p "${db_port}" -U postgres -d "${PGDATABASE:-postgres}" \
+    -c "DELETE FROM public.dubbing_projects WHERE media_id IN (SELECT id FROM public.media WHERE kind = 'movie' AND content_id = ${content_id}) AND language = 'fr-FR'; DELETE FROM public.media WHERE kind = 'movie' AND content_id = ${content_id}; DELETE FROM public.voice_actors WHERE firstname = '${firstname}' AND lastname = '${lastname}';" \
     >/dev/null
 }
 trap cleanup EXIT
 cleanup
 
 query="SELECT public.apply_extracted_credits(${content_id}, 'movie', 'fr-FR', '${credit_json}'::jsonb)"
-PGPASSWORD=postgres psql -v ON_ERROR_STOP=1 -h "${db_host}" -p "${db_port}" -U postgres -d postgres -c "${query}" >/dev/null &
+PGPASSWORD=postgres psql -v ON_ERROR_STOP=1 -h "${db_host}" -p "${db_port}" -U postgres -d "${PGDATABASE:-postgres}" -c "${query}" >/dev/null &
 first_pid=$!
-PGPASSWORD=postgres psql -v ON_ERROR_STOP=1 -h "${db_host}" -p "${db_port}" -U postgres -d postgres -c "${query}" >/dev/null &
+PGPASSWORD=postgres psql -v ON_ERROR_STOP=1 -h "${db_host}" -p "${db_port}" -U postgres -d "${PGDATABASE:-postgres}" -c "${query}" >/dev/null &
 second_pid=$!
 wait "${first_pid}"
 wait "${second_pid}"
 
-counts=$(PGPASSWORD=postgres psql -v ON_ERROR_STOP=1 -h "${db_host}" -p "${db_port}" -U postgres -d postgres -Atqc \
-  "SELECT (SELECT count(*) FROM public.dubbing_projects WHERE content_id = ${content_id} AND content_type = 'movie' AND language = 'fr-FR') || ':' || (SELECT count(*) FROM public.voice_actors WHERE firstname = '${firstname}' AND lastname = '${lastname}') || ':' || (SELECT count(*) FROM public.work AS work JOIN public.dubbing_projects AS project ON project.id = work.dubbing_project_id WHERE project.content_id = ${content_id} AND project.content_type = 'movie' AND project.language = 'fr-FR')")
+counts=$(PGPASSWORD=postgres psql -v ON_ERROR_STOP=1 -h "${db_host}" -p "${db_port}" -U postgres -d "${PGDATABASE:-postgres}" -Atqc \
+  "SELECT (SELECT count(*) FROM public.dubbing_projects WHERE media_id = private.find_media_id('movie', ${content_id}) AND language = 'fr-FR') || ':' || (SELECT count(*) FROM public.voice_actors WHERE firstname = '${firstname}' AND lastname = '${lastname}') || ':' || (SELECT count(*) FROM public.work AS work JOIN public.dubbing_projects AS project ON project.id = work.dubbing_project_id WHERE project.media_id = private.find_media_id('movie', ${content_id}) AND project.language = 'fr-FR')")
 
 if [[ "${counts}" != "1:1:1" ]]; then
   echo "Concurrent bulk persistence produced unexpected project:voice_actor:work counts ${counts}." >&2

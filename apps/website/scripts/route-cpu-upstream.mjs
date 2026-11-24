@@ -93,7 +93,7 @@ const actorRoles = Array.from({ length: sizes.actorRoles }, (_, index) => {
     },
     dubbing_projects: {
       language: index % 2 === 0 ? "fr-FR" : "en-US",
-      content_id: 100_000 + index,
+      media: { id: 100_000 + index, kind: "movie", content_id: 100_000 + index },
     },
   };
 });
@@ -222,8 +222,11 @@ const voiceActor = {
     note: null,
     character_name: `CI character ${index}`,
     dubbing_projects: {
-      content_id: 300_000 + (index % sizes.uniqueMedia),
-      content_type: index % 2 === 0 ? "movie" : "tv",
+      media: {
+        id: 300_000 + (index % sizes.uniqueMedia),
+        kind: index % 2 === 0 ? "movie" : "tv",
+        content_id: 300_000 + (index % sizes.uniqueMedia),
+      },
       studios: { id: 10, name: "CI studio", logo_url: null },
     },
   })),
@@ -418,23 +421,23 @@ const supabaseResponse = (url) => {
   if (table === "toy_metadata") return { value: searchToys, single: false };
   if (table === "dubbing_projects") {
     const query = url.searchParams;
-    if (query.get("content_type") === "eq.video_game") {
+    if (query.get("media.kind") === "eq.video_game") {
       return { value: gameDubbingProjects, single: false };
     }
-    if (query.get("content_id") === "eq.1397" && query.get("content_type") === "eq.audiobook") {
+    if (query.get("media.content_id") === "eq.1397" && query.get("media.kind") === "eq.audiobook") {
       return {
         value: query.get("id") === "eq.1" ? [mediaCastProjects[0]] : mediaCastProjects,
         single: false,
       };
     }
-    if (query.get("content_type") === "eq.advertisement") {
+    if (query.get("media.kind") === "eq.advertisement") {
       return { value: searchAdvertisements, single: false };
     }
     return {
       value:
-        query.get("content_id") === "eq.1397" && query.get("content_type") === "eq.tv"
+        query.get("media.content_id") === "eq.1397" && query.get("media.kind") === "eq.tv"
           ? episodeDubbingProjects
-          : query.get("content_id") === "eq.31" && query.get("content_type") === "eq.tv"
+          : query.get("media.content_id") === "eq.31" && query.get("media.kind") === "eq.tv"
             ? seasonDubbingProjects
             : dubbingProjects,
       single: false,

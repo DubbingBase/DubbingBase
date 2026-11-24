@@ -187,6 +187,7 @@ const route = useRoute();
 const router = useRouter();
 const localePath = useLocalePath();
 const supabase = useSupabaseClient();
+const { fetchProjectTabs } = useDubbingProjectTabs();
 const saveDubbingProject = createDubbingProjectSaveClient((body) =>
   $fetch<DubbingProjectSaveResponse>("/api/save-dubbing-project", {
     method: "POST",
@@ -375,13 +376,7 @@ onMounted(async () => {
         console.error("Error loading toy metadata:", err);
       }
 
-      const { data: projects } = await supabase
-        .from("dubbing_projects")
-        .select("*, studios(id, name)")
-        .eq("content_id", parsedToyId.value)
-        .eq("content_type", "toy");
-
-      toyDubbingProjects.value = projects || [];
+      toyDubbingProjects.value = await fetchProjectTabs("toy", parsedToyId.value);
     }
 
     if (isEditMode.value) {

@@ -3,6 +3,9 @@
 # Database backup script for Supabase
 # Using password from environment variable or user prompt
 
+# Doppler's production config exposes the password as SUPABASE_DB_PASSWORD
+SUPABASE_PASSWORD="${SUPABASE_PASSWORD:-$SUPABASE_DB_PASSWORD}"
+
 # Get password from environment variable or prompt
 if [ -z "$SUPABASE_PASSWORD" ]; then
     read -sp "Enter Supabase password: " SUPABASE_PASSWORD

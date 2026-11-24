@@ -87,7 +87,7 @@ BEGIN
   END;
   IF EXISTS (
     SELECT 1 FROM public.dubbing_projects
-    WHERE content_id = 980204 AND content_type = 'movie'
+    WHERE media_id = private.find_media_id('movie', 980204)
   ) THEN
     RAISE EXCEPTION 'An invalid regional language created a project';
   END IF;
@@ -132,7 +132,7 @@ BEGIN
   END;
   IF EXISTS (
     SELECT 1 FROM public.dubbing_projects
-    WHERE content_id = 980202 AND content_type = 'movie' AND language = 'fr-FR'
+    WHERE media_id = private.find_media_id('movie', 980202) AND language = 'fr-FR'
   ) THEN
     RAISE EXCEPTION 'A failed assignment left an empty project behind';
   END IF;
@@ -196,8 +196,8 @@ BEGIN
   END IF;
 
   -- Multiple works for one actor are intentionally non-editable in this form.
-  INSERT INTO public.dubbing_projects(content_id, content_type, language, status)
-  VALUES (980204, 'movie', 'fr-FR', 'validated') RETURNING id INTO project_id;
+  INSERT INTO public.dubbing_projects(media_id, language, status)
+  VALUES (private.resolve_media('movie', 980204), 'fr-FR', 'validated') RETURNING id INTO project_id;
   INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_id)
   VALUES (project_id, actor_ambiguous, va_one, 80401)
   RETURNING id INTO ambiguous_work_one;
@@ -227,8 +227,8 @@ BEGIN
   END IF;
 
   -- Clearing one assignment deletes its exact work ID and leaves other actors alone.
-  INSERT INTO public.dubbing_projects(content_id, content_type, language, status)
-  VALUES (980205, 'movie', 'fr-FR', 'validated') RETURNING id INTO project_id;
+  INSERT INTO public.dubbing_projects(media_id, language, status)
+  VALUES (private.resolve_media('movie', 980205), 'fr-FR', 'validated') RETURNING id INTO project_id;
   INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id)
   VALUES (project_id, actor_clear, va_one) RETURNING id INTO clear_work_id;
   INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id)
@@ -266,23 +266,23 @@ BEGIN
       ))
     );
     RAISE EXCEPTION 'A stale work ID was accepted';
-  EXCEPTION WHEN SQLSTATE '40001' THEN
+  EXCEPTION WHEN SQLSTATE 'PT409' THEN
     NULL;
   END;
   IF EXISTS (
     SELECT 1 FROM public.dubbing_projects
-    WHERE content_id = 980206 AND content_type = 'movie' AND language = 'fr-CA'
+    WHERE media_id = private.find_media_id('movie', 980206) AND language = 'fr-CA'
   ) THEN
     RAISE EXCEPTION 'A stale work ID left a newly created project behind';
   END IF;
 
   -- France and Canada projects for one title keep exact work IDs and assignments isolated.
-  INSERT INTO public.dubbing_projects(content_id, content_type, language, status)
-  VALUES (980207, 'movie', 'fr-FR', 'validated') RETURNING id INTO project_id;
+  INSERT INTO public.dubbing_projects(media_id, language, status)
+  VALUES (private.resolve_media('movie', 980207), 'fr-FR', 'validated') RETURNING id INTO project_id;
   INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id)
   VALUES (project_id, actor_fr, va_one) RETURNING id INTO france_work_id;
-  INSERT INTO public.dubbing_projects(content_id, content_type, language, status)
-  VALUES (980207, 'movie', 'fr-CA', 'validated') RETURNING id INTO project_id;
+  INSERT INTO public.dubbing_projects(media_id, language, status)
+  VALUES (private.resolve_media('movie', 980207), 'fr-CA', 'validated') RETURNING id INTO project_id;
   INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id)
   VALUES (project_id, actor_fr, va_four) RETURNING id INTO canada_work_id;
 
@@ -352,7 +352,7 @@ BEGIN
       )
     );
     RAISE EXCEPTION 'A stale voice-cast edit overwrote a concurrent assignment';
-  EXCEPTION WHEN SQLSTATE '40001' THEN
+  EXCEPTION WHEN SQLSTATE 'PT409' THEN
     NULL;
   END;
   IF NOT EXISTS (
@@ -364,7 +364,7 @@ BEGIN
       AND work.character_id = 80801
       AND work.character_name = 'Concurrency character'
       AND work.note = 'Preserve after conflict'
-      AND project.content_id = 980208
+      AND project.media_id = private.find_media_id('movie', 980208)
       AND project.language = 'fr-FR'
       AND project.status = 'in_progress'
   ) OR NOT EXISTS (

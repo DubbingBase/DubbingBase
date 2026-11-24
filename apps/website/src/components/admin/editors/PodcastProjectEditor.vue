@@ -167,6 +167,7 @@ const route = useRoute();
 const router = useRouter();
 const localePath = useLocalePath();
 const supabase = useSupabaseClient();
+const { fetchProjectTabs } = useDubbingProjectTabs();
 const saveDubbingProject = createDubbingProjectSaveClient((body) =>
   $fetch<DubbingProjectSaveResponse>("/api/save-dubbing-project", {
     method: "POST",
@@ -319,13 +320,7 @@ onMounted(async () => {
     if (parsedPodcastId.value) {
       await fetchPodcastMetadata();
 
-      const { data: projects } = await supabase
-        .from("dubbing_projects")
-        .select("*, studios(id, name)")
-        .eq("content_id", parsedPodcastId.value)
-        .eq("content_type", "podcast");
-
-      podcastDubbingProjects.value = projects || [];
+      podcastDubbingProjects.value = await fetchProjectTabs("podcast", parsedPodcastId.value);
     }
 
     if (isEditMode.value) {

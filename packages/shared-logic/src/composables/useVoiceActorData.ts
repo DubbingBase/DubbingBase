@@ -23,6 +23,7 @@ export async function fetchVoiceActorData(
 
 import { ref, shallowRef, computed, watch, unref, type MaybeRef } from "vue";
 import type { MovieModel, SerieModel, PersonData, Actor, Tables } from "../types";
+import type { ProjectMediaRef } from "./useStudioData";
 
 type VoiceActorCastMember = {
   id: number;
@@ -52,7 +53,7 @@ type VoiceActorWork = Pick<
   | "suggestions"
   | "voice_actor_id"
 > & {
-  dubbing_projects?: Pick<Tables<"dubbing_projects">, "content_id" | "content_type"> & {
+  dubbing_projects?: ProjectMediaRef & {
     studios?: Pick<Tables<"studios">, "id" | "name" | "logo_url"> | null;
   };
 };

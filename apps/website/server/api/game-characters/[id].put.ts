@@ -1,5 +1,5 @@
 import { defineAdminHandler } from "../../utils/auth-handlers";
-import { isRecord } from "@app/shared-logic";
+import { isRecord, MEDIA_EMBED, mediaRefFromEmbed } from "@app/shared-logic";
 import { useIgdbClient } from "../../utils";
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { gameCharacterError, hasOnlyKeys, isUuid } from "../../utils/game-character-validation";
@@ -58,7 +58,7 @@ export default defineAdminHandler(async (event, admin) => {
   if (typeof igdbCharacterId === "number") {
     const { data: localCharacter, error: lookupError } = await supabase
       .from("game_characters")
-      .select("igdb_game_id")
+      .select(MEDIA_EMBED)
       .eq("id", gameCharacterId)
       .maybeSingle();
     if (lookupError) {
@@ -68,10 +68,15 @@ export default defineAdminHandler(async (event, admin) => {
       throw gameCharacterError(404, "Game character does not exist");
     }
 
+    const gameRef = mediaRefFromEmbed(localCharacter.media);
+    if (!gameRef) {
+      throw gameCharacterError(500, "Game character references could not be verified");
+    }
+
     let igdbCharacterBelongsToGame: boolean;
     try {
       igdbCharacterBelongsToGame = (
-        await useIgdbClient().getGameCharacters(localCharacter.igdb_game_id)
+        await useIgdbClient().getGameCharacters(gameRef.contentId)
       ).some((character) => character.id === igdbCharacterId);
     } catch {
       throw gameCharacterError(503, "IGDB characters are unavailable; the link was not saved");

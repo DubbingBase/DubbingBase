@@ -198,7 +198,12 @@
 </template>
 
 <script setup lang="ts">
-import { resolveMediaImage, validateDubbingLanguage } from "@app/shared-logic";
+import {
+  MEDIA_EMBED,
+  mediaRefFromEmbed,
+  resolveMediaImage,
+  validateDubbingLanguage,
+} from "@app/shared-logic";
 import { useCharacterImages } from "../../../composables/useCharacterImages";
 import { ref, onMounted, computed, nextTick, watch, type Ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -236,6 +241,7 @@ import { pickOriginalCastSeed, type CastWorkspaceRow } from "~/utils/cast-worksp
 
 useKeyboardInset();
 const supabase = useSupabaseClient();
+const { fetchProjectTabs } = useDubbingProjectTabs();
 const saveDubbingProject = createDubbingProjectSaveClient((body) =>
   $fetch<DubbingProjectSaveResponse>("/api/save-dubbing-project", {
     method: "POST",
@@ -569,19 +575,16 @@ const {
       }
 
       // Fetch all dubbing projects for this work for the tabs
-      const { data: pData } = await supabase
-        .from("dubbing_projects")
-        .select("id, language, studio_id, studios(name)")
-        .eq("content_id", tmdbId.value)
-        .eq("content_type", config.contentType);
-      projects = pData || [];
+      projects = await fetchProjectTabs(config.contentType, tmdbId.value);
     }
 
     if (isEditMode.value) {
       const projectId = Number(projectIdParam);
       const { data: proj, error: projectError } = await supabase
         .from("dubbing_projects")
-        .select("*, studios(name), work(*, voice_actors(firstname, lastname, profile_picture))")
+        .select(
+          `*, studios(name), work(*, voice_actors(firstname, lastname, profile_picture)), ${MEDIA_EMBED}`,
+        )
         .eq("id", projectId)
         .single();
       if (projectError || !proj) throw projectError || new Error("Project not found");
@@ -645,8 +648,11 @@ watch(
       tmdbDubbingProjects.value = data.projects;
 
       if (data.project) {
-        contentId.value = data.project.content_id;
-        contentType.value = data.project.content_type;
+        const mediaRef = mediaRefFromEmbed(data.project.media);
+        if (mediaRef) {
+          contentId.value = mediaRef.contentId;
+          contentType.value = mediaRef.contentType;
+        }
         dubbingLanguage.value = data.project.language || "";
         status.value = getEditableDubbingProjectStatus(data.project.status);
         selectedStudioId.value = data.project.studio_id;

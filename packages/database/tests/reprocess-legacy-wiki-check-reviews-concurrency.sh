@@ -7,11 +7,11 @@ set -euo pipefail
 db_host="${DB_HOST:-127.0.0.1}"
 db_port="${DB_PORT:-55322}"
 db_user="${DB_USER:-postgres}"
-db_name="${DB_NAME:-postgres}"
+db_name="${DB_NAME:-${PGDATABASE:-postgres}}"
 export PGPASSWORD="${PGPASSWORD:-postgres}"
 
-if [[ "$db_host" != "127.0.0.1" && "$db_host" != "localhost" ]] || [[ "$db_port" != "55322" ]] || [[ "$db_name" != "postgres" ]]; then
-  printf '%s\n' 'This regression fixture only permits the local Supabase database at 127.0.0.1:55322/postgres.' >&2
+if [[ "$db_host" != "127.0.0.1" && "$db_host" != "localhost" ]] || [[ "$db_port" != "55322" ]] || [[ ! "$db_name" =~ ^[A-Za-z0-9_]+$ ]]; then
+  printf '%s\n' 'This regression fixture only permits a local database at 127.0.0.1:55322 (DB_NAME or PGDATABASE, default postgres).' >&2
   exit 2
 fi
 
@@ -59,7 +59,7 @@ BEGIN
     OR EXISTS (SELECT 1 FROM pgmq.q_wiki_check WHERE message->>'tmdb_id' = '1492640')
     OR EXISTS (SELECT 1 FROM pgmq.q_wiki_scan WHERE message->>'tmdb_id' = '1492640')
     OR EXISTS (SELECT 1 FROM pgmq.q_wiki_extract WHERE message->>'tmdb_id' = '-1492640')
-    OR EXISTS (SELECT 1 FROM public.dubbing_projects WHERE content_id = -1492640) THEN
+    OR EXISTS (SELECT 1 FROM public.dubbing_projects WHERE media_id = private.find_media_id('movie', 991492640)) THEN
     RAISE EXCEPTION 'Legacy reprocessor concurrency fixture ID is already in use';
   END IF;
 END;

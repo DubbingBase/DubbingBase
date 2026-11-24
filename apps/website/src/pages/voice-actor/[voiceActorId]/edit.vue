@@ -892,14 +892,34 @@ import {
   voiceActorProfilePayload,
 } from "~/utils/voice-actor-profile-save";
 import type { Tables } from "@app/supabase/types";
+import { MEDIA_EMBED, mediaRefFromEmbed } from "@app/shared-logic";
 import type { SearchResult } from "@app/shared-logic";
 import { useMediaImage } from "~/composables/useMediaImage";
 
 const mediaImage = useMediaImage();
 
 type LinkedWork = Tables<"work"> & {
-  dubbing_projects: Pick<Tables<"dubbing_projects">, "id" | "content_id" | "content_type"> | null;
+  /** Project with its provider reference resolved from the embedded media. */
+  dubbing_projects: { id: number; content_id: number; content_type: string } | null;
 };
+
+async function fetchLinkedWorks(voiceActorId: number): Promise<LinkedWork[]> {
+  const { data, error } = await supabase
+    .from("work")
+    .select(`*, dubbing_projects(id, ${MEDIA_EMBED})`)
+    .eq("voice_actor_id", voiceActorId);
+  if (error) throw error;
+  return data.map(({ dubbing_projects: project, ...work }) => {
+    const ref = mediaRefFromEmbed(project?.media);
+    return {
+      ...work,
+      dubbing_projects:
+        project && ref
+          ? { id: project.id, content_id: ref.contentId, content_type: ref.contentType }
+          : null,
+    };
+  });
+}
 
 type MediaSearchItem = {
   id: number | string;
@@ -1104,14 +1124,9 @@ const { data: initialData } = await useAsyncData(
 
     if (vaErr) throw vaErr;
 
-    const { data: works, error: worksErr } = await supabase
-      .from("work")
-      .select("*, dubbing_projects(id, content_id, content_type)")
-      .eq("voice_actor_id", numId);
-
     return {
       voiceActor: va,
-      linkedWorks: works || [],
+      linkedWorks: await fetchLinkedWorks(numId),
     };
   },
   { getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp) },
@@ -1499,11 +1514,7 @@ async function submitWorkLink(opts: {
     });
     voiceActorWorkRequestIds.clear();
     showToast(`Linked to "${selectedMedia.value.title || selectedMedia.value.name}"`, "success");
-    const { data: refreshed } = await supabase
-      .from("work")
-      .select("*, dubbing_projects(id, content_id, content_type)")
-      .eq("voice_actor_id", numId);
-    if (refreshed) linkedWorks.value = refreshed;
+    linkedWorks.value = await fetchLinkedWorks(numId);
     closeLinkWorkModal();
   } catch (err: unknown) {
     showToast(getRequestErrorMessage(err, "Failed to link work"), "error");

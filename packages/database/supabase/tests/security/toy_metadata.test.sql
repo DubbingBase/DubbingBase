@@ -7,17 +7,15 @@ SELECT is(
   (
     SELECT count(*)
     FROM (
-      SELECT DISTINCT project.content_id
+      SELECT DISTINCT project.media_id
       FROM public.dubbing_projects AS project
-      LEFT JOIN public.toy_metadata AS metadata
-        ON metadata.content_id = project.content_id
-      WHERE project.content_type = 'toy'
-        AND project.content_id <> 0
-        AND metadata.content_id IS NULL
+      JOIN public.media AS media ON media.id = project.media_id AND media.kind = 'toy'
+      LEFT JOIN public.toy_metadata AS metadata ON metadata.media_id = project.media_id
+      WHERE metadata.media_id IS NULL
     ) AS missing_metadata
   ),
   0::BIGINT,
-  'every existing non-zero toy project has persisted metadata'
+  'every existing toy project has persisted metadata'
 );
 
 INSERT INTO auth.users (
@@ -42,8 +40,11 @@ INSERT INTO auth.users (
     '{}'::JSONB
   );
 
-INSERT INTO public.dubbing_projects (content_id, content_type, language, status)
-VALUES (910001, 'toy', 'fr-FR', 'validated');
+INSERT INTO public.media (id, kind, content_id)
+OVERRIDING SYSTEM VALUE
+VALUES (910001, 'toy', 910001);
+INSERT INTO public.dubbing_projects (media_id, language, status)
+VALUES (910001, 'fr-FR', 'validated');
 
 SELECT ok(
   has_table_privilege('service_role', 'public.toy_metadata', 'SELECT'),
@@ -93,7 +94,7 @@ SELECT is(
   'retries with the same request id replay the audited save'
 );
 SELECT is(
-  (SELECT name FROM public.toy_metadata WHERE content_id = 910001),
+  (SELECT name FROM public.toy_metadata WHERE media_id = 910001),
   'Lunii Storyteller'::TEXT,
   'created toy name is persisted'
 );
@@ -107,13 +108,13 @@ SELECT lives_ok(
     'cccccccc-cccc-4ccc-8ccc-ccccccccccc1',
     'dddddddd-dddd-4ddd-8ddd-ddddddddddd2',
     910001,
-    (SELECT updated_at FROM public.toy_metadata WHERE content_id = 910001),
+    (SELECT updated_at FROM public.toy_metadata WHERE media_id = 910001),
     '{"name":"Lunii Storyteller 2","manufacturer":"Lunii","product_line":"My Fabulous Storyteller","release_year":2022,"cover_url":"https://example.test/lunii.jpg","description":"Updated description"}'::JSONB
   )$$,
   'admin metadata update succeeds with the current version'
 );
 SELECT is(
-  (SELECT description FROM public.toy_metadata WHERE content_id = 910001),
+  (SELECT description FROM public.toy_metadata WHERE media_id = 910001),
   'Updated description'::TEXT,
   'metadata update is persisted'
 );
@@ -122,7 +123,7 @@ SELECT throws_ok(
     'cccccccc-cccc-4ccc-8ccc-ccccccccccc1',
     'dddddddd-dddd-4ddd-8ddd-ddddddddddd3',
     910001,
-    (SELECT created_at FROM public.toy_metadata WHERE content_id = 910001),
+    (SELECT created_at FROM public.toy_metadata WHERE media_id = 910001),
     '{"name":"Stale name","manufacturer":null,"product_line":null,"release_year":null,"cover_url":null,"description":null}'::JSONB
   )$$,
   '55000',
@@ -134,7 +135,7 @@ SELECT throws_ok(
     'cccccccc-cccc-4ccc-8ccc-ccccccccccc2',
     'dddddddd-dddd-4ddd-8ddd-ddddddddddd4',
     910001,
-    (SELECT updated_at FROM public.toy_metadata WHERE content_id = 910001),
+    (SELECT updated_at FROM public.toy_metadata WHERE media_id = 910001),
     '{"name":"Not allowed","manufacturer":null,"product_line":null,"release_year":null,"cover_url":null,"description":null}'::JSONB
   )$$,
   '42501',
@@ -146,7 +147,7 @@ SELECT throws_ok(
     'cccccccc-cccc-4ccc-8ccc-ccccccccccc1',
     'dddddddd-dddd-4ddd-8ddd-ddddddddddd5',
     910001,
-    (SELECT updated_at FROM public.toy_metadata WHERE content_id = 910001),
+    (SELECT updated_at FROM public.toy_metadata WHERE media_id = 910001),
     '{"name":"Unsafe URL","manufacturer":null,"product_line":null,"release_year":null,"cover_url":"javascript:alert(1)","description":null}'::JSONB
   )$$,
   '22023',
@@ -186,12 +187,12 @@ SELECT is(
   'controlled internal toy creation returns a project result'
 );
 SELECT is(
-  (SELECT name FROM public.toy_metadata WHERE content_id = -1),
+  (SELECT name FROM public.toy_metadata WHERE name = 'Tonies Audio Player'),
   'Tonies Audio Player'::TEXT,
   'controlled internal toy creation persists its name'
 );
 SELECT is(
-  (SELECT product_line FROM public.toy_metadata WHERE content_id = -1),
+  (SELECT product_line FROM public.toy_metadata WHERE name = 'Tonies Audio Player'),
   'Toniebox'::TEXT,
   'controlled internal toy creation persists product line metadata'
 );
