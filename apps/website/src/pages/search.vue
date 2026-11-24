@@ -76,6 +76,7 @@
             v-for="(item, index) in filteredResults"
             :key="`${item.media_type}-${item.id}`"
             :result="item"
+            :href="localePath(getSearchResultRoute(item))"
             :media-type-label="getMediaTypeLabel(item.media_type)"
             :selected="index === selectedIndex"
             :disabled="loading"

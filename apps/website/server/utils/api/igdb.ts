@@ -289,6 +289,7 @@ export class IgdbClient {
     return results[0] ?? null;
   }
 
+  /** Search full games only: main games, remakes and remasters (no DLC, bundles, packs, ports). */
   async searchGames(queryText: string): Promise<IgdbGame[]> {
     const escapedQuery = queryText.replace(/"/g, '\\"');
     const results = await this.query(
@@ -296,7 +297,7 @@ export class IgdbClient {
       `search "${escapedQuery}";
        fields id, name, summary, rating, rating_count, first_release_date,
               cover.image_id, genres.name, platforms.name;
-       where version_parent = null;
+       where version_parent = null & game_type = (0, 8, 9);
        limit 10;`,
       isIgdbGame,
     );

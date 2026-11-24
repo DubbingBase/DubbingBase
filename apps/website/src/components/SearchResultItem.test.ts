@@ -15,6 +15,7 @@ describe("SearchResultItem", () => {
           title: "The Witcher 3: Wild Hunt",
           cover,
         },
+        href: "/game/42",
         mediaTypeLabel: "Video Game",
         selected: false,
       },
@@ -32,6 +33,7 @@ describe("SearchResultItem", () => {
           title: "The Witcher 3: Wild Hunt",
           first_release_date: 1432180800,
         },
+        href: "/game/42",
         mediaTypeLabel: "Video Game",
         selected: false,
       },
@@ -46,5 +48,24 @@ describe("SearchResultItem", () => {
       "text-[var(--app-color-search-video-game)]",
     );
     expect(wrapper.attributes("aria-label")).toBe("The Witcher 3: Wild Hunt, Video Game, 2015");
+  });
+
+  it("renders a real link and only intercepts plain left clicks", async () => {
+    const wrapper = mount(SearchResultItem, {
+      props: {
+        result: { id: 42, media_type: "video_game", title: "Game" },
+        href: "/game/42",
+        mediaTypeLabel: "Video Game",
+        selected: false,
+      },
+    });
+
+    expect(wrapper.element.tagName).toBe("A");
+    expect(wrapper.attributes("href")).toBe("/game/42");
+    await wrapper.trigger("click", { ctrlKey: true });
+    await wrapper.trigger("click", { button: 1 });
+    expect(wrapper.emitted("select")).toBeUndefined();
+    await wrapper.trigger("click");
+    expect(wrapper.emitted("select")).toHaveLength(1);
   });
 });

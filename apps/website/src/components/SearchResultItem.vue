@@ -1,11 +1,11 @@
 <template>
-  <button
-    type="button"
-    class="group flex w-full cursor-pointer items-center gap-3 rounded-2xl border p-3 text-left transition theme-surface theme-border-subtle theme-focus theme-hover-surface-muted theme-hover-border-strong sm:gap-4 sm:p-4"
+  <a
+    :href="href"
+    class="group flex w-full cursor-pointer items-center gap-3 rounded-2xl border p-3 text-left no-underline transition theme-surface theme-border-subtle theme-focus theme-hover-surface-muted theme-hover-border-strong sm:gap-4 sm:p-4"
     :class="selected ? 'theme-selected theme-border-strong' : ''"
     :aria-label="accessibleLabel"
-    :disabled="disabled"
-    @click="$emit('select')"
+    :aria-disabled="disabled || undefined"
+    @click="handleClick"
   >
     <div
       class="relative flex h-[68px] w-[50px] shrink-0 items-center justify-center overflow-hidden rounded-xl theme-surface-muted sm:h-[76px] sm:w-[56px]"
@@ -55,7 +55,7 @@
         </span>
       </div>
     </div>
-  </button>
+  </a>
 </template>
 
 <script setup lang="ts">
@@ -80,6 +80,8 @@ const mediaImage = useMediaImage();
 
 const props = defineProps<{
   result: SearchResult;
+  /** Destination URL, so modified clicks (middle click, ctrl/cmd) open a new tab natively. */
+  href: string;
   mediaTypeLabel: string;
   selected: boolean;
   disabled?: boolean;
@@ -109,9 +111,18 @@ const mediaTypeIconColors: Record<SearchResult["media_type"], string> = {
   toy: "text-[var(--app-color-search-toy)]",
 };
 
-defineEmits<{
+const emit = defineEmits<{
   select: [];
 }>();
+
+/** Handle plain left clicks with client-side navigation; let the browser handle modified clicks. */
+const handleClick = (event: MouseEvent): void => {
+  if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+    return;
+  }
+  event.preventDefault();
+  if (!props.disabled) emit("select");
+};
 
 const displayName = computed(
   () =>
