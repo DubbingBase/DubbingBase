@@ -17,7 +17,7 @@ beforeEach(() => vi.clearAllMocks());
 const route = defineApiRoute({
   summary: "Echo",
   tags: ["Test"],
-  scope: "voice-actors:write",
+  scope: "voice-actors:update",
   idempotent: true,
   params: v.object({ id: v.pipe(v.string(), v.regex(/^\d+$/), v.transform(Number)) }),
   query: v.object({}),
@@ -83,12 +83,15 @@ describe("defineApiRoute", () => {
     const response = await call({ token: "dbk_live_x" });
     expect(response.status).toBe(403);
     expect(await response.json()).toEqual({
-      error: { code: "insufficient_scope", message: expect.any(String) },
+      error: {
+        code: "insufficient_scope",
+        message: expect.stringContaining("Its scopes: voice-actors:read"),
+      },
     });
   });
 
   it("validates params, body and the idempotency key before running the handler", async () => {
-    principal(["voice-actors:write"]);
+    principal(["voice-actors:update"]);
     expect((await call({ token: "dbk_live_x", id: "abc" })).status).toBe(400);
     expect((await call({ token: "dbk_live_x", body: { name: "" } })).status).toBe(400);
     expect((await call({ token: "dbk_live_x", body: { name: "x", extra: 1 } })).status).toBe(400);
@@ -96,12 +99,12 @@ describe("defineApiRoute", () => {
   });
 
   it("generates an idempotency key when the client sends none", async () => {
-    principal(["voice-actors:write"]);
+    principal(["voice-actors:update"]);
     expect((await call({ token: "dbk_live_x", key: null })).status).toBe(200);
   });
 
   it("runs the handler, strips fields outside the response schema and disables caching", async () => {
-    principal(["voice-actors:write"]);
+    principal(["voice-actors:update"]);
     const response = await call({ token: "dbk_live_x", body: { name: "Ada" } });
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe("no-store");
@@ -111,7 +114,7 @@ describe("defineApiRoute", () => {
 
   it("documents scope, body, idempotency and error responses in the OpenAPI operation", () => {
     const operation = operationFor(route.docs, {});
-    expect(operation.security).toEqual([{ bearerAuth: ["voice-actors:write"] }]);
+    expect(operation.security).toEqual([{ bearerAuth: ["voice-actors:update"] }]);
     expect(operation.requestBody).toBeDefined();
     expect(operation.parameters.map((parameter) => parameter.name)).toEqual([
       "id",

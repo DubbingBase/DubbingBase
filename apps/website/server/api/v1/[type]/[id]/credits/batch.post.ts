@@ -33,7 +33,7 @@ const BatchItem = v.strictObject({
 export const route = defineApiRoute({
   summary: "Add credits",
   tags: ["Credits"],
-  scope: "credits:write",
+  scope: "credits:create",
   params: mediaParams,
   query: v.object({
     /** `true` validates everything and reports what would happen without writing. */
@@ -49,6 +49,17 @@ export const route = defineApiRoute({
         /** `create` adds a credit; `unchanged` means that voice actor already holds that role. */
         action: v.picklist(["create", "unchanged"]),
         credit: v.nullable(v.string()),
+        /** Dry run only: the credit a `create` item would add; null otherwise. */
+        would_create: v.nullable(
+          v.object({
+            character_name: v.string(),
+            voice_actor: v.object({ id: v.number(), firstname: v.string(), lastname: v.string() }),
+            language: v.string(),
+            performance: performanceSchema,
+            actor_id: v.nullable(v.number()),
+            game_character_id: v.nullable(v.string()),
+          }),
+        ),
       }),
     ),
   }),
@@ -59,6 +70,7 @@ export const route = defineApiRoute({
 
     // Everything is checked before the first write, so a bad item rejects the whole request.
     const existing: (number | null)[] = [];
+    const actors: { id: number; firstname: string; lastname: string }[] = [];
     for (const [index, item] of body.credits.entries()) {
       if (item.game_character_id !== null && key.contentType !== "video_game") {
         throw new ApiError(400, "invalid_request", `credits.${index}: only games have characters.`);
@@ -98,13 +110,14 @@ export const route = defineApiRoute({
       }
       const { data: actor, error: actorError } = await supabase
         .from("voice_actors")
-        .select("id")
+        .select("id, firstname, lastname")
         .eq("id", item.voice_actor_id)
         .maybeSingle();
       if (actorError) throw actorError;
       if (!actor) {
         throw new ApiError(404, "not_found", `credits.${index}: voice actor not found.`);
       }
+      actors.push({ id: actor.id, firstname: actor.firstname, lastname: actor.lastname });
       // The same role is one credit: same project, voice actor, cast id and character name.
       const { data: project, error: projectError } = await eqMediaRef(
         supabase.from("dubbing_projects").select(`id, ${MEDIA_FILTER_EMBED}`),
@@ -139,11 +152,29 @@ export const route = defineApiRoute({
     if (dryRun) {
       return {
         dry_run: true,
-        data: body.credits.map((_, index) => {
+        data: body.credits.map((item, index) => {
           const match = existing[index] ?? null;
-          return match === null
-            ? { action: "create" as const, credit: null }
-            : { action: "unchanged" as const, credit: `${base}/credits/${match}` };
+          if (match !== null) {
+            return {
+              action: "unchanged" as const,
+              credit: `${base}/credits/${match}`,
+              would_create: null,
+            };
+          }
+          const actor = actors[index];
+          if (!actor) throw new Error("Voice actor missing after validation");
+          return {
+            action: "create" as const,
+            credit: null,
+            would_create: {
+              character_name: item.character_name,
+              voice_actor: actor,
+              language: item.language,
+              performance: item.performance,
+              actor_id: item.actor_id,
+              game_character_id: item.game_character_id,
+            },
+          };
         }),
       };
     }
@@ -168,6 +199,7 @@ export const route = defineApiRoute({
     const results = written.map((credit) => ({
       action: credit.created ? ("create" as const) : ("unchanged" as const),
       credit: `${base}/credits/${credit.work_id}`,
+      would_create: null,
     }));
     const created = written.filter((credit) => credit.created).length;
     if (created > 0) {

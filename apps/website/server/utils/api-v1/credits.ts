@@ -188,11 +188,11 @@ export async function mutateCredits(
 export function notifyCreditChange(
   event: H3Event,
   userId: string,
-  edit: { entityId: string | number; detail: string; path: string },
+  edit: { entity?: string; entityId: string | number; detail: string; path: string },
 ): void {
   notifyContributionEdit(
     event,
     { id: userId, app_metadata: {} },
-    { entity: "media", via: "api", ...edit },
+    { via: "api", ...edit, entity: edit.entity ?? "media" },
   );
 }

@@ -933,6 +933,16 @@ export type Database = {
           replayed: boolean;
         }[];
       };
+      api_create_game_character: {
+        Args: {
+          p_actor_id: string;
+          p_igdb_character_id: number;
+          p_igdb_game_id: number;
+          p_name: string;
+          p_request_id: string;
+        };
+        Returns: Json;
+      };
       api_create_internal_media: {
         Args: {
           p_actor_id: string;
@@ -948,8 +958,30 @@ export type Database = {
         };
         Returns: Json;
       };
+      api_create_voice_actor: {
+        Args: {
+          p_actor_id: string;
+          p_date_of_birth: string;
+          p_firstname: string;
+          p_lastname: string;
+          p_request_id: string;
+          p_tmdb_id: number;
+          p_wikidata_id: string;
+        };
+        Returns: Json;
+      };
       api_mutate_credits: {
         Args: { p_items: Json; p_operation: string; p_user_id: string };
+        Returns: Json;
+      };
+      api_update_game_character_references: {
+        Args: {
+          p_actor_id: string;
+          p_expected_updated_at: string;
+          p_game_character_id: string;
+          p_references: Json;
+          p_request_id: string;
+        };
         Returns: Json;
       };
       apply_extracted_credits: {

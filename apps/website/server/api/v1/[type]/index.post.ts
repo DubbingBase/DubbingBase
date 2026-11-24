@@ -15,7 +15,7 @@ const optionalText = v.optional(v.nullable(v.pipe(v.string(), v.trim(), v.maxLen
 export const route = defineApiRoute({
   summary: "Create an advertisement or toy",
   tags: ["Media"],
-  scope: "credits:write",
+  scope: "credits:create",
   idempotent: true,
   params: v.object({ type: internalSegment }),
   query: v.object({}),

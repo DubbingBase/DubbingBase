@@ -5,6 +5,8 @@ export class ApiError extends Error {
     readonly code: string,
     message: string,
     readonly headers: Record<string, string> = {},
+    /** Extra machine-readable fields rendered inside `error`, e.g. the matches of a duplicate. */
+    readonly details: Record<string, unknown> = {},
   ) {
     super(message);
     this.name = "ApiError";

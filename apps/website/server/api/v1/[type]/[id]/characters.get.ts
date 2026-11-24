@@ -10,7 +10,7 @@ const PAGE = 1000;
 export const route = defineApiRoute({
   summary: "List the characters credited on a media entry",
   tags: ["Credits"],
-  scope: "credits:read",
+  scope: "characters:read",
   params: mediaParams,
   query: v.object({}),
   response: v.object({
@@ -20,6 +20,9 @@ export const route = defineApiRoute({
       v.object({
         name: v.string(),
         game_character_id: v.nullable(v.string()),
+        /** The IGDB character this game character is linked to, if any (games only). */
+        igdb_character_id: v.nullable(v.number()),
+        wikidata_qid: v.nullable(v.string()),
         languages: v.array(v.string()),
         credits: v.number(),
       }),
@@ -39,7 +42,14 @@ export const route = defineApiRoute({
 
     const groups = new Map<
       string,
-      { name: string; game_character_id: string | null; languages: Set<string>; credits: number }
+      {
+        name: string;
+        game_character_id: string | null;
+        igdb_character_id: number | null;
+        wikidata_qid: string | null;
+        languages: Set<string>;
+        credits: number;
+      }
     >();
     if (languageOf.size > 0) {
       for (let from = 0; ; from += PAGE) {
@@ -58,6 +68,8 @@ export const route = defineApiRoute({
           const group = groups.get(id) ?? {
             name,
             game_character_id: row.game_character_id,
+            igdb_character_id: null,
+            wikidata_qid: null,
             languages: new Set<string>(),
             credits: 0,
           };
@@ -73,7 +85,9 @@ export const route = defineApiRoute({
       // Characters registered for the game appear even before they have a credit.
       for (let from = 0; ; from += PAGE) {
         const { data, error } = await eqMediaRef(
-          supabase.from("game_characters").select(`id, name, ${MEDIA_FILTER_EMBED}`),
+          supabase
+            .from("game_characters")
+            .select(`id, name, igdb_character_id, wikidata_qid, ${MEDIA_FILTER_EMBED}`),
           key.contentType,
           key.contentId,
         )
@@ -84,11 +98,15 @@ export const route = defineApiRoute({
           const group = groups.get(character.id);
           if (group) {
             if (!group.name) group.name = character.name.trim();
+            group.igdb_character_id = character.igdb_character_id;
+            group.wikidata_qid = character.wikidata_qid;
             continue;
           }
           groups.set(character.id, {
             name: character.name.trim(),
             game_character_id: character.id,
+            igdb_character_id: character.igdb_character_id,
+            wikidata_qid: character.wikidata_qid,
             languages: new Set<string>(),
             credits: 0,
           });

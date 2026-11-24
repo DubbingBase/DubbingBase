@@ -51,7 +51,7 @@ function setup(
 const base: Row = {
   id: "t1",
   user_id: "u1",
-  scopes: ["voice-actors:read", "voice-actors:write", "unknown:scope"],
+  scopes: ["voice-actors:read", "voice-actors:update", "unknown:scope"],
   expires_at: null,
   revoked_at: null,
   last_used_at: new Date().toISOString(),
@@ -67,7 +67,7 @@ describe("authenticateApiToken", () => {
     expect(await authenticateApiToken(event, "dbk_live_x")).toEqual({
       tokenId: "t1",
       userId: "u1",
-      scopes: ["voice-actors:read", "voice-actors:write"],
+      scopes: ["voice-actors:read", "voice-actors:update"],
     });
   });
 
