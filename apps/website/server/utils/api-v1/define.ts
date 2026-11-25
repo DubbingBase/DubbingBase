@@ -32,6 +32,7 @@ export interface ApiRouteDefinition<
   TBody extends v.GenericSchema,
 > {
   summary: string;
+  description?: string;
   tags: readonly string[];
   scope: ApiScope;
   params: TParams;
@@ -56,6 +57,7 @@ export interface ApiRouteDefinition<
 /** What the spec builder needs from a definition, without the handler's generics. */
 export interface ApiRouteDocs {
   summary: string;
+  description?: string;
   tags: readonly string[];
   scope: ApiScope;
   params: ObjectSchema;
@@ -238,6 +240,7 @@ export function operationFor(docs: ApiRouteDocs, components: SchemaComponents) {
     : [];
   return {
     summary: docs.summary,
+    ...(docs.description ? { description: docs.description } : {}),
     tags: [...docs.tags],
     security: [{ bearerAuth: [docs.scope] }],
     parameters: [
@@ -262,6 +265,9 @@ export function operationFor(docs: ApiRouteDocs, components: SchemaComponents) {
       401: errorResponse("Missing, invalid, expired or revoked token"),
       403: errorResponse("The token lacks the required scope"),
       ...(docs.notFound ? { 404: errorResponse(docs.notFound) } : {}),
+      ...(docs.idempotent
+        ? { 409: errorResponse("The request conflicts with an earlier operation") }
+        : {}),
     },
   };
 }
