@@ -123,6 +123,10 @@
   - _...1 more_
 - `apps/website/server/utils/db/client.ts` — function useSupabaseAdmin: (event?) => SupabaseClient<Database>
 - `apps/website/server/utils/db/dubbing-project.ts` — function findOrCreateDubbingProject: (contentId, contentType, dubbingLanguage, actorId, voiceActorId, requestId) => Promise<number>
+- `apps/website/server/utils/db/known-content-ids.ts`
+  - function isKnownMedia: (kind, contentId) => Promise<boolean>
+  - function isKnownActor: (actorId) => Promise<boolean>
+  - function invalidateKnownContentIds: () => Promise<void>
 - `apps/website/server/utils/db/queries.ts`
   - function getWorkByActor: (actorId) => void
   - function getActorPageWorkByActor: (actorId) => void

@@ -2,9 +2,9 @@
 
 > **Navigation aid.** Library inventory extracted via AST. Read the source files listed here before modifying exported functions.
 
-**149 library files** across 3 modules
+**150 library files** across 3 modules
 
-## Website (125 files)
+## Website (126 files)
 
 - `apps/website/server/utils/notifications/discord.ts` — shortText, errorFields, normalizeDiscordUrl, buildDiscordEmbed, beginDiscordDigest, severityOf, …
 - `apps/website/src/utils/dubbing-project-save.ts` — getEditableDubbingProjectStatus, serializeGameProjectCastRows, createRequestId, createStableRequestIdFactory, createDubbingProjectSaveClient, isDubbingProjectSaveConflict, …
@@ -31,7 +31,7 @@
 - `apps/website/src/utils/cast-workspace.ts` — filterCastRows, summarizeCast, getInitials, CastWorkspaceRow, CastFilter, ORIGINAL_CAST_SEED_LIMIT, …
 - `apps/website/server/utils/api-v1/projects.ts` — toProject, getProject, ProjectOutput, Project, ProjectSummary, PROJECT_SELECT
 - `apps/website/server/utils/api-v1/tokens.ts` — hashApiToken, generateApiToken, readBearerToken, authenticateApiToken, ApiPrincipal, API_TOKEN_PREFIX
-- _…and 100 more files_
+- _…and 101 more files_
 
 ## Shared-logic (23 files)
 

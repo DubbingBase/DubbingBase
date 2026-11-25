@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/website, @app/supabase, @app/locales, @app/shared-logic
 
-> 89 routes | 30 models | 145 components | 149 lib files | 53 env vars | 15 middleware | 47% test coverage
-> **Token savings:** this file is ~20,100 tokens. Without it, AI exploration would cost ~163,700 tokens. **Saves ~143,700 tokens per conversation.**
-> **Last scanned:** 2026-11-25 16:23 — re-run after significant changes
+> 89 routes | 30 models | 145 components | 150 lib files | 53 env vars | 15 middleware | 47% test coverage
+> **Token savings:** this file is ~20,100 tokens. Without it, AI exploration would cost ~164,000 tokens. **Saves ~143,900 tokens per conversation.**
+> **Last scanned:** 2026-11-25 20:00 — re-run after significant changes
 
 ---
 
@@ -599,6 +599,10 @@
   - _...1 more_
 - `apps/website/server/utils/db/client.ts` — function useSupabaseAdmin: (event?) => SupabaseClient<Database>
 - `apps/website/server/utils/db/dubbing-project.ts` — function findOrCreateDubbingProject: (contentId, contentType, dubbingLanguage, actorId, voiceActorId, requestId) => Promise<number>
+- `apps/website/server/utils/db/known-content-ids.ts`
+  - function isKnownMedia: (kind, contentId) => Promise<boolean>
+  - function isKnownActor: (actorId) => Promise<boolean>
+  - function invalidateKnownContentIds: () => Promise<void>
 - `apps/website/server/utils/db/queries.ts`
   - function getWorkByActor: (actorId) => void
   - function getActorPageWorkByActor: (actorId) => void
@@ -1114,11 +1118,11 @@
 
 ## Most Imported Files (change these carefully)
 
-- `apps/website/server/utils/db/client.ts` — imported by **71** files
+- `apps/website/server/utils/db/client.ts` — imported by **72** files
+- `apps/website/server/utils/index.ts` — imported by **29** files
 - `apps/website/server/utils/auth-handlers.ts` — imported by **29** files
-- `apps/website/server/utils/index.ts` — imported by **28** files
 - `apps/website/server/utils/api-v1/define.ts` — imported by **20** files
-- `apps/website/server/utils/cache/index.ts` — imported by **18** files
+- `apps/website/server/utils/cache/index.ts` — imported by **20** files
 - `apps/website/server/utils/api-v1/errors.ts` — imported by **14** files
 - `apps/website/server/utils/api-v1/voice-actors.ts` — imported by **12** files
 - `packages/shared-logic/src/types/index.ts` — imported by **12** files
@@ -1137,11 +1141,11 @@
 
 ## Import Map (who imports what)
 
-- `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue.get.ts`, `apps/website/server/api/admin/work-duplicates/merge.post.ts`, `apps/website/server/api/admin/work-duplicates.get.ts` +66 more
+- `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue.get.ts`, `apps/website/server/api/admin/work-duplicates/merge.post.ts`, `apps/website/server/api/admin/work-duplicates.get.ts` +67 more
+- `apps/website/server/utils/index.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/character/[source]/[id].get.ts` +24 more
 - `apps/website/server/utils/auth-handlers.ts` ← `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue.get.ts`, `apps/website/server/api/admin/work-duplicates/merge.post.ts`, `apps/website/server/api/admin/work-duplicates.get.ts` +24 more
-- `apps/website/server/utils/index.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/character/[source]/[id].get.ts` +23 more
 - `apps/website/server/utils/api-v1/define.ts` ← `apps/website/server/api/v1/[type]/[id]/characters/[characterId].patch.ts`, `apps/website/server/api/v1/[type]/[id]/characters.get.ts`, `apps/website/server/api/v1/[type]/[id]/characters.post.ts`, `apps/website/server/api/v1/[type]/[id]/credits/[workId].get.ts`, `apps/website/server/api/v1/[type]/[id]/credits/[workId].patch.ts` +15 more
-- `apps/website/server/utils/cache/index.ts` ← `apps/website/server/utils/api/igdb.test.ts`, `apps/website/server/utils/api/igdb.ts`, `apps/website/server/utils/api/openlibrary.test.ts`, `apps/website/server/utils/api/openlibrary.ts`, `apps/website/server/utils/api/podcast.test.ts` +13 more
+- `apps/website/server/utils/cache/index.ts` ← `apps/website/server/utils/api/igdb.test.ts`, `apps/website/server/utils/api/igdb.ts`, `apps/website/server/utils/api/openlibrary.test.ts`, `apps/website/server/utils/api/openlibrary.ts`, `apps/website/server/utils/api/podcast.test.ts` +15 more
 - `apps/website/server/utils/api-v1/errors.ts` ← `apps/website/server/api/v1/[type]/[id]/characters/[characterId].patch.ts`, `apps/website/server/api/v1/[type]/[id]/characters.post.ts`, `apps/website/server/api/v1/[type]/[id]/credits/batch.post.ts`, `apps/website/server/api/v1/[type]/[id]/projects/index.post.ts`, `apps/website/server/api/v1/[type]/index.post.ts` +9 more
 - `apps/website/server/utils/api-v1/voice-actors.ts` ← `apps/website/server/api/v1/[type]/[id]/characters/[characterId].patch.ts`, `apps/website/server/api/v1/[type]/[id]/characters.post.ts`, `apps/website/server/api/v1/[type]/[id]/credits/[workId].get.ts`, `apps/website/server/api/v1/[type]/[id]/credits/[workId].patch.ts`, `apps/website/server/api/v1/[type]/[id]/credits/index.get.ts` +7 more
 - `packages/shared-logic/src/types/index.ts` ← `packages/shared-logic/src/composables/useAdvertisementData.ts`, `packages/shared-logic/src/composables/useAudiobookData.ts`, `packages/shared-logic/src/composables/useDetailCollections.ts`, `packages/shared-logic/src/composables/useDetailCollections.ts`, `packages/shared-logic/src/composables/useGameData.ts` +7 more
@@ -1153,7 +1157,7 @@
 # Test Coverage
 
 > **47%** of routes and models are covered by tests
-> 180 test files found
+> 182 test files found
 
 ## Covered Routes
 
