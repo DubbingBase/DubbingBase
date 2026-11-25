@@ -14,7 +14,6 @@ type CollectionItem = {
   id?: number | string;
   actorId?: number | string;
   actor_id?: number | string | null;
-  character_id?: number | string | null;
   character_name?: string | null;
   character?: string | null;
   characterImage?: string | null;
