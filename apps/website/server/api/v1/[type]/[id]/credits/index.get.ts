@@ -6,6 +6,7 @@ import {
   Credit,
   CreditRows,
   requireMedia,
+  MEDIA_NOT_FOUND_DESCRIPTION,
   toCredit,
 } from "../../../../../utils/api-v1/credits";
 import {
@@ -23,6 +24,7 @@ export const route = defineApiRoute({
   summary: "List a media entry's credits",
   tags: ["Credits"],
   scope: "credits:read",
+  notFound: MEDIA_NOT_FOUND_DESCRIPTION,
   params: mediaParams,
   query: v.object({
     language: v.optional(dubbingLanguage),

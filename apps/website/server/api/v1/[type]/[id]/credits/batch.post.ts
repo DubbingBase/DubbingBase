@@ -35,6 +35,7 @@ export const route = defineApiRoute({
   summary: "Add credits",
   tags: ["Credits"],
   scope: "credits:create",
+  notFound: "The media or a referenced voice actor has no local DubbingBase record.",
   params: mediaParams,
   query: v.object({
     /** `true` validates everything and reports what would happen without writing. */

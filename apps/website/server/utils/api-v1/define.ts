@@ -40,6 +40,7 @@ export interface ApiRouteDefinition<
   body?: TBody;
   /** Accepts an optional UUID `Idempotency-Key` header; one is generated when it is absent. */
   idempotent?: boolean;
+  notFound?: string;
   response: TResponse;
   handler: (input: {
     event: H3Event;
@@ -61,6 +62,7 @@ export interface ApiRouteDocs {
   query: ObjectSchema;
   body?: v.GenericSchema;
   idempotent?: boolean;
+  notFound?: string;
   response: v.GenericSchema;
 }
 
@@ -259,6 +261,7 @@ export function operationFor(docs: ApiRouteDocs, components: SchemaComponents) {
       400: errorResponse("Invalid request"),
       401: errorResponse("Missing, invalid, expired or revoked token"),
       403: errorResponse("The token lacks the required scope"),
+      ...(docs.notFound ? { 404: errorResponse(docs.notFound) } : {}),
     },
   };
 }
