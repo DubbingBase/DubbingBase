@@ -27,14 +27,22 @@ export function buildOpenApiSpec() {
           "ads and toys use their DubbingBase id. Follow the `path` fields in responses instead of building URLs. " +
           "Media reads, credit batches (including previews) and game character writes require a local DubbingBase record. " +
           "A missing external media record returns `404 not_found` with `Media not imported yet.`. " +
+          "Create a dubbing project to register that media before writing characters or credits. " +
           "Unknown ads and toys return `404 not_found` with `Media not found.`. " +
           "Create ads and toys with `POST /advertisements` and `POST /toys`. Cast IDs (`actor_id`) are stored as given.",
+        "## Managing dubbing projects",
+        "`GET /{type}/{id}` lists the existing projects with their IDs, regional languages and paths. " +
+          "Use `POST /{type}/{id}/projects` with a regional `language` to create a project. " +
+          'For example, send `{"language":"fr-FR"}` to `POST /games/140617/projects`. ' +
+          "This returns an existing project for the same language or creates one, registering the external media reference if needed. " +
+          "The API stores provider IDs as supplied without contacting providers. Toys and advertisements must already exist. " +
+          "Follow the returned path to `GET /projects/{projectId}` for its details or `PATCH /projects/{projectId}` to set its status or studio.",
         "## Maintaining credits",
         "1. Find the voice actor with `GET /voice-actors?q=` (name search). If they are missing, create them with `POST /voice-actors`: " +
           "a name matching an existing actor (ignoring case, accents and hyphens) is refused with `409 duplicate_candidate` and the matches, " +
           "so use the existing actor, or, for a real homonym, resend with a `tmdb_id`, `wikidata_id` or `date_of_birth` that differs from each match's own " +
           "(an identifier the match lacks proves nothing). An identical name is refused for now. Merging duplicates is website-only.\n" +
-          "2. Read what exists: `GET /{type}/{id}` (languages), `GET /{type}/{id}/credits?language=` and " +
+          "2. Read what exists: `GET /{type}/{id}` (projects), `GET /{type}/{id}/credits?language=` and " +
           "`GET /{type}/{id}/characters` (character names already used, and a game's registered characters with their IGDB links). " +
           "For a game, register a missing character with `POST /games/{id}/characters` (a name already registered is returned, not duplicated) and " +
           "link it to its IGDB character with `igdb_character_id` or `PATCH /games/{id}/characters/{characterId}`; ids are stored as given, " +

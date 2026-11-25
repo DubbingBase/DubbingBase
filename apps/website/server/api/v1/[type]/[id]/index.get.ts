@@ -18,13 +18,17 @@ export const route = defineApiRoute({
     id: v.number(),
     /** Dubbing languages that have a project for this media. */
     languages: v.array(v.string()),
+    /** Existing dubbing projects for this media. */
+    projects: v.array(v.object({ id: v.number(), language: v.string(), path: v.string() })),
     links: v.object({ credits: v.string(), characters: v.string() }),
   }),
   handler: async ({ event, params }) => {
     const key = mediaKey(params.type, params.id);
     await requireMedia(event, key);
     const { data, error } = await eqMediaRef(
-      useSupabaseAdmin(event).from("dubbing_projects").select(`language, ${MEDIA_FILTER_EMBED}`),
+      useSupabaseAdmin(event)
+        .from("dubbing_projects")
+        .select(`id, language, ${MEDIA_FILTER_EMBED}`),
       key.contentType,
       key.contentId,
     ).order("language", { ascending: true });
@@ -35,6 +39,11 @@ export const route = defineApiRoute({
       type: key.segment,
       id: params.id,
       languages: (data ?? []).map((project) => project.language),
+      projects: (data ?? []).map((project) => ({
+        id: project.id,
+        language: project.language,
+        path: `/api/v1/projects/${project.id}`,
+      })),
       links: { credits: `${path}/credits`, characters: `${path}/characters` },
     };
   },

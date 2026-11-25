@@ -120,7 +120,7 @@ describe("defineApiRoute", () => {
       "id",
       "Idempotency-Key",
     ]);
-    expect(Object.keys(operation.responses)).toEqual(["200", "400", "401", "403"]);
+    expect(Object.keys(operation.responses)).toEqual(["200", "400", "401", "403", "409"]);
   });
 
   it("hoists recursive schema definitions into components so $refs resolve", () => {

@@ -35,6 +35,9 @@ const nullableArguments = {
 // Supabase CLI cannot infer nullable columns from a RETURNS TABLE function.
 // Keep only result fields that the SQL function can intentionally return NULL.
 const nullableReturns = {
+  api_create_dubbing_project: {
+    audit_log_id: "string",
+  },
   update_work_review_status_controlled: {
     audit_log_id: "string",
   },
