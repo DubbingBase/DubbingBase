@@ -1,4 +1,5 @@
 import { useSupabaseAdmin } from "./client";
+import { isKnownActor, isKnownMedia } from "./known-content-ids";
 import {
   MEDIA_EMBED,
   MEDIA_FILTER_EMBED,
@@ -26,6 +27,7 @@ export function withContentRef<T extends { media: Parameters<typeof mediaRefFrom
 }
 
 export async function getWorkByActor(actorId: number) {
+  if (!(await isKnownActor(actorId))) return [];
   const supabase = useSupabaseAdmin();
   const { data, error } = await supabase
     .from("work")
@@ -40,6 +42,7 @@ export async function getWorkByActor(actorId: number) {
 }
 
 export async function getActorPageWorkByActor(actorId: number) {
+  if (!(await isKnownActor(actorId))) return [];
   const supabase = useSupabaseAdmin();
   const { data, error } = await supabase
     .from("work")
@@ -63,6 +66,7 @@ export async function getDubbingProjects(contentId: number, contentType: string)
   const supabase = useSupabaseAdmin();
   if (!isMediaKind(contentType)) return [];
   const kind = contentType;
+  if (!(await isKnownMedia(kind, contentId))) return [];
   const { data, error } = await eqMediaRef(
     supabase.from("dubbing_projects").select(`id,
        language,
@@ -175,6 +179,7 @@ const ADVERTISEMENT_PAGE_DUBBING_PROJECTS_SELECT = `id,
   )`;
 
 export async function getAdvertisementPageDubbingProjects(contentId: number) {
+  if (!(await isKnownMedia("advertisement", contentId))) return [];
   const supabase = useSupabaseAdmin();
   const { data, error } = await eqMediaRef(
     supabase
@@ -204,6 +209,7 @@ export async function getMediaPageDubbingProjectData(contentId: number, contentT
   const supabase = useSupabaseAdmin();
   if (!isMediaKind(contentType)) return { dubbingProjects: [], voiceActors: [] };
   const kind = contentType;
+  if (!(await isKnownMedia(kind, contentId))) return { dubbingProjects: [], voiceActors: [] };
   const { data, error } = await eqMediaRef(
     supabase
       .from("dubbing_projects")
@@ -253,6 +259,7 @@ export async function getMediaPageDubbingProjects(
   const supabase = useSupabaseAdmin();
   if (!isMediaKind(contentType)) return [];
   const kind = contentType;
+  if (!(await isKnownMedia(kind, contentId))) return [];
   let query = eqMediaRef(
     supabase
       .from("dubbing_projects")
@@ -282,6 +289,7 @@ export async function getMediaPageDubbingProjectSummaries(contentId: number, con
   const supabase = useSupabaseAdmin();
   if (!isMediaKind(contentType)) return [];
   const kind = contentType;
+  if (!(await isKnownMedia(kind, contentId))) return [];
   const { data, error } = await eqMediaRef(
     supabase.from("dubbing_projects").select(`id,
       language,
@@ -338,6 +346,7 @@ const PODCAST_PAGE_DUBBING_PROJECTS_SELECT = `id,
   )`;
 
 export async function getPodcastPageDubbingProjects(contentId: number) {
+  if (!(await isKnownMedia("podcast", contentId))) return [];
   const supabase = useSupabaseAdmin();
   const { data, error } = await eqMediaRef(
     supabase
@@ -381,6 +390,7 @@ const TOY_PAGE_DUBBING_PROJECTS_SELECT = `id,
   )`;
 
 export async function getToyPageDubbingProjects(contentId: number): Promise<ToyDubbingProject[]> {
+  if (!(await isKnownMedia("toy", contentId))) return [];
   const supabase = useSupabaseAdmin();
   const { data, error } = await eqMediaRef(
     supabase
@@ -420,6 +430,7 @@ const GAME_PAGE_DUBBING_PROJECTS_SELECT = `id,
   )`;
 
 export async function getGamePageDubbingProjects(contentId: number) {
+  if (!(await isKnownMedia("video_game", contentId))) return [];
   const supabase = useSupabaseAdmin();
   const { data, error } = await eqMediaRef(
     supabase
@@ -459,6 +470,9 @@ export async function getEpisodePageDubbingProjectData(
   preferredProjectId?: number,
   locale?: string,
 ) {
+  if (!(await isKnownMedia("tv", contentId))) {
+    return { dubbingProjects: [], activeProjectId: null, activeProjectWorks: [], voiceActors: [] };
+  }
   const supabase = useSupabaseAdmin();
   const { data, error } = await eqMediaRef(
     supabase
@@ -542,6 +556,7 @@ export async function getEpisodePageDubbingProjectData(
 }
 
 export async function getEpisodePageProjectWorks(contentId: number, projectId: number) {
+  if (!(await isKnownMedia("tv", contentId))) return { projectId, works: [], voiceActors: [] };
   const supabase = useSupabaseAdmin();
   const { data, error } = await eqMediaRef(
     supabase
@@ -598,6 +613,7 @@ export async function getSeasonPageDubbingProjects(contentId: number, contentTyp
   const supabase = useSupabaseAdmin();
   if (!isMediaKind(contentType)) return [];
   const kind = contentType;
+  if (!(await isKnownMedia(kind, contentId))) return [];
   const { data, error } = await eqMediaRef(
     supabase
       .from("dubbing_projects")

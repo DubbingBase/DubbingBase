@@ -1,15 +1,49 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { rpc } = vi.hoisted(() => ({ rpc: vi.fn() }));
+const { rpc, invalidateKnownContentIds } = vi.hoisted(() => ({
+  rpc: vi.fn(),
+  invalidateKnownContentIds: vi.fn(),
+}));
 
 vi.mock("../db/client", () => ({
   useSupabaseAdmin: () => ({ rpc }),
 }));
 
+vi.mock("../db/known-content-ids", () => ({ invalidateKnownContentIds }));
+
 import { applyExtractedCredits } from "./voice-actor";
 
 describe("applyExtractedCredits", () => {
-  beforeEach(() => rpc.mockReset());
+  beforeEach(() => {
+    rpc.mockReset();
+    invalidateKnownContentIds.mockReset();
+  });
+
+  it("invalidates the known content ids after persisting credits", async () => {
+    rpc.mockResolvedValue({
+      data: { new_voice_actors: 0, credits_added: 1, credits_overlapped: 0, credits_mismatched: 0 },
+      error: null,
+    });
+
+    await applyExtractedCredits(42, "movie", "fr-FR", [
+      { firstname: "First", lastname: "Actor", actorId: 7 },
+    ]);
+
+    expect(invalidateKnownContentIds).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not invalidate when nothing was written", async () => {
+    await applyExtractedCredits(42, "movie", "fr-FR", []);
+    expect(invalidateKnownContentIds).not.toHaveBeenCalled();
+
+    rpc.mockResolvedValue({ data: null, error: new Error("rpc failed") });
+    await expect(
+      applyExtractedCredits(42, "movie", "fr-FR", [
+        { firstname: "First", lastname: "Actor", actorId: 7 },
+      ]),
+    ).rejects.toThrow("rpc failed");
+    expect(invalidateKnownContentIds).not.toHaveBeenCalled();
+  });
 
   it("persists a batch with one transactional RPC", async () => {
     rpc.mockResolvedValue({

@@ -1,5 +1,6 @@
 import { defineAdminHandler } from "../utils/auth-handlers";
 import { useSupabaseAdmin } from "../utils/db/client";
+import { invalidateKnownContentIds } from "../utils/db/known-content-ids";
 import { requireDubbingLanguage } from "../utils/dubbing-language";
 import { isRecord } from "@app/shared-logic";
 
@@ -101,6 +102,9 @@ export default defineAdminHandler(async (event, user) => {
   if (!project) {
     throw internalMediaError(500, "Internal media creation failed");
   }
+
+  // The new media must be known before its page is first requested.
+  await invalidateKnownContentIds();
 
   return {
     media: {

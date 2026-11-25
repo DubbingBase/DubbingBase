@@ -1,6 +1,7 @@
 import type { H3Event as H3EventType } from "h3";
 import { defineAdminHandler } from "../utils/auth-handlers";
 import { useSupabaseAdmin } from "../utils/db/client";
+import { invalidateKnownContentIds } from "../utils/db/known-content-ids";
 import { useIgdbClient, useOpenLibraryClient, usePodcastClient, useTmdbClient } from "../utils";
 import { requireDubbingLanguage } from "../utils/dubbing-language";
 import {
@@ -441,6 +442,9 @@ export default defineAdminHandler(async (event, user) => {
     console.error("Controlled project save returned no result");
     throw projectSaveError(500, "Project save failed; no changes were saved");
   }
+
+  // The save may have created the first project or cast credit for a media or an actor.
+  await invalidateKnownContentIds();
 
   return {
     success: true,

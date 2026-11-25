@@ -1,6 +1,7 @@
 import type { H3Event } from "h3";
 import { defineUserHandler } from "../utils/auth-handlers";
 import { useSupabaseAdmin } from "../utils/db/client";
+import { invalidateKnownContentIds } from "../utils/db/known-content-ids";
 import { notifyContributionEdit } from "../utils/notifications/contribution";
 import { useIgdbClient, useOpenLibraryClient, usePodcastClient, useTmdbClient } from "../utils";
 import { requireDubbingLanguage } from "../utils/dubbing-language";
@@ -317,6 +318,8 @@ export default defineUserHandler(async (event, user) => {
   if (!mutation) {
     throw linkError(500, "Voice actor work link failed; no changes were saved");
   }
+  // The link may be the first credit for this actor or media.
+  await invalidateKnownContentIds();
   const { data: work, error: workError } = await supabase
     .from("work")
     .select("*")
