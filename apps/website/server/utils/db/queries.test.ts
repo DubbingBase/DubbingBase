@@ -259,7 +259,7 @@ describe("dubbing project detail queries", () => {
     expect(queryMocks.selectedColumns[0]).not.toContain("voice_actor_name");
   });
 
-  it("keeps the full projection available to pages that render crew", async () => {
+  it("selects public crew fields for pages that render crew", async () => {
     queryMocks.useSupabaseAdmin.mockReturnValue(createSupabaseMock([]));
 
     await getDubbingProjects(1, "toy");
@@ -267,7 +267,10 @@ describe("dubbing project detail queries", () => {
     expectInnerMediaJoin();
     expectMediaFilter("toy", 1);
     expect(queryMocks.selectedColumns[0]).toContain("crew:dubbing_project_crew");
-    expect(queryMocks.selectedColumns[0]).toContain("person:voice_actors(*)");
+    expect(queryMocks.selectedColumns[0]).toContain(
+      "person:voice_actors(id, firstname, lastname, profile_picture)",
+    );
+    expect(queryMocks.selectedColumns[0]).not.toContain("*");
   });
 
   it("projects podcast detail projects while retaining cast, studio, and crew data", async () => {
@@ -386,13 +389,12 @@ describe("dubbing project detail queries", () => {
     expect(queryMocks.selectedColumns[0]).toContain("studio_data:studios");
   });
 
-  it("preserves the complete public payload when no page projection is requested", async () => {
+  it("keeps public credits and crew when no page projection is requested", async () => {
     const rows = [
       {
         id: 17,
         media: { id: 900, kind: "movie", content_id: 1 },
         language: "fr-FR",
-        extra: "project metadata",
         studio_data: {
           id: 3,
           name: "Studio",
@@ -411,7 +413,6 @@ describe("dubbing project detail queries", () => {
               lastname: "Actor",
               profile_picture: "https://example.com/voice-actor.png",
               voice_actor_name: "Actor",
-              tmdb_id: 99,
             },
           },
         ],
@@ -441,7 +442,7 @@ describe("dubbing project detail queries", () => {
     expect(projects[0]).not.toHaveProperty("media");
     expectInnerMediaJoin();
     expectMediaFilter("movie", 1);
-    expect(queryMocks.selectedColumns[0]).toContain("*,");
+    expect(queryMocks.selectedColumns[0]).not.toContain("*");
     expect(queryMocks.selectedColumns[0]).toContain("crew:dubbing_project_crew");
     expect(projects[0]?.crew[0]?.person).toMatchObject({
       id: 5,

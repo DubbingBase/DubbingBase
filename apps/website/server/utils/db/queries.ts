@@ -64,18 +64,27 @@ export async function getDubbingProjects(contentId: number, contentType: string)
   if (!isMediaKind(contentType)) return [];
   const kind = contentType;
   const { data, error } = await eqMediaRef(
-    supabase.from("dubbing_projects").select(`*,
-       studio_data:studios(*),
+    supabase.from("dubbing_projects").select(`id,
+       language,
+       studio_data:studios(id, name, logo_url),
        works:work(
-         *,
-         voice_actor:voice_actors(*)
+         id,
+         actor_id,
+         voice_actor_id,
+         character_id,
+         game_character_id,
+         character_name,
+         performance,
+         note,
+         reviewed_status,
+         voice_actor:voice_actors(id, firstname, lastname, profile_picture, voice_actor_name)
        ),
        crew:dubbing_project_crew(
          id,
          person_id,
          job_id,
-         job:jobs(*),
-         person:voice_actors(*)
+         job:jobs(id, name),
+         person:voice_actors(id, firstname, lastname, profile_picture)
        ),
        ${MEDIA_FILTER_EMBED}`),
     kind,
