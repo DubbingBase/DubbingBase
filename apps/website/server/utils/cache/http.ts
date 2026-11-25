@@ -15,9 +15,9 @@ const PUBLIC_CACHE_CONTROL: Record<CacheProfile, string> = {
   discovery: "public, max-age=60, stale-while-revalidate=3600",
   page: "public, max-age=60, stale-while-revalidate=300",
   "detail-json": "public, max-age=0, must-revalidate",
-  // Portraits change rarely (TVDB/Wikimedia positives live 30 days in KV).
+  // Portraits change rarely, so successful responses can use longer HTTP caching.
   "character-images": "public, max-age=86400, stale-while-revalidate=604800",
-  // Responses with "no image" cards follow the 24h negative lifetime in KV.
+  // Give responses with empty rosters a shorter HTTP cache lifetime.
   "character-images-negative": "public, max-age=3600, stale-while-revalidate=3600",
   static: "public, max-age=86400, stale-while-revalidate=2592000",
   sitemap: "public, max-age=3600, stale-while-revalidate=86400",

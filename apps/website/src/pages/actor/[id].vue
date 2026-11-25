@@ -529,7 +529,9 @@ function characterRequest(item: { id: number; media_type: "movie" | "tv"; charac
 const characterImageRequests = computed(() => filmographyItems.value.map(characterRequest));
 const { activeRequests, observe: observeCharacterImages } =
   useCharacterImageViewport(characterImageRequests);
-const { imageFor, reportImageError } = useCharacterImages(activeRequests);
+const { imageFor, reportImageError } = useCharacterImages(activeRequests, {
+  batchProductions: true,
+});
 
 function characterImageAlt(item: {
   character: string;

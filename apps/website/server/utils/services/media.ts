@@ -280,7 +280,7 @@ type TvdbCharactersResult = {
   tvdbId: number | null;
   degraded?: boolean;
 };
-const TVDB_CHARACTER_NEGATIVE_TTL = 24 * 60 * 60;
+const TVDB_CHARACTER_NEGATIVE_TTL = 7 * 24 * 60 * 60;
 export const MEDIA_TVDB_CHARACTERS_NAMESPACE = createCacheNamespace<TvdbCharactersResult>();
 
 async function fetchPotentialWikipediaUrl(

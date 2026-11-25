@@ -48,7 +48,7 @@ beforeEach(() => {
           image: "https://artworks.thetvdb.com/ron.jpg",
           tvdbPeopleId: 7,
         },
-        { id: 2, name: "Harry Potter", image: "javascript:alert(1)", tvdbPeopleId: 8 },
+        { id: "2", name: "Harry Potter", image: "javascript:alert(1)", tvdbPeopleId: 8 },
         { id: 3, name: "", image: "https://artworks.thetvdb.com/x.jpg", tvdbPeopleId: 9 },
       ],
       tvdbId: 5671,
@@ -112,5 +112,64 @@ describe("GET /api/character-portraits", () => {
     expect((await call()).status).toBe(400);
     mocks.query = { mediaType: "movie", mediaId: "0" };
     expect((await call()).status).toBe(400);
+  });
+
+  it("rejects malformed, unsorted, duplicate, and oversized batches before provider lookup", async () => {
+    for (const productions of [
+      "tv:2,movie:1",
+      "movie:1,movie:1",
+      "movie:01,tv:2",
+      "movie:1,tv:2\n",
+      "movie:1,tv:0",
+      "movie:1,tv:2,movie:3,tv:4,movie:5",
+    ]) {
+      mocks.query = { productions };
+      expect((await call()).status).toBe(400);
+    }
+    expect(mocks.getCharacterProfilePictures).not.toHaveBeenCalled();
+  });
+
+  it("returns individual rosters and disables caching if any provider lookup degrades", async () => {
+    mocks.query = { productions: "movie:1,tv:2", lang: "fr-FR" };
+    mocks.getCharacterProfilePictures
+      .mockResolvedValueOnce({
+        characters: [{ id: 1, name: "A", image: "https://x/a.jpg" }],
+        tvdbId: 11,
+      })
+      .mockResolvedValueOnce({ characters: [], tvdbId: null, degraded: true });
+    const { body } = await call();
+    expect(body).toEqual({
+      "movie:1": {
+        tvdbId: 11,
+        characters: [{ id: "1", name: "A", image: "https://x/a.jpg" }],
+        degraded: false,
+      },
+      "tv:2": { tvdbId: null, characters: [], degraded: true },
+    });
+    expect(mocks.getCharacterProfilePictures).toHaveBeenCalledTimes(2);
+    expect(mocks.cache).toHaveBeenCalledWith("no-store");
+  });
+
+  it("uses negative caching when a healthy batch includes an empty cast", async () => {
+    mocks.query = { productions: "movie:1,tv:2" };
+    mocks.getCharacterProfilePictures
+      .mockResolvedValueOnce({
+        characters: [{ id: 1, name: "A", image: "https://x/a.jpg" }],
+        tvdbId: 11,
+      })
+      .mockResolvedValueOnce({ characters: [], tvdbId: null });
+    await call();
+    expect(mocks.cache).toHaveBeenCalledWith("public:character-images-negative");
+  });
+
+  it("uses the positive cache profile for four complete casts", async () => {
+    mocks.query = { productions: "movie:1,movie:3,tv:2,tv:4" };
+    const { status, body } = await call();
+    expect(status).toBe(200);
+    expect(body).toHaveProperty("movie:1");
+    expect(body).toHaveProperty("tv:4");
+    expect(mocks.getCharacterProfilePictures).toHaveBeenCalledTimes(4);
+    expect(mocks.getMediaWithVoiceActors).not.toHaveBeenCalled();
+    expect(mocks.cache).toHaveBeenCalledWith("public:character-images");
   });
 });
