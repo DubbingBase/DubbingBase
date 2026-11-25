@@ -1286,6 +1286,7 @@ export type Database = {
           user_name: string;
         }[];
       };
+      get_known_content_ids: { Args: never; Returns: Json };
       get_media_queue_depth: {
         Args: { p_queue_name?: string };
         Returns: number;

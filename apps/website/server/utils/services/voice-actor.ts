@@ -1,5 +1,6 @@
 import { requireDubbingLanguage } from "../dubbing-language";
 import { useSupabaseAdmin } from "../db/client";
+import { invalidateKnownContentIds } from "../db/known-content-ids";
 import type { DubbingLanguage } from "@app/shared-logic";
 import type { Json } from "@app/supabase/types";
 import { readProperty } from "@app/shared-logic";
@@ -60,6 +61,8 @@ export async function applyExtractedCredits(
   });
 
   if (error) throw error;
+  // The import may have created a media or the first credit of an actor.
+  await invalidateKnownContentIds();
   return {
     newVoiceActors: readCount(data, "new_voice_actors"),
     creditsAdded: readCount(data, "credits_added"),
