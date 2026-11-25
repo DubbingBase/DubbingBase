@@ -40,17 +40,17 @@ BEGIN
 
   IF NOT has_function_privilege(
        'service_role',
-       'public.save_admin_credit_import(uuid, uuid, bigint, text, text, bigint, text, text, bigint, bigint, text)',
+       'public.save_admin_credit_import(uuid, uuid, bigint, text, text, bigint, text, text, bigint, text)',
        'EXECUTE'
      )
      OR has_function_privilege(
        'anon',
-       'public.save_admin_credit_import(uuid, uuid, bigint, text, text, bigint, text, text, bigint, bigint, text)',
+       'public.save_admin_credit_import(uuid, uuid, bigint, text, text, bigint, text, text, bigint, text)',
        'EXECUTE'
      )
      OR has_function_privilege(
        'authenticated',
-       'public.save_admin_credit_import(uuid, uuid, bigint, text, text, bigint, text, text, bigint, bigint, text)',
+       'public.save_admin_credit_import(uuid, uuid, bigint, text, text, bigint, text, text, bigint, text)',
        'EXECUTE'
      )
      OR has_table_privilege(
@@ -62,7 +62,7 @@ BEGIN
   BEGIN
     PERFORM * FROM public.save_admin_credit_import(
       v_non_admin_id, v_request_id, 563684101, 'movie', 'en-US',
-      NULL, 'Atomic', 'Non Admin', NULL, NULL, 'Rejected Role'
+      NULL, 'Atomic', 'Non Admin', NULL, 'Rejected Role'
     );
     RAISE EXCEPTION 'Non-admin was allowed to import credits';
   EXCEPTION WHEN insufficient_privilege THEN
@@ -75,7 +75,7 @@ BEGIN
   SELECT result.* INTO v_first
   FROM public.save_admin_credit_import(
     v_admin_id, v_request_id, 563684101, 'movie', 'en-US',
-    NULL, 'Atomic', 'Importer', NULL, NULL, 'Role One'
+    NULL, 'Atomic', 'Importer', NULL, 'Role One'
   ) AS result;
   IF v_first.replayed IS DISTINCT FROM FALSE THEN
     RAISE EXCEPTION 'First import was unexpectedly reported as a replay';
@@ -85,7 +85,6 @@ BEGIN
   FROM public.work AS work
   WHERE work.id = v_first.work_id;
   IF v_replay.voice_actor_id IS DISTINCT FROM v_first.voice_actor_id
-     OR v_replay.character_id IS NOT NULL
      OR v_replay.character_name IS DISTINCT FROM 'Role One'
      OR v_replay.performance IS DISTINCT FROM 'dialogues'
      OR v_replay.status IS DISTINCT FROM 'validated' THEN
@@ -115,7 +114,7 @@ BEGIN
   SELECT result.* INTO v_replay
   FROM public.save_admin_credit_import(
     v_admin_id, v_request_id, 563684101, 'movie', 'en-US',
-    NULL, 'Atomic', 'Importer', NULL, NULL, 'Role One'
+    NULL, 'Atomic', 'Importer', NULL, 'Role One'
   ) AS result;
   IF v_replay.replayed IS DISTINCT FROM TRUE
      OR v_replay.work_id IS DISTINCT FROM v_first.work_id
@@ -142,7 +141,7 @@ BEGIN
   BEGIN
     PERFORM * FROM public.save_admin_credit_import(
       v_admin_id, v_request_id, 563684101, 'movie', 'en-US',
-      NULL, 'Atomic', 'Importer', NULL, NULL, 'Changed Role'
+      NULL, 'Atomic', 'Importer', NULL, 'Changed Role'
     );
     RAISE EXCEPTION 'A request ID was accepted with changed credit data';
   EXCEPTION WHEN unique_violation THEN
@@ -152,7 +151,7 @@ BEGIN
   SELECT result.* INTO v_updated
   FROM public.save_admin_credit_import(
     v_admin_id, v_updated_request_id, 563684101, 'movie', 'en-US',
-    v_first.voice_actor_id, NULL, NULL, NULL, NULL, '  role one  '
+    v_first.voice_actor_id, NULL, NULL, NULL, '  role one  '
   ) AS result;
   IF v_updated.work_id IS DISTINCT FROM v_first.work_id
      OR v_updated.replayed IS DISTINCT FROM FALSE
@@ -169,7 +168,7 @@ BEGIN
   SELECT result.* INTO v_distinct
   FROM public.save_admin_credit_import(
     v_admin_id, v_distinct_request_id, 563684101, 'movie', 'en-US',
-    v_first.voice_actor_id, NULL, NULL, NULL, NULL, 'Role Two'
+    v_first.voice_actor_id, NULL, NULL, NULL, 'Role Two'
   ) AS result;
   IF v_distinct.work_id = v_first.work_id THEN
     RAISE EXCEPTION 'A distinct role replaced the existing assignment';
@@ -178,7 +177,7 @@ BEGIN
   BEGIN
     PERFORM * FROM public.save_admin_credit_import(
       v_admin_id, v_failure_request_id, 563684102, 'movie', 'en-US',
-      NULL, 'Atomic', 'Failure', NULL, NULL, 'Injected failure'
+      NULL, 'Atomic', 'Failure', NULL, 'Injected failure'
     );
     RAISE EXCEPTION 'Injected work constraint failure was not reached';
   EXCEPTION WHEN check_violation THEN
@@ -216,7 +215,7 @@ BEGIN
   BEGIN
     PERFORM * FROM public.save_admin_credit_import(
       v_admin_id, v_existing_project_failure_request_id, 563684103, 'movie', 'en-US',
-      NULL, 'Atomic', 'Failure Two', NULL, NULL, 'Injected failure'
+      NULL, 'Atomic', 'Failure Two', NULL, 'Injected failure'
     );
     RAISE EXCEPTION 'Injected work constraint failure was not reached for existing project';
   EXCEPTION WHEN check_violation THEN

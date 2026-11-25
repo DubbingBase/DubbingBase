@@ -389,7 +389,7 @@
                 </span>
               </td>
               <td class="px-4 py-3 font-medium theme-text">
-                {{ work.character_name || work.suggestions || "Character" }}
+                {{ work.character_name || "Character" }}
               </td>
               <td class="px-4 py-3 text-xs theme-text-muted">
                 {{ work.performance || "dialogues" }}

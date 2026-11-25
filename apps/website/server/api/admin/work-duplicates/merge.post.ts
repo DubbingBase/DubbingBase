@@ -9,8 +9,6 @@ const editableValuesSchema = z
     reviewed_status: z.enum(["waiting", "accepted", "rejected"]).nullable(),
     note: z.string().nullable(),
     highlight: z.boolean().nullable(),
-    source_id: z.number().int().positive().nullable(),
-    suggestions: z.string().nullable(),
     character_name: z.string().nullable(),
   })
   .strict();

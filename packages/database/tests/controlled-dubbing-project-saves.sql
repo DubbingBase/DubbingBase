@@ -250,7 +250,7 @@ BEGIN
         'id', v_work_one.id,
         'expected_updated_at', v_work_one.updated_at,
         'expected', jsonb_build_object(
-          'actor_id', v_work_one.actor_id, 'character_id', v_work_one.character_id,
+          'actor_id', v_work_one.actor_id,
           'character_name', v_work_one.character_name, 'voice_actor_id', v_work_one.voice_actor_id,
           'performance', v_work_one.performance, 'note', v_work_one.note,
           'highlight', v_work_one.highlight, 'status', v_work_one.status
@@ -261,7 +261,7 @@ BEGIN
         'id', v_work_two.id,
         'expected_updated_at', v_work_two.updated_at,
         'expected', jsonb_build_object(
-          'actor_id', v_work_two.actor_id, 'character_id', v_work_two.character_id,
+          'actor_id', v_work_two.actor_id,
           'character_name', v_work_two.character_name, 'voice_actor_id', v_work_two.voice_actor_id,
           'performance', v_work_two.performance, 'note', v_work_two.note,
           'highlight', v_work_two.highlight, 'status', v_work_two.status
@@ -375,7 +375,7 @@ BEGIN
         'id', v_work_one.id,
         'expected_updated_at', v_work_one.updated_at,
         'expected', jsonb_build_object(
-          'actor_id', v_work_one.actor_id, 'character_id', v_work_one.character_id,
+          'actor_id', v_work_one.actor_id,
           'character_name', v_work_one.character_name, 'voice_actor_id', v_work_one.voice_actor_id,
           'performance', v_work_one.performance, 'note', v_work_one.note,
           'highlight', v_work_one.highlight, 'status', v_work_one.status
@@ -452,7 +452,7 @@ BEGIN
     NULL;
   END;
 
-  -- Game character IDs and free-text names are both retained in snapshots.
+  -- Free-text character names are retained in snapshots.
   SELECT result.project_id, result.audit_log_id INTO v_cross_project_id, v_other_audit_id
   FROM public.save_dubbing_project_editor(
     v_admin, '14000000-0000-4000-8000-000000563651', NULL, NULL,
@@ -461,19 +461,18 @@ BEGIN
       'studio_id', NULL, 'status', 'validated'
     ), '[]'::JSONB,
     jsonb_build_array(jsonb_build_object(
-      'character_id', 563651301, 'character_name', 'Joueur libre',
+      'character_name', 'Joueur libre',
       'voice_actor_id', 563651003, 'performance', 'dialogues'
     ))
   ) AS result;
   IF NOT EXISTS (
     SELECT 1 FROM public.work WHERE dubbing_project_id = v_cross_project_id
-      AND character_id = 563651301 AND character_name = 'Joueur libre'
+      AND character_name = 'Joueur libre'
   ) OR NOT EXISTS (
     SELECT 1 FROM public.audit_logs AS audit WHERE audit.id = v_other_audit_id
-      AND jsonb_typeof(audit.new_value -> 'cast' -> 0 -> 'character_id') = 'number'
       AND audit.new_value -> 'cast' -> 0 ->> 'character_name' = 'Joueur libre'
   ) THEN
-    RAISE EXCEPTION 'game character ID or free-text character name was lost';
+    RAISE EXCEPTION 'free-text character name was lost';
   END IF;
 
   -- Existing service-role project DML is blocked; the regional RPC remains callable.
@@ -664,7 +663,7 @@ BEGIN
         'id', v_work_id,
         'expected_updated_at', (SELECT work.updated_at FROM public.work AS work WHERE work.id = v_work_id),
         'expected', (SELECT jsonb_build_object(
-          'actor_id', work.actor_id, 'character_id', work.character_id,
+          'actor_id', work.actor_id,
           'character_name', work.character_name, 'voice_actor_id', work.voice_actor_id,
           'performance', work.performance, 'note', work.note,
           'highlight', work.highlight, 'status', work.status

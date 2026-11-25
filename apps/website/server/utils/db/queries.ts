@@ -404,7 +404,6 @@ const GAME_PAGE_DUBBING_PROJECTS_SELECT = `id,
   works:work(
     id,
     actor_id,
-    character_id,
     game_character_id,
     character_name,
     performance,

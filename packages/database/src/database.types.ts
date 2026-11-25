@@ -435,27 +435,6 @@ export type Database = {
           },
         ];
       };
-      source: {
-        Row: {
-          id: number;
-          name: string | null;
-          suggested_at: string | null;
-          user_id: number | null;
-        };
-        Insert: {
-          id?: number;
-          name?: string | null;
-          suggested_at?: string | null;
-          user_id?: number | null;
-        };
-        Update: {
-          id?: number;
-          name?: string | null;
-          suggested_at?: string | null;
-          user_id?: number | null;
-        };
-        Relationships: [];
-      };
       studios: {
         Row: {
           city: string | null;
@@ -825,7 +804,6 @@ export type Database = {
       work: {
         Row: {
           actor_id: number | null;
-          character_id: number | null;
           character_name: string | null;
           created_at: string | null;
           created_by: string | null;
@@ -836,16 +814,13 @@ export type Database = {
           note: string | null;
           performance: string | null;
           reviewed_status: string | null;
-          source_id: number | null;
           status: string | null;
-          suggestions: string | null;
           updated_at: string;
           updated_by: string | null;
           voice_actor_id: number | null;
         };
         Insert: {
           actor_id?: number | null;
-          character_id?: number | null;
           character_name?: string | null;
           created_at?: string | null;
           created_by?: string | null;
@@ -856,16 +831,13 @@ export type Database = {
           note?: string | null;
           performance?: string | null;
           reviewed_status?: string | null;
-          source_id?: number | null;
           status?: string | null;
-          suggestions?: string | null;
           updated_at?: string;
           updated_by?: string | null;
           voice_actor_id?: number | null;
         };
         Update: {
           actor_id?: number | null;
-          character_id?: number | null;
           character_name?: string | null;
           created_at?: string | null;
           created_by?: string | null;
@@ -876,9 +848,7 @@ export type Database = {
           note?: string | null;
           performance?: string | null;
           reviewed_status?: string | null;
-          source_id?: number | null;
           status?: string | null;
-          suggestions?: string | null;
           updated_at?: string;
           updated_by?: string | null;
           voice_actor_id?: number | null;
@@ -896,13 +866,6 @@ export type Database = {
             columns: ["game_character_id"];
             isOneToOne: false;
             referencedRelation: "game_characters";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "work_source_id_fkey";
-            columns: ["source_id"];
-            isOneToOne: false;
-            referencedRelation: "source";
             referencedColumns: ["id"];
           },
           {
@@ -1596,7 +1559,6 @@ export type Database = {
       save_admin_credit_import: {
         Args: {
           p_admin_id: string;
-          p_character_id: number | null;
           p_character_name: string | null;
           p_content_id: number;
           p_content_type: string;
@@ -1720,6 +1682,20 @@ export type Database = {
           game_character_id: string;
           replayed: boolean;
           updated_at: string;
+        }[];
+      };
+      update_voice_actor_work_credit: {
+        Args: {
+          p_changes: Json;
+          p_expected_updated_at: string;
+          p_request_id: string;
+          p_user_id: string;
+          p_work_id: number;
+        };
+        Returns: {
+          audit_log_id: string;
+          replayed: boolean;
+          work_id: number;
         }[];
       };
       update_voice_actor_work_performance: {

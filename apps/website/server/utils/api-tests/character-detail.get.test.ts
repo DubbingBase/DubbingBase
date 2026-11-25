@@ -199,7 +199,6 @@ describe("GET /api/character/:source/:id", () => {
             {
               id: 20,
               game_character_id: gameCharacterId,
-              character_id: null,
               actor_id: null,
               character_name: "Custom hero",
               performance: "Line",
@@ -209,8 +208,7 @@ describe("GET /api/character/:source/:id", () => {
             {
               id: 21,
               game_character_id: null,
-              character_id: 77,
-              actor_id: null,
+              actor_id: 77,
               character_name: "IGDB link",
               performance: "Linked",
               note: null,
@@ -219,8 +217,7 @@ describe("GET /api/character/:source/:id", () => {
             {
               id: 22,
               game_character_id: null,
-              character_id: 9000000077,
-              actor_id: null,
+              actor_id: 9000000077,
               character_name: "Legacy ID",
               performance: null,
               note: "Legacy",
@@ -229,8 +226,7 @@ describe("GET /api/character/:source/:id", () => {
             {
               id: 23,
               game_character_id: null,
-              character_id: 5,
-              actor_id: null,
+              actor_id: 5,
               character_name: "Unrelated",
               performance: null,
               note: null,

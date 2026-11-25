@@ -267,7 +267,6 @@ export function deduplicateExtractedCredits(credits: ExtractedCredit[]): Extract
       credit.firstname.trim().toLowerCase(),
       credit.lastname.trim().toLowerCase(),
       (credit.performance ?? "").trim().toLowerCase(),
-      credit.characterId ?? "",
       (credit.characterName ?? "").trim().toLowerCase(),
     ].join("\u001f");
     if (seen.has(key)) return false;

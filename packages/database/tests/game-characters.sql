@@ -198,7 +198,6 @@ BEGIN
   FROM public.work AS work
   WHERE work.dubbing_project_id = v_project_id
     AND work.game_character_id = v_character_id
-    AND work.character_id IS NULL
     AND work.character_name = 'Same Name'
     AND work.voice_actor_id = 563691101;
   IF v_count <> 1 THEN
@@ -222,7 +221,6 @@ BEGIN
         'expected_updated_at', v_work_updated_at,
         'expected', jsonb_build_object(
           'actor_id', NULL,
-          'character_id', NULL,
           'game_character_id', v_character_id,
           'character_name', 'Same Name',
           'voice_actor_id', 563691101,
@@ -232,7 +230,6 @@ BEGIN
           'status', 'validated'
         ),
         'game_character_id', v_character_id,
-        'character_id', NULL,
         'character_name', 'Same Name',
         'voice_actor_id', 563691101,
         'performance', 'dialogues',
@@ -241,7 +238,6 @@ BEGIN
       ),
       jsonb_build_object(
         'game_character_id', v_homonym_id,
-        'character_id', NULL,
         'character_name', 'Same Name',
         'voice_actor_id', 563691101,
         'performance', 'dialogues'

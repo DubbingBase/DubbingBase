@@ -23,7 +23,6 @@ const nullableArguments = {
     p_request_id: "string",
   },
   save_admin_credit_import: {
-    p_character_id: "number",
     p_character_name: "string",
     p_voice_actor_firstname: "string",
     p_voice_actor_id: "number",

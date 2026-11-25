@@ -168,12 +168,14 @@
                 @input="setFinalText(field.key, $event)"
                 :aria-label="t(field.label)"
                 :disabled="
-                  field.key === 'character_name' && currentCanonical?.character_id === null
+                  field.key === 'character_name' && currentCanonical?.game_character_id === null
                 "
                 class="mt-1 w-full rounded-md border theme-border theme-input px-3 py-2 text-sm theme-text focus-visible:outline-2 focus-visible:outline-[var(--app-color-focus)]"
               />
               <small
-                v-if="field.key === 'character_name' && currentCanonical?.character_id === null"
+                v-if="
+                  field.key === 'character_name' && currentCanonical?.game_character_id === null
+                "
                 class="mt-1 block font-normal"
                 >{{ t("admin.duplicatesWork.roleIdentityLocked") }}</small
               >
@@ -198,16 +200,6 @@
                 class="accent-[var(--app-color-primary)]"
               />{{ t("admin.duplicatesWork.highlight") }}</label
             >
-            <label class="block text-xs font-semibold theme-text-muted"
-              >{{ t("admin.duplicatesWork.source") }}
-              <input
-                :value="finalValues.source_id ?? ''"
-                type="number"
-                min="1"
-                @input="setFinalNumber('source_id', $event)"
-                class="mt-1 w-full rounded-md border theme-border theme-input px-3 py-2 text-sm theme-text"
-              />
-            </label>
             <label class="block text-xs font-semibold theme-text-muted sm:col-span-2"
               >{{ t("admin.duplicatesWork.note") }}
               <textarea
@@ -357,17 +349,6 @@
                     }}</label
                   ></template
                 >
-                <template v-else-if="field.key === 'source_id'"
-                  ><input
-                    :value="finalValues.source_id ?? ''"
-                    type="number"
-                    min="1"
-                    @input="setFinalNumber('source_id', $event)"
-                    class="w-full rounded-md border theme-border theme-input px-2 py-2 text-sm theme-text"
-                  /><small v-if="sourceLabel" class="mt-1 block theme-text-muted">{{
-                    sourceLabel
-                  }}</small></template
-                >
                 <template v-else-if="field.key === 'note'">
                   <textarea
                     v-model="finalValues.note"
@@ -380,11 +361,13 @@
                     :value="finalValues[field.key] ?? ''"
                     @input="setFinalText(field.key, $event)"
                     :disabled="
-                      field.key === 'character_name' && currentCanonical?.character_id === null
+                      field.key === 'character_name' && currentCanonical?.game_character_id === null
                     "
                     class="w-full rounded-md border theme-border theme-input px-2 py-2 text-sm theme-text"
                   /><small
-                    v-if="field.key === 'character_name' && currentCanonical?.character_id === null"
+                    v-if="
+                      field.key === 'character_name' && currentCanonical?.game_character_id === null
+                    "
                     class="mt-1 block text-[10px] theme-text-muted"
                     >{{ t("admin.duplicatesWork.roleIdentityLocked") }}</small
                   ></template
@@ -539,8 +522,6 @@ const provenance = ref<Record<EditableWorkField, number>>({
   reviewed_status: 0,
   note: 0,
   highlight: 0,
-  source_id: 0,
-  suggestions: 0,
   character_name: 0,
 });
 const finalValues = ref<EditableWorkValues>({
@@ -549,8 +530,6 @@ const finalValues = ref<EditableWorkValues>({
   reviewed_status: null,
   note: null,
   highlight: null,
-  source_id: null,
-  suggestions: null,
   character_name: null,
 });
 const initialFinalValues = ref<EditableWorkValues>({ ...finalValues.value });
@@ -564,14 +543,13 @@ const textFields = [
   { key: "performance", label: "admin.duplicatesWork.performance" },
   { key: "status", label: "common.status" },
   { key: "character_name", label: "admin.duplicatesWork.characterName" },
-  { key: "suggestions", label: "admin.duplicatesWork.suggestions" },
 ] as const;
 const matrixFields = editableWorkFields.map((key) => ({
   key,
   label:
     key === "status"
       ? "common.status"
-      : `admin.duplicatesWork.${key === "reviewed_status" ? "reviewStatus" : key === "source_id" ? "source" : key === "character_name" ? "characterName" : key}`,
+      : `admin.duplicatesWork.${key === "reviewed_status" ? "reviewStatus" : key === "character_name" ? "characterName" : key}`,
 }));
 const currentGroup = computed(() => groups.value[currentIndex.value] ?? null);
 const currentCanonical = computed(
@@ -579,11 +557,6 @@ const currentCanonical = computed(
 );
 const voteCount = computed(
   () => currentGroup.value?.works.reduce((sum, work) => sum + work.voteCount, 0) ?? 0,
-);
-const sourceLabel = computed(
-  () =>
-    currentGroup.value?.works.find((work) => work.id === provenance.value.source_id)?.sourceName ??
-    "",
 );
 const mediaPath = computed(() => {
   const project = currentGroup.value?.project;
@@ -596,10 +569,10 @@ function displayId(value: number | null): string {
   return value === null ? t("admin.duplicatesWork.none") : `#${value}`;
 }
 function displayCharacter(group: DuplicateWorkGroup): string {
-  const name = group.works.find((work) => work.character_name)?.character_name;
-  return name
-    ? `${name} · ${displayId(group.identity.characterId)}`
-    : displayId(group.identity.characterId);
+  return (
+    group.works.find((work) => work.character_name)?.character_name ??
+    t("admin.duplicatesWork.none")
+  );
 }
 function displayVoiceActor(group: DuplicateWorkGroup): string {
   const voiceActor = group.works.find((work) => work.voiceActor)?.voiceActor;
@@ -617,8 +590,6 @@ function formatWorkValue(
   field: EditableWorkField,
   work: DuplicateWorkGroup["works"][number],
 ): string {
-  if (field === "source_id" && work.source_id !== null && work.sourceName)
-    return `${work.source_id} · ${work.sourceName}`;
   return formatValue(work[field]);
 }
 function formatDate(value: string | null): string {
@@ -638,17 +609,9 @@ function setFinalText(field: EditableWorkField, event: Event): void {
     case "character_name":
       finalValues.value.character_name = value;
       break;
-    case "suggestions":
-      finalValues.value.suggestions = value;
-      break;
     default:
       break;
   }
-}
-function setFinalNumber(field: "source_id", event: Event): void {
-  const target = event.target;
-  if (target instanceof HTMLInputElement)
-    finalValues.value[field] = target.value ? Number(target.value) : null;
 }
 function isDifferent(field: EditableWorkField, work: DuplicateWorkGroup["works"][number]): boolean {
   return currentGroup.value?.works.some((entry) => entry[field] !== work[field]) ?? false;

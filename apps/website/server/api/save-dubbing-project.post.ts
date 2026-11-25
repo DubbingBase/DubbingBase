@@ -70,7 +70,6 @@ function isExpectedValues(value: unknown): value is WorkExpectedValues {
     !isRecord(value) ||
     !hasOnlyKeys(value, [
       "actor_id",
-      "character_id",
       "game_character_id",
       "character_name",
       "voice_actor_id",
@@ -80,7 +79,6 @@ function isExpectedValues(value: unknown): value is WorkExpectedValues {
       "status",
     ]) ||
     !("actor_id" in value) ||
-    !("character_id" in value) ||
     !("character_name" in value) ||
     !("voice_actor_id" in value) ||
     !("performance" in value) ||
@@ -92,7 +90,6 @@ function isExpectedValues(value: unknown): value is WorkExpectedValues {
   }
   return (
     isOptionalId(value.actor_id) &&
-    isOptionalId(value.character_id) &&
     (!("game_character_id" in value) || isOptionalUuid(value.game_character_id)) &&
     isOptionalText(value.character_name) &&
     isOptionalId(value.voice_actor_id) &&
@@ -111,7 +108,6 @@ function parseCastRow(value: unknown, contentType: MediaType): CastSaveRow {
       "expected_updated_at",
       "expected",
       "actor_id",
-      "character_id",
       "game_character_id",
       "character_name",
       "voice_actor_id",
@@ -130,7 +126,6 @@ function parseCastRow(value: unknown, contentType: MediaType): CastSaveRow {
       (!isOptionalTimestamp(value.expected_updated_at) || !isExpectedValues(value.expected))) ||
     (!hasId && ("expected_updated_at" in value || "expected" in value)) ||
     ("actor_id" in value && !isOptionalId(value.actor_id)) ||
-    ("character_id" in value && !isOptionalId(value.character_id)) ||
     ("game_character_id" in value && !isOptionalUuid(value.game_character_id)) ||
     ("voice_actor_id" in value && !isOptionalId(value.voice_actor_id)) ||
     ("character_name" in value && !isOptionalText(value.character_name)) ||
@@ -138,7 +133,6 @@ function parseCastRow(value: unknown, contentType: MediaType): CastSaveRow {
     ("note" in value && !isOptionalText(value.note)) ||
     ("highlight" in value && value.highlight !== null && typeof value.highlight !== "boolean") ||
     ("actor_id" in value && contentType !== "movie" && contentType !== "tv") ||
-    ("character_id" in value && contentType !== "video_game") ||
     ("game_character_id" in value && contentType !== "video_game")
   ) {
     throw projectSaveError(400, "Invalid or protected cast fields");
@@ -153,8 +147,6 @@ function parseCastRow(value: unknown, contentType: MediaType): CastSaveRow {
     if (isExpectedValues(value.expected)) row.expected = value.expected;
   }
   if ("actor_id" in value && isOptionalId(value.actor_id)) row.actor_id = value.actor_id;
-  if ("character_id" in value && isOptionalId(value.character_id))
-    row.character_id = value.character_id;
   if ("game_character_id" in value && isOptionalUuid(value.game_character_id))
     row.game_character_id = value.game_character_id;
   if ("voice_actor_id" in value && isOptionalId(value.voice_actor_id))
@@ -272,10 +264,7 @@ function parseBody(value: unknown): ProjectSaveBody {
     }
     if (row.id !== undefined) castIds.add(row.id);
     if (row.game_character_id && Object.hasOwn(newGameCharacters, row.game_character_id)) {
-      if (
-        row.character_id != null ||
-        row.character_name !== newGameCharacters[row.game_character_id]
-      ) {
+      if (row.character_name !== newGameCharacters[row.game_character_id]) {
         throw projectSaveError(400, "Invalid assignment for a new game character");
       }
       assignedDrafts.add(row.game_character_id);
@@ -363,7 +352,7 @@ async function validateExternalReferences(body: ProjectSaveBody, event: H3EventT
       const { data, error } = await eqMediaRef(
         useSupabaseAdmin(event)
           .from("game_characters")
-          .select("id, igdb_character_id, media:media_id!inner(id,kind,content_id)"),
+          .select("id, media:media_id!inner(id,kind,content_id)"),
         "video_game",
         contentId,
       ).in("id", requestedLocalIds);
@@ -373,52 +362,19 @@ async function validateExternalReferences(body: ProjectSaveBody, event: H3EventT
       if (data.length !== requestedLocalIds.length) {
         throw projectSaveError(422, "A selected local character does not belong to this game");
       }
-      const localCharacters = new Map(
-        data.map((character) => [character.id, character.igdb_character_id]),
-      );
-      for (const row of body.cast) {
-        if (!row.game_character_id || row.character_id == null) continue;
-        const confirmedCharacterId = localCharacters.get(row.game_character_id);
-        const unchangedMapping =
-          row.expected !== undefined &&
-          (row.expected.game_character_id ?? null) === row.game_character_id &&
-          row.expected.character_id === row.character_id;
-        if (confirmedCharacterId !== row.character_id && !unchangedMapping) {
-          throw projectSaveError(422, "The IGDB character does not match this local character");
-        }
-      }
     }
 
-    const requestedCharacterIds = body.cast.flatMap((row) =>
-      row.game_character_id || row.character_id === undefined || row.character_id === null
-        ? []
-        : [row.character_id],
-    );
     // The save RPC confirms that an existing project still belongs to this game.
-    if (
-      body.project_id !== null &&
-      body.new_game_characters &&
-      requestedCharacterIds.length === 0
-    ) {
-      return;
-    }
-    if (requestedLocalIds.length === 0 || requestedCharacterIds.length > 0) {
+    if (body.project_id !== null && body.new_game_characters) return;
+    // Local characters already belong to this game; otherwise confirm the game itself exists.
+    if (requestedLocalIds.length === 0) {
       try {
-        const igdb = useIgdbClient();
-        const game = await igdb.getGame(contentId);
-        if ((!game || game.id !== contentId) && requestedLocalIds.length === 0) {
+        const game = await useIgdbClient().getGame(contentId);
+        if (!game || game.id !== contentId) {
           throw projectSaveError(422, "The selected game does not exist in IGDB");
-        }
-        if (requestedCharacterIds.length > 0) {
-          const characters = await igdb.getGameCharacters(contentId);
-          const characterIds = new Set(characters.map((character) => character.id));
-          if (requestedCharacterIds.some((characterId) => !characterIds.has(characterId))) {
-            throw projectSaveError(422, "A selected character does not belong to this game");
-          }
         }
       } catch (error) {
         if (error && typeof error === "object" && "statusCode" in error) throw error;
-        if (requestedLocalIds.length > 0 && requestedCharacterIds.length === 0) return;
         throw projectSaveError(503, "IGDB could not verify this save; try again");
       }
     }

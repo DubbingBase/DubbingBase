@@ -9,7 +9,6 @@ export interface ExtractedCredit {
   lastname: string;
   actorId: number;
   performance?: string;
-  characterId?: number | null;
   characterName?: string | null;
 }
 
@@ -48,7 +47,6 @@ export async function applyExtractedCredits(
     lastname: credit.lastname,
     actor_id: credit.actorId,
     performance: credit.performance ?? null,
-    character_id: credit.characterId ?? null,
     character_name: credit.characterName ?? null,
   }));
   const supabase = useSupabaseAdmin();

@@ -23,14 +23,14 @@ project_id="$(PGPASSWORD="$db_password" psql -qAt "${connection[@]}" -c \
   "INSERT INTO public.dubbing_projects(media_id, language) VALUES (private.resolve_media('movie', ${content_id}), 'fr-FR') RETURNING id")"
 
 PGPASSWORD="$db_password" psql "${connection[@]}" -c \
-  "BEGIN; INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_id, character_name) VALUES (${project_id}, NULL, NULL, NULL, 'Race Role'); SELECT pg_sleep(2); COMMIT;" \
+  "BEGIN; INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_name) VALUES (${project_id}, NULL, NULL, 'Race Role'); SELECT pg_sleep(2); COMMIT;" \
   >/tmp/role-aware-work-first-writer.log 2>&1 &
 first_pid=$!
 sleep 0.2
 
 set +e
 PGPASSWORD="$db_password" psql "${connection[@]}" -c \
-  "INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_id, character_name) VALUES (${project_id}, NULL, NULL, NULL, ' race role ');" \
+  "INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_name) VALUES (${project_id}, NULL, NULL, ' race role ');" \
   >/tmp/role-aware-work-second-writer.log 2>&1
 second_status=$?
 wait "$first_pid"

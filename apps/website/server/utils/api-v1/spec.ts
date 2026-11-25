@@ -53,8 +53,10 @@ export function buildOpenApiSpec() {
           "4. Send the same body without `dry_run`. The batch is all or nothing: if one item is rejected, " +
           "nothing is written and the error names it (`credits.2`). Sending a batch again is safe: roles that exist come back `unchanged`. " +
           "If you leave `game_character_id` out and one credit with that name, voice actor and cast id is already linked to a game character, it comes back `unchanged` with that `linked_game_character_id` and nothing is added; several such credits give 409 `ambiguous_credit`.\n" +
-          "5. Fix a credit with `PATCH /{type}/{id}/credits/{workId}` (only `performance`). " +
-          "The API cannot delete credits or change a character name; leave those to the website.",
+          "5. Fix a credit in place with `PATCH /{type}/{id}/credits/{workId}`: `performance`, `character_name`, `actor_id` and `game_character_id` (send only what changes). " +
+          "This is how to complete a credit that has no character name: it keeps its id, history and review state. " +
+          "A batch item for a voice actor who already has a nameless credit with the same cast id is refused with 409 `nameless_credit_exists` naming that credit, so complete it with PATCH. " +
+          "The API cannot delete credits; leave that to the website.",
         "## Rules",
         "Writes behave as if the token's owner made them. Credits carry a `reviewed_status`: `waiting` (added by someone " +
           "who is not trusted for that voice actor, pending an editor's verification), `accepted` (verified) or `rejected`. " +

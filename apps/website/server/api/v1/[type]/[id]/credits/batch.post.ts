@@ -163,6 +163,24 @@ export const route = defineApiRoute({
           const [only] = sameRole;
           if (only) match = { id: only.id, linked: only.game_character_id };
         }
+        if (match === null) {
+          // A credit without a character name cannot match by name, so it would end up next to
+          // the new one. Complete it in place with PATCH instead of adding a second credit.
+          const nameless = (works ?? []).filter(
+            (work) =>
+              (work.character_name?.trim() ?? "") === "" &&
+              work.actor_id === item.actor_id &&
+              (work.game_character_id === null ||
+                work.game_character_id === item.game_character_id),
+          );
+          if (nameless.length > 0) {
+            throw new ApiError(
+              409,
+              "nameless_credit_exists",
+              `credits.${index}: this voice actor already has a credit without a character name (${nameless.map((work) => `${apiMediaPath(key.segment, key.contentId)}/credits/${work.id}`).join(", ")}); complete it with PATCH instead of adding a new credit.`,
+            );
+          }
+        }
       }
       existing.push(match);
     }

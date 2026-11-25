@@ -101,7 +101,6 @@ describe("controlled dubbing project save client", () => {
     const initialRows: GameProjectCastEditorRow[] = [
       {
         character_ref: "custom_captain",
-        character_id: "custom_captain",
         character_name: "Captain",
         voice_actor_id: 41,
         performance: "dialogues",
@@ -110,7 +109,6 @@ describe("controlled dubbing project save client", () => {
       },
       {
         character_ref: "custom_pilot",
-        character_id: "custom_pilot",
         character_name: "Pilot",
         voice_actor_id: 41,
         performance: "voice-over",
@@ -131,7 +129,6 @@ describe("controlled dubbing project save client", () => {
     const refreshedRows: GameProjectCastEditorRow[] = savedRows.map((row, index) => ({
       id: index + 1,
       character_ref: null,
-      character_id: row.character_id ?? null,
       character_name: row.character_name ?? "",
       voice_actor_id: row.voice_actor_id ?? null,
       performance: row.performance ?? "dialogues",
@@ -140,7 +137,6 @@ describe("controlled dubbing project save client", () => {
       expectedUpdatedAt: "2026-10-15T12:05:00",
       expected: {
         actor_id: row.actor_id ?? null,
-        character_id: row.character_id ?? null,
         character_name: row.character_name ?? null,
         voice_actor_id: row.voice_actor_id ?? null,
         performance: row.performance ?? null,
@@ -161,24 +157,21 @@ describe("controlled dubbing project save client", () => {
     expect(requests[1]?.cast).toMatchObject([
       {
         id: 1,
-        character_id: null,
         character_name: "Captain",
         voice_actor_id: 41,
       },
       {
         id: 2,
-        character_id: null,
         character_name: "Pilot",
         voice_actor_id: 41,
       },
     ]);
   });
 
-  it("serializes local character identity separately from provider ids", () => {
+  it("serializes local character identity with its saved name", () => {
     const rows: GameProjectCastEditorRow[] = [
       {
         character_ref: "game_character:11111111-1111-4111-8111-111111111111",
-        character_id: null,
         game_character_id: "11111111-1111-4111-8111-111111111111",
         character_name: "Local-only role",
         voice_actor_id: 41,
@@ -188,7 +181,6 @@ describe("controlled dubbing project save client", () => {
       },
       {
         character_ref: "game_character:22222222-2222-4222-8222-222222222222",
-        character_id: 7,
         game_character_id: "22222222-2222-4222-8222-222222222222",
         character_name: "Linked local spelling",
         voice_actor_id: 42,
@@ -200,12 +192,10 @@ describe("controlled dubbing project save client", () => {
 
     expect(serializeGameProjectCastRows(rows)).toMatchObject([
       {
-        character_id: null,
         game_character_id: rows[0]?.game_character_id,
         character_name: "Local-only role",
       },
       {
-        character_id: 7,
         game_character_id: rows[1]?.game_character_id,
         character_name: "Linked local spelling",
       },

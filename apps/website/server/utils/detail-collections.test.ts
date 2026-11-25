@@ -394,19 +394,19 @@ describe("GET /api/detail-collections", () => {
         works: [
           {
             id: 301,
-            character_id: 1,
+            actor_id: 1,
             character_name: "Cedar",
             voice_actor: { id: 10, firstname: "Rin", lastname: "Mori" },
           },
           {
             id: 302,
-            character_id: 2,
+            actor_id: 2,
             character_name: "Orchid",
             voice_actor: { id: 11, firstname: "Yui", lastname: "Abe" },
           },
           {
             id: 303,
-            character_id: 99,
+            actor_id: 99,
             character_name: "Rin's Shadow",
             voice_actor: { id: 12, firstname: "Nao", lastname: "Ito" },
           },
@@ -443,17 +443,17 @@ describe("GET /api/detail-collections", () => {
     expect(body.data[0]?.name).toBe("Rin's Shadow");
   });
 
-  it("keeps game cast work order while deduplicating a work matched by two character IDs", () => {
+  it("keeps game cast work order across provider-id and fallback-id matches", () => {
     const name = "Cedar";
     const fallbackCharacterId =
       Math.abs(name.split("").reduce((hash, value) => (hash * 31 + value.charCodeAt(0)) | 0, 0)) +
       8_000_000_000;
     const cards = formatGameDetailCastCards([{ id: 1, name }], {
       works: [
-        { id: 301, character_id: 1, actor_id: 9_000_000_001 },
-        { id: 302, character_id: 9_000_000_001 },
+        { id: 301, actor_id: 1 },
+        { id: 302, actor_id: 9_000_000_001 },
         { id: 303, actor_id: fallbackCharacterId },
-        { id: 304, character_id: 99, character_name: "Unmatched" },
+        { id: 304, actor_id: 99, character_name: "Unmatched" },
       ],
     });
 
@@ -487,18 +487,15 @@ describe("GET /api/detail-collections", () => {
             id: 401,
             game_character_id: "11111111-1111-4111-8111-111111111111",
             actor_id: null,
-            character_id: null,
           },
           {
             id: 402,
             game_character_id: "22222222-2222-4222-8222-222222222222",
             actor_id: null,
-            character_id: null,
           },
           {
             id: 403,
             actor_id: null,
-            character_id: null,
             character_name: "Unassigned",
           },
         ],
@@ -531,7 +528,7 @@ describe("GET /api/detail-collections", () => {
           {
             id: 501,
             game_character_id: localCharacterId,
-            character_id: 7,
+            actor_id: 7,
             character_name: "Local character",
           },
         ],

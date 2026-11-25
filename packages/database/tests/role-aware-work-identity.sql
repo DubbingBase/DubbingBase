@@ -15,7 +15,6 @@ DECLARE
   null_id bigint;
   sigma_id bigint;
   dotted_i_id bigint;
-  identity_character_id bigint;
   admin_id uuid := gen_random_uuid();
   voter_id uuid := gen_random_uuid();
   scan_result jsonb;
@@ -57,31 +56,26 @@ BEGIN
   VALUES (private.resolve_media('movie', 987654321), 'fr-FR') RETURNING id INTO project_id;
   INSERT INTO auth.users(id) VALUES (admin_id), (voter_id);
 
-  INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_id, character_name)
-  VALUES (project_id, NULL, NULL, NULL, 'Alice') RETURNING id INTO alice_id;
-  INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_id, character_name)
-  VALUES (project_id, NULL, NULL, NULL, 'Bob') RETURNING id INTO bob_id;
-  INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_id, character_name)
-  VALUES (project_id, NULL, NULL, 42, 'Alice') RETURNING id INTO identity_character_id;
-  INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_id, character_name)
-  VALUES (project_id, NULL, NULL, NULL, '  ') RETURNING id INTO blank_id;
-  INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_id, character_name)
-  VALUES (project_id, NULL, NULL, NULL, E'\t') RETURNING id INTO tab_only_id;
-  INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_id, character_name)
-  VALUES (project_id, NULL, NULL, NULL, E'\n\r') RETURNING id INTO newline_only_id;
-  INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_id, character_name)
-  VALUES (project_id, NULL, NULL, NULL, NULL) RETURNING id INTO null_id;
-  INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_id, character_name)
-  VALUES (project_id, NULL, NULL, NULL, 'ΟΣ') RETURNING id INTO sigma_id;
-  INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_id, character_name)
-  VALUES (project_id, NULL, NULL, NULL, 'İ') RETURNING id INTO dotted_i_id;
+  INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_name)
+  VALUES (project_id, NULL, NULL, 'Alice') RETURNING id INTO alice_id;
+  INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_name)
+  VALUES (project_id, NULL, NULL, 'Bob') RETURNING id INTO bob_id;
+  INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_name)
+  VALUES (project_id, NULL, NULL, '  ') RETURNING id INTO blank_id;
+  INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_name)
+  VALUES (project_id, NULL, NULL, E'\t') RETURNING id INTO tab_only_id;
+  INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_name)
+  VALUES (project_id, NULL, NULL, E'\n\r') RETURNING id INTO newline_only_id;
+  INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_name)
+  VALUES (project_id, NULL, NULL, NULL) RETURNING id INTO null_id;
+  INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_name)
+  VALUES (project_id, NULL, NULL, 'ΟΣ') RETURNING id INTO sigma_id;
+  INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_name)
+  VALUES (project_id, NULL, NULL, 'İ') RETURNING id INTO dotted_i_id;
 
   IF public.find_work_role_identity_matches(
       ARRAY[alice_id, bob_id], NULL, E'\t ALICE \n'
     ) <> ARRAY[alice_id]
-    OR public.find_work_role_identity_matches(
-      ARRAY[identity_character_id], 42, 'Different name'
-    ) <> ARRAY[identity_character_id]
     OR public.find_work_role_identity_matches(
       ARRAY[tab_only_id, newline_only_id], NULL, E'\t\n\r\u00a0'
     ) <> ARRAY[]::bigint[]
@@ -93,21 +87,21 @@ BEGIN
   END IF;
 
   BEGIN
-    INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_id, character_name)
-    VALUES (project_id, NULL, NULL, NULL, ' alice ');
+    INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_name)
+    VALUES (project_id, NULL, NULL, ' alice ');
     RAISE EXCEPTION 'same normalized role was accepted';
   EXCEPTION WHEN unique_violation THEN
     NULL;
   END;
 
-  INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_id, character_name)
-  VALUES (project_id, NULL, NULL, NULL, '');
-  INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_id, character_name)
-  VALUES (project_id, NULL, NULL, NULL, NULL);
+  INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_name)
+  VALUES (project_id, NULL, NULL, '');
+  INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_name)
+  VALUES (project_id, NULL, NULL, NULL);
 
   ALTER TABLE public.work DISABLE TRIGGER prevent_duplicate_work_assignment_trigger;
-  INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_id, character_name)
-  VALUES (project_id, NULL, NULL, NULL, ' alice ') RETURNING id INTO alice_duplicate_id;
+  INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_name)
+  VALUES (project_id, NULL, NULL, ' alice ') RETURNING id INTO alice_duplicate_id;
   ALTER TABLE public.work ENABLE TRIGGER prevent_duplicate_work_assignment_trigger;
 
   scan_result := public.find_duplicate_work_groups(0, 20);
@@ -124,7 +118,7 @@ BEGIN
   BEGIN
     PERFORM public.merge_work_duplicates_atomic(
       alice_id, ARRAY[alice_id, alice_duplicate_id],
-      '{"performance":"dialogues","status":null,"reviewed_status":null,"note":null,"highlight":false,"source_id":null,"suggestions":null,"character_name":"Bob"}'::jsonb,
+      '{"performance":"dialogues","status":null,"reviewed_status":null,"note":null,"highlight":false,"character_name":"Bob"}'::jsonb,
       admin_id
     );
     RAISE EXCEPTION 'merge changed free-text role identity';
@@ -134,7 +128,7 @@ BEGIN
 
   merge_result := public.merge_work_duplicates_atomic(
     alice_id, ARRAY[alice_id, alice_duplicate_id],
-    '{"performance":"dialogues","status":null,"reviewed_status":null,"note":null,"highlight":false,"source_id":null,"suggestions":null,"character_name":" alice "}'::jsonb,
+    '{"performance":"dialogues","status":null,"reviewed_status":null,"note":null,"highlight":false,"character_name":" alice "}'::jsonb,
     admin_id
   );
   IF (merge_result->>'preservedVotes')::integer <> 1
@@ -147,8 +141,7 @@ BEGIN
     OR (SELECT count(*) FROM public.audit_logs WHERE entity_id = alice_id::text AND action = 'merge_duplicate') <> 1 THEN
     RAISE EXCEPTION 'vote, data, or audit preservation failed';
   END IF;
-  IF (SELECT work_role_identity_key(character_id, character_name) FROM public.work WHERE id = alice_id) <> 'name:alice'
-    OR (SELECT character_id FROM public.work WHERE id = identity_character_id) <> 42
+  IF (SELECT work_role_identity_key(NULL, character_name) FROM public.work WHERE id = alice_id) <> 'name:alice'
     OR (SELECT character_name FROM public.work WHERE id = bob_id) <> 'Bob'
     OR NOT EXISTS (SELECT 1 FROM public.work WHERE id = blank_id)
     OR NOT EXISTS (SELECT 1 FROM public.work WHERE id = tab_only_id)
@@ -314,7 +307,7 @@ BEGIN
   IF (SELECT count(*) FROM public.work
       WHERE id IN (ambiguous_work_a, ambiguous_work_b)
         AND voice_actor_id = keep_ambiguous
-        AND public.work_role_identity_key(character_id, character_name) IS NULL) <> 2
+        AND public.work_role_identity_key(NULL, character_name) IS NULL) <> 2
     OR (SELECT count(*) FROM public.votes
         WHERE work_id IN (ambiguous_work_a, ambiguous_work_b)) <> 2
     OR (SELECT vote_type FROM public.votes

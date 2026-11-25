@@ -24,7 +24,6 @@ export type EditorProjectWork = Pick<
   Tables<"work">,
   | "id"
   | "actor_id"
-  | "character_id"
   | "character_name"
   | "voice_actor_id"
   | "performance"

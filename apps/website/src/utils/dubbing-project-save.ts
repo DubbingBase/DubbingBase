@@ -22,14 +22,7 @@ export function getEditableDubbingProjectStatus(value: string | null): DubbingPr
 
 export type WorkExpectedValues = Pick<
   Tables<"work">,
-  | "actor_id"
-  | "character_id"
-  | "character_name"
-  | "voice_actor_id"
-  | "performance"
-  | "note"
-  | "highlight"
-  | "status"
+  "actor_id" | "character_name" | "voice_actor_id" | "performance" | "note" | "highlight" | "status"
 > & { game_character_id?: Tables<"work">["game_character_id"] };
 
 export type DubbingProjectCrewSaveRow = Pick<
@@ -41,7 +34,6 @@ export type DubbingProjectCastSaveRow = Partial<
   Pick<
     TablesInsert<"work">,
     | "actor_id"
-    | "character_id"
     | "game_character_id"
     | "character_name"
     | "voice_actor_id"
@@ -60,7 +52,6 @@ export interface GameProjectCastEditorRow {
   key: string;
   id?: number;
   character_ref: number | string | null;
-  character_id: number | string | null;
   game_character_id?: string | null;
   character_name: string;
   voice_actor_id: number | null;
@@ -83,11 +74,6 @@ export function serializeGameProjectCastRows(
       throw new Error("Reload this project before saving its cast.");
     }
 
-    const selectedCharacter = row.character_ref ?? row.character_id;
-    const isCustom =
-      typeof selectedCharacter === "string" && selectedCharacter.startsWith("custom_");
-    const hasNoProviderCharacter = !row.character_id;
-
     return [
       {
         ...(row.id === undefined
@@ -97,11 +83,7 @@ export function serializeGameProjectCastRows(
               expected_updated_at: row.expectedUpdatedAt,
               expected: row.expected,
             }),
-        character_id: isCustom || hasNoProviderCharacter ? null : Number(row.character_id),
-        character_name:
-          row.game_character_id || isCustom || hasNoProviderCharacter
-            ? row.character_name || null
-            : null,
+        character_name: row.character_name || null,
         game_character_id: row.game_character_id ?? null,
         voice_actor_id: row.voice_actor_id || null,
         performance: row.performance || "dialogues",

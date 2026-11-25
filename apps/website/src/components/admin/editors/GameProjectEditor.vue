@@ -427,7 +427,6 @@ const addCastRow = () => {
   castRows.value.push({
     key,
     character_ref: null,
-    character_id: null,
     game_character_id: null,
     character_name: "",
     voice_actor_id: null,
@@ -480,15 +479,19 @@ const getCharacterName = (id: number | string | null) => {
 const handleCharacterSelect = (row: CastRow, val: number | string | null) => {
   if (val === null) {
     row.character_ref = null;
-    row.character_id = null;
     row.game_character_id = null;
     row.character_name = "";
     return;
   }
   const char = characterOptions.value.find((c) => c.id === val);
+  if (char?.identity_source === "igdb") {
+    // A provider character is only a suggestion until it is registered for this game: the credit
+    // gets a local character of that name, which can then be linked to its IGDB character.
+    handleCharacterCreate(row, char.name);
+    return;
+  }
   if (char) {
     row.character_ref = char.id;
-    row.character_id = char.igdb_character_id;
     row.game_character_id = char.game_character_id;
     row.character_name = char.local_name || char.name;
   }
@@ -501,7 +504,6 @@ const handleCharacterFreeText = (row: CastRow) => {
     return;
   }
   row.character_ref = `custom_${name}`;
-  row.character_id = null;
   row.game_character_id = null;
   row.character_name = name;
   lastCharacterQuery = "";
@@ -560,15 +562,6 @@ const reloadGameCharacterOptions = async () => {
     ...character,
     id: character.stable_id ?? `igdb_character:${character.id}`,
   }));
-  for (const row of castRows.value) {
-    if (!row.game_character_id) continue;
-    const localCharacter = igdbCharacters.value.find(
-      (character) =>
-        character.identity_source === "local" &&
-        character.game_character_id === row.game_character_id,
-    );
-    if (localCharacter) row.character_id = localCharacter.igdb_character_id;
-  }
 };
 
 const updateGameCharacterReferences = async (
@@ -856,15 +849,7 @@ watch(
 
       if (data.works) {
         castRows.value = data.works.map((w) => {
-          const linkedCharacter =
-            w.game_character_id || w.character_id === null
-              ? null
-              : igdbCharacters.value.find(
-                  (character) =>
-                    character.identity_source === "local" &&
-                    character.igdb_character_id === w.character_id,
-                );
-          const gameCharacterId = w.game_character_id ?? linkedCharacter?.game_character_id ?? null;
+          const gameCharacterId = w.game_character_id ?? null;
           if (w.voice_actors && w.voice_actor_id !== null) {
             const name =
               `${w.voice_actors.firstname || ""} ${w.voice_actors.lastname || ""}`.trim();
@@ -873,12 +858,7 @@ watch(
           return {
             key: createEditorRowKey(),
             id: w.id,
-            character_ref: gameCharacterId
-              ? `game_character:${gameCharacterId}`
-              : w.character_id
-                ? `igdb_character:${w.character_id}`
-                : null,
-            character_id: w.character_id,
+            character_ref: gameCharacterId ? `game_character:${gameCharacterId}` : null,
             game_character_id: gameCharacterId,
             character_name: w.character_name || "",
             voice_actor_id: w.voice_actor_id,
@@ -888,7 +868,6 @@ watch(
             expectedUpdatedAt: w.updated_at,
             expected: {
               actor_id: w.actor_id,
-              character_id: w.character_id,
               game_character_id: w.game_character_id ?? null,
               character_name: w.character_name,
               voice_actor_id: w.voice_actor_id,

@@ -82,7 +82,7 @@ SELECT pg_sleep(0.2);
 SELECT work_id || '|' || project_id || '|' || voice_actor_id || '|' || audit_log_id || '|' || replayed
 FROM public.save_admin_credit_import(
   '$ADMIN_ID', '$request_id', $content_id, 'movie', 'en-US',
-  NULL, '$VOICE_FIRSTNAME', '$VOICE_LASTNAME', NULL, NULL, '$role_name'
+  NULL, '$VOICE_FIRSTNAME', '$VOICE_LASTNAME', NULL, '$role_name'
 );
 SQL
 }

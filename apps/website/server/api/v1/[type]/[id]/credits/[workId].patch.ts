@@ -16,12 +16,29 @@ import {
 import { positiveId } from "../../../../../utils/api-v1/voice-actors";
 
 export const route = defineApiRoute({
-  summary: "Change a credit's performance",
+  summary: "Change a credit",
   tags: ["Credits"],
   scope: "credits:update",
   params: v.object({ type: mediaSegment, id: positiveId, workId: positiveId }),
   query: v.object({}),
-  body: v.strictObject({ performance: performanceSchema }),
+  // Only the fields sent change. A credit keeps its id, history and review state, so a credit
+  // without a character is completed here instead of being deleted and created again.
+  body: v.pipe(
+    v.strictObject({
+      performance: v.optional(performanceSchema),
+      /** Sets the character name; a name cannot be cleared. */
+      character_name: v.optional(v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(300))),
+      /** TMDB person id (movies, shows) or IGDB character id (games); null removes it. */
+      actor_id: v.optional(v.nullable(v.pipe(v.number(), v.integer(), v.minValue(1)))),
+      /** A character registered for this game (games only); null removes the link. */
+      game_character_id: v.optional(v.nullable(v.pipe(v.string(), v.uuid(), v.toLowerCase()))),
+    }),
+    v.check((body) => Object.keys(body).length > 0, "Send at least one field to change."),
+    v.check(
+      (body) => !(body.actor_id != null && body.game_character_id != null),
+      "Use either actor_id or game_character_id.",
+    ),
+  ),
   response: Credit,
   handler: async ({ event, auth, params, body }) => {
     const key = mediaKey(params.type, params.id);
@@ -34,14 +51,15 @@ export const route = defineApiRoute({
         {
           work_id: params.workId,
           expected_updated_at: row.updated_at,
-          performance: body.performance,
+          // Only the fields that were sent, so the others stay as they are.
+          ...body,
         },
       ],
       () => "The credit",
     );
     notifyCreditChange(event, auth.userId, {
       entityId: `${key.contentType}/${key.contentId}`,
-      detail: `credit #${params.workId} performance set to ${body.performance}`,
+      detail: `credit #${params.workId} ${Object.keys(body).join(", ")} changed`,
       path: sitePath(key.segment, key.contentId),
     });
     // Answer from the row the transaction wrote, not a second read another request may have changed.
