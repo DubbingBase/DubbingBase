@@ -4,7 +4,7 @@ import {
   CHARACTER_PORTRAIT_BATCH_LIMIT,
   type CharacterRoster,
   type CharacterRosterBatch,
-} from "../../shared/character-portraits";
+} from "#shared/character-portraits";
 
 export type CharacterImage = {
   src: string;
