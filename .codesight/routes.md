@@ -24,7 +24,7 @@
 - `GET` `/api/entity-history` [auth] ✓
 - `GET` `/api/episode/index`
 - `GET` `/api/find_duplicate_voice_actors` [auth] ✓
-- `GET` `/api/game/:id` params(id)
+- `GET` `/api/game/:id` params(id) [auth]
 - `PUT` `/api/game-characters/:id` params(id) [auth]
 - `POST` `/api/game-characters` [auth] ✓
 - `GET` `/api/get-random-task` ✓

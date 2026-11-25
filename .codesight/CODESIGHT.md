@@ -5,7 +5,7 @@
 
 > 89 routes | 30 models | 145 components | 149 lib files | 53 env vars | 15 middleware | 47% test coverage
 > **Token savings:** this file is ~20,100 tokens. Without it, AI exploration would cost ~163,700 tokens. **Saves ~143,700 tokens per conversation.**
-> **Last scanned:** 2026-11-25 10:11 — re-run after significant changes
+> **Last scanned:** 2026-11-25 15:25 — re-run after significant changes
 
 ---
 
@@ -35,7 +35,7 @@
 - `GET` `/api/entity-history` [auth] ✓
 - `GET` `/api/episode/index`
 - `GET` `/api/find_duplicate_voice_actors` [auth] ✓
-- `GET` `/api/game/:id` params(id)
+- `GET` `/api/game/:id` params(id) [auth]
 - `PUT` `/api/game-characters/:id` params(id) [auth]
 - `POST` `/api/game-characters` [auth] ✓
 - `GET` `/api/get-random-task` ✓
@@ -1126,9 +1126,9 @@
 - `apps/website/server/utils/db/queries.ts` — imported by **10** files
 - `apps/website/server/utils/media-request.ts` — imported by **10** files
 - `apps/website/server/utils/services/media.ts` — imported by **10** files
+- `apps/website/server/utils/auth.ts` — imported by **10** files
 - `apps/website/server/utils/api-v1/media.ts` — imported by **10** files
 - `apps/website/server/utils/cache/http.ts` — imported by **9** files
-- `apps/website/server/utils/auth.ts` — imported by **9** files
 - `apps/website/server/utils/cache/constants.ts` — imported by **8** files
 - `e2e/helpers/mock-api.ts` — imported by **8** files
 - `apps/website/server/utils/narrow.ts` — imported by **7** files
@@ -1153,7 +1153,7 @@
 # Test Coverage
 
 > **47%** of routes and models are covered by tests
-> 178 test files found
+> 179 test files found
 
 ## Covered Routes
 

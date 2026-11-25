@@ -14,7 +14,7 @@ The [id].get subsystem handles **12 routes** and touches: auth, cache.
   `apps/website/server/api/audiobook/[id].get.ts`
 - `GET` `/api/character/:source/:id` params(source, id)
   `apps/website/server/api/character/[source]/[id].get.ts`
-- `GET` `/api/game/:id` params(id)
+- `GET` `/api/game/:id` params(id) [auth]
   `apps/website/server/api/game/[id].get.ts`
 - `GET` `/api/movie/:id` params(id)
   `apps/website/server/api/movie/[id].get.ts`
