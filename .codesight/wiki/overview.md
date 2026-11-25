@@ -8,7 +8,7 @@
 
 ## Scale
 
-86 API routes · 30 database models · 145 UI components · 148 library files · 15 middleware layers · 53 environment variables
+89 API routes · 30 database models · 145 UI components · 149 library files · 15 middleware layers · 53 environment variables
 
 ## Subsystems
 
@@ -17,6 +17,8 @@
 - **[[id].get](./[id].get.md)** — 12 routes — touches: auth, cache
 - **[[id].patch](./[id].patch.md)** — 1 routes — touches: auth
 - **[[id].put](./[id].put.md)** — 1 routes — touches: auth
+- **[[projectId].get](./[projectid].get.md)** — 1 routes
+- **[[projectId].patch](./[projectid].patch.md)** — 1 routes — touches: auth
 - **[[workId].get](./[workid].get.md)** — 1 routes
 - **[[workId].patch](./[workid].patch.md)** — 1 routes — touches: auth
 - **[Admin](./admin.md)** — 5 routes — touches: auth, queue, cache
@@ -40,7 +42,7 @@
 - **[Get-studio-details.get](./get-studio-details.get.md)** — 1 routes
 - **[Home-stats.get](./home-stats.get.md)** — 1 routes
 - **[Index.get](./index.get.md)** — 7 routes — touches: db, auth, cache
-- **[Index.post](./index.post.md)** — 3 routes — touches: auth, db, cache, email
+- **[Index.post](./index.post.md)** — 4 routes — touches: auth, db, cache, email
 - **[Internal-media-create.post](./internal-media-create.post.md)** — 1 routes — touches: auth
 - **[Internal-media-credits.get](./internal-media-credits.get.md)** — 1 routes
 - **[Link-user-voice-actor.post](./link-user-voice-actor.post.md)** — 1 routes — touches: auth
@@ -79,18 +81,18 @@
 
 **UI:** 145 components (vue) — see [ui.md](./ui.md)
 
-**Libraries:** 148 files — see [libraries.md](./libraries.md)
+**Libraries:** 149 files — see [libraries.md](./libraries.md)
 
 ## High-Impact Files
 
 Changes to these files have the widest blast radius across the codebase:
 
-- `apps/website/server/utils/db/client.ts` — imported by **68** files
+- `apps/website/server/utils/db/client.ts` — imported by **71** files
 - `apps/website/server/utils/auth-handlers.ts` — imported by **29** files
 - `apps/website/server/utils/index.ts` — imported by **28** files
+- `apps/website/server/utils/api-v1/define.ts` — imported by **20** files
 - `apps/website/server/utils/cache/index.ts` — imported by **18** files
-- `apps/website/server/utils/api-v1/define.ts` — imported by **17** files
-- `packages/shared-logic/src/types/index.ts` — imported by **12** files
+- `apps/website/server/utils/api-v1/errors.ts` — imported by **14** files
 
 ## Required Environment Variables
 

@@ -2,9 +2,9 @@
 
 > **Navigation aid.** Library inventory extracted via AST. Read the source files listed here before modifying exported functions.
 
-**148 library files** across 3 modules
+**149 library files** across 3 modules
 
-## Website (124 files)
+## Website (125 files)
 
 - `apps/website/server/utils/notifications/discord.ts` — shortText, errorFields, normalizeDiscordUrl, buildDiscordEmbed, beginDiscordDigest, severityOf, …
 - `apps/website/src/utils/dubbing-project-save.ts` — getEditableDubbingProjectStatus, serializeGameProjectCastRows, createRequestId, createStableRequestIdFactory, createDubbingProjectSaveClient, isDubbingProjectSaveConflict, …
@@ -29,9 +29,9 @@
 - `apps/website/server/utils/contribution/task-submission-validation.ts` — isTaskClaimId, authorizeTaskContribution, validateTaskContribution, TaskCategory, TaskUpload, TaskContributionInput, …
 - `apps/website/server/utils/search-ranking.ts` — rankSearchResults, getTmdbLocale, projectSearchResult, SearchItem, MEDIA_TYPE_WEIGHTS, DEFAULT_MEDIA_TYPE_WEIGHT, …
 - `apps/website/src/utils/cast-workspace.ts` — filterCastRows, summarizeCast, getInitials, CastWorkspaceRow, CastFilter, ORIGINAL_CAST_SEED_LIMIT, …
+- `apps/website/server/utils/api-v1/projects.ts` — toProject, getProject, ProjectOutput, Project, ProjectSummary, PROJECT_SELECT
 - `apps/website/server/utils/api-v1/tokens.ts` — hashApiToken, generateApiToken, readBearerToken, authenticateApiToken, ApiPrincipal, API_TOKEN_PREFIX
-- `apps/website/server/utils/cache/http.ts` — getPublicCacheControl, getCloudflareCacheControl, setNoCacheHeaders, setPublicCacheHeaders, CacheProfile, NO_STORE_CACHE_CONTROL
-- _…and 99 more files_
+- _…and 100 more files_
 
 ## Shared-logic (23 files)
 

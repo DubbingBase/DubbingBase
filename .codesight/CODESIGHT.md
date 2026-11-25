@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/website, @app/supabase, @app/locales, @app/shared-logic
 
-> 86 routes | 30 models | 145 components | 148 lib files | 53 env vars | 15 middleware | 48% test coverage
-> **Token savings:** this file is ~19,900 tokens. Without it, AI exploration would cost ~161,900 tokens. **Saves ~142,000 tokens per conversation.**
-> **Last scanned:** 2026-11-25 08:43 — re-run after significant changes
+> 89 routes | 30 models | 145 components | 149 lib files | 53 env vars | 15 middleware | 47% test coverage
+> **Token savings:** this file is ~20,100 tokens. Without it, AI exploration would cost ~163,700 tokens. **Saves ~143,700 tokens per conversation.**
+> **Last scanned:** 2026-11-25 10:08 — re-run after significant changes
 
 ---
 
@@ -88,7 +88,10 @@
 - `POST` `/api/v1/:type/:id/credits/batch` params(type, id) [auth]
 - `GET` `/api/v1/:type/:id/credits/index` params(type, id)
 - `GET` `/api/v1/:type/:id/index` params(type, id)
+- `POST` `/api/v1/:type/:id/projects/index` params(type, id) [auth]
 - `POST` `/api/v1/:type/index` params(type) [auth]
+- `GET` `/api/v1/projects/:projectId` params(projectId)
+- `PATCH` `/api/v1/projects/:projectId` params(projectId) [auth]
 - `GET` `/api/v1/voice-actors/:id/credits` params(id)
 - `GET` `/api/v1/voice-actors/:id` params(id)
 - `PATCH` `/api/v1/voice-actors/:id` params(id) [auth]
@@ -519,6 +522,13 @@
   - interface MediaKey
   - type MediaSegment
   - _...7 more_
+- `apps/website/server/utils/api-v1/projects.ts`
+  - function toProject: (row) => ProjectOutput
+  - function getProject: (event, projectId) => Promise<ProjectOutput>
+  - type ProjectOutput
+  - const Project
+  - const ProjectSummary
+  - const PROJECT_SELECT
 - `apps/website/server/utils/api-v1/spec.ts` — function buildOpenApiSpec: () => void
 - `apps/website/server/utils/api-v1/tokens.ts`
   - function hashApiToken: (token) => Promise<string>
@@ -1104,46 +1114,46 @@
 
 ## Most Imported Files (change these carefully)
 
-- `apps/website/server/utils/db/client.ts` — imported by **68** files
+- `apps/website/server/utils/db/client.ts` — imported by **71** files
 - `apps/website/server/utils/auth-handlers.ts` — imported by **29** files
 - `apps/website/server/utils/index.ts` — imported by **28** files
+- `apps/website/server/utils/api-v1/define.ts` — imported by **20** files
 - `apps/website/server/utils/cache/index.ts` — imported by **18** files
-- `apps/website/server/utils/api-v1/define.ts` — imported by **17** files
+- `apps/website/server/utils/api-v1/errors.ts` — imported by **14** files
+- `apps/website/server/utils/api-v1/voice-actors.ts` — imported by **12** files
 - `packages/shared-logic/src/types/index.ts` — imported by **12** files
-- `apps/website/server/utils/api-v1/errors.ts` — imported by **11** files
+- `apps/website/server/utils/api-v1/credits.ts` — imported by **11** files
 - `apps/website/server/utils/db/queries.ts` — imported by **10** files
 - `apps/website/server/utils/media-request.ts` — imported by **10** files
 - `apps/website/server/utils/services/media.ts` — imported by **10** files
-- `apps/website/server/utils/api-v1/voice-actors.ts` — imported by **10** files
+- `apps/website/server/utils/api-v1/media.ts` — imported by **10** files
 - `apps/website/server/utils/cache/http.ts` — imported by **9** files
 - `apps/website/server/utils/auth.ts` — imported by **9** files
-- `apps/website/server/utils/api-v1/credits.ts` — imported by **9** files
-- `apps/website/server/utils/api-v1/media.ts` — imported by **8** files
 - `apps/website/server/utils/cache/constants.ts` — imported by **8** files
 - `e2e/helpers/mock-api.ts` — imported by **8** files
 - `apps/website/server/utils/narrow.ts` — imported by **7** files
 - `apps/website/server/utils/dubbing-language.ts` — imported by **7** files
-- `apps/website/server/utils/cache/edge.ts` — imported by **7** files
+- `apps/website/shared/api-scopes.ts` — imported by **7** files
 
 ## Import Map (who imports what)
 
-- `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue.get.ts`, `apps/website/server/api/admin/work-duplicates/merge.post.ts`, `apps/website/server/api/admin/work-duplicates.get.ts` +63 more
+- `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue.get.ts`, `apps/website/server/api/admin/work-duplicates/merge.post.ts`, `apps/website/server/api/admin/work-duplicates.get.ts` +66 more
 - `apps/website/server/utils/auth-handlers.ts` ← `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue.get.ts`, `apps/website/server/api/admin/work-duplicates/merge.post.ts`, `apps/website/server/api/admin/work-duplicates.get.ts` +24 more
 - `apps/website/server/utils/index.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/character/[source]/[id].get.ts` +23 more
+- `apps/website/server/utils/api-v1/define.ts` ← `apps/website/server/api/v1/[type]/[id]/characters/[characterId].patch.ts`, `apps/website/server/api/v1/[type]/[id]/characters.get.ts`, `apps/website/server/api/v1/[type]/[id]/characters.post.ts`, `apps/website/server/api/v1/[type]/[id]/credits/[workId].get.ts`, `apps/website/server/api/v1/[type]/[id]/credits/[workId].patch.ts` +15 more
 - `apps/website/server/utils/cache/index.ts` ← `apps/website/server/utils/api/igdb.test.ts`, `apps/website/server/utils/api/igdb.ts`, `apps/website/server/utils/api/openlibrary.test.ts`, `apps/website/server/utils/api/openlibrary.ts`, `apps/website/server/utils/api/podcast.test.ts` +13 more
-- `apps/website/server/utils/api-v1/define.ts` ← `apps/website/server/api/v1/[type]/[id]/characters/[characterId].patch.ts`, `apps/website/server/api/v1/[type]/[id]/characters.get.ts`, `apps/website/server/api/v1/[type]/[id]/characters.post.ts`, `apps/website/server/api/v1/[type]/[id]/credits/[workId].get.ts`, `apps/website/server/api/v1/[type]/[id]/credits/[workId].patch.ts` +12 more
+- `apps/website/server/utils/api-v1/errors.ts` ← `apps/website/server/api/v1/[type]/[id]/characters/[characterId].patch.ts`, `apps/website/server/api/v1/[type]/[id]/characters.post.ts`, `apps/website/server/api/v1/[type]/[id]/credits/batch.post.ts`, `apps/website/server/api/v1/[type]/[id]/projects/index.post.ts`, `apps/website/server/api/v1/[type]/index.post.ts` +9 more
+- `apps/website/server/utils/api-v1/voice-actors.ts` ← `apps/website/server/api/v1/[type]/[id]/characters/[characterId].patch.ts`, `apps/website/server/api/v1/[type]/[id]/characters.post.ts`, `apps/website/server/api/v1/[type]/[id]/credits/[workId].get.ts`, `apps/website/server/api/v1/[type]/[id]/credits/[workId].patch.ts`, `apps/website/server/api/v1/[type]/[id]/credits/index.get.ts` +7 more
 - `packages/shared-logic/src/types/index.ts` ← `packages/shared-logic/src/composables/useAdvertisementData.ts`, `packages/shared-logic/src/composables/useAudiobookData.ts`, `packages/shared-logic/src/composables/useDetailCollections.ts`, `packages/shared-logic/src/composables/useDetailCollections.ts`, `packages/shared-logic/src/composables/useGameData.ts` +7 more
-- `apps/website/server/utils/api-v1/errors.ts` ← `apps/website/server/api/v1/[type]/[id]/characters/[characterId].patch.ts`, `apps/website/server/api/v1/[type]/[id]/characters.post.ts`, `apps/website/server/api/v1/[type]/[id]/credits/batch.post.ts`, `apps/website/server/api/v1/[type]/index.post.ts`, `apps/website/server/api/v1/voice-actors/[id]/credits.get.ts` +6 more
+- `apps/website/server/utils/api-v1/credits.ts` ← `apps/website/server/api/v1/[type]/[id]/characters/[characterId].patch.ts`, `apps/website/server/api/v1/[type]/[id]/characters.get.ts`, `apps/website/server/api/v1/[type]/[id]/characters.post.ts`, `apps/website/server/api/v1/[type]/[id]/credits/[workId].get.ts`, `apps/website/server/api/v1/[type]/[id]/index.get.ts` +6 more
 - `apps/website/server/utils/db/queries.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/character/[source]/[id].get.ts`, `apps/website/server/api/detail-collections.get.ts` +5 more
-- `apps/website/server/utils/media-request.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/character-portraits.get.ts`, `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/game/[id].get.ts` +5 more
-- `apps/website/server/utils/services/media.ts` ← `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/character/[source]/[id].get.ts`, `apps/website/server/api/character-portraits.get.ts`, `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/movie/[id].get.ts` +5 more
 
 ---
 
 # Test Coverage
 
-> **48%** of routes and models are covered by tests
-> 176 test files found
+> **47%** of routes and models are covered by tests
+> 178 test files found
 
 ## Covered Routes
 

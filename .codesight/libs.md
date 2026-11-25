@@ -46,6 +46,13 @@
   - interface MediaKey
   - type MediaSegment
   - _...7 more_
+- `apps/website/server/utils/api-v1/projects.ts`
+  - function toProject: (row) => ProjectOutput
+  - function getProject: (event, projectId) => Promise<ProjectOutput>
+  - type ProjectOutput
+  - const Project
+  - const ProjectSummary
+  - const PROJECT_SELECT
 - `apps/website/server/utils/api-v1/spec.ts` — function buildOpenApiSpec: () => void
 - `apps/website/server/utils/api-v1/tokens.ts`
   - function hashApiToken: (token) => Promise<string>

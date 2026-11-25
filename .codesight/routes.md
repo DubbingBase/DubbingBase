@@ -77,7 +77,10 @@
 - `POST` `/api/v1/:type/:id/credits/batch` params(type, id) [auth]
 - `GET` `/api/v1/:type/:id/credits/index` params(type, id)
 - `GET` `/api/v1/:type/:id/index` params(type, id)
+- `POST` `/api/v1/:type/:id/projects/index` params(type, id) [auth]
 - `POST` `/api/v1/:type/index` params(type) [auth]
+- `GET` `/api/v1/projects/:projectId` params(projectId)
+- `PATCH` `/api/v1/projects/:projectId` params(projectId) [auth]
 - `GET` `/api/v1/voice-actors/:id/credits` params(id)
 - `GET` `/api/v1/voice-actors/:id` params(id)
 - `PATCH` `/api/v1/voice-actors/:id` params(id) [auth]
