@@ -6,20 +6,14 @@ export const editableWorkFields = [
   "reviewed_status",
   "note",
   "highlight",
-  "source_id",
-  "suggestions",
   "character_name",
 ] as const;
 
 export type EditableWorkField = (typeof editableWorkFields)[number];
 
-/**
- * Work row as returned by the admin duplicates API. `game_character_id` is a
- * database column the API does not project, so it is excluded here.
- */
-export type DuplicateWorkEntry = Omit<Tables<"work">, "reviewed_status" | "game_character_id"> & {
+/** Work row as returned by the admin duplicates API. */
+export type DuplicateWorkEntry = Omit<Tables<"work">, "reviewed_status"> & {
   reviewed_status: "waiting" | "accepted" | "rejected" | null;
-  sourceName: string | null;
   voteCount: number;
   upVotes: number;
   downVotes: number;
@@ -32,7 +26,6 @@ export interface DuplicateWorkGroup {
   identity: {
     dubbingProjectId: number;
     actorId: number | null;
-    characterId: number | null;
     voiceActorId: number | null;
     roleKey: string;
   };
@@ -124,8 +117,6 @@ export function prefillDuplicateWork(
     reviewed_status: canonical.reviewed_status,
     note: canonical.note,
     highlight: canonical.highlight,
-    source_id: canonical.source_id,
-    suggestions: canonical.suggestions,
     character_name: canonical.character_name,
   };
   const provenance: Record<EditableWorkField, number> = {
@@ -134,8 +125,6 @@ export function prefillDuplicateWork(
     reviewed_status: canonical.id,
     note: canonical.id,
     highlight: canonical.id,
-    source_id: canonical.id,
-    suggestions: canonical.id,
     character_name: canonical.id,
   };
 
@@ -158,12 +147,6 @@ export function prefillDuplicateWork(
           break;
         case "highlight":
           values.highlight = source.highlight;
-          break;
-        case "source_id":
-          values.source_id = source.source_id;
-          break;
-        case "suggestions":
-          values.suggestions = source.suggestions;
           break;
         case "character_name":
           values.character_name = source.character_name;

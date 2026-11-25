@@ -85,7 +85,6 @@ IFS='|' read -r project_id project_updated_at _create_audit_id <<< "$created"
 work_info="$(psql_local -c "
   SELECT work.id, work.updated_at, jsonb_build_object(
     'actor_id', work.actor_id,
-    'character_id', work.character_id,
     'character_name', work.character_name,
     'voice_actor_id', work.voice_actor_id,
     'performance', work.performance,
@@ -182,7 +181,7 @@ IFS='|' read -r retry_project_id retry_updated_at retry_audit_id retry_replayed 
 
 work_info="$(psql_local -c "
   SELECT work.id, work.updated_at, jsonb_build_object(
-    'actor_id', work.actor_id, 'character_id', work.character_id,
+    'actor_id', work.actor_id,
     'character_name', work.character_name, 'voice_actor_id', work.voice_actor_id,
     'performance', work.performance, 'note', work.note,
     'highlight', work.highlight, 'status', work.status

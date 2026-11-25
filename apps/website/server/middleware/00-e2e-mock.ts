@@ -28,9 +28,8 @@ export const MOCK_VOICE_ACTOR = {
         voice_actor_id: 1,
         highlight: true,
         performance: "dialogues",
-        source_id: null,
         status: "validated",
-        suggestions: "Indiana Jones",
+        character_name: "Indiana Jones",
         dubbing_projects: {
           content_id: 85,
           content_type: "movie",
@@ -43,9 +42,8 @@ export const MOCK_VOICE_ACTOR = {
         voice_actor_id: 1,
         highlight: true,
         performance: "dialogues",
-        source_id: null,
         status: "validated",
-        suggestions: "Rick Deckard",
+        character_name: "Rick Deckard",
         dubbing_projects: {
           content_id: 78,
           content_type: "movie",
@@ -58,9 +56,8 @@ export const MOCK_VOICE_ACTOR = {
         voice_actor_id: 1,
         highlight: false,
         performance: "dialogues",
-        source_id: null,
         status: "validated",
-        suggestions: "Batman",
+        character_name: "Batman",
         dubbing_projects: {
           content_id: 201,
           content_type: "tv",
@@ -73,9 +70,8 @@ export const MOCK_VOICE_ACTOR = {
         voice_actor_id: 1,
         highlight: false,
         performance: "dialogues",
-        source_id: null,
         status: "validated",
-        suggestions: "Geralt de Riv",
+        character_name: "Geralt de Riv",
         dubbing_projects: {
           content_id: 301,
           content_type: "video_game",
@@ -88,9 +84,8 @@ export const MOCK_VOICE_ACTOR = {
         voice_actor_id: 1,
         highlight: false,
         performance: "narration",
-        source_id: null,
         status: "validated",
-        suggestions: "Narrateur",
+        character_name: "Narrateur",
         dubbing_projects: {
           content_id: 401,
           content_type: "audiobook",
@@ -103,9 +98,8 @@ export const MOCK_VOICE_ACTOR = {
         voice_actor_id: 1,
         highlight: false,
         performance: "dialogues",
-        source_id: null,
         status: "validated",
-        suggestions: "Commandant",
+        character_name: "Commandant",
         dubbing_projects: {
           content_id: 501,
           content_type: "podcast",
@@ -118,9 +112,8 @@ export const MOCK_VOICE_ACTOR = {
         voice_actor_id: 1,
         highlight: false,
         performance: "voiceover",
-        source_id: null,
         status: "validated",
-        suggestions: "Voix Off",
+        character_name: "Voix Off",
         dubbing_projects: {
           content_id: 601,
           content_type: "advertisement",
@@ -133,9 +126,8 @@ export const MOCK_VOICE_ACTOR = {
         voice_actor_id: 1,
         highlight: false,
         performance: "narration",
-        source_id: null,
         status: "validated",
-        suggestions: "Héros Mystère",
+        character_name: "Héros Mystère",
         dubbing_projects: {
           content_id: 701,
           content_type: "toy",
@@ -869,7 +861,6 @@ export const MOCK_GAME = {
         {
           id: 1942001,
           actor_id: 1001,
-          character_id: 1001,
           voice_actor_id: 30,
           character_name: "Geralt de Riv",
           performance: "dialogues",
@@ -891,7 +882,6 @@ export const MOCK_GAME = {
         {
           id: 1942001,
           actor_id: 1001,
-          character_id: 1001,
           voice_actor_id: 30,
           character_name: "Geralt de Riv",
           performance: "dialogues",

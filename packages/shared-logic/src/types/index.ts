@@ -65,7 +65,6 @@ export type DubbingProjectWork = Pick<WorkRow, "id"> &
       WorkRow,
       | "actor_id"
       | "voice_actor_id"
-      | "character_id"
       | "game_character_id"
       | "character_name"
       | "performance"

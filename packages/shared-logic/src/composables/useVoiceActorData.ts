@@ -43,15 +43,7 @@ type VoiceActorMedia = (MovieModel | SerieModel) & {
 /** Work row with the dubbing project (and its studio) nested, as returned by the voice actor route. */
 type VoiceActorWork = Pick<
   Tables<"work">,
-  | "id"
-  | "actor_id"
-  | "highlight"
-  | "performance"
-  | "reviewed_status"
-  | "source_id"
-  | "status"
-  | "suggestions"
-  | "voice_actor_id"
+  "id" | "actor_id" | "highlight" | "performance" | "reviewed_status" | "status" | "voice_actor_id"
 > & {
   dubbing_projects?: ProjectMediaRef & {
     studios?: Pick<Tables<"studios">, "id" | "name" | "logo_url"> | null;

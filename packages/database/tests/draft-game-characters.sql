@@ -69,7 +69,7 @@ BEGIN
   WHERE media_id = (SELECT media.id FROM public.media AS media WHERE media.kind = 'video_game' AND media.content_id = 563701001) AND name = 'Draft Role' AND created_by = v_admin;
   IF v_saved.replayed OR (SELECT count(*) FROM public.work
     WHERE dubbing_project_id = v_saved.project_id AND game_character_id = v_character_id
-      AND character_id IS NULL AND voice_actor_id IN (563701101, 563701102)) <> 2 THEN
+      AND voice_actor_id IN (563701101, 563701102)) <> 2 THEN
     RAISE EXCEPTION 'Both cast rows must reference the single saved character';
   END IF;
 

@@ -17,7 +17,6 @@ interface GamePageDubbingProject {
   works?:
     | {
         actor_id: number | null;
-        character_id: number | null;
         character_name: string | null;
         voice_actor?: {
           id: number | null;

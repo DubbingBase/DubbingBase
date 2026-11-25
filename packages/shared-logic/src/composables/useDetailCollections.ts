@@ -192,13 +192,12 @@ export function formatGameDetailCastCards(
       else worksByGameCharacterId.set(gameCharacterId, [index]);
       continue;
     }
-    for (const rawId of [work.character_id, work.actor_id]) {
-      if (rawId === null || rawId === undefined) continue;
-      const id = String(rawId);
-      const workIndexes = worksByCharacterId.get(id);
-      if (workIndexes) workIndexes.push(index);
-      else worksByCharacterId.set(id, [index]);
-    }
+    const rawId = work.actor_id;
+    if (rawId === null || rawId === undefined) continue;
+    const id = String(rawId);
+    const workIndexes = worksByCharacterId.get(id);
+    if (workIndexes) workIndexes.push(index);
+    else worksByCharacterId.set(id, [index]);
   }
 
   const matchedWorkIds = new Set<unknown>();

@@ -39,7 +39,6 @@ DECLARE
   va_two bigint;
   va_three bigint;
   va_four bigint;
-  v_source_id bigint;
   actor_new bigint := 710100001;
   actor_rich bigint := 710100002;
   actor_ambiguous bigint := 710100003;
@@ -67,7 +66,6 @@ BEGIN
   VALUES ('Regional RPC', 'Three') RETURNING id INTO va_three;
   INSERT INTO public.voice_actors(firstname, lastname)
   VALUES ('Regional RPC', 'Four') RETURNING id INTO va_four;
-  INSERT INTO public.source(name) VALUES ('Regional RPC fixture') RETURNING id INTO v_source_id;
 
   BEGIN
     PERFORM pg_temp.test_save_regional_project_actor_assignments(
@@ -152,12 +150,9 @@ BEGIN
   );
   UPDATE public.dubbing_projects SET status = 'in_progress' WHERE id = project_id;
   UPDATE public.work
-  SET character_id = 80301,
-      character_name = 'Rich character',
-      source_id = v_source_id,
+  SET character_name = 'Rich character',
       note = 'Preserve this note',
       reviewed_status = 'accepted',
-      suggestions = 'Existing suggestions',
       highlight = true,
       performance = 'singing',
       status = 'reviewed'
@@ -181,12 +176,9 @@ BEGIN
     JOIN public.dubbing_projects AS project ON project.id = work.dubbing_project_id
     WHERE work.id = rich_work_id
       AND work.voice_actor_id = va_two
-      AND work.character_id = 80301
       AND work.character_name = 'Rich character'
-      AND work.source_id = v_source_id
       AND work.note = 'Preserve this note'
       AND work.reviewed_status = 'accepted'
-      AND work.suggestions = 'Existing suggestions'
       AND work.highlight IS TRUE
       AND work.performance = 'singing'
       AND work.status = 'reviewed'
@@ -198,11 +190,11 @@ BEGIN
   -- Multiple works for one actor are intentionally non-editable in this form.
   INSERT INTO public.dubbing_projects(media_id, language, status)
   VALUES (private.resolve_media('movie', 980204), 'fr-FR', 'validated') RETURNING id INTO project_id;
-  INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_id)
-  VALUES (project_id, actor_ambiguous, va_one, 80401)
+  INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id)
+  VALUES (project_id, actor_ambiguous, va_one)
   RETURNING id INTO ambiguous_work_one;
-  INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_id)
-  VALUES (project_id, actor_ambiguous, va_two, 80402)
+  INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id)
+  VALUES (project_id, actor_ambiguous, va_two)
   RETURNING id INTO ambiguous_work_two;
   BEGIN
     PERFORM pg_temp.test_save_regional_project_actor_assignments(
@@ -320,8 +312,7 @@ BEGIN
   );
   UPDATE public.dubbing_projects SET status = 'in_progress' WHERE id = project_id;
   UPDATE public.work
-  SET character_id = 80801,
-      character_name = 'Concurrency character',
+  SET character_name = 'Concurrency character',
       note = 'Preserve after conflict'
   WHERE dubbing_project_id = project_id AND actor_id = actor_concurrent
   RETURNING id INTO concurrent_work_id;
@@ -361,7 +352,6 @@ BEGIN
     JOIN public.dubbing_projects AS project ON project.id = work.dubbing_project_id
     WHERE work.id = concurrent_work_id
       AND work.voice_actor_id = va_two
-      AND work.character_id = 80801
       AND work.character_name = 'Concurrency character'
       AND work.note = 'Preserve after conflict'
       AND project.media_id = private.find_media_id('movie', 980208)

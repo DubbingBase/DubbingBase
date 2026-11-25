@@ -525,7 +525,6 @@ describe("dubbing project detail queries", () => {
           {
             id: 91,
             actor_id: 42,
-            character_id: 17,
             character_name: "Character",
             voice_actor: {
               id: 42,
@@ -549,7 +548,8 @@ describe("dubbing project detail queries", () => {
     );
     expect(queryMocks.selectedColumns[0]).not.toContain("*");
     expect(queryMocks.selectedColumns[0]).toContain("studio_data:studios(id, name, logo_url)");
-    expect(queryMocks.selectedColumns[0]).toContain("character_id");
+    expect(queryMocks.selectedColumns[0]).toContain("game_character_id");
+    expect(queryMocks.selectedColumns[0]).not.toMatch(/(?<![a-z_])character_id/);
     expect(queryMocks.selectedColumns[0]).toContain("voice_actor:voice_actors(id");
     expect(projects[0]?.crew).toEqual([]);
   });

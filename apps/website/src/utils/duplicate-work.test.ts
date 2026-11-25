@@ -12,7 +12,7 @@ const work = (id: number, overrides: Partial<DuplicateWorkEntry> = {}): Duplicat
   id,
   dubbing_project_id: 5,
   actor_id: 7,
-  character_id: null,
+  game_character_id: null,
   voice_actor_id: 11,
   character_name: null,
   performance: null,
@@ -20,9 +20,6 @@ const work = (id: number, overrides: Partial<DuplicateWorkEntry> = {}): Duplicat
   reviewed_status: null,
   note: null,
   highlight: null,
-  source_id: null,
-  sourceName: null,
-  suggestions: null,
   created_at: null,
   created_by: null,
   updated_at: "2026-09-01T00:00:00Z",
@@ -42,8 +39,6 @@ describe("duplicate work comparison", () => {
       reviewed_status: null,
       note: null,
       highlight: false,
-      source_id: null,
-      suggestions: null,
       character_name: null,
     };
 
@@ -77,8 +72,7 @@ describe("duplicate work comparison", () => {
       status: "validated",
       highlight: true,
       performance: "dialogues",
-      source_id: 14,
-      sourceName: "Credits page",
+      note: "from credits page",
     });
 
     const result = prefillDuplicateWork(canonical, [canonical, donor]);
@@ -87,7 +81,7 @@ describe("duplicate work comparison", () => {
       highlight: false,
       status: "validated",
       performance: "dialogues",
-      source_id: 14,
+      note: "from credits page",
     });
     expect(result.provenance.performance).toBe(9);
     expect(result.provenance.highlight).toBe(8);

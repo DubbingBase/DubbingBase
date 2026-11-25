@@ -691,7 +691,6 @@ watch(
             expectedUpdatedAt: w.updated_at,
             expected: {
               actor_id: w.actor_id,
-              character_id: w.character_id,
               character_name: w.character_name,
               voice_actor_id: w.voice_actor_id,
               performance: w.performance,

@@ -268,8 +268,7 @@ WHERE dubbing_project_id = :'main_project_id'::BIGINT AND actor_id = 720001
 -- Give the existing row structured values that must survive an assignment
 -- change and remain recoverable from the before/after snapshots.
 UPDATE public.work
-SET character_id = 80801,
-    character_name = 'Audit character',
+SET character_name = 'Audit character',
     note = 'Preserve this note'
 WHERE id = :'main_work_id'::BIGINT;
 

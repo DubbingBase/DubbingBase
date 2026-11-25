@@ -50,7 +50,6 @@ describe("applyExtractedCredits", () => {
           lastname: "Actor",
           actor_id: 7,
           performance: "voice",
-          character_id: null,
           character_name: null,
         },
         {
@@ -58,7 +57,6 @@ describe("applyExtractedCredits", () => {
           lastname: "Actor",
           actor_id: 8,
           performance: null,
-          character_id: null,
           character_name: null,
         },
       ],

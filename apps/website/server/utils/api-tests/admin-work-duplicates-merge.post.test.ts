@@ -33,8 +33,6 @@ const updates = {
   reviewed_status: null,
   note: null,
   highlight: null,
-  source_id: null,
-  suggestions: null,
   character_name: null,
 };
 
