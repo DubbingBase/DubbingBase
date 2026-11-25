@@ -2,7 +2,7 @@
   <div class="min-h-screen overflow-x-hidden">
     <!-- Hero Search Section (Full Width) -->
     <section
-      class="relative theme-surface-raised py-16 md:py-24 px-4 flex flex-col items-center justify-center text-center overflow-hidden border-b theme-border-subtle"
+      class="relative theme-surface-raised py-16 md:py-24 px-4 flex flex-col items-center justify-center text-center z-20 border-b theme-border-subtle"
     >
       <div class="relative z-10 max-w-3xl w-full">
         <h1
@@ -58,6 +58,8 @@
           class="home-search-form mx-auto flex w-full max-w-2xl items-center rounded-full theme-surface p-1 text-left text-base shadow-xl md:p-1.5 md:text-lg"
           @submit.prevent="submitHomeSearch"
         >
+          <HomeSearchTypeSelect v-model="homeSearchType" />
+          <span class="mx-1 h-6 w-px shrink-0 theme-surface-muted" aria-hidden="true"></span>
           <label class="sr-only" for="home-search-input">
             {{ $t("home.hero.searchPlaceholder") }}
           </label>
@@ -70,7 +72,7 @@
             required
             data-testid="home-search-input"
             :placeholder="$t('home.hero.searchPlaceholder')"
-            class="min-w-0 flex-1 bg-transparent py-2 pl-3 pr-2 text-base outline-none theme-text theme-placeholder md:py-3 md:pl-5 md:text-lg"
+            class="min-w-0 flex-1 bg-transparent py-2 pl-2 pr-2 text-base outline-none theme-text theme-placeholder md:py-3 md:pl-5 md:text-lg"
           />
           <button
             type="submit"
@@ -276,6 +278,8 @@
 <script setup lang="ts">
 import { resolveMediaImage, getTmdbImagePath, resolveLocaleLanguage } from "@app/shared-logic";
 import type { HomeDataPayload } from "@app/shared-logic";
+import HomeSearchTypeSelect from "../components/HomeSearchTypeSelect.vue";
+import type { SearchMediaType as HomeSearchType } from "../utils/search-type-display";
 import { useDragScroll } from "../composables/useDragScroll";
 import { ref, computed, watch, type MaybeRefOrGetter } from "vue";
 
@@ -288,18 +292,21 @@ const siteAssetUrl = (path: string): string => new URL(path, siteUrl).href;
 const pageUrl = computed(() => siteAssetUrl(localePath("/")));
 const homeSearchQuery = ref("");
 const homeSearchInput = ref<HTMLInputElement | null>(null);
-const canSubmitHomeSearch = computed(() => homeSearchQuery.value.trim().length >= 2);
+const homeSearchType = ref<HomeSearchType>("movie");
+const canSubmitHomeSearch = computed(
+  () => homeSearchQuery.value.trim().length >= 2 && Boolean(homeSearchType.value),
+);
 
 const submitHomeSearch = (): void => {
   const query = homeSearchQuery.value.trim();
-  if (query.length < 2) {
+  if (query.length < 2 || !homeSearchType.value) {
     homeSearchInput.value?.focus();
     return;
   }
 
   void navigateTo({
     path: localePath("/search"),
-    query: { q: query },
+    query: { q: query, type: homeSearchType.value },
   });
 };
 

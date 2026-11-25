@@ -465,6 +465,27 @@ describe("GET /api/detail-collections", () => {
     ]);
   });
 
+  it("orders game cast by highlight, then voiced, then alphabetically", () => {
+    const voiceActor = { id: 5, firstname: "A", lastname: "B" };
+    const cards = formatGameDetailCastCards(
+      [
+        { id: 1, name: "Alice" },
+        { id: 2, name: "Bob" },
+        { id: 3, name: "Cara" },
+        { id: 4, name: "Dan" },
+      ],
+      {
+        works: [
+          { id: 1, actor_id: 3, voice_actor: voiceActor },
+          { id: 2, actor_id: 4, voice_actor: voiceActor, highlight: true },
+          { id: 3, actor_id: 99, character_name: "Zed", voice_actor: voiceActor },
+        ],
+      },
+    );
+
+    expect(cards.map(({ name }) => name)).toEqual(["Dan", "Cara", "Zed", "Alice", "Bob"]);
+  });
+
   it("matches local game characters by UUID and never by null provider IDs", () => {
     const cards = formatGameDetailCastCards(
       [

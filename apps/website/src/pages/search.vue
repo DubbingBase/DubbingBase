@@ -147,6 +147,7 @@ import SearchFilters from "../components/SearchFilters.vue";
 import SearchResultItem from "../components/SearchResultItem.vue";
 import type { SearchFilter } from "../utils/search-routes";
 import { getSearchResultRoute } from "../utils/search-routes";
+import { searchTypeOptions } from "../utils/search-type-display";
 
 const { t, locale } = useI18n();
 const route = useRoute();
@@ -159,7 +160,10 @@ const query = ref(queryFromRoute(route.query.q));
 const results = ref<SearchResult[]>([]);
 const loading = ref(false);
 const error = ref(false);
-const selectedFilter = ref<SearchFilter>("all");
+const searchFilterValues: SearchFilter[] = ["all", ...searchTypeOptions];
+const filterFromRoute = (value: unknown): SearchFilter =>
+  searchFilterValues.find((filter) => filter === value) ?? "all";
+const selectedFilter = ref<SearchFilter>(filterFromRoute(route.query.type));
 const selectedIndex = ref(-1);
 const searchInput = ref<HTMLInputElement | null>(null);
 let activeController: AbortController | null = null;

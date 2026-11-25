@@ -215,7 +215,8 @@
       "title": "吹き替え＆声優データベース",
       "subtitle": "吹き替えの世界を探索してください。声優、その役、そして命を吹き込む作品を発見してください。",
       "searchPlaceholder": "映画、テレビ番組、声優を検索...",
-      "searchButton": "検索"
+      "searchButton": "検索",
+      "searchTypeLabel": "メディアの種類"
     },
     "meta": {
       "title": "吹き替え＆声優データベース",

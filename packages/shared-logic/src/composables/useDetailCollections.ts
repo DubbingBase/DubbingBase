@@ -69,6 +69,8 @@ export type GameDetailCastCard = {
   game_character_id?: string | null;
   mug_shot?: { image_id?: string; url?: string | null } | null;
   work_id?: number;
+  /** Editors flagged this role as a main/relevant character. */
+  highlighted?: boolean;
   voiceActor: DetailVoiceActor | null;
 };
 
@@ -241,22 +243,27 @@ export function formatGameDetailCastCards(
       id: work ? `${characterKey}-${String(work.id)}` : characterKey,
       name: character.name,
       ...(work && numberValue(work.id) !== undefined ? { work_id: numberValue(work.id) } : {}),
+      ...(work?.highlight === true ? { highlighted: true } : {}),
       voiceActor: work ? formatGameVoiceActor(work) : null,
     }));
   });
 
-  return [
-    ...cards,
-    ...works
-      .filter((work) => !matchedWorkIds.has(work.id))
-      .map((work) => ({
-        id: `work-${String(work.id)}`,
-        name: stringValue(work.character_name) || "Unknown character",
-        mug_shot: null,
-        ...(numberValue(work.id) !== undefined ? { work_id: numberValue(work.id) } : {}),
-        voiceActor: formatGameVoiceActor(work),
-      })),
-  ];
+  const unmatchedCards = works
+    .filter((work) => !matchedWorkIds.has(work.id))
+    .map((work) => ({
+      id: `work-${String(work.id)}`,
+      name: stringValue(work.character_name) || "Unknown character",
+      mug_shot: null,
+      ...(numberValue(work.id) !== undefined ? { work_id: numberValue(work.id) } : {}),
+      ...(work.highlight === true ? { highlighted: true } : {}),
+      voiceActor: formatGameVoiceActor(work),
+    }));
+
+  // Main (highlighted) characters first, then voiced ones; the sort is stable, so each group
+  // keeps the catalog's alphabetical order.
+  const rank = (card: GameDetailCastCard): number =>
+    (card.highlighted ? 2 : 0) + (card.voiceActor ? 1 : 0);
+  return [...cards, ...unmatchedCards].sort((left, right) => rank(right) - rank(left));
 }
 
 function formatGameVoiceActor(work: DetailRecord): GameDetailCastCard["voiceActor"] {

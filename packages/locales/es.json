@@ -215,7 +215,8 @@
       "title": "La base de datos del doblaje y actores de voz",
       "subtitle": "Explora el mundo del doblaje. Descubre actores de doblaje, sus roles y las producciones que dan vida.",
       "searchPlaceholder": "Buscar películas, series, actores de doblaje...",
-      "searchButton": "Buscar"
+      "searchButton": "Buscar",
+      "searchTypeLabel": "Tipo de medio"
     },
     "meta": {
       "title": "La base de datos del doblaje y actores de voz",

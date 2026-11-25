@@ -416,6 +416,7 @@ const GAME_PAGE_DUBBING_PROJECTS_SELECT = `id,
     character_name,
     performance,
     note,
+    highlight,
     voice_actor:voice_actors(id, firstname, lastname, profile_picture)
   )`;
 

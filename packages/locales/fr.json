@@ -215,7 +215,8 @@
       "title": "La base de données mondiale du doublage",
       "subtitle": "Explorez le monde du doublage. Découvrez les comédiens, leurs rôles et les productions qu'ils donnent vie.",
       "searchPlaceholder": "Rechercher films, séries, comédiens...",
-      "searchButton": "Rechercher"
+      "searchButton": "Rechercher",
+      "searchTypeLabel": "Type de média"
     },
     "meta": {
       "title": "La base de données mondiale du doublage",
