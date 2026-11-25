@@ -485,8 +485,26 @@ const handleCharacterSelect = (row: CastRow, val: number | string | null) => {
   }
   const char = characterOptions.value.find((c) => c.id === val);
   if (char?.identity_source === "igdb") {
-    // A provider character is only a suggestion until it is registered for this game: the credit
-    // gets a local character of that name, which can then be linked to its IGDB character.
+    // A provider character is only a suggestion until it is registered for this game. Reuse the
+    // local character that already carries or matches it, or a draft of the same name in this
+    // session, so one provider character never becomes two local characters.
+    const local = characterOptions.value.find(
+      (candidate) =>
+        candidate.identity_source === "local" &&
+        char.igdb_character_id !== null &&
+        (candidate.igdb_character_id === char.igdb_character_id ||
+          candidate.igdb_candidate_ids.includes(char.igdb_character_id)),
+    );
+    const draft = characterOptions.value.find(
+      (candidate) =>
+        candidate.identity_source === "draft" &&
+        candidate.name.trim().toLowerCase() === char.name.trim().toLowerCase(),
+    );
+    const existing = local ?? draft;
+    if (existing) {
+      handleCharacterSelect(row, existing.id);
+      return;
+    }
     handleCharacterCreate(row, char.name);
     return;
   }

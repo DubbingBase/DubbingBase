@@ -141,7 +141,7 @@ BEGIN
     OR (SELECT count(*) FROM public.audit_logs WHERE entity_id = alice_id::text AND action = 'merge_duplicate') <> 1 THEN
     RAISE EXCEPTION 'vote, data, or audit preservation failed';
   END IF;
-  IF (SELECT work_role_identity_key(NULL, character_name) FROM public.work WHERE id = alice_id) <> 'name:alice'
+  IF (SELECT work_role_identity_key(NULL, character_name) FROM public.work WHERE id = alice_id) IS DISTINCT FROM 'name:alice'
     OR (SELECT character_name FROM public.work WHERE id = bob_id) <> 'Bob'
     OR NOT EXISTS (SELECT 1 FROM public.work WHERE id = blank_id)
     OR NOT EXISTS (SELECT 1 FROM public.work WHERE id = tab_only_id)
@@ -316,6 +316,44 @@ BEGIN
         WHERE user_id = voter_one AND work_id = ambiguous_work_b) <> 'down' THEN
     RAISE EXCEPTION 'voice actor merge collapsed or lost votes for ambiguous roles';
   END IF;
+
+  -- Two registered characters that share a name stay two roles when voice actor profiles merge.
+  DECLARE
+    game_project_id bigint;
+    game_media_id bigint := private.resolve_media('video_game', 987654322);
+    keep_game integer;
+    source_game integer;
+    guard_one uuid;
+    guard_two uuid;
+    guard_work_one bigint;
+    guard_work_two bigint;
+  BEGIN
+    INSERT INTO public.dubbing_projects(media_id, language)
+    VALUES (game_media_id, 'fr-FR') RETURNING id INTO game_project_id;
+    INSERT INTO public.game_characters(media_id, name, created_by, updated_by)
+    VALUES (game_media_id, 'Guard', voter_one, voter_one) RETURNING id INTO guard_one;
+    INSERT INTO public.game_characters(media_id, name, created_by, updated_by)
+    VALUES (game_media_id, 'Guard', voter_one, voter_one) RETURNING id INTO guard_two;
+    INSERT INTO public.voice_actors(firstname, lastname)
+    VALUES ('MergeDestination', 'GameRoles') RETURNING id INTO keep_game;
+    INSERT INTO public.voice_actors(firstname, lastname)
+    VALUES ('MergeSource', 'GameRoles') RETURNING id INTO source_game;
+    INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, game_character_id, character_name)
+    VALUES (game_project_id, NULL, keep_game, guard_one, 'Guard') RETURNING id INTO guard_work_one;
+    INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, game_character_id, character_name)
+    VALUES (game_project_id, NULL, source_game, guard_two, 'Guard') RETURNING id INTO guard_work_two;
+    INSERT INTO public.votes(user_id, work_id, vote_type, created_at)
+    VALUES (voter_one, guard_work_one, 'up', '2026-03-07T00:00:00Z'),
+      (voter_one, guard_work_two, 'down', '2026-03-08T00:00:00Z');
+
+    PERFORM public.merge_voice_actor_duplicates_atomic(keep_game, ARRAY[source_game], '{}'::jsonb);
+    IF (SELECT count(*) FROM public.work
+        WHERE id IN (guard_work_one, guard_work_two) AND voice_actor_id = keep_game) <> 2
+      OR (SELECT count(*) FROM public.votes
+          WHERE work_id IN (guard_work_one, guard_work_two)) <> 2 THEN
+      RAISE EXCEPTION 'voice actor merge collapsed credits of two registered characters with one name';
+    END IF;
+  END;
 
   INSERT INTO public.voice_actors(firstname, lastname)
   VALUES ('MergeDestination', 'Rollback') RETURNING id INTO keep_error;

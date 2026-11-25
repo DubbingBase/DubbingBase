@@ -170,7 +170,9 @@ export const route = defineApiRoute({
             (work) =>
               (work.character_name?.trim() ?? "") === "" &&
               work.actor_id === item.actor_id &&
-              (work.game_character_id === null ||
+              // Like the named-role match: an omitted link is compatible with a linked credit.
+              (item.game_character_id === null ||
+                work.game_character_id === null ||
                 work.game_character_id === item.game_character_id),
           );
           if (nameless.length > 0) {

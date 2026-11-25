@@ -5,6 +5,8 @@
 -- The change keys present in p_changes are applied, the others are left alone:
 --   performance, character_name, actor_id (cast id), game_character_id.
 -- A credit never gets both a cast id and a game character, and a name can be set but not cleared.
+-- The credit keeps its review status: completing a credit does not verify or reject it, and a
+-- verified (accepted) credit can still only be changed by trusted users.
 -- The role-aware duplicate trigger rejects (23505) a result that equals another credit of the
 -- same voice actor and cast id, so completing a credit cannot create a duplicate role.
 CREATE OR REPLACE FUNCTION public.update_voice_actor_work_credit(
@@ -61,8 +63,10 @@ BEGIN
   v_game_character := CASE WHEN p_changes ? 'game_character_id'
     THEN (p_changes ->> 'game_character_id')::UUID ELSE v_work.game_character_id END;
 
-  IF v_performance IS NULL
-     OR v_performance NOT IN ('dialogues', 'chant', 'dialogues & chant', 'bruitages', 'narration', 'ambiances', 'voice')
+  -- Only a supplied performance is validated: a credit that already has none can still be completed.
+  IF (p_changes ? 'performance' AND (
+       v_performance IS NULL
+       OR v_performance NOT IN ('dialogues', 'chant', 'dialogues & chant', 'bruitages', 'narration', 'ambiances', 'voice')))
      OR (p_changes ? 'character_name' AND (
        v_name IS NULL OR length(pg_catalog.btrim(v_name)) = 0 OR length(v_name) > 300))
      OR (v_actor IS NOT NULL AND v_actor <= 0)
@@ -115,7 +119,6 @@ BEGIN
       character_name = v_name,
       actor_id = v_actor,
       game_character_id = v_game_character,
-      reviewed_status = CASE WHEN v_verified THEN 'accepted' ELSE 'waiting' END,
       updated_by = p_user_id
   WHERE work.id = p_work_id
   RETURNING work.* INTO v_work;

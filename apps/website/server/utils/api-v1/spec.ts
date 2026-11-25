@@ -60,7 +60,7 @@ export function buildOpenApiSpec() {
         "## Rules",
         "Writes behave as if the token's owner made them. Credits carry a `reviewed_status`: `waiting` (added by someone " +
           "who is not trusted for that voice actor, pending an editor's verification), `accepted` (verified) or `rejected`. " +
-          "Tokens belong to admins, who are trusted, so API-written credits are `accepted` straight away; the API returns credits of every status; " +
+          "Tokens belong to admins, who are trusted, so credits the API adds are `accepted` straight away, while changing a credit with PATCH keeps its status; the API returns credits of every status; " +
           "no separate review step applies to API writes. Each change is " +
           "audited as made through the API and reported to the DubbingBase admins. " +
           "A credit for a language with no dubbing project yet creates that project. " +

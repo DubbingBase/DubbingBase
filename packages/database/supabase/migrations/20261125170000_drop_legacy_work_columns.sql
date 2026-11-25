@@ -5,8 +5,8 @@
 --     `game_character_id` (a registered game character) and the name; the last nine credits that
 --     only had `character_id` are linked by 20261125150000_complete_witcher3_nameless_credits.sql.
 --
--- The migration refuses to run if a row would lose information (a `character_id` without a game
--- character, a non-blank `suggestions`, or a `source_id`).
+-- The migration refuses to run if a row would lose information (a `character_id` that no linked game
+-- character carries as its IGDB id, a non-blank `suggestions`, or a `source_id`).
 --
 -- Every function that read or wrote the columns is re-created from its current definition with
 -- only those references removed; the role-identity helpers keep their signature and are passed
@@ -19,12 +19,20 @@
 -- pages and sends it to the editor, so it errors on those routes from the moment the migration
 -- commits until the new Worker is live (see docs/release-pipeline.md). Deploy back to back, during
 -- low traffic. There is no down migration; take a backup or PITR marker first.
-SET LOCAL lock_timeout = '5s';
-
+-- Fail early, before anything is rewritten, when a row would lose information.
 DO $guard$
 BEGIN
-  IF EXISTS (SELECT 1 FROM public.work WHERE character_id IS NOT NULL AND game_character_id IS NULL) THEN
-    RAISE EXCEPTION 'work.character_id still identifies credits that have no game character'
+  -- The linked game character replaces the legacy id only when it carries that same IGDB id.
+  IF EXISTS (
+    SELECT 1 FROM public.work AS work
+    WHERE work.character_id IS NOT NULL
+      AND NOT EXISTS (
+        SELECT 1 FROM public.game_characters AS character
+        WHERE character.id = work.game_character_id
+          AND character.igdb_character_id = work.character_id
+      )
+  ) THEN
+    RAISE EXCEPTION 'work.character_id still holds an IGDB id that no linked game character carries'
       USING ERRCODE = '55000';
   END IF;
   IF EXISTS (SELECT 1 FROM public.work WHERE pg_catalog.btrim(COALESCE(suggestions, '')) <> '') THEN
@@ -39,7 +47,7 @@ BEGIN
 END
 $guard$;
 
-DROP FUNCTION public.save_admin_credit_import(
+DROP FUNCTION IF EXISTS public.save_admin_credit_import(
   UUID, UUID, BIGINT, TEXT, TEXT, BIGINT, TEXT, TEXT, BIGINT, BIGINT, TEXT
 );
 
@@ -808,12 +816,12 @@ BEGIN
   WITH duplicate_work AS (
     SELECT id, first_value(id) OVER (
       PARTITION BY dubbing_project_id, actor_id,
-        public.work_role_identity_key(NULL::bigint, character_name)
+        public.work_assignment_role_identity_key(game_character_id, NULL::bigint, character_name)
       ORDER BY (voice_actor_id = p_keep_id) DESC, id
     ) AS keeper_id
     FROM public.work
     WHERE (voice_actor_id = p_keep_id OR voice_actor_id = ANY(v_other_ids))
-      AND public.work_role_identity_key(NULL::bigint, character_name) IS NOT NULL
+      AND public.work_assignment_role_identity_key(game_character_id, NULL::bigint, character_name) IS NOT NULL
   ), ranked_votes AS (
     SELECT vote.id, duplicate_work.keeper_id,
       row_number() OVER (
@@ -830,12 +838,12 @@ BEGIN
   WITH duplicate_work AS (
     SELECT id, first_value(id) OVER (
       PARTITION BY dubbing_project_id, actor_id,
-        public.work_role_identity_key(NULL::bigint, character_name)
+        public.work_assignment_role_identity_key(game_character_id, NULL::bigint, character_name)
       ORDER BY (voice_actor_id = p_keep_id) DESC, id
     ) AS keeper_id
     FROM public.work
     WHERE (voice_actor_id = p_keep_id OR voice_actor_id = ANY(v_other_ids))
-      AND public.work_role_identity_key(NULL::bigint, character_name) IS NOT NULL
+      AND public.work_assignment_role_identity_key(game_character_id, NULL::bigint, character_name) IS NOT NULL
   ), ranked_votes AS (
     SELECT vote.id, duplicate_work.keeper_id,
       row_number() OVER (
@@ -855,12 +863,12 @@ BEGIN
   WITH duplicate_work AS (
     SELECT id, first_value(id) OVER (
       PARTITION BY dubbing_project_id, actor_id,
-        public.work_role_identity_key(NULL::bigint, character_name)
+        public.work_assignment_role_identity_key(game_character_id, NULL::bigint, character_name)
       ORDER BY (voice_actor_id = p_keep_id) DESC, id
     ) AS keeper_id
     FROM public.work
     WHERE (voice_actor_id = p_keep_id OR voice_actor_id = ANY(v_other_ids))
-      AND public.work_role_identity_key(NULL::bigint, character_name) IS NOT NULL
+      AND public.work_assignment_role_identity_key(game_character_id, NULL::bigint, character_name) IS NOT NULL
   )
   DELETE FROM public.work AS duplicate
   USING duplicate_work
@@ -1368,7 +1376,14 @@ BEGIN
          (v_existing_audit.new_value -> 'project' ->> 'updated_at')::TIMESTAMP WITHOUT TIME ZONE
        OR to_jsonb(v_project) IS DISTINCT FROM v_existing_audit.new_value -> 'project'
        OR v_after_crew IS DISTINCT FROM v_existing_audit.new_value -> 'crew'
-       OR v_after_cast IS DISTINCT FROM v_existing_audit.new_value -> 'cast' THEN
+       OR v_after_cast IS DISTINCT FROM (
+         -- Snapshots stored before the legacy columns were dropped still carry them.
+         SELECT COALESCE(jsonb_agg(entry.value - 'character_id' - 'suggestions' - 'source_id' ORDER BY entry.position), '[]'::JSONB)
+         FROM jsonb_array_elements(
+           CASE WHEN jsonb_typeof(v_existing_audit.new_value -> 'cast') = 'array'
+             THEN v_existing_audit.new_value -> 'cast' ELSE '[]'::JSONB END
+         ) WITH ORDINALITY AS entry(value, position)
+       ) THEN
       RAISE EXCEPTION 'The project changed after this save; reload before retrying'
         USING ERRCODE = '55000';
     END IF;
@@ -1821,6 +1836,8 @@ BEGIN
       ELSE NULL::JSONB
     END,
     'work_actor_id', p_work_actor_id,
+    -- The key stays (always null) so a request stored before the argument was dropped still replays.
+    'character_id', NULL::BIGINT,
     'character_name', p_character_name,
     'performance', 'dialogues',
     'status', 'validated'
@@ -2079,16 +2096,49 @@ GRANT EXECUTE ON FUNCTION public.save_admin_credit_import(
   UUID, UUID, BIGINT, TEXT, TEXT, BIGINT, TEXT, TEXT, BIGINT, TEXT
 ) TO service_role;
 
--- The duplicate-work trigger is declared on specific columns, one of them character_id.
-DROP TRIGGER prevent_duplicate_work_assignment_trigger ON public.work;
-CREATE TRIGGER prevent_duplicate_work_assignment_trigger
-  BEFORE INSERT OR UPDATE OF dubbing_project_id, actor_id, game_character_id, character_name, voice_actor_id
-  ON public.work
-  FOR EACH ROW EXECUTE FUNCTION public.prevent_duplicate_work_assignment();
+-- The CLI does not run a migration file as one transaction, so the locks, the final check and the
+-- DDL share one block: the locks wait for in-flight writers, the check then sees every committed
+-- row, and nothing can be written between the check and the drops.
+DO $final$
+BEGIN
+  PERFORM pg_catalog.set_config('lock_timeout', '5s', TRUE);
+  LOCK TABLE public.work, public.source IN ACCESS EXCLUSIVE MODE;
 
-ALTER TABLE public.work
-  DROP COLUMN character_id,
-  DROP COLUMN suggestions,
-  DROP COLUMN source_id;
+  -- The linked game character replaces the legacy id only when it carries that same IGDB id.
+  IF EXISTS (
+    SELECT 1 FROM public.work AS work
+    WHERE work.character_id IS NOT NULL
+      AND NOT EXISTS (
+        SELECT 1 FROM public.game_characters AS character
+        WHERE character.id = work.game_character_id
+          AND character.igdb_character_id = work.character_id
+      )
+  ) THEN
+    RAISE EXCEPTION 'work.character_id still holds an IGDB id that no linked game character carries'
+      USING ERRCODE = '55000';
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.work WHERE pg_catalog.btrim(COALESCE(suggestions, '')) <> '') THEN
+    RAISE EXCEPTION 'work.suggestions still holds data' USING ERRCODE = '55000';
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.work WHERE source_id IS NOT NULL) THEN
+    RAISE EXCEPTION 'work.source_id still holds data' USING ERRCODE = '55000';
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.source) THEN
+    RAISE EXCEPTION 'public.source still holds data' USING ERRCODE = '55000';
+  END IF;
 
-DROP TABLE public.source;
+  -- The duplicate-work trigger is declared on specific columns, one of them character_id.
+  DROP TRIGGER prevent_duplicate_work_assignment_trigger ON public.work;
+  CREATE TRIGGER prevent_duplicate_work_assignment_trigger
+    BEFORE INSERT OR UPDATE OF dubbing_project_id, actor_id, game_character_id, character_name, voice_actor_id
+    ON public.work
+    FOR EACH ROW EXECUTE FUNCTION public.prevent_duplicate_work_assignment();
+
+  ALTER TABLE public.work
+    DROP COLUMN character_id,
+    DROP COLUMN suggestions,
+    DROP COLUMN source_id;
+
+  DROP TABLE public.source;
+END
+$final$;
