@@ -595,6 +595,7 @@
     "graph3Placeholder": "グラフコンポーネント3プレースホルダー"
   },
   "game": {
+    "details": "ゲーム情報",
     "prepareCredits": "吹き替えクレジットを抽出",
     "prepareDialogTitle": "ゲームの吹き替えクレジットを抽出",
     "prepareDialogDescription": "参照する Wikipedia の言語版と、クレジットを登録する吹き替え地域を選択してください。",

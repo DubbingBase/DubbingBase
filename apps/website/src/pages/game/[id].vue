@@ -10,38 +10,14 @@
       :loading="pending"
     >
       <template #metadata>
-        <DetailsMetaChip>{{ formatReleaseYear(game.first_release_date) }}</DetailsMetaChip>
+        <DetailsMetaChip v-if="game.first_release_date">
+          {{ formatReleaseYear(game.first_release_date) }}
+        </DetailsMetaChip>
         <DetailsMetaChip v-if="game.rating" variant="rating">
           <StarIcon class="w-4 h-4 theme-rating fill-current" />
           {{ (game.rating / 10).toFixed(1) }}
         </DetailsMetaChip>
-        <DetailsMetaChip v-if="getDevelopers(game)" variant="tag" :label="$t('game.developer')">
-          {{ getDevelopers(game) }}
-        </DetailsMetaChip>
-        <DetailsMetaChip v-if="getPublishers(game)" variant="tag" :label="$t('game.publisher')">
-          {{ getPublishers(game) }}
-        </DetailsMetaChip>
-        <DetailsMetaChip
-          v-for="genre in (game.genres ?? []).slice(0, 4)"
-          :key="`g-${genre.id}`"
-          variant="tag"
-        >
-          {{ genre.name }}
-        </DetailsMetaChip>
-        <DetailsMetaChip v-if="(game.genres?.length ?? 0) > 4" variant="tag">
-          +{{ (game.genres?.length ?? 0) - 4 }}
-        </DetailsMetaChip>
-        <DetailsMetaChip
-          v-for="platform in (game.platforms ?? []).slice(0, 4)"
-          :key="`p-${platform.id}`"
-          variant="tag"
-        >
-          {{ platform.name }}
-        </DetailsMetaChip>
-        <DetailsMetaChip v-if="(game.platforms?.length ?? 0) > 4" variant="tag">
-          +{{ (game.platforms?.length ?? 0) - 4 }}
-        </DetailsMetaChip>
-        <div class="flex gap-2 ml-2">
+        <div v-if="game.slug" class="flex gap-2 ml-2">
           <DetailsExternalLink
             :href="`https://www.igdb.com/games/${game.slug}`"
             :label="$t('game.igdb')"
@@ -95,22 +71,75 @@
       </template>
 
       <template #content>
-        <DetailsSynopsis :text="game.summary" />
+        <DetailsSynopsis :text="game.summary">
+          <details
+            v-if="hasGameFacts"
+            id="game-details"
+            class="group mt-4 border-t theme-border-subtle theme-border"
+          >
+            <summary
+              class="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-md py-2 text-sm font-medium theme-text-secondary theme-hover-text theme-focus [&::-webkit-details-marker]:hidden"
+            >
+              <span>{{ $t("game.details") }}</span>
+              <ChevronDownIcon
+                class="size-4 shrink-0 theme-text-muted motion-safe:transition-transform group-open:rotate-180"
+                aria-hidden="true"
+              />
+            </summary>
+            <dl
+              class="grid gap-x-8 gap-y-4 pt-2 pb-3 text-sm leading-relaxed theme-text sm:grid-cols-2"
+            >
+              <div v-if="developers" class="min-w-0">
+                <dt
+                  :title="$t('game.developer')"
+                  class="flex min-h-5 items-center theme-text-muted"
+                >
+                  <CodeXmlIcon class="size-4" aria-hidden="true" />
+                  <span class="sr-only">{{ $t("game.developer") }}</span>
+                </dt>
+                <dd class="mt-1 wrap-break-word">{{ developers }}</dd>
+              </div>
+              <div v-if="publishers" class="min-w-0">
+                <dt
+                  :title="$t('game.publisher')"
+                  class="flex min-h-5 items-center theme-text-muted"
+                >
+                  <MegaphoneIcon class="size-4" aria-hidden="true" />
+                  <span class="sr-only">{{ $t("game.publisher") }}</span>
+                </dt>
+                <dd class="mt-1 wrap-break-word">{{ publishers }}</dd>
+              </div>
+              <div v-if="genres" class="min-w-0">
+                <dt class="theme-text-muted">{{ $t("game.genres") }}</dt>
+                <dd class="mt-1 wrap-break-word">{{ genres }}</dd>
+              </div>
+              <div v-if="platforms" class="min-w-0">
+                <dt class="theme-text-muted">{{ $t("game.platforms") }}</dt>
+                <dd class="mt-1 wrap-break-word">{{ platforms }}</dd>
+              </div>
+            </dl>
+          </details>
+        </DetailsSynopsis>
 
         <!-- Voice Cast -->
         <section>
           <DetailsCastHeader
             v-model:search="searchInput"
             :title="$t('details.castAndCrew')"
+            :searchable="completeCastItems.length > 0"
             :subtitle="
-              $t('media.rolesCount', {
-                shown: castItems.length,
-                total: castTotal,
-              })
+              castTotal > 0
+                ? $t('media.rolesCount', { shown: castItems.length, total: castTotal })
+                : undefined
             "
           />
 
+          <DetailsEmptyState v-if="castTotal === 0">
+            {{ completeCastItems.length > 0 ? $t("search.noResults") : $t("details.noCast") }}
+          </DetailsEmptyState>
+
           <PaginatedResponsiveGrid
+            v-else
             :key="searchQuery"
             :items="castItems"
             :total-items="castTotal"
@@ -128,7 +157,9 @@
                 <!-- 2 Column Layout for Games (Character -> Voice Actor) -->
                 <div class="flex flex-col sm:grid sm:grid-cols-2 gap-4">
                   <!-- Character -->
-                  <div
+                  <component
+                    :is="char.characterDetailPath ? NuxtLink : 'div'"
+                    :to="char.characterDetailPath"
                     class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start"
                   >
                     <div
@@ -144,7 +175,7 @@
                           })
                         "
                         class="w-full h-full object-cover"
-                        alt="Character"
+                        alt=""
                       />
                       <div
                         v-else
@@ -160,23 +191,15 @@
                         <UserIcon class="w-3 h-3 flex-shrink-0" />
                         <span class="truncate block w-full">{{ $t("details.character") }}</span>
                       </div>
-                      <NuxtLink
-                        v-if="char.characterDetailPath"
-                        :to="char.characterDetailPath"
-                        class="font-bold text-sm theme-text truncate block w-full hover:underline"
-                        :title="char.name"
-                      >
-                        {{ char.name }}
-                      </NuxtLink>
                       <div
-                        v-else
                         class="font-bold text-sm theme-text truncate block w-full"
+                        :class="{ 'underline underline-offset-2': char.characterDetailPath }"
                         :title="char.name"
                       >
                         {{ char.name }}
                       </div>
                     </div>
-                  </div>
+                  </component>
 
                   <!-- Voice Actor -->
                   <div
@@ -259,7 +282,7 @@
               </div>
             </template>
           </PaginatedResponsiveGrid>
-          <span class="block text-xs theme-text-muted mt-4">{{
+          <span v-if="castTotal > 0" class="block text-xs theme-text-muted mt-4">{{
             $t("media.rolesCount", {
               shown: castItems.length,
               total: castTotal,
@@ -355,6 +378,8 @@ import DetailsMetaChip from "../../components/layout/details/DetailsMetaChip.vue
 import DetailsExternalLink from "../../components/layout/details/DetailsExternalLink.vue";
 import DetailsSynopsis from "../../components/layout/details/DetailsSynopsis.vue";
 import DetailsCastHeader from "../../components/layout/details/DetailsCastHeader.vue";
+import DetailsEmptyState from "../../components/layout/details/DetailsEmptyState.vue";
+import { NuxtLink } from "#components";
 import { useRoute, useRouter } from "vue-router";
 import {
   fetchGameData,
@@ -363,7 +388,6 @@ import {
   paginateDetailCollection,
   resolveDetailCollectionProject,
 } from "@app/shared-logic";
-import type { IgdbGame } from "@app/shared-logic";
 import { buildPrepareGameRequest } from "./prepare-game-request";
 import { MEDIA_CAST_PAGE_SIZE } from "../../utils/media-cast";
 
@@ -386,10 +410,13 @@ import { computed, ref, watch } from "vue";
 import { refDebounced } from "@vueuse/core";
 import {
   ArrowLeftIcon,
+  ChevronDownIcon,
+  CodeXmlIcon,
   UserIcon,
   MicIcon,
   Gamepad2Icon,
   Loader2Icon,
+  MegaphoneIcon,
   StarIcon,
 } from "lucide-vue-next";
 import ReportModal from "../../components/ReportModal.vue";
@@ -491,16 +518,25 @@ const activeDubId = computed(() => activeDubProject.value?.id || null);
 
 const getDisplayLanguage = useDubbingLanguageLabel();
 
-const getDevelopers = (g: IgdbGame) =>
-  g.involved_companies
+const developers = computed(() =>
+  game.value?.involved_companies
     ?.filter((c) => c.developer)
     .map((c) => c.company.name)
-    .join(", ");
-const getPublishers = (g: IgdbGame) =>
-  g.involved_companies
+    .join(", "),
+);
+const publishers = computed(() =>
+  game.value?.involved_companies
     ?.filter((c) => c.publisher)
     .map((c) => c.company.name)
-    .join(", ");
+    .join(", "),
+);
+const genres = computed(() => game.value?.genres?.map((genre) => genre.name).join(", "));
+const platforms = computed(() =>
+  game.value?.platforms?.map((platform) => platform.name).join(", "),
+);
+const hasGameFacts = computed(() =>
+  Boolean(developers.value || publishers.value || genres.value || platforms.value),
+);
 const formatReleaseYear = (ts?: number) => (ts ? new Date(ts * 1000).getFullYear().toString() : "");
 
 const searchQuery = ref("");

@@ -595,6 +595,7 @@
     "graph3Placeholder": "Graph Component 3 Placeholder"
   },
   "game": {
+    "details": "Game details",
     "prepareCredits": "Extract dubbing credits",
     "prepareDialogTitle": "Extract game dubbing credits",
     "prepareDialogDescription": "Choose the Wikipedia edition to search and the regional dubbing project that should receive the credits.",

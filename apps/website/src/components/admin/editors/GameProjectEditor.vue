@@ -548,13 +548,15 @@ const setWikidataDraft = (row: CastRow, event: Event) => {
   wikidataDrafts.value[row.game_character_id] = event.target.value;
 };
 
+const gameEditorFetch = useRequestFetch();
+
 const reloadGameCharacterOptions = async () => {
   const gameId = contentId.value ?? igdbGameId.value;
   if (!gameId) return;
-  const data = await $fetch<{
+  const data = await gameEditorFetch<{
     characters: GameCharacterApiRow[];
     character_catalog_status: "available" | "unavailable";
-  }>(`/api/game/${gameId}`);
+  }>(`/api/game/${gameId}`, { query: { projection: "editor" } });
   characterCatalogStatus.value = data.character_catalog_status;
   igdbCharacters.value = data.characters.map((character) => ({
     ...character,
@@ -738,7 +740,9 @@ const {
     if (igdbGameId.value) {
       // IGDB metadata
       try {
-        const data = await $fetch<GameApiResponse>(`/api/game/${igdbGameId.value}`);
+        const data = await gameEditorFetch<GameApiResponse>(`/api/game/${igdbGameId.value}`, {
+          query: { projection: "editor" },
+        });
         if (data) {
           igdbData = data;
         }

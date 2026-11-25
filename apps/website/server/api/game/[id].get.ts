@@ -1,5 +1,6 @@
 import { useIgdbClient } from "../../utils";
-import { getDubbingProjects, getGamePageDubbingProjects } from "../../utils/db/queries";
+import { requireAdmin } from "../../utils/auth";
+import { getGamePageDubbingProjects } from "../../utils/db/queries";
 import type { IgdbGame } from "@app/shared-logic";
 import { loadGameCharacterCatalog, type ResolvedGameCharacter } from "../../utils/game-characters";
 import { withMediaServiceTimeout } from "../../utils/media-request";
@@ -87,7 +88,9 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: "Game not found" });
   }
   const igdbClient = useIgdbClient();
-  const pageProjection = getQuery(event).projection === "media-page";
+  const editorProjection = getQuery(event).projection === "editor";
+  if (editorProjection) await requireAdmin(event);
+  const pageProjection = !editorProjection;
   let gameLookupFailed = false;
 
   const [game, characterCatalog] = await Promise.all([
@@ -129,10 +132,7 @@ export default defineEventHandler(async (event) => {
   };
 
   // Dubbing works are mutable admin data and are read from Supabase on every request.
-  const dubbingProjects =
-    getQuery(event).projection === "media-page"
-      ? await getGamePageDubbingProjects(gameId)
-      : await getDubbingProjects(gameId, "video_game");
+  const dubbingProjects = editorProjection ? [] : await getGamePageDubbingProjects(gameId);
 
   return { ...metadata, dubbingProjects };
 });

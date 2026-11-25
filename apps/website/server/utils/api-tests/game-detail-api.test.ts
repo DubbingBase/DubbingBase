@@ -12,7 +12,7 @@ const mocks = vi.hoisted(() => ({
   getGame: vi.fn(),
   getGameCharacters: vi.fn(),
   loadGameCharacterCatalog: vi.fn(),
-  getDubbingProjects: vi.fn(),
+  requireAdmin: vi.fn(),
   getGamePageDubbingProjects: vi.fn(),
 }));
 
@@ -29,9 +29,10 @@ vi.mock("../media-request", () => ({
   withMediaServiceTimeout: (request: () => Promise<unknown>) => request(),
 }));
 vi.mock("../db/queries", () => ({
-  getDubbingProjects: mocks.getDubbingProjects,
   getGamePageDubbingProjects: mocks.getGamePageDubbingProjects,
 }));
+
+vi.mock("../auth", () => ({ requireAdmin: mocks.requireAdmin }));
 
 let handler: typeof import("../../api/game/[id].get").default;
 
@@ -48,7 +49,7 @@ beforeEach(async () => {
     providerStatus: "available",
     localStatus: "available",
   });
-  mocks.getDubbingProjects.mockResolvedValue([]);
+  mocks.requireAdmin.mockReset();
   mocks.getGamePageDubbingProjects.mockResolvedValue([]);
   handler = (await import("../../api/game/[id].get")).default;
 });
@@ -121,7 +122,35 @@ describe("GET /api/game/:id", () => {
     expect(data.game_data_status).toBe("available");
     expect(data.game.cover).toEqual({ image_id: "co42" });
     expect(mocks.getGamePageDubbingProjects).toHaveBeenCalledWith(1942);
-    expect(mocks.getDubbingProjects).not.toHaveBeenCalled();
+    expect(mocks.requireAdmin).not.toHaveBeenCalled();
+  });
+
+  it.each(["", "?projection=full", "?projection=editor&projection=editor"])(
+    "uses the public response for an absent or unrecognized projection (%s)",
+    async (query) => {
+      const response = await request(`/api/game/1942${query}`);
+      expect(response.status).toBe(200);
+      expect(mocks.getGame).toHaveBeenCalledWith(1942, true);
+      expect(mocks.getGamePageDubbingProjects).toHaveBeenCalledWith(1942);
+      expect(mocks.requireAdmin).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([401, 403])(
+    "rejects editor access before querying upstreams (%s)",
+    async (statusCode) => {
+      mocks.requireAdmin.mockRejectedValueOnce(createError({ statusCode }));
+      expect((await request("/api/game/1942?projection=editor")).status).toBe(statusCode);
+      expect(mocks.getGame).not.toHaveBeenCalled();
+      expect(mocks.loadGameCharacterCatalog).not.toHaveBeenCalled();
+    },
+  );
+
+  it("loads the character catalog for authorized editors", async () => {
+    mocks.requireAdmin.mockResolvedValueOnce({ id: "admin" });
+    expect((await request("/api/game/1942?projection=editor")).status).toBe(200);
+    expect(mocks.getGame).toHaveBeenCalledWith(1942);
+    expect(mocks.getGamePageDubbingProjects).not.toHaveBeenCalled();
   });
 
   it("marks unavailable character data as degraded", async () => {
