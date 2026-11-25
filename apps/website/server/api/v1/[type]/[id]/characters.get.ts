@@ -1,7 +1,7 @@
 import { eqMediaRef, MEDIA_FILTER_EMBED } from "@app/shared-logic";
 import * as v from "valibot";
 import { defineApiRoute } from "../../../../utils/api-v1/define";
-import { requireMedia } from "../../../../utils/api-v1/credits";
+import { MEDIA_NOT_FOUND_DESCRIPTION, requireMedia } from "../../../../utils/api-v1/credits";
 import { mediaKey, mediaParams, apiMediaPath } from "../../../../utils/api-v1/media";
 import { useSupabaseAdmin } from "../../../../utils/db/client";
 
@@ -11,6 +11,7 @@ export const route = defineApiRoute({
   summary: "List the characters credited on a media entry",
   tags: ["Credits"],
   scope: "characters:read",
+  notFound: MEDIA_NOT_FOUND_DESCRIPTION,
   params: mediaParams,
   query: v.object({}),
   response: v.object({

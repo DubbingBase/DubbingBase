@@ -84,10 +84,12 @@ export function toCredit(
   };
 }
 
-/**
- * Confirms the media is known to DubbingBase. The API never calls the media providers, so
- * media nobody has opened on the website yet is a 404.
- */
+const MEDIA_NOT_IMPORTED = "Media not imported yet.";
+const INTERNAL_MEDIA_NOT_FOUND = "Media not found.";
+
+export const MEDIA_NOT_FOUND_DESCRIPTION = `No DubbingBase record for the ID. External media returns "${MEDIA_NOT_IMPORTED}" and a missing toy or advertisement returns "${INTERNAL_MEDIA_NOT_FOUND}"`;
+
+/** Confirms that the media has a local DubbingBase record. */
 export async function requireMedia(event: H3Event, key: MediaKey): Promise<void> {
   const { data, error } = await useSupabaseAdmin(event)
     .from("media")
@@ -96,7 +98,10 @@ export async function requireMedia(event: H3Event, key: MediaKey): Promise<void>
     .eq("content_id", key.contentId)
     .maybeSingle();
   if (error) throw error;
-  if (!data) throw new ApiError(404, "not_found", "Media not found.");
+  if (!data) {
+    const internal = key.contentType === "toy" || key.contentType === "advertisement";
+    throw new ApiError(404, "not_found", internal ? INTERNAL_MEDIA_NOT_FOUND : MEDIA_NOT_IMPORTED);
+  }
 }
 
 /** Looks up the credit and checks it belongs to the media in the path. */

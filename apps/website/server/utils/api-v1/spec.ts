@@ -25,9 +25,10 @@ export function buildOpenApiSpec() {
         "Media lives at `/api/v1/{movies|shows|games|podcasts|audiobooks|advertisements|toys}/{id}`: " +
           "TMDB (movies, shows), IGDB (games), iTunes (podcasts) or Open Library (audiobooks) ids; " +
           "ads and toys use their DubbingBase id. Follow the `path` fields in responses instead of building URLs. " +
-          "The API never calls those providers: media that DubbingBase does not know yet is a 404 " +
-          "(it has to be opened on the website once), and cast ids (`actor_id`) are stored as given. " +
-          "Ads and toys are created with `POST /advertisements` and `POST /toys`.",
+          "Media reads, credit batches (including previews) and game character writes require a local DubbingBase record. " +
+          "A missing external media record returns `404 not_found` with `Media not imported yet.`. " +
+          "Unknown ads and toys return `404 not_found` with `Media not found.`. " +
+          "Create ads and toys with `POST /advertisements` and `POST /toys`. Cast IDs (`actor_id`) are stored as given.",
         "## Maintaining credits",
         "1. Find the voice actor with `GET /voice-actors?q=` (name search). If they are missing, create them with `POST /voice-actors`: " +
           "a name matching an existing actor (ignoring case, accents and hyphens) is refused with `409 duplicate_candidate` and the matches, " +

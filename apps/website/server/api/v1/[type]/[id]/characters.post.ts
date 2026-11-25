@@ -11,6 +11,7 @@ export const route = defineApiRoute({
   summary: "Register a game character",
   tags: ["Characters"],
   scope: "characters:create",
+  notFound: "The game has no local DubbingBase record.",
   idempotent: true,
   params: v.object({ type: v.literal("games"), id: positiveId }),
   query: v.object({}),
