@@ -26,7 +26,7 @@
   - function errorCode: (error) => string
   - function mutateCredits: (event, userId, operation, items, label) => void
   - function notifyCreditChange: (event, userId, edit, "via" | "entity"> & { entity?) => void
-  - _...5 more_
+  - _...6 more_
 - `apps/website/server/utils/api-v1/define.ts`
   - function defineApiRoute: (definition, TQuery, TResponse, TBody>) => void
   - function operationFor: (docs, components) => void

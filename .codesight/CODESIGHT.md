@@ -5,7 +5,7 @@
 
 > 86 routes | 30 models | 145 components | 148 lib files | 53 env vars | 15 middleware | 48% test coverage
 > **Token savings:** this file is ~19,900 tokens. Without it, AI exploration would cost ~161,900 tokens. **Saves ~142,000 tokens per conversation.**
-> **Last scanned:** 2026-11-24 16:19 — re-run after significant changes
+> **Last scanned:** 2026-11-25 08:43 — re-run after significant changes
 
 ---
 
@@ -499,7 +499,7 @@
   - function errorCode: (error) => string
   - function mutateCredits: (event, userId, operation, items, label) => void
   - function notifyCreditChange: (event, userId, edit, "via" | "entity"> & { entity?) => void
-  - _...5 more_
+  - _...6 more_
 - `apps/website/server/utils/api-v1/define.ts`
   - function defineApiRoute: (definition, TQuery, TResponse, TBody>) => void
   - function operationFor: (docs, components) => void
@@ -1143,7 +1143,7 @@
 # Test Coverage
 
 > **48%** of routes and models are covered by tests
-> 175 test files found
+> 176 test files found
 
 ## Covered Routes
 
