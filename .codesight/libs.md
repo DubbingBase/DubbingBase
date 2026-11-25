@@ -309,7 +309,7 @@
 - `apps/website/src/composables/useCharacterImages.ts`
   - function resetSharedCharacterImages: () => void
   - function characterImageKey: (request) => string | null
-  - function useCharacterImages: (requests) => void
+  - function useCharacterImages: (requests, options) => void
   - type CharacterImage
   - type CharacterImageRequest
 - `apps/website/src/composables/useClientUser.ts` — function useClientUser: () => void

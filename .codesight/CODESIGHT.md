@@ -5,7 +5,7 @@
 
 > 89 routes | 30 models | 145 components | 149 lib files | 53 env vars | 15 middleware | 47% test coverage
 > **Token savings:** this file is ~20,100 tokens. Without it, AI exploration would cost ~163,700 tokens. **Saves ~143,700 tokens per conversation.**
-> **Last scanned:** 2026-11-25 10:08 — re-run after significant changes
+> **Last scanned:** 2026-11-25 10:11 — re-run after significant changes
 
 ---
 
@@ -785,7 +785,7 @@
 - `apps/website/src/composables/useCharacterImages.ts`
   - function resetSharedCharacterImages: () => void
   - function characterImageKey: (request) => string | null
-  - function useCharacterImages: (requests) => void
+  - function useCharacterImages: (requests, options) => void
   - type CharacterImage
   - type CharacterImageRequest
 - `apps/website/src/composables/useClientUser.ts` — function useClientUser: () => void
