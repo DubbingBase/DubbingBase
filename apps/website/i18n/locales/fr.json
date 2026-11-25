@@ -594,6 +594,7 @@
     "graph3Placeholder": "Espace réservé pour le graphique 3"
   },
   "game": {
+    "details": "Détails du jeu",
     "prepareCredits": "Extraire les crédits de doublage",
     "prepareDialogTitle": "Extraire les crédits de doublage du jeu",
     "prepareDialogDescription": "Choisissez l’édition Wikipédia à consulter et le projet régional de doublage auquel attribuer les crédits.",
