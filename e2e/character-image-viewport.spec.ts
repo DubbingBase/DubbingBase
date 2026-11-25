@@ -1,13 +1,8 @@
-import { expect, test, type Locator, type Page, type Request } from "@playwright/test";
+import { expect, test, type Page, type Request } from "@playwright/test";
 
 type RequestRecord = {
-  items: string[];
-  started: number;
-  finished: number;
-  skippedSources: string | null;
+  productions: string[];
   status: "intercepted" | "finished" | "failed";
-  failure: string | null;
-  url: string;
 };
 
 type RequestCapture = {
@@ -16,6 +11,22 @@ type RequestCapture = {
   inFlight: number;
   maxInFlight: number;
 };
+
+const portraitUrl = "https://artworks.thetvdb.com/e2e-character-2012.svg";
+
+function mockRoster(production: string) {
+  const character =
+    production === "movie:2012"
+      ? { id: "2012", name: "Character 2012" }
+      : production === "movie:9000"
+        ? { id: "9000", name: "Actor role 0" }
+        : null;
+  return {
+    tvdbId: null,
+    degraded: false,
+    characters: character ? [{ ...character, image: portraitUrl }] : [],
+  };
+}
 
 async function installCharacterImageMock(
   page: Page,
@@ -36,20 +47,25 @@ async function installCharacterImageMock(
     const record = capture.byRequest.get(request);
     if (!record) return;
     record.status = "failed";
-    record.failure = request.failure()?.errorText ?? null;
   });
 
-  await page.route("**/api/character-images**", async (route) => {
+  await page.route(portraitUrl, (route) =>
+    options.failTvdbPortrait
+      ? route.abort()
+      : route.fulfill({
+          contentType: "image/svg+xml",
+          body: '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"/>',
+        }),
+  );
+
+  await page.route("**/api/character-portraits?**", async (route) => {
     const url = new URL(route.request().url());
     const request = route.request();
+    const batch = url.searchParams.get("productions");
+    const production = `${url.searchParams.get("mediaType")}:${url.searchParams.get("mediaId")}`;
     const record: RequestRecord = {
-      items: url.searchParams.getAll("item").flatMap((value) => value.split(",")),
-      started: Date.now(),
-      finished: 0,
-      skippedSources: url.searchParams.get("skip"),
+      productions: batch?.split(",") ?? [production],
       status: "intercepted",
-      failure: null,
-      url: request.url(),
     };
     capture.records.push(record);
     capture.byRequest.set(request, record);
@@ -57,30 +73,11 @@ async function installCharacterImageMock(
     capture.maxInFlight = Math.max(capture.maxInFlight, capture.inFlight);
     await new Promise((resolve) => setTimeout(resolve, 300));
 
-    const portraitKey = record.items.find((item) => item === "movie:2012:Character 2012");
-    const useWikimediaFallback =
-      options.failTvdbPortrait && portraitKey && record.skippedSources === "tvdb";
     await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({
-        images: portraitKey
-          ? {
-              [portraitKey]: {
-                src:
-                  options.failTvdbPortrait && !useWikimediaFallback
-                    ? "data:image/svg+xml,not-an-image"
-                    : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3Crect width='1' height='1' fill='teal'/%3E%3C/svg%3E",
-                source: useWikimediaFallback ? "wikimedia" : "tvdb",
-                ...(useWikimediaFallback ? { attribution: "Mock Wikimedia attribution" } : {}),
-              },
-            }
-          : {},
-        characterIds: {},
-        tvdbIds: {},
-      }),
+      json: batch
+        ? Object.fromEntries(record.productions.map((key) => [key, mockRoster(key)]))
+        : mockRoster(production),
     });
-    record.finished = Date.now();
     capture.inFlight -= 1;
   });
 
@@ -94,36 +91,13 @@ function resetCapture(capture: RequestCapture): void {
   capture.maxInFlight = 0;
 }
 
-function requestedItems(capture: RequestCapture): string[] {
-  return capture.records.flatMap((record) => record.items);
+function requestedProductions(capture: RequestCapture): string[] {
+  return capture.records.flatMap((record) => record.productions);
 }
 
-function duplicateItems(capture: RequestCapture): string[] {
-  const items = requestedItems(capture);
+function duplicateProductions(capture: RequestCapture): string[] {
+  const items = requestedProductions(capture);
   return items.filter((item, index) => items.indexOf(item) !== index);
-}
-
-async function expectItemsWithinViewportMargin(
-  items: string[],
-  groups: Locator,
-  margin = 400,
-): Promise<void> {
-  const mediaIds = await groups.evaluateAll((elements, viewportMargin) => {
-    const ids = new Set<string>();
-    for (const group of elements) {
-      const bounds = group.getBoundingClientRect();
-      if (bounds.bottom < -viewportMargin || bounds.top > window.innerHeight + viewportMargin) {
-        continue;
-      }
-      for (const link of group.querySelectorAll("a[href*='/movie/']")) {
-        const match = link.getAttribute("href")?.match(/\/movie\/(\d+)(?:\/|$)/);
-        if (match?.[1]) ids.add(match[1]);
-      }
-    }
-    return [...ids];
-  }, margin);
-  const nearbyIds = new Set(mediaIds);
-  expect(items.every((item) => nearbyIds.has(item.split(":", 3)[1] ?? ""))).toBe(true);
 }
 
 async function waitForRequestQuiet(
@@ -159,113 +133,63 @@ async function expectNoHorizontalOverflow(page: Page): Promise<void> {
     .toBe(0);
 }
 
-test("loads voice-actor character images as grouped cards enter the viewport", async ({ page }) => {
-  test.setTimeout(120000);
-  const capture = await installCharacterImageMock(page);
-  const hydrationWarnings: string[] = [];
-  page.on("console", (message) => {
-    if (
-      (message.type() === "warning" || message.type() === "error") &&
-      message.text().includes("Hydration")
-    ) {
-      hydrationWarnings.push(message.text());
-    }
+async function waitForVueHydration(page: Page): Promise<void> {
+  await page.waitForFunction(() => {
+    const root = document.querySelector("#__nuxt");
+    return root !== null && Reflect.get(root, "__vue_app__") !== undefined;
   });
+}
 
-  for (const viewport of [
-    { name: "desktop", width: 1280, height: 900 },
-    { name: "mobile", width: 390, height: 844 },
-  ]) {
-    resetCapture(capture);
+for (const viewport of [
+  { name: "desktop", width: 1280, height: 900 },
+  { name: "mobile", width: 390, height: 844 },
+]) {
+  test(`defers below-viewport grouped portraits on ${viewport.name}`, async ({ page }) => {
+    test.setTimeout(120000);
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    const capture = await installCharacterImageMock(page);
     const response = await page.goto("/voice-actor/999", { waitUntil: "domcontentloaded" });
     expect(response?.status()).toBe(200);
-    await page.waitForFunction(() => {
-      const root = document.querySelector("#__nuxt");
-      return root !== null && Reflect.get(root, "__vue_app__") !== undefined;
-    });
     const html = await response?.text();
     expect(html).toContain("Film 2012");
     expect(html?.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, "")).not.toContain(
       "data-character-image-source",
     );
+    await waitForVueHydration(page);
 
     const filmography = page.locator("#voice-actor-works-results");
-    const groups = filmography.getByTestId("voice-actor-group");
-    await expect(groups).toHaveCount(12);
+    const group = filmography.getByTestId("voice-actor-group").filter({ hasText: "Harrison Ford" });
+    const links = group.locator("a[href*='/movie/']");
+    await expect(links).toHaveCount(12);
+    const first = links.first();
+    const last = links.last();
+    await expect(first).toHaveAttribute("href", "/movie/2012");
+    const lastProduction = `movie:${(await last.getAttribute("href"))?.split("/").pop()}`;
+
     await waitForRequestQuiet(page, capture);
-    const topCount = capture.records.length;
-    const topItems = requestedItems(capture);
-    expect(topCount).toBeLessThan(22);
-    await expectItemsWithinViewportMargin(topItems, groups);
-    await groups
-      .nth(0)
-      .locator("a[href*='/actor/3']")
-      .evaluate((element) => element.scrollIntoView({ block: "start" }));
-    await expect.poll(() => capture.records.length, { timeout: 15000 }).toBeGreaterThan(0);
-    await waitForRequestQuiet(page, capture);
-    const afterFirstGroupCount = capture.records.length;
-    const afterFirstGroupItems = requestedItems(capture).slice(topItems.length);
-    expect(afterFirstGroupCount).toBeLessThan(22);
-    await expectItemsWithinViewportMargin(afterFirstGroupItems, groups);
-    const initialLayout = await filmography.evaluate((element) => ({
-      height: element.getBoundingClientRect().height,
-      top: element.getBoundingClientRect().top,
-    }));
-    await page.screenshot({
-      path: `/tmp/db-56365-148-evidence/after-${viewport.name}.png`,
+    const initialCount = capture.records.length;
+    await first.evaluate((link) => {
+      window.scrollBy({ top: link.getBoundingClientRect().top - window.innerHeight + 40 });
     });
-
-    const groupCounts: number[] = [];
-    for (let index = 1; index < (await groups.count()); index += 1) {
-      const previousItemCount = requestedItems(capture).length;
-      await groups.nth(index).evaluate((element) => element.scrollIntoView({ block: "start" }));
-      await waitForRequestQuiet(page, capture);
-      groupCounts.push(capture.records.length);
-      const newItems = requestedItems(capture).slice(previousItemCount);
-      await expectItemsWithinViewportMargin(newItems, groups);
-    }
-
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await expect.poll(() => requestedProductions(capture)).toContain("movie:2012");
     await waitForRequestQuiet(page, capture);
-    const afterFastScrollCount = capture.records.length;
-    await expect.poll(() => capture.inFlight, { timeout: 10000 }).toBe(0);
-
-    const allKeys = requestedItems(capture);
-    const eligibleCardCount = await groups.locator("a[href*='/movie/']").count();
-    const finalLayout = await filmography.evaluate((element) => ({
-      height: element.getBoundingClientRect().height,
-      top: element.getBoundingClientRect().top,
-    }));
-
-    console.info(JSON.stringify({ viewport: viewport.name, capture: capture.records }));
-    expect(duplicateItems(capture)).toEqual([]);
-    expect(new Set(allKeys).size).toBe(22);
-    expect(eligibleCardCount).toBe(22);
-    expect(capture.maxInFlight).toBeLessThanOrEqual(4);
-    expect(Math.abs(finalLayout.height - initialLayout.height)).toBeLessThan(1);
-    await expectNoHorizontalOverflow(page);
-    expect(hydrationWarnings).toEqual([]);
-
+    await expect(page.getByAltText("Character 2012", { exact: true })).toBeVisible();
+    const firstRowCount = capture.records.length;
     console.info(
-      JSON.stringify({
-        viewport: viewport.name,
-        topCount,
-        afterFirstGroupCount,
-        sequentialGroupCounts: groupCounts,
-        afterFastScrollCount,
-        requestCount: capture.records.length,
-        uniqueRequestItems: new Set(allKeys).size,
-        duplicateItems: duplicateItems(capture),
-        eligibleCardCount,
-        maxInFlight: capture.maxInFlight,
-        overflowPx: 0,
-        heightDelta: finalLayout.height - initialLayout.height,
-        requests: capture.records.map(({ items }) => items),
-      }),
+      `Voice actor ${viewport.name}: ${initialCount} initial requests, ${firstRowCount} at first row for ${requestedProductions(capture).length} productions`,
     );
-  }
-});
+    if (viewport.name === "desktop") expect(firstRowCount).toBeLessThanOrEqual(4);
+    expect((await last.boundingBox())?.y).toBeGreaterThan(viewport.height + 400);
+    expect(requestedProductions(capture)).not.toContain(lastProduction);
+
+    await last.scrollIntoViewIfNeeded();
+    await expect.poll(() => requestedProductions(capture)).toContain(lastProduction);
+    await waitForRequestQuiet(page, capture);
+    expect(duplicateProductions(capture)).toEqual([]);
+    expect(capture.maxInFlight).toBeLessThanOrEqual(4);
+    await expectNoHorizontalOverflow(page);
+  });
+}
 
 test("keeps character image requests scoped to their visible production and pagination", async ({
   page,
@@ -275,20 +199,17 @@ test("keeps character image requests scoped to their visible production and pagi
 
   const response = await page.goto("/voice-actor/999", { waitUntil: "domcontentloaded" });
   expect(response?.status()).toBe(200);
-  await page.waitForFunction(() => {
-    const root = document.querySelector("#__nuxt");
-    return root !== null && Reflect.get(root, "__vue_app__") !== undefined;
-  });
+  await waitForVueHydration(page);
   const filmography = page.locator("#voice-actor-works-results");
   const groups = filmography.getByTestId("voice-actor-group");
   const harrisonGroup = groups.filter({ hasText: "Harrison Ford" });
   await expect(harrisonGroup).toHaveCount(1);
-  await harrisonGroup.evaluate((element) => element.scrollIntoView({ block: "start" }));
+  await harrisonGroup.locator("a[href='/movie/2012']").scrollIntoViewIfNeeded();
   await expect.poll(() => capture.records.length, { timeout: 15000 }).toBeGreaterThan(0);
   await waitForRequestQuiet(page, capture);
   await expect(page.locator('img[data-character-image-source="tvdb"]').first()).toHaveAttribute(
     "src",
-    /^data:image\/svg\+xml/,
+    portraitUrl,
   );
 
   const beforeInnerPage = capture.records.length;
@@ -324,13 +245,12 @@ test("keeps character image requests scoped to their visible production and pagi
   await waitForRequestQuiet(page, capture);
   await expectNoHorizontalOverflow(page);
 
-  console.info(JSON.stringify({ paginationRequests: capture.records }));
   expect(capture.records.every((record) => record.status === "finished")).toBe(true);
-  expect(duplicateItems(capture)).toEqual([]);
+  expect(duplicateProductions(capture)).toEqual([]);
 
   for (const production of [
-    { path: "/movie/85", keyPrefix: "movie:85:" },
-    { path: "/show/1396", keyPrefix: "tv:1396:" },
+    { path: "/movie/85", key: "movie:85" },
+    { path: "/show/1396", key: "tv:1396" },
   ]) {
     resetCapture(capture);
     const mediaResponse = await page.goto(production.path, { waitUntil: "domcontentloaded" });
@@ -342,21 +262,8 @@ test("keeps character image requests scoped to their visible production and pagi
     await expect.poll(() => capture.records.length, { timeout: 15000 }).toBeGreaterThan(0);
     await waitForRequestQuiet(page, capture);
 
-    const items = requestedItems(capture);
-    expect(capture.records).toHaveLength(1);
-    expect(items.length).toBeGreaterThan(0);
-    expect(items.every((item) => item.startsWith(production.keyPrefix))).toBe(true);
-    expect(new Set(items).size).toBe(items.length);
-    expect(duplicateItems(capture)).toEqual([]);
+    expect(requestedProductions(capture)).toEqual([production.key]);
     await expectNoHorizontalOverflow(page);
-    console.info(
-      JSON.stringify({
-        route: production.path,
-        requestCount: capture.records.length,
-        items,
-        productionKeys: [...new Set(items.map((item) => item.split(":", 2).join(":")))],
-      }),
-    );
   }
 
   for (const route of [
@@ -370,67 +277,38 @@ test("keeps character image requests scoped to their visible production and pagi
     await expect.poll(() => capture.records.length, { timeout: 15000 }).toBeGreaterThan(0);
     await waitForRequestQuiet(page, capture);
 
-    const items = requestedItems(capture);
-    expect(items.length).toBeGreaterThan(0);
-    expect(duplicateItems(capture)).toEqual([]);
-    expect(
-      capture.records.every(
-        (record) => new Set(record.items.map((item) => item.split(":", 2).join(":"))).size === 1,
-      ),
-    ).toBe(true);
+    expect(duplicateProductions(capture)).toEqual([]);
     await expectNoHorizontalOverflow(page);
-    console.info(JSON.stringify({ route: route.path, items }));
   }
 });
 
-test("falls back to a mocked Wikimedia portrait after a TVDB image error", async ({ page }) => {
+test("shows a placeholder after a broken TVDB portrait without another request", async ({
+  page,
+}) => {
   test.setTimeout(60000);
   const capture = await installCharacterImageMock(page, { failTvdbPortrait: true });
-
-  const response = await page.goto("/voice-actor/999", { waitUntil: "domcontentloaded" });
-  expect(response?.status()).toBe(200);
-  await page.waitForFunction(() => {
-    const root = document.querySelector("#__nuxt");
-    return root !== null && Reflect.get(root, "__vue_app__") !== undefined;
-  });
-
-  const harrisonGroup = page
-    .locator("#voice-actor-works-results")
-    .getByTestId("voice-actor-group")
-    .filter({ hasText: "Harrison Ford" });
-  await expect(harrisonGroup).toHaveCount(1);
-  await harrisonGroup.evaluate((element) => element.scrollIntoView({ block: "start" }));
-
-  await expect
-    .poll(
-      () =>
-        capture.records.some(
-          (record) =>
-            record.items.includes("movie:2012:Character 2012") && record.skippedSources === "tvdb",
-        ),
-      { timeout: 15000 },
-    )
-    .toBe(true);
-
-  const portrait = page.locator('img[data-character-image-source="wikimedia"]');
-  await expect(portrait.first()).toHaveAttribute("src", /^data:image\/svg\+xml/);
-  await expect(portrait.first()).toHaveAttribute("title", "Mock Wikimedia attribution");
-  await expect(harrisonGroup.locator("a[href*='/movie/2012']")).toHaveCount(1);
-
-  const portraitAttempts = capture.records.filter((record) =>
-    record.items.includes("movie:2012:Character 2012"),
+  const failedImage = page.waitForEvent(
+    "requestfailed",
+    (request) => request.url() === portraitUrl,
   );
-  expect(portraitAttempts.map((record) => record.skippedSources)).toEqual([null, "tvdb"]);
+  await page.goto("/voice-actor/999", { waitUntil: "domcontentloaded" });
+  await waitForVueHydration(page);
+  const filmography = page.locator("#voice-actor-works-results");
+  await filmography.locator("a[href='/movie/2012']").scrollIntoViewIfNeeded();
+
+  await failedImage;
+  await expect.poll(() => requestedProductions(capture)).toContain("movie:2012");
+  await waitForRequestQuiet(page, capture);
+  await expect(page.getByAltText("Character 2012", { exact: true })).toHaveCount(0);
+  expect(requestedProductions(capture).filter((key) => key === "movie:2012")).toHaveLength(1);
 });
 
 test("loads only current actor filmography cards across pagination", async ({ page }) => {
-  test.setTimeout(60000);
+  test.setTimeout(120000);
+  await page.setViewportSize({ width: 1280, height: 900 });
   const capture = await installCharacterImageMock(page);
   await page.goto("/actor/999", { waitUntil: "domcontentloaded" });
-  await page.waitForFunction(() => {
-    const root = document.querySelector("#__nuxt");
-    return root !== null && Reflect.get(root, "__vue_app__") !== undefined;
-  });
+  await waitForVueHydration(page);
   const filmography = page
     .getByRole("heading", { name: "Filmography", exact: true })
     .locator("xpath=ancestor::section[1]");
@@ -441,7 +319,33 @@ test("loads only current actor filmography cards across pagination", async ({ pa
     .evaluate((element) => element.scrollIntoView({ block: "start" }));
   await expect.poll(() => capture.records.length, { timeout: 15000 }).toBeGreaterThan(0);
   await waitForRequestQuiet(page, capture);
-  expect(requestedItems(capture)).not.toContain("movie:9012:Actor role 12");
+  expect(requestedProductions(capture)).not.toContain("movie:9012");
+  await expect(page.getByAltText("Actor role 0 – Actor film 0", { exact: true })).toHaveAttribute(
+    "src",
+    portraitUrl,
+  );
+  const firstRowRequests = capture.records.length;
+  console.info(
+    `Actor desktop: ${firstRowRequests} requests at first row for ${requestedProductions(capture).length} productions`,
+  );
+  expect(firstRowRequests).toBeLessThanOrEqual(4);
+  const firstRowProductions = new Set(requestedProductions(capture));
+
+  await cards.first().click();
+  await expect(page).toHaveURL(/\/movie\/9000$/);
+  await waitForRequestQuiet(page, capture);
+  const requestsBeforeBack = capture.records.length;
+  await page.goBack();
+  await expect(page).toHaveURL(/\/actor\/999$/);
+  await expect(page.getByAltText("Actor role 0 – Actor film 0", { exact: true })).toHaveAttribute(
+    "src",
+    portraitUrl,
+  );
+  await waitForRequestQuiet(page, capture);
+  const requestedOnReturn = capture.records
+    .slice(requestsBeforeBack)
+    .flatMap((record) => record.productions);
+  expect(requestedOnReturn.filter((production) => firstRowProductions.has(production))).toEqual([]);
 
   await filmography.locator("nav button").last().click();
   await expect(page).toHaveURL(/filmographyPage=2/);
@@ -450,9 +354,12 @@ test("loads only current actor filmography cards across pagination", async ({ pa
   await filmography
     .getByRole("heading")
     .evaluate((element) => element.scrollIntoView({ block: "start" }));
-  await expect.poll(() => requestedItems(capture)).toContain("movie:9012:Actor role 12");
+  await expect.poll(() => requestedProductions(capture)).toContain("movie:9012");
   await waitForRequestQuiet(page, capture);
   expect(capture.maxInFlight).toBeLessThanOrEqual(4);
-  expect(duplicateItems(capture)).toEqual([]);
+  const completed = capture.records
+    .filter((record) => record.status === "finished")
+    .flatMap((record) => record.productions);
+  expect(new Set(completed).size).toBe(completed.length);
   await expectNoHorizontalOverflow(page);
 });

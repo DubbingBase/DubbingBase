@@ -1464,11 +1464,12 @@ export default defineEventHandler(async (event) => {
 
   // Character portraits are lazy and best-effort: the e2e mocks have no provider data.
   if (path === "/api/character-portraits") {
-    return send(
-      event,
-      JSON.stringify({ tvdbId: null, characters: [], degraded: false }),
-      "application/json",
-    );
+    const roster = { tvdbId: null, characters: [], degraded: false };
+    const productions = url.searchParams.get("productions");
+    const response = productions
+      ? Object.fromEntries(productions.split(",").map((production) => [production, roster]))
+      : roster;
+    return send(event, JSON.stringify(response), "application/json");
   }
 
   // 2. Movie Detail

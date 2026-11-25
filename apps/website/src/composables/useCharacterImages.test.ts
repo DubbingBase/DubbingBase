@@ -60,13 +60,13 @@ const hermione = (mediaId: number): Request => ({
   names: ["Hermione Granger"],
 });
 
-function setup(initial: Request[]) {
+function setup(initial: Request[], options?: Parameters<typeof useCharacterImages>[1]) {
   const requests = ref<Request[]>(initial);
   let api!: ReturnType<typeof useCharacterImages>;
   const wrapper = mount(
     defineComponent({
       setup() {
-        api = useCharacterImages(requests);
+        api = useCharacterImages(requests, options);
         return () => h("div");
       },
     }),
@@ -152,6 +152,67 @@ describe("useCharacterImages", () => {
     setup([ron(671), ron(672)]);
     await flushPromises();
     expect(rosterQueries.map((query) => query.mediaId)).toEqual(["671", "672"]);
+  });
+
+  it("loads the leading portrait promptly and batches two filmography rows into four requests", async () => {
+    const films = [674, 672, 671, 673, 675, 679, 677, 676, 678, 680];
+    const cast = castOf({ characters: [RON, HERMIONE] });
+    const batch = (ids: number[]) => Object.fromEntries(ids.map((id) => [`movie:${id}`, cast]));
+    const { promise: slowResponse, resolve: releaseBatch } = Promise.withResolvers<unknown>();
+    rosterQueue.push(
+      { respond: () => cast },
+      { respond: () => slowResponse },
+      { respond: () => batch(films.slice(5, 9)) },
+      { respond: () => cast },
+    );
+    const options = { batchProductions: true };
+    const { requests, api } = setup(films.slice(0, 5).map(ron), options);
+    await flushPromises();
+    expect(api.imageFor(ron(674))?.src).toBe(RON.image);
+    expect(api.imageFor(ron(675))).toBeNull();
+    releaseBatch(batch(films.slice(1, 5)));
+    requests.value = films.map(ron);
+    await flushPromises();
+
+    expect(rosterQueries).toEqual([
+      { mediaType: "movie", mediaId: "674", lang: "en-US" },
+      { productions: "movie:671,movie:672,movie:673,movie:675", lang: "en-US" },
+      { productions: "movie:676,movie:677,movie:678,movie:679", lang: "en-US" },
+      { mediaType: "movie", mediaId: "680", lang: "en-US" },
+    ]);
+    for (const id of films) expect(api.imageFor(ron(id))?.src).toBe(RON.image);
+
+    unmounts.pop()?.();
+    const revisited = setup(films.map(hermione), options);
+    await flushPromises();
+    for (const id of films) expect(revisited.api.imageFor(hermione(id))?.src).toBe(HERMIONE.image);
+    expect(rosterQueries).toHaveLength(4);
+  });
+
+  it("keeps healthy casts when a different production in the batch fails", async () => {
+    replyRoster();
+    rosterQueue.push({
+      respond: () => ({
+        "movie:671": castOf({ characters: [RON] }),
+        "movie:672": castOf({ degraded: true }),
+      }),
+    });
+    const { requests, api } = setup([ron(670), ron(671), ron(672)], { batchProductions: true });
+    await flushPromises();
+    expect(api.imageFor(ron(671))?.src).toBe(RON.image);
+    expect(api.imageFor(ron(672))).toBeNull();
+
+    requests.value = [];
+    await nextTick();
+    replyRoster({ characters: [RON] });
+    requests.value = [ron(671), ron(672)];
+    await flushPromises();
+    expect(rosterQueries).toEqual([
+      { mediaType: "movie", mediaId: "670", lang: "en-US" },
+      { productions: "movie:671,movie:672", lang: "en-US" },
+      { mediaType: "movie", mediaId: "672", lang: "en-US" },
+    ]);
+    expect(api.imageFor(ron(672))?.src).toBe(RON.image);
   });
 
   it("limits concurrent cast requests and queues the remaining productions", async () => {

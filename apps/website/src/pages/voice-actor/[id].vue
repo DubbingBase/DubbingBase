@@ -463,7 +463,6 @@
                 v-for="group in groupedWorks"
                 :key="group.key"
                 data-testid="voice-actor-group"
-                :ref="observeCharacterImages(group.pageData.data.map(characterRequest))"
                 class="space-y-4"
               >
                 <!-- Actor Group Header -->
@@ -543,6 +542,7 @@
                   <template #default="{ item }">
                     <div
                       :key="item.work.id"
+                      :ref="observeCharacterImages([characterRequest(item)])"
                       class="theme-input border theme-border-subtle theme-border rounded-xl p-3 shadow-sm transition-colors theme-hover-border block group"
                     >
                       <div class="flex flex-col sm:grid sm:grid-cols-2 gap-4 h-full">
@@ -1010,7 +1010,9 @@ const characterImageRequests = computed(() =>
 );
 const { activeRequests, observe: observeCharacterImages } =
   useCharacterImageViewport(characterImageRequests);
-const { imageFor, reportImageError } = useCharacterImages(activeRequests);
+const { imageFor, reportImageError } = useCharacterImages(activeRequests, {
+  batchProductions: true,
+});
 const worksTotal = computed(() => worksPageData.value.pagination.totalItems);
 const currentWorksPage = computed(() => worksPageData.value.pagination.page);
 

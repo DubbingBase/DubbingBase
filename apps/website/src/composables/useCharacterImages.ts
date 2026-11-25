@@ -1,5 +1,10 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch, type Ref } from "vue";
 import { APP_LOCALES, selectTvdbCharacter } from "@app/shared-logic";
+import {
+  CHARACTER_PORTRAIT_BATCH_LIMIT,
+  type CharacterRoster,
+  type CharacterRosterBatch,
+} from "../../shared/character-portraits";
 
 export type CharacterImage = {
   src: string;
@@ -11,14 +16,6 @@ export type CharacterImageRequest = {
   mediaType: "movie" | "tv";
   mediaId: number | string;
   names: readonly (string | null | undefined)[];
-};
-
-/** `/api/character-portraits`: the whole TVDB cast of one production. */
-type CharacterRoster = {
-  tvdbId: number | null;
-  characters: Array<{ id: string; name: string; image: string | null }>;
-  /** A provider failed, so an empty cast may not be the real answer. */
-  degraded: boolean;
 };
 
 /**
@@ -89,12 +86,14 @@ function namesOf(key: string): string[] {
  * The one way pages get production-scoped character images (TVDB): lazily,
  * after hydration, only for the cards currently shown. Never blocks SSR.
  *
- * One /api/character-portraits request per production returns its whole TVDB
- * cast. That URL does not depend on the visible cards, so it is edge-cached for
- * everyone; role names are matched here, and paging or filtering inside a
- * production costs no request. An image that fails to load becomes a placeholder.
+ * Filmographies can send several production lookups together. Each response cast
+ * is reused by production, so later role matches do not require another request.
+ * An image that fails to load becomes a placeholder.
  */
-export function useCharacterImages(requests: Ref<readonly CharacterImageRequest[]>) {
+export function useCharacterImages(
+  requests: Ref<readonly CharacterImageRequest[]>,
+  options: { batchProductions?: boolean } = {},
+) {
   const { locale } = useI18n();
   const language = computed(
     () => APP_LOCALES.find((item) => item.code === locale.value)?.language ?? "en-US",
@@ -169,6 +168,8 @@ export function useCharacterImages(requests: Ref<readonly CharacterImageRequest[
   const pendingLoads: PendingLoad[] = [];
   const rosterRequests = new Map<string, Promise<CharacterRoster>>();
   const activeLoads = new Set<AbortController>();
+  const batchLimit = options.batchProductions ? CHARACTER_PORTRAIT_BATCH_LIMIT : 1;
+  let hasRequestedRoster = false;
   let localeGeneration = 0;
   let mounted = false;
   let active = true;
@@ -189,13 +190,43 @@ export function useCharacterImages(requests: Ref<readonly CharacterImageRequest[
     }
   }
 
-  async function loadRoster(
-    production: string,
-    keys: string[],
-    requestLanguage: string,
-    startedLocale: number,
-    signal: AbortSignal,
-  ): Promise<void> {
+  function requestRosters(productions: Set<string>, signal: AbortSignal): void {
+    const [firstProduction] = productions;
+    if (!firstProduction) return;
+
+    let response: Promise<CharacterRosterBatch>;
+    if (productions.size === 1) {
+      const [mediaType, mediaId] = firstProduction.split(":");
+      response = $fetch<CharacterRoster>("/api/character-portraits", {
+        query: { mediaType, mediaId, lang: language.value },
+        signal,
+      }).then((roster) => ({ [firstProduction]: roster }));
+    } else {
+      response = $fetch<CharacterRosterBatch>("/api/character-portraits", {
+        query: { productions: [...productions].sort().join(","), lang: language.value },
+        signal,
+      });
+    }
+    for (const production of productions) {
+      const request = response.then((rosters) => {
+        const roster = rosters[production];
+        if (!roster) throw new Error("Missing character roster");
+        return roster;
+      });
+      rosterRequests.set(production, request);
+      const forget = () => {
+        if (rosterRequests.get(production) === request) rosterRequests.delete(production);
+      };
+      request.then(forget, forget);
+    }
+  }
+
+  async function loadRoster({
+    production,
+    keys,
+    language: requestLanguage,
+    localeGeneration: startedLocale,
+  }: PendingLoad): Promise<void> {
     const started = new Map(keys.map((key) => [key, (generations.get(key) ?? 0) + 1]));
     for (const [key, generation] of started) generations.set(key, generation);
     // Paging away does not invalidate a completed production lookup in this locale.
@@ -205,20 +236,8 @@ export function useCharacterImages(requests: Ref<readonly CharacterImageRequest[
       const store = sharedFor(requestLanguage);
       let roster = store.rosters.get(production);
       if (!roster) {
-        let request = rosterRequests.get(production);
-        if (!request) {
-          const [mediaType, mediaId] = production.split(":");
-          request = $fetch<CharacterRoster>("/api/character-portraits", {
-            query: { mediaType, mediaId, lang: requestLanguage },
-            signal,
-          });
-          rosterRequests.set(production, request);
-          const forget = () => {
-            if (rosterRequests.get(production) === request) rosterRequests.delete(production);
-          };
-          request.then(forget, forget);
-        }
-        roster = await request;
+        roster = await rosterRequests.get(production);
+        if (!roster) throw new Error("Missing character roster request");
         if (!roster.degraded && import.meta.client) {
           store.rosters.delete(production);
           store.rosters.set(production, roster);
@@ -244,21 +263,28 @@ export function useCharacterImages(requests: Ref<readonly CharacterImageRequest[
 
   function drainLoads(): void {
     while (activeLoads.size < MAX_CONCURRENT_REQUESTS && pendingLoads.length > 0) {
-      const pending = pendingLoads.shift();
-      if (!pending) break;
       const activeKeys = new Set(currentKeys());
-      const keys = pending.keys.filter((key) => activeKeys.has(key) && requested.has(key));
-      for (const key of pending.keys) if (!keys.includes(key)) requested.delete(key);
-      if (keys.length === 0 || pending.localeGeneration !== localeGeneration) continue;
+      const loads: PendingLoad[] = [];
+      const productions = new Set<string>();
+      // The leading portrait can render while another title's batch lookup is still running.
+      const limit = hasRequestedRoster ? batchLimit : 1;
+      while (productions.size < limit && pendingLoads.length > 0) {
+        const pending = pendingLoads.shift();
+        if (!pending || pending.localeGeneration !== localeGeneration) continue;
+        const keys = pending.keys.filter((key) => activeKeys.has(key) && requested.has(key));
+        for (const key of pending.keys) if (!keys.includes(key)) requested.delete(key);
+        if (keys.length === 0) continue;
+        loads.push({ ...pending, keys });
+        if (!shared.rosters.has(pending.production) && !rosterRequests.has(pending.production)) {
+          productions.add(pending.production);
+        }
+      }
+      if (loads.length === 0) break;
       const controller = new AbortController();
       activeLoads.add(controller);
-      void loadRoster(
-        pending.production,
-        keys,
-        pending.language,
-        pending.localeGeneration,
-        controller.signal,
-      ).finally(() => {
+      if (productions.size > 0) hasRequestedRoster = true;
+      requestRosters(productions, controller.signal);
+      void Promise.all(loads.map(loadRoster)).finally(() => {
         activeLoads.delete(controller);
         drainLoads();
       });
@@ -289,7 +315,7 @@ export function useCharacterImages(requests: Ref<readonly CharacterImageRequest[
     if (!mounted) return;
     const keys = currentKeys().filter((key) => !requested.has(key));
     for (const key of keys) requested.add(key);
-    // One cast request per production: the URL never depends on the visible cards.
+    // The roster is production-scoped even when its request carries other casts.
     const byProduction = new Map<string, string[]>();
     for (const key of keys) {
       const production = productionOf(key);
@@ -346,6 +372,7 @@ export function useCharacterImages(requests: Ref<readonly CharacterImageRequest[
   );
   watch(locale, () => {
     localeGeneration += 1;
+    hasRequestedRoster = false;
     pendingLoads.length = 0;
     for (const controller of activeLoads.keys()) controller.abort();
     requested.clear();
