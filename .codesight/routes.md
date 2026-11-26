@@ -74,8 +74,8 @@
 - `POST` `/api/upload-profile-picture` [auth, cache, upload] ✓
 - `GET` `/api/v1/:type/:id/credits/:workId` params(type, id, workId)
 - `PATCH` `/api/v1/:type/:id/credits/:workId` params(type, id, workId) [auth]
-- `POST` `/api/v1/:type/:id/credits/batch` params(type, id) [auth]
 - `GET` `/api/v1/:type/:id/credits/index` params(type, id)
+- `POST` `/api/v1/:type/:id/credits/sync` params(type, id) [auth]
 - `GET` `/api/v1/:type/:id/index` params(type, id)
 - `POST` `/api/v1/:type/:id/projects/index` params(type, id) [auth]
 - `POST` `/api/v1/:type/index` params(type) [auth]

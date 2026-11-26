@@ -7,7 +7,7 @@
 - `apps/website/server/utils/auth-handlers.ts` — imported by **29** files
 - `apps/website/server/utils/api-v1/define.ts` — imported by **20** files
 - `apps/website/server/utils/cache/index.ts` — imported by **20** files
-- `apps/website/server/utils/api-v1/errors.ts` — imported by **14** files
+- `apps/website/server/utils/api-v1/errors.ts` — imported by **15** files
 - `apps/website/server/utils/api-v1/voice-actors.ts` — imported by **12** files
 - `packages/shared-logic/src/types/index.ts` — imported by **12** files
 - `apps/website/server/utils/api-v1/credits.ts` — imported by **11** files
@@ -30,7 +30,7 @@
 - `apps/website/server/utils/auth-handlers.ts` ← `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue.get.ts`, `apps/website/server/api/admin/work-duplicates/merge.post.ts`, `apps/website/server/api/admin/work-duplicates.get.ts` +24 more
 - `apps/website/server/utils/api-v1/define.ts` ← `apps/website/server/api/v1/[type]/[id]/characters/[characterId].patch.ts`, `apps/website/server/api/v1/[type]/[id]/characters.get.ts`, `apps/website/server/api/v1/[type]/[id]/characters.post.ts`, `apps/website/server/api/v1/[type]/[id]/credits/[workId].get.ts`, `apps/website/server/api/v1/[type]/[id]/credits/[workId].patch.ts` +15 more
 - `apps/website/server/utils/cache/index.ts` ← `apps/website/server/utils/api/igdb.test.ts`, `apps/website/server/utils/api/igdb.ts`, `apps/website/server/utils/api/openlibrary.test.ts`, `apps/website/server/utils/api/openlibrary.ts`, `apps/website/server/utils/api/podcast.test.ts` +15 more
-- `apps/website/server/utils/api-v1/errors.ts` ← `apps/website/server/api/v1/[type]/[id]/characters/[characterId].patch.ts`, `apps/website/server/api/v1/[type]/[id]/characters.post.ts`, `apps/website/server/api/v1/[type]/[id]/credits/batch.post.ts`, `apps/website/server/api/v1/[type]/[id]/projects/index.post.ts`, `apps/website/server/api/v1/[type]/index.post.ts` +9 more
+- `apps/website/server/utils/api-v1/errors.ts` ← `apps/website/server/api/v1/[type]/[id]/characters/[characterId].patch.ts`, `apps/website/server/api/v1/[type]/[id]/characters.post.ts`, `apps/website/server/api/v1/[type]/[id]/credits/[workId].patch.ts`, `apps/website/server/api/v1/[type]/[id]/credits/sync.post.ts`, `apps/website/server/api/v1/[type]/[id]/projects/index.post.ts` +10 more
 - `apps/website/server/utils/api-v1/voice-actors.ts` ← `apps/website/server/api/v1/[type]/[id]/characters/[characterId].patch.ts`, `apps/website/server/api/v1/[type]/[id]/characters.post.ts`, `apps/website/server/api/v1/[type]/[id]/credits/[workId].get.ts`, `apps/website/server/api/v1/[type]/[id]/credits/[workId].patch.ts`, `apps/website/server/api/v1/[type]/[id]/credits/index.get.ts` +7 more
 - `packages/shared-logic/src/types/index.ts` ← `packages/shared-logic/src/composables/useAdvertisementData.ts`, `packages/shared-logic/src/composables/useAudiobookData.ts`, `packages/shared-logic/src/composables/useDetailCollections.ts`, `packages/shared-logic/src/composables/useDetailCollections.ts`, `packages/shared-logic/src/composables/useGameData.ts` +7 more
 - `apps/website/server/utils/api-v1/credits.ts` ← `apps/website/server/api/v1/[type]/[id]/characters/[characterId].patch.ts`, `apps/website/server/api/v1/[type]/[id]/characters.get.ts`, `apps/website/server/api/v1/[type]/[id]/characters.post.ts`, `apps/website/server/api/v1/[type]/[id]/credits/[workId].get.ts`, `apps/website/server/api/v1/[type]/[id]/index.get.ts` +6 more

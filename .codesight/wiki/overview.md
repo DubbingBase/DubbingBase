@@ -22,7 +22,6 @@
 - **[[workId].get](./[workid].get.md)** — 1 routes
 - **[[workId].patch](./[workid].patch.md)** — 1 routes — touches: auth
 - **[Admin](./admin.md)** — 5 routes — touches: auth, queue, cache
-- **[Batch.post](./batch.post.md)** — 1 routes — touches: auth
 - **[Career-grid.get](./career-grid.get.md)** — 1 routes
 - **[Character-portraits.get](./character-portraits.get.md)** — 1 routes — touches: cache
 - **[Characters.get](./characters.get.md)** — 1 routes
@@ -70,6 +69,7 @@
 - **[Sitemaps](./sitemaps.md)** — 2 routes
 - **[Submit-task.post](./submit-task.post.md)** — 1 routes — touches: auth, db, upload
 - **[Submit-user-report.post](./submit-user-report.post.md)** — 1 routes — touches: auth, db
+- **[Sync.post](./sync.post.md)** — 1 routes — touches: auth
 - **[Top-contributors.get](./top-contributors.get.md)** — 1 routes
 - **[Top-voice-actors.get](./top-voice-actors.get.md)** — 1 routes
 - **[Update-voice-actor.post](./update-voice-actor.post.md)** — 1 routes — touches: auth, cache, upload
@@ -92,7 +92,7 @@ Changes to these files have the widest blast radius across the codebase:
 - `apps/website/server/utils/auth-handlers.ts` — imported by **29** files
 - `apps/website/server/utils/api-v1/define.ts` — imported by **20** files
 - `apps/website/server/utils/cache/index.ts` — imported by **20** files
-- `apps/website/server/utils/api-v1/errors.ts` — imported by **14** files
+- `apps/website/server/utils/api-v1/errors.ts` — imported by **15** files
 
 ## Required Environment Variables
 
