@@ -32,6 +32,8 @@ export const route = defineApiRoute({
       actor_id: v.optional(v.nullable(v.pipe(v.number(), v.integer(), v.minValue(1)))),
       /** A character registered for this game (games only); null removes the link. */
       game_character_id: v.optional(v.nullable(v.pipe(v.string(), v.uuid(), v.toLowerCase()))),
+      /** Flags the credit as a main character (true) or clears the flag (false). */
+      highlight: v.optional(v.boolean()),
     }),
     v.check((body) => Object.keys(body).length > 0, "Send at least one field to change."),
     v.check(

@@ -502,12 +502,14 @@ function projectVoiceActorCount(project: GameDubbingProject): number {
 const coverUrl = computed(() =>
   mediaImage(game.value?.cover?.image_id || game.value?.cover?.url, { igdbSize: "cover_big" }),
 );
+// Screenshots are always landscape; IGDB artworks are often square or portrait box art, which
+// object-cover crops and upscales into a blurry banner. Artwork is only the fallback.
 const backdropUrl = computed(() => {
-  const artwork = game.value?.artworks?.[0];
   const screenshot = game.value?.screenshots?.[0];
+  const artwork = game.value?.artworks?.[0];
   return (
-    mediaImage(artwork?.image_id || artwork?.url, { igdbSize: "1080p" }) ??
-    mediaImage(screenshot?.image_id || screenshot?.url, { igdbSize: "screenshot_huge" })
+    mediaImage(screenshot?.image_id || screenshot?.url, { igdbSize: "screenshot_huge" }) ??
+    mediaImage(artwork?.image_id || artwork?.url, { igdbSize: "1080p" })
   );
 });
 

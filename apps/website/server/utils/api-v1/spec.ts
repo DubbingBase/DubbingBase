@@ -49,11 +49,11 @@ export function buildOpenApiSpec() {
           "so copy them from IGDB. Then reference it as `game_character_id` on credits. Characters that share an actor, such as Taylor and Tanya, are separate characters. " +
           "Reuse existing character names exactly: a credit is identified by media, language, voice actor, cast id and character name.\n" +
           "3. Preview with `POST /{type}/{id}/credits/batch?dry_run=true` (up to 50 credits), which writes nothing and reports `create` or `unchanged` per item; " +
-          "a `create` item carries `would_create` (character, voice actor, language, performance, cast ids).\n" +
+          "a `create` item carries `would_create` (character, voice actor, language, performance, cast ids, highlight).\n" +
           "4. Send the same body without `dry_run`. The batch is all or nothing: if one item is rejected, " +
           "nothing is written and the error names it (`credits.2`). Sending a batch again is safe: roles that exist come back `unchanged`. " +
           "If you leave `game_character_id` out and one credit with that name, voice actor and cast id is already linked to a game character, it comes back `unchanged` with that `linked_game_character_id` and nothing is added; several such credits give 409 `ambiguous_credit`.\n" +
-          "5. Fix a credit in place with `PATCH /{type}/{id}/credits/{workId}`: `performance`, `character_name`, `actor_id` and `game_character_id` (send only what changes). " +
+          "5. Fix a credit in place with `PATCH /{type}/{id}/credits/{workId}`: `performance`, `character_name`, `actor_id`, `game_character_id` and `highlight` (send only what changes). `highlight: true` marks a main character, who is listed first on the game page; on a batch `create` item it flags the credit being created, never one that already exists. " +
           "This is how to complete a credit that has no character name: it keeps its id, history and review state. " +
           "A batch item for a voice actor who already has a nameless credit with the same cast id is refused with 409 `nameless_credit_exists` naming that credit, so complete it with PATCH. " +
           "The API cannot delete credits; leave that to the website.",

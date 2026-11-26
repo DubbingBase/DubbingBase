@@ -15,14 +15,18 @@
         :srcset="backdropSrcset"
         :src="resolveMediaImage(backdropPath, { tmdbSize: 'w1280' }) ?? undefined"
       />
-      <NuxtImg
+      <!-- Non-TMDB backdrops (IGDB) are served as-is: routing them through the image optimizer with a
+           self-referencing placeholder left the hero visibly blurry. IGDB resizes per `t_<size>`
+           path segment, so the srcset swaps that segment. -->
+      <img
         v-else-if="backdropUrl"
-        :src="backdropUrl"
-        :placeholder="backdropUrl"
+        :src="igdbBackdrop?.src ?? backdropUrl"
+        :srcset="igdbBackdrop?.srcset"
+        :sizes="igdbBackdrop ? BACKDROP_SIZES : undefined"
         class="w-full h-full object-cover"
         :class="blurBackdrop ? 'blur-3xl opacity-50 scale-110' : ''"
         alt="Backdrop"
-        format="webp"
+        fetchpriority="high"
       />
       <div
         v-if="backdropUrl"
@@ -110,25 +114,58 @@ const backdropSrcset = computed(() =>
     : undefined,
 );
 
+const IGDB_BACKDROP_URL =
+  /^(https:\/\/images\.igdb\.com\/igdb\/image\/upload\/)t_[a-z0-9_]+(\/.+)$/;
+const IGDB_BACKDROP_WIDTHS: Array<{ size: string; width: number }> = [
+  { size: "screenshot_big", width: 889 },
+  { size: "screenshot_huge", width: 1280 },
+  { size: "1080p", width: 1920 },
+];
+const igdbBackdrop = computed(() => {
+  const match = props.backdropUrl ? IGDB_BACKDROP_URL.exec(props.backdropUrl) : null;
+  const [, base, hash] = match ?? [];
+  if (!base || !hash) return null;
+  const variants = IGDB_BACKDROP_WIDTHS.map(({ size, width }) => ({
+    url: `${base}t_${size}${hash}`,
+    width,
+  }));
+  return {
+    src: `${base}t_screenshot_huge${hash}`,
+    srcset: variants.map(({ url, width }) => `${url} ${width}w`).join(", "),
+  };
+});
+
 // The page's inlined CSS pushes the <img> about 100 KB into the HTML, so the browser would find
 // the LCP image late. Preloading it from the top of <head> starts the download right away; the
 // srcset and sizes must match the <img> so the preloaded file is the one it uses.
 useHead({
   link: computed(() =>
-    backdropPath.value
+    igdbBackdrop.value && !backdropPath.value
       ? [
           {
             rel: "preload",
             as: "image",
-            // Browsers ignore href when imagesrcset is present; the HTML validator requires it.
-            href: resolveMediaImage(backdropPath.value, { tmdbSize: "w1280" }) ?? undefined,
-            imagesrcset: backdropSrcset.value,
+            href: igdbBackdrop.value.src,
+            imagesrcset: igdbBackdrop.value.srcset,
             imagesizes: BACKDROP_SIZES,
             fetchpriority: "high",
             tagPriority: -14,
           },
         ]
-      : [],
+      : backdropPath.value
+        ? [
+            {
+              rel: "preload",
+              as: "image",
+              // Browsers ignore href when imagesrcset is present; the HTML validator requires it.
+              href: resolveMediaImage(backdropPath.value, { tmdbSize: "w1280" }) ?? undefined,
+              imagesrcset: backdropSrcset.value,
+              imagesizes: BACKDROP_SIZES,
+              fetchpriority: "high",
+              tagPriority: -14,
+            },
+          ]
+        : [],
   ),
 });
 const posterPath = computed(() =>

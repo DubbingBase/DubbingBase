@@ -36,7 +36,7 @@
     </div>
 
     <!-- Center Section: Search -->
-    <div class="flex-1 max-w-md mx-4 hidden sm:flex justify-center">
+    <div v-if="!isSearchTriggerHidden" class="flex-1 max-w-md mx-4 hidden sm:flex justify-center">
       <NuxtLink
         :to="localePath('/search')"
         data-testid="header-search-trigger"
@@ -56,6 +56,8 @@
         </kbd>
       </NuxtLink>
     </div>
+
+    <div v-else class="flex-1 hidden sm:block"></div>
 
     <!-- Right Section: Actions & Profile -->
     <div class="flex items-center gap-1 md:gap-2 ml-auto shrink-0">
@@ -129,6 +131,11 @@ const isHomePage = computed(() => {
   const homePath = localePath("/");
   return route.path === homePath;
 });
+
+// The page already exposes its own search field, so the header shortcut is redundant there.
+const isSearchTriggerHidden = computed(
+  () => isHomePage.value || route.path === localePath("/search"),
+);
 
 const focusSearchInput = (): void => {
   document.querySelector<HTMLInputElement>("[data-testid='search-input']")?.focus();

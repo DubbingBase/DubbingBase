@@ -45,20 +45,14 @@
 <script setup lang="ts">
 import { computed, type Component } from "vue";
 import { useI18n } from "vue-i18n";
-import {
-  BookOpen as BookOpenIcon,
-  ChevronRight as ChevronRightIcon,
-  Film as FilmIcon,
-  Gamepad2 as Gamepad2Icon,
-  Layers as LayersIcon,
-  Megaphone as MegaphoneIcon,
-  Mic as MicIcon,
-  Radio as RadioIcon,
-  Smile as SmileIcon,
-  Tv as TvIcon,
-  User as UserIcon,
-} from "lucide-vue-next";
+import { ChevronRight as ChevronRightIcon, Layers as LayersIcon } from "lucide-vue-next";
 import type { SearchFilter } from "../utils/search-routes";
+import {
+  searchTypeColors,
+  searchTypeIcons,
+  searchTypeLabelKeys,
+  searchTypeOptions,
+} from "../utils/search-type-display";
 
 defineProps<{
   modelValue: SearchFilter;
@@ -77,27 +71,15 @@ const keepTouchFocus = (event: PointerEvent): void => {
 
 const filterIconColors: Record<SearchFilter, string> = {
   all: "text-[var(--app-color-primary)]",
-  movie: "text-[var(--app-color-search-movie)]",
-  tv: "text-[var(--app-color-search-tv)]",
-  person: "text-[var(--app-color-search-person)]",
-  voice_actor: "text-[var(--app-color-search-voice-actor)]",
-  video_game: "text-[var(--app-color-search-video-game)]",
-  audiobook: "text-[var(--app-color-search-audiobook)]",
-  podcast: "text-[var(--app-color-search-podcast)]",
-  advertisement: "text-[var(--app-color-search-advertisement)]",
-  toy: "text-[var(--app-color-search-toy)]",
+  ...searchTypeColors,
 };
 
 const filters = computed<Array<{ label: string; value: SearchFilter; icon: Component }>>(() => [
   { label: t("search.all"), value: "all", icon: LayersIcon },
-  { label: t("search.movie"), value: "movie", icon: FilmIcon },
-  { label: t("search.tv"), value: "tv", icon: TvIcon },
-  { label: t("search.actor"), value: "person", icon: UserIcon },
-  { label: t("search.voiceActor"), value: "voice_actor", icon: MicIcon },
-  { label: t("search.videoGame"), value: "video_game", icon: Gamepad2Icon },
-  { label: t("search.audiobook"), value: "audiobook", icon: BookOpenIcon },
-  { label: t("search.podcast"), value: "podcast", icon: RadioIcon },
-  { label: t("search.advertisement"), value: "advertisement", icon: MegaphoneIcon },
-  { label: t("search.toy"), value: "toy", icon: SmileIcon },
+  ...searchTypeOptions.map((type) => ({
+    label: t(searchTypeLabelKeys[type]),
+    value: type,
+    icon: searchTypeIcons[type],
+  })),
 ]);
 </script>
