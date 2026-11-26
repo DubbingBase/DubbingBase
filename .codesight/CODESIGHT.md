@@ -5,7 +5,7 @@
 
 > 89 routes | 30 models | 146 components | 150 lib files | 53 env vars | 15 middleware | 47% test coverage
 > **Token savings:** this file is ~20,200 tokens. Without it, AI exploration would cost ~164,300 tokens. **Saves ~144,200 tokens per conversation.**
-> **Last scanned:** 2026-11-26 12:17 — re-run after significant changes
+> **Last scanned:** 2026-11-26 13:50 — re-run after significant changes
 
 ---
 
