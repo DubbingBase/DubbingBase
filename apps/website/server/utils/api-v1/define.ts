@@ -34,7 +34,8 @@ export interface ApiRouteDefinition<
   summary: string;
   description?: string;
   tags: readonly string[];
-  scope: ApiScope;
+  /** One scope, or several that the token must all hold. */
+  scope: ApiScope | readonly ApiScope[];
   params: TParams;
   query: TQuery;
   /** JSON request body schema; omit for routes without one. */
@@ -59,7 +60,7 @@ export interface ApiRouteDocs {
   summary: string;
   description?: string;
   tags: readonly string[];
-  scope: ApiScope;
+  scope: ApiScope | readonly ApiScope[];
   params: ObjectSchema;
   query: ObjectSchema;
   body?: v.GenericSchema;
@@ -87,7 +88,10 @@ function issueMessages(issues: readonly v.BaseIssue<unknown>[]): string {
     .join("; ");
 }
 
-async function authorize(event: H3Event, scope: ApiScope): Promise<ApiPrincipal> {
+async function authorize(
+  event: H3Event,
+  required: ApiScope | readonly ApiScope[],
+): Promise<ApiPrincipal> {
   const token = readBearerToken(event);
   const principal = token ? await authenticateApiToken(event, token) : null;
   if (!principal) {
@@ -95,11 +99,14 @@ async function authorize(event: H3Event, scope: ApiScope): Promise<ApiPrincipal>
       "WWW-Authenticate": 'Bearer realm="DubbingBase API"',
     });
   }
-  if (!principal.scopes.includes(scope)) {
+  const missing = (typeof required === "string" ? [required] : required).filter(
+    (scope) => !principal.scopes.includes(scope),
+  );
+  if (missing.length > 0) {
     throw new ApiError(
       403,
       "insufficient_scope",
-      `This token lacks the "${scope}" scope. Its scopes: ${principal.scopes.join(", ") || "none"}.`,
+      `This token lacks the ${missing.map((scope) => `"${scope}"`).join(", ")} scope. Its scopes: ${principal.scopes.join(", ") || "none"}.`,
     );
   }
   return principal;
@@ -242,7 +249,7 @@ export function operationFor(docs: ApiRouteDocs, components: SchemaComponents) {
     summary: docs.summary,
     ...(docs.description ? { description: docs.description } : {}),
     tags: [...docs.tags],
-    security: [{ bearerAuth: [docs.scope] }],
+    security: [{ bearerAuth: typeof docs.scope === "string" ? [docs.scope] : [...docs.scope] }],
     parameters: [
       ...parametersOf(docs.params, "path", components),
       ...parametersOf(docs.query, "query", components),

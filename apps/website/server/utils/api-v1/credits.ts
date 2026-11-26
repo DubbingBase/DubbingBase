@@ -201,3 +201,8 @@ export function notifyCreditChange(
     { via: "api", ...edit, entity: edit.entity ?? "media" },
   );
 }
+
+/** The entity tag of a credit: its last change, quoted as HTTP requires. */
+export function creditEtag(updatedAt: string): string {
+  return `"${updatedAt}"`;
+}

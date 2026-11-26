@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { createApp, createRouter, toWebHandler } from "h3";
 import { beforeEach, expect, it, vi } from "vitest";
-import batch from "../../api/v1/[type]/[id]/credits/batch.post";
+import sync from "../../api/v1/[type]/[id]/credits/sync.post";
 import characters from "../../api/v1/[type]/[id]/characters.get";
 import createCharacter from "../../api/v1/[type]/[id]/characters.post";
 import credits from "../../api/v1/[type]/[id]/credits/index.get";
@@ -23,7 +23,7 @@ const path = "/api/v1/:type/:id";
 router.get(path, media);
 router.get(`${path}/credits`, credits);
 router.get(`${path}/characters`, characters);
-router.post(`${path}/credits/batch`, batch);
+router.post(`${path}/credits/sync`, sync);
 router.post(`${path}/characters`, createCharacter);
 const handle = toWebHandler(createApp().use(router));
 
@@ -41,7 +41,13 @@ beforeEach(() => {
   mocks.authenticateApiToken.mockResolvedValue({
     tokenId: "test",
     userId: "admin",
-    scopes: ["credits:read", "credits:create", "characters:read", "characters:create"],
+    scopes: [
+      "credits:read",
+      "credits:create",
+      "credits:update",
+      "characters:read",
+      "characters:create",
+    ],
   });
 });
 
@@ -83,8 +89,8 @@ it("reports a missing local game before registering a character", async () => {
   await expectNotFound(response, "video_game", "Media not imported yet.");
 });
 
-it.each(["", "?dry_run=true"])("requires a local game for a credit batch %s", async (query) => {
-  const response = await request(`games/140617/credits/batch${query}`, {
+it.each(["", "?dry_run=true"])("requires a local game for a credit sync %s", async (query) => {
+  const response = await request(`games/140617/credits/sync${query}`, {
     credits: [{ voice_actor_id: 5, character_name: "Rachel", language: "en-US" }],
   });
   await expectNotFound(response, "video_game", "Media not imported yet.");

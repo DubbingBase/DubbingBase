@@ -20,26 +20,46 @@ import { shortText } from "../../../../../utils/notifications/discord";
 
 const MAX_ITEMS = 50;
 
-const BatchItem = v.strictObject({
+type Performance = v.InferOutput<typeof performanceSchema>;
+
+/** What differs between a credit that exists and the item that describes it; null when nothing. */
+function diffCredit(
+  item: { performance?: Performance; highlight?: boolean },
+  current: { performance: string | null; highlight: boolean | null },
+) {
+  const changes: {
+    performance?: { from: string | null; to: Performance };
+    highlight?: { from: boolean; to: boolean };
+  } = {};
+  if (item.performance !== undefined && item.performance !== current.performance) {
+    changes.performance = { from: current.performance, to: item.performance };
+  }
+  const highlight = current.highlight ?? false;
+  if (item.highlight !== undefined && item.highlight !== highlight) {
+    changes.highlight = { from: highlight, to: item.highlight };
+  }
+  return Object.keys(changes).length > 0 ? changes : null;
+}
+
+const SyncItem = v.strictObject({
   voice_actor_id: v.pipe(v.number(), v.integer(), v.minValue(1)),
   character_name: v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(300)),
   language: dubbingLanguage,
-  performance: v.optional(performanceSchema, "dialogues"),
+  /** Defaults to `dialogues` on a new credit; omit it to leave an existing credit's alone. */
+  performance: v.optional(performanceSchema),
   /** TMDB person id (movies, shows) or IGDB character id (games) of the on-screen cast member. */
   actor_id: v.optional(v.nullable(v.pipe(v.number(), v.integer(), v.minValue(1))), null),
   /** A character registered for this game (see the characters endpoint). Games only. */
   game_character_id: v.optional(v.nullable(v.pipe(v.string(), v.uuid(), v.toLowerCase())), null),
-  /**
-   * Flags the credit as a main character. Applies to credits this request creates; a credit that
-   * already exists is not changed (use PATCH to flag it).
-   */
-  highlight: v.optional(v.boolean(), false),
+  /** Main character flag. Defaults to false on a new credit; omit it to leave an existing credit's alone. */
+  highlight: v.optional(v.boolean()),
 });
 
 export const route = defineApiRoute({
-  summary: "Add credits",
+  summary: "Sync credits",
   tags: ["Credits"],
-  scope: "credits:create",
+  // Creates what is missing and updates what differs, so both scopes are needed.
+  scope: ["credits:create", "credits:update"],
   notFound: "The media or a referenced voice actor has no local DubbingBase record.",
   params: mediaParams,
   query: v.object({
@@ -47,20 +67,33 @@ export const route = defineApiRoute({
     dry_run: v.optional(v.picklist(["true", "false"]), "false"),
   }),
   body: v.strictObject({
-    credits: v.pipe(v.array(BatchItem), v.minLength(1), v.maxLength(MAX_ITEMS)),
+    credits: v.pipe(v.array(SyncItem), v.minLength(1), v.maxLength(MAX_ITEMS)),
   }),
   response: v.object({
     dry_run: v.boolean(),
     data: v.array(
       v.object({
-        /** `create` adds a credit; `unchanged` means that voice actor already holds that role. */
-        action: v.picklist(["create", "unchanged"]),
+        /**
+         * `create` adds a credit; `update` changes `performance` or `highlight` of the credit that
+         * already holds that role; `unchanged` means it already matches. Credits not listed in the
+         * request are never touched or deleted.
+         */
+        action: v.picklist(["create", "update", "unchanged"]),
         credit: v.nullable(v.string()),
         /**
          * Set when `game_character_id` was omitted and the credit that matched by name is linked to
          * a game character: that character's id. Null otherwise.
          */
         linked_game_character_id: v.nullable(v.string()),
+        /** What an `update` item changes (previewed on a dry run, applied otherwise); null otherwise. */
+        changes: v.nullable(
+          v.object({
+            performance: v.optional(
+              v.object({ from: v.nullable(v.string()), to: performanceSchema }),
+            ),
+            highlight: v.optional(v.object({ from: v.boolean(), to: v.boolean() })),
+          }),
+        ),
         /** Dry run only: the credit a `create` item would add; null otherwise. */
         would_create: v.nullable(
           v.object({
@@ -82,7 +115,14 @@ export const route = defineApiRoute({
     const supabase = useSupabaseAdmin(event);
 
     // Everything is checked before the first write, so a bad item rejects the whole request.
-    const existing: ({ id: number; linked: string | null } | null)[] = [];
+    type Match = {
+      id: number;
+      linked: string | null;
+      highlight: boolean | null;
+      performance: string | null;
+      updatedAt: string;
+    };
+    const existing: (Match | null)[] = [];
     const actors: { id: number; firstname: string; lastname: string }[] = [];
     for (const [index, item] of body.credits.entries()) {
       if (item.game_character_id !== null && key.contentType !== "video_game") {
@@ -140,11 +180,13 @@ export const route = defineApiRoute({
         .eq("language", item.language)
         .maybeSingle();
       if (projectError) throw projectError;
-      let match: { id: number; linked: string | null } | null = null;
+      let match: Match | null = null;
       if (project) {
         const { data: works, error: worksError } = await supabase
           .from("work")
-          .select("id, character_name, actor_id, game_character_id")
+          .select(
+            "id, character_name, actor_id, game_character_id, highlight, performance, updated_at",
+          )
           .eq("dubbing_project_id", project.id)
           .eq("voice_actor_id", item.voice_actor_id);
         if (worksError) throw worksError;
@@ -155,7 +197,13 @@ export const route = defineApiRoute({
         );
         const exact = sameRole.find((work) => work.game_character_id === item.game_character_id);
         if (exact) {
-          match = { id: exact.id, linked: null };
+          match = {
+            id: exact.id,
+            linked: null,
+            highlight: exact.highlight,
+            performance: exact.performance,
+            updatedAt: exact.updated_at,
+          };
         } else if (item.game_character_id === null && sameRole.length > 0) {
           // The credit exists but is linked to a character this item left out: a retry that
           // drops the id must not add a second credit for the same role.
@@ -167,7 +215,15 @@ export const route = defineApiRoute({
             );
           }
           const [only] = sameRole;
-          if (only) match = { id: only.id, linked: only.game_character_id };
+          if (only) {
+            match = {
+              id: only.id,
+              linked: only.game_character_id,
+              highlight: only.highlight,
+              performance: only.performance,
+              updatedAt: only.updated_at,
+            };
+          }
         }
         if (match === null) {
           // A credit without a character name cannot match by name, so it would end up next to
@@ -201,10 +257,12 @@ export const route = defineApiRoute({
         data: body.credits.map((item, index) => {
           const match = existing[index] ?? null;
           if (match !== null) {
+            const change = diffCredit(item, match);
             return {
-              action: "unchanged" as const,
+              action: change === null ? ("unchanged" as const) : ("update" as const),
               credit: `${base}/credits/${match.id}`,
               linked_game_character_id: match.linked,
+              changes: change,
               would_create: null,
             };
           }
@@ -214,14 +272,15 @@ export const route = defineApiRoute({
             action: "create" as const,
             credit: null,
             linked_game_character_id: null,
+            changes: null,
             would_create: {
               character_name: item.character_name,
               voice_actor: actor,
               language: item.language,
-              performance: item.performance,
+              performance: item.performance ?? "dialogues",
               actor_id: item.actor_id,
               game_character_id: item.game_character_id,
-              highlight: item.highlight,
+              highlight: item.highlight ?? false,
             },
           };
         }),
@@ -246,22 +305,45 @@ export const route = defineApiRoute({
             actor_person_id: item.actor_id,
             game_character_id: item.game_character_id,
             character_name: item.character_name,
-            performance: item.performance,
-            highlight: item.highlight,
+            performance: item.performance ?? "dialogues",
+            highlight: item.highlight ?? false,
           })),
           (position) => `credits.${toWrite[position]?.index ?? position}`,
         )
       : [];
+    // Matched credits whose flag differs from the one sent are updated in place, in the same
+    // request, so a re-run of a fill converges instead of silently keeping the old flag.
+    const toUpdate = body.credits.flatMap((item, index) => {
+      const match = existing[index];
+      const change = match ? diffCredit(item, match) : null;
+      return match && change ? [{ match, change }] : [];
+    });
+    if (toUpdate.length) {
+      await mutateCredits(
+        event,
+        auth.userId,
+        "update",
+        toUpdate.map(({ match, change }) => ({
+          work_id: match.id,
+          expected_updated_at: match.updatedAt,
+          ...(change.performance ? { performance: change.performance.to } : {}),
+          ...(change.highlight ? { highlight: change.highlight.to } : {}),
+        })),
+        (position) => `credits.${position}`,
+      );
+    }
     const writtenByIndex = new Map(
       toWrite.map(({ index }, position) => [index, written[position]]),
     );
     const results = body.credits.map((_, index) => {
       const name = existing[index];
-      if (name?.linked != null) {
+      if (name) {
+        const change = diffCredit(body.credits[index] ?? {}, name);
         return {
-          action: "unchanged" as const,
+          action: change === null ? ("unchanged" as const) : ("update" as const),
           credit: `${base}/credits/${name.id}`,
           linked_game_character_id: name.linked,
+          changes: change,
           would_create: null,
         };
       }
@@ -271,6 +353,7 @@ export const route = defineApiRoute({
         action: credit.created ? ("create" as const) : ("unchanged" as const),
         credit: `${base}/credits/${credit.work_id}`,
         linked_game_character_id: null,
+        changes: null,
         would_create: null,
       };
     });
