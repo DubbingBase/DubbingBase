@@ -15,7 +15,14 @@ import {
   apiMediaPath,
   sitePath,
   performanceSchema,
+  castRankSchema,
 } from "../../../../../utils/api-v1/media";
+import {
+  applyCastPlacements,
+  castPlacementMessage,
+  loadGameCastOrder,
+  type CastPlacement,
+} from "../../../../../utils/cast-order";
 import { useSupabaseAdmin } from "../../../../../utils/db/client";
 import { shortText } from "../../../../../utils/notifications/discord";
 
@@ -23,15 +30,21 @@ const MAX_ITEMS = 50;
 
 type Performance = v.InferOutput<typeof performanceSchema>;
 
+/** Cast order positions of a credit's game character before and after the request. */
+type RankChange = { from: number | null; to: number | null };
+
 /** What differs between a credit that exists and the item that describes it; null when nothing. */
 function diffCredit(
   item: { performance?: Performance; highlight?: boolean },
   current: { performance: string | null; highlight: boolean | null },
+  rank: RankChange | null,
 ) {
   const changes: {
     performance?: { from: string | null; to: Performance };
     highlight?: { from: boolean; to: boolean };
+    cast_rank?: RankChange;
   } = {};
+  if (rank !== null && rank.from !== rank.to) changes.cast_rank = rank;
   if (item.performance !== undefined && item.performance !== current.performance) {
     changes.performance = { from: current.performance, to: item.performance };
   }
@@ -54,6 +67,14 @@ const SyncItem = v.strictObject({
   game_character_id: v.optional(v.nullable(v.pipe(v.string(), v.uuid(), v.toLowerCase())), null),
   /** Main character flag. Defaults to false on a new credit; omit it to leave an existing credit's alone. */
   highlight: v.optional(v.boolean()),
+  /**
+   * Games only: puts the credit's game character at this position of the game's cast order
+   * (1 = first, shared by every language); the others shift. Null takes it out of the order; omit
+   * it to leave the order alone. The credit must be linked to a game character (send
+   * `game_character_id`, or match a linked credit). Ranks of one request are applied together:
+   * each ranked character ends exactly at its rank, and two characters cannot share a rank.
+   */
+  cast_rank: v.optional(v.nullable(castRankSchema)),
 });
 
 export const route = defineApiRoute({
@@ -69,13 +90,19 @@ export const route = defineApiRoute({
   }),
   body: v.strictObject({
     credits: v.pipe(v.array(SyncItem), v.minLength(1), v.maxLength(MAX_ITEMS)),
+    /**
+     * The `cast_order.version` a dry run (or `GET /games/{id}/cast-order`) returned. When given,
+     * a request with ranks is refused with 412 if the order changed since, so it applies exactly
+     * what was previewed.
+     */
+    cast_order_version: v.optional(v.pipe(v.number(), v.integer(), v.minValue(0))),
   }),
   response: v.object({
     dry_run: v.boolean(),
     data: v.array(
       v.object({
         /**
-         * `create` adds a credit; `update` changes `performance` or `highlight` of the credit that
+         * `create` adds a credit; `update` changes `performance`, `highlight` or `cast_rank` of the credit that
          * already holds that role; `unchanged` means it already matches. Credits not listed in the
          * request are never touched or deleted.
          */
@@ -93,6 +120,10 @@ export const route = defineApiRoute({
               v.object({ from: v.nullable(v.string()), to: performanceSchema }),
             ),
             highlight: v.optional(v.object({ from: v.boolean(), to: v.boolean() })),
+            /** The character's position in the cast order before and after; null = unranked. */
+            cast_rank: v.optional(
+              v.object({ from: v.nullable(v.number()), to: v.nullable(v.number()) }),
+            ),
           }),
         ),
         /** Dry run only: the credit a `create` item would add; null otherwise. */
@@ -105,9 +136,18 @@ export const route = defineApiRoute({
             actor_id: v.nullable(v.number()),
             game_character_id: v.nullable(v.string()),
             highlight: v.boolean(),
+            cast_rank: v.nullable(v.number()),
           }),
         ),
       }),
+    ),
+    /**
+     * Set when the request ranks characters: the game's whole cast order before and after (game
+     * character ids, first = position 1), including characters that shifted. On a dry run `version`
+     * is the order's current version, to send back as `cast_order_version`; otherwise the new one.
+     */
+    cast_order: v.nullable(
+      v.object({ version: v.number(), from: v.array(v.string()), to: v.array(v.string()) }),
     ),
   }),
   handler: async ({ event, auth, params, query, body }) => {
@@ -118,6 +158,7 @@ export const route = defineApiRoute({
     // Everything is checked before the first write, so a bad item rejects the whole request.
     type Match = {
       id: number;
+      gameCharacterId: string | null;
       linked: string | null;
       highlight: boolean | null;
       performance: string | null;
@@ -126,6 +167,13 @@ export const route = defineApiRoute({
     const existing: (Match | null)[] = [];
     const actors: { id: number; firstname: string; lastname: string }[] = [];
     for (const [index, item] of body.credits.entries()) {
+      if (item.cast_rank !== undefined && key.contentType !== "video_game") {
+        throw new ApiError(
+          400,
+          "invalid_request",
+          `credits.${index}: only game credits can be ranked.`,
+        );
+      }
       if (item.game_character_id !== null && key.contentType !== "video_game") {
         throw new ApiError(400, "invalid_request", `credits.${index}: only games have characters.`);
       }
@@ -200,6 +248,7 @@ export const route = defineApiRoute({
         if (exact) {
           match = {
             id: exact.id,
+            gameCharacterId: exact.game_character_id,
             linked: null,
             highlight: exact.highlight,
             performance: exact.performance,
@@ -219,6 +268,7 @@ export const route = defineApiRoute({
           if (only) {
             match = {
               id: only.id,
+              gameCharacterId: only.game_character_id,
               linked: only.game_character_id,
               highlight: only.highlight,
               performance: only.performance,
@@ -250,6 +300,51 @@ export const route = defineApiRoute({
       existing.push(match);
     }
 
+    // Ranks: placed together on the game's cast order, the way the database will place them.
+    const placements: (CastPlacement | null)[] = body.credits.map((item, index) => {
+      if (item.cast_rank === undefined) return null;
+      const gameCharacterId = item.game_character_id ?? existing[index]?.gameCharacterId ?? null;
+      if (gameCharacterId === null) {
+        throw new ApiError(
+          409,
+          "unlinked_credit",
+          `credits.${index}: the cast order lists game characters; send game_character_id to rank this credit.`,
+        );
+      }
+      return { gameCharacterId, rank: item.cast_rank };
+    });
+    let castOrder: { version: number; from: string[]; to: string[] } | null = null;
+    const requested = placements.filter((placement) => placement !== null);
+    if (requested.length > 0) {
+      const order = await loadGameCastOrder(event, key.contentId);
+      if (!order) throw new ApiError(404, "not_found", "Game not found.");
+      if (body.cast_order_version !== undefined && body.cast_order_version !== order.version) {
+        throw new ApiError(
+          412,
+          "precondition_failed",
+          `The cast order changed since version ${body.cast_order_version} (now ${order.version}); run the dry run again.`,
+        );
+      }
+      const from = order.characters.map((character) => character.game_character_id);
+      const placed = applyCastPlacements(from, requested);
+      if (!placed.ok) {
+        throw new ApiError(422, "invalid_request", `credits: ${castPlacementMessage(placed)}`);
+      }
+      castOrder = { version: order.version, from, to: placed.order };
+    }
+    const rankChange = (index: number): RankChange | null => {
+      const placement = placements[index];
+      if (!placement || !castOrder) return null;
+      const position = (list: string[]) => {
+        const at = list.indexOf(placement.gameCharacterId);
+        return at === -1 ? null : at + 1;
+      };
+      return { from: position(castOrder.from), to: position(castOrder.to) };
+    };
+    // When the order changes, every rank of the request is sent, even ones already in place: the
+    // database recomputes the same placement from the same version.
+    const orderChanges = castOrder !== null && castOrder.from.join(",") !== castOrder.to.join(",");
+
     const base = apiMediaPath(key.segment, key.contentId);
     const dryRun = query.dry_run === "true";
     if (dryRun) {
@@ -258,7 +353,7 @@ export const route = defineApiRoute({
         data: body.credits.map((item, index) => {
           const match = existing[index] ?? null;
           if (match !== null) {
-            const change = diffCredit(item, match);
+            const change = diffCredit(item, match, rankChange(index));
             return {
               action: change === null ? ("unchanged" as const) : ("update" as const),
               credit: `${base}/credits/${match.id}`,
@@ -282,9 +377,11 @@ export const route = defineApiRoute({
               actor_id: item.actor_id,
               game_character_id: item.game_character_id,
               highlight: item.highlight ?? false,
+              cast_rank: item.cast_rank ?? null,
             },
           };
         }),
+        cast_order: castOrder,
       };
     }
 
@@ -292,6 +389,10 @@ export const route = defineApiRoute({
     // rejected item rolls back the whole request. Matched credits that already agree are not sent.
     const toSend = body.credits.flatMap<{ index: number; payload: Json }>((item, index) => {
       const match = existing[index];
+      const rank =
+        orderChanges && castOrder && item.cast_rank !== undefined
+          ? { cast_rank: item.cast_rank, cast_order_version: castOrder.version }
+          : {};
       if (!match) {
         return [
           {
@@ -306,20 +407,22 @@ export const route = defineApiRoute({
               character_name: item.character_name,
               performance: item.performance ?? "dialogues",
               highlight: item.highlight ?? false,
+              ...rank,
             },
           },
         ];
       }
-      const change = diffCredit(item, match);
-      if (!change) return [];
+      const change = diffCredit(item, match, rankChange(index));
+      if (!change && !("cast_rank" in rank)) return [];
       return [
         {
           index,
           payload: {
             work_id: match.id,
             expected_updated_at: match.updatedAt,
-            ...(change.performance ? { performance: change.performance.to } : {}),
-            ...(change.highlight ? { highlight: change.highlight.to } : {}),
+            ...(change?.performance ? { performance: change.performance.to } : {}),
+            ...(change?.highlight ? { highlight: change.highlight.to } : {}),
+            ...rank,
           },
         },
       ];
@@ -337,7 +440,7 @@ export const route = defineApiRoute({
     const results = body.credits.map((_, index) => {
       const name = existing[index];
       if (name) {
-        const change = diffCredit(body.credits[index] ?? {}, name);
+        const change = diffCredit(body.credits[index] ?? {}, name, rankChange(index));
         return {
           action: change === null ? ("unchanged" as const) : ("update" as const),
           credit: `${base}/credits/${name.id}`,
@@ -384,7 +487,21 @@ export const route = defineApiRoute({
           .slice(0, 10),
       });
     }
-    return { dry_run: false, data: results };
+    const writtenOrder = written.find((credit) => credit.cast_order)?.cast_order;
+    return {
+      dry_run: false,
+      data: results,
+      cast_order:
+        castOrder === null
+          ? null
+          : writtenOrder
+            ? {
+                version: writtenOrder.version,
+                from: castOrder.from,
+                to: writtenOrder.characters.map((character) => character.game_character_id),
+              }
+            : castOrder,
+    };
   },
 });
 

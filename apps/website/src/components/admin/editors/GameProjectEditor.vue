@@ -23,149 +23,160 @@
     @submit="saveGameProject"
   >
     <template #cast>
-      <AdminProjectCastWorkspace
-        v-model:selected-key="selectedCastKey"
-        :rows="castView"
-        :show-original-actor="false"
-        @add="addCastRow"
-        @remove="removeCastRow"
-      >
-        <template #detail>
-          <div v-if="selectedRow" :key="selectedRow.key" class="space-y-5">
-            <AdminFormField :label="$t('projectEditor.character')">
-              <AdminAsyncAutocomplete
-                v-model="selectedRow.character_ref"
-                @update:model-value="
-                  (val: string | number | null) => handleCharacterSelect(selectedRow!, val)
-                "
-                :options="initialCharacterOptions"
-                :search-fn="searchCharacters"
-                :placeholder="$t('projectEditor.searchGameCharacter')"
-                :allow-create="true"
-                :display-fn="
-                  (id: string | number) => getCharacterName(id) || selectedRow!.character_name
-                "
-                @create="(query: string) => handleCharacterCreate(selectedRow!, query)"
-              >
-                <template #leading>
-                  <AdminCastAvatar
-                    size="xs"
-                    :name="
-                      selectedRow.character_name || getCharacterName(selectedRow.character_ref)
-                    "
-                    :src="characterImageById(selectedRow.character_ref)"
-                  />
-                </template>
-                <template #option="{ option }">
-                  <span class="flex items-center gap-2">
-                    <AdminCastAvatar
-                      size="sm"
-                      :name="option.name"
-                      :src="igdbImageUrl(option.mug_shot)"
-                    />{{ option.name }}
-                  </span>
-                </template>
-              </AdminAsyncAutocomplete>
-              <button
-                type="button"
-                class="text-xs theme-text-muted underline-offset-2 hover:underline"
-                @click="handleCharacterFreeText(selectedRow!)"
-              >
-                {{ $t("projectEditor.gameFreeTextRole") }}
-              </button>
-              <p
-                v-if="characterCatalogStatus === 'unavailable'"
-                role="status"
-                class="text-xs theme-status-warning-text"
-              >
-                {{ $t("projectEditor.gameCharactersUnavailable") }}
-              </p>
-              <p
-                v-else-if="providerCharacterCount === 0"
-                role="status"
-                class="text-xs theme-text-muted"
-              >
-                {{ $t("projectEditor.gameNoProviderCharacters") }}
-              </p>
-              <div
-                v-if="getLocalCharacter(selectedRow!)"
-                class="mt-2 space-y-2 rounded-lg border theme-border theme-surface-muted p-3"
-              >
-                <div
-                  v-for="candidate in getIgdbCandidates(selectedRow!)"
-                  :key="candidate.id"
-                  class="flex flex-wrap items-center justify-between gap-2 text-xs"
+      <div class="space-y-4">
+        <!-- One order per game, shared by every language; saved on its own, not with the project. -->
+        <AdminGameCastOrderCard
+          v-if="igdbGameId"
+          :game-id="igdbGameId"
+          :characters="castOrderCatalog"
+          :project-character-ids="projectCharacterIds"
+          @saved="castRanks = $event"
+          @registered="reloadGameCharacterOptions"
+        />
+        <AdminProjectCastWorkspace
+          v-model:selected-key="selectedCastKey"
+          :rows="castView"
+          :show-original-actor="false"
+          @add="addCastRow"
+          @remove="removeCastRow"
+        >
+          <template #detail>
+            <div v-if="selectedRow" :key="selectedRow.key" class="space-y-5">
+              <AdminFormField :label="$t('projectEditor.character')">
+                <AdminAsyncAutocomplete
+                  v-model="selectedRow.character_ref"
+                  @update:model-value="
+                    (val: string | number | null) => handleCharacterSelect(selectedRow!, val)
+                  "
+                  :options="initialCharacterOptions"
+                  :search-fn="searchCharacters"
+                  :placeholder="$t('projectEditor.searchGameCharacter')"
+                  :allow-create="true"
+                  :display-fn="
+                    (id: string | number) => getCharacterName(id) || selectedRow!.character_name
+                  "
+                  @create="(query: string) => handleCharacterCreate(selectedRow!, query)"
                 >
-                  <span class="theme-text-secondary">
-                    {{ $t("projectEditor.gamePossibleMatch", { name: candidate.name }) }}
-                  </span>
-                  <button
-                    type="button"
-                    class="theme-status-info-text underline-offset-2 hover:underline disabled:opacity-50"
-                    :disabled="isUpdatingCharacterReferences"
-                    @click="
-                      updateGameCharacterReferences(selectedRow!, {
-                        igdb_character_id: candidate.igdb_character_id,
-                      })
-                    "
-                  >
-                    {{ $t("projectEditor.gameConfirmLink") }}
-                  </button>
-                </div>
-                <div class="flex flex-wrap items-end gap-2">
-                  <label class="min-w-48 flex-1 text-xs theme-text-secondary">
-                    {{ $t("projectEditor.gameWikidataQid") }}
-                    <input
-                      :value="getWikidataDraft(selectedRow!)"
-                      type="text"
-                      inputmode="text"
-                      placeholder="Q12345"
-                      class="mt-1 w-full rounded-lg border theme-border theme-input px-2 py-1.5"
-                      @input="setWikidataDraft(selectedRow!, $event)"
+                  <template #leading>
+                    <AdminCastAvatar
+                      size="xs"
+                      :name="
+                        selectedRow.character_name || getCharacterName(selectedRow.character_ref)
+                      "
+                      :src="characterImageById(selectedRow.character_ref)"
                     />
-                  </label>
-                  <button
-                    type="button"
-                    class="theme-status-info-text underline-offset-2 hover:underline disabled:opacity-50"
-                    :disabled="isUpdatingCharacterReferences"
-                    @click="saveWikidataReference(selectedRow!)"
+                  </template>
+                  <template #option="{ option }">
+                    <span class="flex items-center gap-2">
+                      <AdminCastAvatar
+                        size="sm"
+                        :name="option.name"
+                        :src="igdbImageUrl(option.mug_shot)"
+                      />{{ option.name }}
+                    </span>
+                  </template>
+                </AdminAsyncAutocomplete>
+                <button
+                  type="button"
+                  class="text-xs theme-text-muted underline-offset-2 hover:underline"
+                  @click="handleCharacterFreeText(selectedRow!)"
+                >
+                  {{ $t("projectEditor.gameFreeTextRole") }}
+                </button>
+                <p
+                  v-if="characterCatalogStatus === 'unavailable'"
+                  role="status"
+                  class="text-xs theme-status-warning-text"
+                >
+                  {{ $t("projectEditor.gameCharactersUnavailable") }}
+                </p>
+                <p
+                  v-else-if="providerCharacterCount === 0"
+                  role="status"
+                  class="text-xs theme-text-muted"
+                >
+                  {{ $t("projectEditor.gameNoProviderCharacters") }}
+                </p>
+                <div
+                  v-if="getLocalCharacter(selectedRow!)"
+                  class="mt-2 space-y-2 rounded-lg border theme-border theme-surface-muted p-3"
+                >
+                  <div
+                    v-for="candidate in getIgdbCandidates(selectedRow!)"
+                    :key="candidate.id"
+                    class="flex flex-wrap items-center justify-between gap-2 text-xs"
                   >
-                    {{ $t("projectEditor.gameSaveQid") }}
-                  </button>
-                  <button
-                    v-if="getLocalCharacter(selectedRow!)?.igdb_character_id"
-                    type="button"
-                    class="theme-status-danger-text underline-offset-2 hover:underline disabled:opacity-50"
-                    :disabled="isUpdatingCharacterReferences"
-                    @click="
-                      updateGameCharacterReferences(selectedRow!, {
-                        igdb_character_id: null,
-                      })
-                    "
-                  >
-                    {{ $t("projectEditor.gameUnlinkIgdb") }}
-                  </button>
+                    <span class="theme-text-secondary">
+                      {{ $t("projectEditor.gamePossibleMatch", { name: candidate.name }) }}
+                    </span>
+                    <button
+                      type="button"
+                      class="theme-status-info-text underline-offset-2 hover:underline disabled:opacity-50"
+                      :disabled="isUpdatingCharacterReferences"
+                      @click="
+                        updateGameCharacterReferences(selectedRow!, {
+                          igdb_character_id: candidate.igdb_character_id,
+                        })
+                      "
+                    >
+                      {{ $t("projectEditor.gameConfirmLink") }}
+                    </button>
+                  </div>
+                  <div class="flex flex-wrap items-end gap-2">
+                    <label class="min-w-48 flex-1 text-xs theme-text-secondary">
+                      {{ $t("projectEditor.gameWikidataQid") }}
+                      <input
+                        :value="getWikidataDraft(selectedRow!)"
+                        type="text"
+                        inputmode="text"
+                        placeholder="Q12345"
+                        class="mt-1 w-full rounded-lg border theme-border theme-input px-2 py-1.5"
+                        @input="setWikidataDraft(selectedRow!, $event)"
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      class="theme-status-info-text underline-offset-2 hover:underline disabled:opacity-50"
+                      :disabled="isUpdatingCharacterReferences"
+                      @click="saveWikidataReference(selectedRow!)"
+                    >
+                      {{ $t("projectEditor.gameSaveQid") }}
+                    </button>
+                    <button
+                      v-if="getLocalCharacter(selectedRow!)?.igdb_character_id"
+                      type="button"
+                      class="theme-status-danger-text underline-offset-2 hover:underline disabled:opacity-50"
+                      :disabled="isUpdatingCharacterReferences"
+                      @click="
+                        updateGameCharacterReferences(selectedRow!, {
+                          igdb_character_id: null,
+                        })
+                      "
+                    >
+                      {{ $t("projectEditor.gameUnlinkIgdb") }}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </AdminFormField>
+              </AdminFormField>
 
-            <AdminCastVoiceActorField
-              v-model="selectedRow.voice_actor_id"
-              :options="initialVoiceActorOptions"
-              :lookups="lookups"
-              @create="
-                (query: string) =>
-                  openCreateVaDialog(query, (id: number) => (selectedRow!.voice_actor_id = id))
-              "
-            />
-            <AdminCastPerformanceField v-model="selectedRow.performance" />
-            <AdminCastNoteHighlight
-              v-model:note="selectedRow.note"
-              v-model:highlight="selectedRow.highlight"
-            />
-          </div>
-        </template>
-      </AdminProjectCastWorkspace>
+              <AdminCastVoiceActorField
+                v-model="selectedRow.voice_actor_id"
+                :options="initialVoiceActorOptions"
+                :lookups="lookups"
+                @create="
+                  (query: string) =>
+                    openCreateVaDialog(query, (id: number) => (selectedRow!.voice_actor_id = id))
+                "
+              />
+              <AdminCastPerformanceField v-model="selectedRow.performance" />
+              <AdminCastNoteHighlight
+                v-model:note="selectedRow.note"
+                v-model:highlight="selectedRow.highlight"
+              />
+            </div>
+          </template>
+        </AdminProjectCastWorkspace>
+      </div>
     </template>
 
     <template #overview>
@@ -266,6 +277,8 @@ import { useDisplayLanguage } from "~/composables/useDisplayLanguage";
 import { useEditorToast } from "~/composables/useEditorToast";
 import { createEditorRowKey, useEditorFormState } from "~/composables/useEditorFormState";
 import { useMediaImage } from "~/composables/useMediaImage";
+import { sortRowsByCastRank } from "~/utils/game-cast-order";
+import type { CastOrderCatalogCharacter } from "~/components/admin/GameCastOrderCard.vue";
 
 const mediaImage = useMediaImage();
 
@@ -367,6 +380,8 @@ type GameCharacterOption = {
   local_name: string | null;
   local_updated_at: string | null;
   igdb_candidate_ids: number[];
+  /** Position in the game's cast order (registered characters only); null when unranked. */
+  cast_rank?: number | null;
   mug_shot?: { image_id: string; url?: string } | null;
 };
 
@@ -631,6 +646,50 @@ const igdbImageUrl = (image: GameCharacterOption["mug_shot"]): string | null =>
   mediaImage(image?.image_id || image?.url, { igdbSize: "thumb" }) ?? null;
 const characterImageById = (id: number | string | null): string | null =>
   igdbImageUrl(igdbCharacters.value.find((character) => character.id === id)?.mug_shot);
+// Positions in the game's cast order, by game character; refreshed when the order is saved.
+const castRanks = ref<Record<string, number>>({});
+const castOrderCatalog = computed<CastOrderCatalogCharacter[]>(() => {
+  const local = igdbCharacters.value.filter((character) => character.game_character_id !== null);
+  const localNames = new Set(
+    local.map((character) => (character.local_name ?? character.name).trim().toLowerCase()),
+  );
+  const localIgdbIds = new Set(
+    local.flatMap((character) => [
+      ...(character.igdb_character_id === null ? [] : [character.igdb_character_id]),
+      ...character.igdb_candidate_ids,
+    ]),
+  );
+  return [
+    ...local.map((character) => ({
+      key: String(character.id),
+      name: character.local_name ?? character.name,
+      gameCharacterId: character.game_character_id,
+    })),
+    // IGDB-only characters, unless a registered character already stands for them.
+    ...igdbCharacters.value
+      .filter(
+        (character) =>
+          character.identity_source === "igdb" &&
+          !localNames.has(character.name.trim().toLowerCase()) &&
+          (character.igdb_character_id === null || !localIgdbIds.has(character.igdb_character_id)),
+      )
+      .map((character) => ({
+        key: String(character.id),
+        name: character.name,
+        gameCharacterId: null,
+      })),
+  ];
+});
+const projectCharacterIds = computed(() => [
+  ...new Set(
+    castRows.value.flatMap((row) =>
+      row.game_character_id && !Object.hasOwn(draftCharacters.value, row.game_character_id)
+        ? [row.game_character_id]
+        : [],
+    ),
+  ),
+]);
+
 const castView = computed<CastWorkspaceRow[]>(() =>
   castRows.value.map((row) => ({
     key: row.key,
@@ -643,6 +702,9 @@ const castView = computed<CastWorkspaceRow[]>(() =>
     assigned: row.voice_actor_id !== null,
     performance: row.performance,
     highlight: row.highlight,
+    ...(row.game_character_id && castRanks.value[row.game_character_id] !== undefined
+      ? { castRank: castRanks.value[row.game_character_id] }
+      : {}),
   })),
 );
 
@@ -870,7 +932,15 @@ watch(
       crewState.load(data.crew ?? []);
 
       if (data.works) {
-        castRows.value = data.works.map((w) => {
+        // Show the project's roles in the game's cast order: ranked characters first.
+        const loadedRanks = Object.fromEntries(
+          igdbCharacters.value.flatMap((character) =>
+            character.game_character_id && typeof character.cast_rank === "number"
+              ? [[character.game_character_id, character.cast_rank]]
+              : [],
+          ),
+        );
+        const rows = data.works.map((w): CastRow => {
           const gameCharacterId = w.game_character_id ?? null;
           if (w.voice_actors && w.voice_actor_id !== null) {
             const name =
@@ -900,6 +970,10 @@ watch(
             },
           };
         });
+        castRows.value = sortRowsByCastRank(rows, (row) =>
+          row.game_character_id ? (loadedRanks[row.game_character_id] ?? null) : null,
+        );
+        castRanks.value = loadedRanks;
       }
 
       if (data.initialStudios) {

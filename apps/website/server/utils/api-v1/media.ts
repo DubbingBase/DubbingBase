@@ -54,6 +54,9 @@ export const PERFORMANCES = [
 
 export const performanceSchema = v.picklist(PERFORMANCES);
 
+/** Position of a game character in the game cast: 1 is first. Ties are allowed. */
+export const castRankSchema = v.pipe(v.number(), v.integer(), v.minValue(1), v.maxValue(10000));
+
 export interface MediaKey {
   segment: MediaSegment;
   contentType: DubbingProjectMediaType;

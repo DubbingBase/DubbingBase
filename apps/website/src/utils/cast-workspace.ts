@@ -11,6 +11,8 @@ export interface CastWorkspaceRow {
   assigned: boolean;
   performance: string;
   highlight: boolean;
+  /** Position of the role's game character in the game's cast order; unset when unranked. */
+  castRank?: number;
 }
 
 export type CastFilter = "all" | "unassigned" | "assigned";

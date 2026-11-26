@@ -49,19 +49,25 @@ export function buildOpenApiSpec() {
           "so copy them from IGDB. Then reference it as `game_character_id` on credits. Characters that share an actor, such as Taylor and Tanya, are separate characters. " +
           "Reuse existing character names exactly: a credit is identified by media, language, voice actor, cast id and character name.\n" +
           "3. Sync with `POST /{type}/{id}/credits/sync` (up to 50 credits). A credit is identified by language, voice actor, cast id and character name. " +
-          "Each item comes back `create` (missing, added), `update` (it exists but `performance` or `highlight` differs, so `changes` lists `from`/`to` and it is changed) or `unchanged`. " +
-          "Omit `performance` or `highlight` to leave an existing credit's value alone; a new credit gets `dialogues` and `false`. " +
+          "Each item comes back `create` (missing, added), `update` (it exists but `performance`, `highlight` or `cast_rank` differs, so `changes` lists `from`/`to` and it is changed) or `unchanged`. " +
+          "Omit `performance`, `highlight` or `cast_rank` to leave an existing credit's value alone; a new credit gets `dialogues`, `false` and no rank. " +
           "Credits you do not list are never touched. The call is idempotent: sending the same body again returns `unchanged` for everything.\n" +
-          "4. Add `?dry_run=true` to preview the same result without writing; a `create` item carries `would_create`. " +
+          "4. Add `?dry_run=true` to preview the same result without writing; a `create` item carries `would_create` and an `update` item its `changes`, including a `cast_rank` change. " +
+          "When items carry `cast_rank`, the response's `cast_order` shows the game's whole order before and after, including characters that shift; send the dry run's `cast_order.version` back as `cast_order_version` and the real sync is refused with 412 if the order changed in between. " +
           "The sync is all or nothing: if one item is rejected, nothing is written and the error names it (`credits.2`). " +
           "If you leave `game_character_id` out and one credit with that name, voice actor and cast id is already linked to a game character, it is matched to that credit and `linked_game_character_id` returns the character; several such credits give 409 `ambiguous_credit`. " +
           "The token needs both `credits:create` and `credits:update`.\n" +
-          "5. Fix a single credit with `PATCH /{type}/{id}/credits/{workId}`: `performance`, `character_name`, `actor_id`, `game_character_id` and `highlight` (send only what changes). " +
-          "`highlight: true` marks a main character, who is listed first on the game page. " +
+          "5. Fix a single credit with `PATCH /{type}/{id}/credits/{workId}`: `performance`, `character_name`, `actor_id`, `game_character_id`, `highlight` and `cast_rank` (send only what changes). " +
+          "`highlight: true` marks a main character. " +
+          "`cast_rank` (games only) moves the credit's game character to that position of the game's cast order and shifts the others; null takes it out. " +
+          "The credit must have a `game_character_id` (409 `unlinked_credit` otherwise), and the rank can be at most one past the end of the order (422). " +
+          "Ranks shown on credits are the order's positions, so they are never tied or skipped. " +
           "`GET` and `PATCH` return an `ETag`; send it back as `If-Match` on PATCH and a credit changed in the meantime is refused with 412 `precondition_failed` instead of being overwritten. " +
           "This is how to complete a credit that has no character name: it keeps its id, history and review state. " +
           "A sync item for a voice actor who already has a nameless credit with the same cast id is refused with 409 `nameless_credit_exists` naming that credit, so complete it with PATCH. " +
-          "The API cannot delete credits; leave that to the website.",
+          "The API cannot delete credits; leave that to the website.\n" +
+          "6. A game's cast order is one list shared by every language: `GET /games/{id}/cast-order` returns its ranked characters at positions 1..n with an `ETag`, and `PUT /games/{id}/cast-order` replaces the whole list (`If-Match` required; 412 if it changed). " +
+          "The game page lists ranked characters first, then the others: highlighted, then voiced, then alphabetical. Any character can be ranked, highlighted or not; new IGDB or DubbingBase characters stay unranked until placed, and existing positions never move on their own.",
         "## Rules",
         "Writes behave as if the token's owner made them. Credits carry a `reviewed_status`: `waiting` (added by someone " +
           "who is not trusted for that voice actor, pending an editor's verification), `accepted` (verified) or `rejected`. " +

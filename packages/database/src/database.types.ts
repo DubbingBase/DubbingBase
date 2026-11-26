@@ -233,6 +233,68 @@ export type Database = {
           },
         ];
       };
+      game_cast_order_entries: {
+        Row: {
+          game_character_id: string;
+          media_id: number;
+          position: number;
+        };
+        Insert: {
+          game_character_id: string;
+          media_id: number;
+          position: number;
+        };
+        Update: {
+          game_character_id?: string;
+          media_id?: number;
+          position?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "game_cast_order_entries_character_fkey";
+            columns: ["game_character_id", "media_id"];
+            isOneToOne: true;
+            referencedRelation: "game_characters";
+            referencedColumns: ["id", "media_id"];
+          },
+          {
+            foreignKeyName: "game_cast_order_entries_media_id_fkey";
+            columns: ["media_id"];
+            isOneToOne: false;
+            referencedRelation: "game_cast_orders";
+            referencedColumns: ["media_id"];
+          },
+        ];
+      };
+      game_cast_orders: {
+        Row: {
+          media_id: number;
+          updated_at: string;
+          updated_by: string | null;
+          version: number;
+        };
+        Insert: {
+          media_id: number;
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Update: {
+          media_id?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "game_cast_orders_media_id_fkey";
+            columns: ["media_id"];
+            isOneToOne: true;
+            referencedRelation: "media";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       game_characters: {
         Row: {
           created_at: string;
@@ -1634,6 +1696,16 @@ export type Database = {
             };
             Returns: number;
           };
+      set_game_cast_order: {
+        Args: {
+          p_actor_id: string;
+          p_character_ids: string[];
+          p_expected_version: number;
+          p_igdb_game_id: number;
+          p_origin: string;
+        };
+        Returns: Json;
+      };
       skip_gamification_task_retry_safe: {
         Args: { p_category: string; p_skip_claim_id: string; p_user_id: string };
         Returns: {

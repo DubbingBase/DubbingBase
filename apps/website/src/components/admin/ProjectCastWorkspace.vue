@@ -99,6 +99,14 @@
                     class="mt-1 h-3.5 w-3.5 shrink-0 fill-current text-[var(--app-color-rating)]"
                     aria-hidden="true"
                   />
+                  <span
+                    v-if="row.castRank !== undefined"
+                    class="mt-0.5 shrink-0 rounded-md border theme-border px-1.5 text-[11px] font-semibold tabular-nums theme-text-secondary"
+                    :title="$t('projectEditor.castOrderPosition', { position: row.castRank })"
+                    data-testid="cast-rank"
+                  >
+                    #{{ row.castRank }}
+                  </span>
                 </span>
               </span>
               <span v-if="showOriginalActor" class="flex min-w-0 items-center gap-2.5">

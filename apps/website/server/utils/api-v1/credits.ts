@@ -7,6 +7,7 @@ import { useSupabaseAdmin } from "../db/client";
 import { notifyContributionEdit, type ContributionEdit } from "../notifications/contribution";
 import { ApiError } from "./errors";
 import { apiMediaPath, performanceSchema, type MediaKey } from "./media";
+import { GameCastOrderSchema } from "../cast-order";
 
 export const CreditActor = v.object({
   id: v.number(),
@@ -28,6 +29,11 @@ export const Credit = v.object({
   performance: v.nullable(performanceSchema),
   note: v.nullable(v.string()),
   highlight: v.nullable(v.boolean()),
+  /**
+   * Games only: position of the credit's game character in the game's cast order (1 = first),
+   * shared by every language. Null when unranked; unranked characters follow the ranked ones.
+   */
+  cast_rank: v.nullable(v.number()),
   /** `waiting`, `accepted` or `rejected`: whether a trusted editor has verified the credit. */
   reviewed_status: v.nullable(v.string()),
   updated_at: v.string(),
@@ -35,7 +41,7 @@ export const Credit = v.object({
 
 export type CreditOutput = v.InferOutput<typeof Credit>;
 
-export const CREDIT_SELECT = `id, dubbing_project_id, character_name, actor_id, game_character_id, performance, note, highlight, reviewed_status, updated_at, voice_actors(id, firstname, lastname), dubbing_projects(language, ${MEDIA_EMBED})`;
+export const CREDIT_SELECT = `id, dubbing_project_id, character_name, actor_id, game_character_id, performance, note, highlight, reviewed_status, updated_at, voice_actors(id, firstname, lastname), game_character:game_characters(cast_order:game_cast_order_entries(position)), dubbing_projects(language, ${MEDIA_EMBED})`;
 
 const CreditRow = v.object({
   id: v.number(),
@@ -49,6 +55,10 @@ const CreditRow = v.object({
   updated_at: v.string(),
   voice_actors: v.nullable(
     v.object({ id: v.number(), firstname: v.string(), lastname: v.string() }),
+  ),
+  game_character: v.optional(
+    v.nullable(v.object({ cast_order: v.nullable(v.object({ position: v.number() })) })),
+    null,
   ),
   dubbing_projects: v.nullable(
     v.object({
@@ -79,9 +89,15 @@ export function toCredit(
     performance: known.success ? known.output : null,
     note: row.note,
     highlight: row.highlight,
+    cast_rank: creditCastRank(row),
     reviewed_status: row.reviewed_status,
     updated_at: row.updated_at,
   };
+}
+
+/** The cast order position of a credit's game character, or null. */
+export function creditCastRank(row: Pick<v.InferOutput<typeof CreditRow>, "game_character">) {
+  return row.game_character?.cast_order?.position ?? null;
 }
 
 const MEDIA_NOT_IMPORTED = "Media not imported yet.";
@@ -135,8 +151,10 @@ const MutationResults = v.array(
   v.object({
     work_id: v.number(),
     created: v.boolean(),
-    /** The credit row as the transaction wrote it. */
+    /** The credit row as the transaction wrote it, with its `cast_rank`. */
     after: v.nullable(v.record(v.string(), v.unknown())),
+    /** The game's cast order after the request, when the request placed characters in it. */
+    cast_order: v.optional(v.nullable(GameCastOrderSchema), null),
   }),
 );
 
@@ -170,8 +188,15 @@ export async function mutateCredits(
         throw new ApiError(403, "forbidden", `${where}: not allowed.`);
       case "P0002":
         throw new ApiError(404, "not_found", `${where}: credit not found.`);
+      case "PT412":
+        throw new ApiError(
+          412,
+          "precondition_failed",
+          "The cast order changed since you read it; read it again and retry. Nothing was written.",
+        );
       case "55000":
       case "23505":
+      case "23514":
       case "40001":
       case "40P01":
       case "PT409":
@@ -202,7 +227,11 @@ export function notifyCreditChange(
   );
 }
 
-/** The entity tag of a credit: its last change, quoted as HTTP requires. */
-export function creditEtag(updatedAt: string): string {
-  return `"${updatedAt}"`;
+/**
+ * The entity tag of a credit, quoted as HTTP requires: its last change, plus its cast rank when it
+ * has one. The rank lives on the shared game character, so it can change without the credit row.
+ * An unranked credit keeps the plain tag.
+ */
+export function creditEtag(updatedAt: string, castRank: number | null = null): string {
+  return castRank === null ? `"${updatedAt}"` : `"${updatedAt}#${castRank}"`;
 }

@@ -486,6 +486,38 @@ describe("GET /api/detail-collections", () => {
     expect(cards.map(({ name }) => name)).toEqual(["Dan", "Cara", "Zed", "Alice", "Bob"]);
   });
 
+  it("lists ranked characters first by rank, then the others in the default order", () => {
+    const voiceActor = { id: 5, firstname: "A", lastname: "B" };
+    const peter = "11111111-1111-4111-8111-111111111111";
+    const cards = formatGameDetailCastCards(
+      [
+        { id: 1, name: "Aunt May" },
+        { id: 2, name: "Martin Li" },
+        { id: null, name: "Peter Parker", game_character_id: peter, cast_rank: 1 },
+        // Ranked without a credit in this language, and not highlighted.
+        { id: null, name: "Miles Morales", game_character_id: "m", cast_rank: 2 },
+      ],
+      {
+        works: [
+          { id: 1, actor_id: 1, voice_actor: voiceActor, highlight: true },
+          { id: 2, actor_id: 2, voice_actor: voiceActor, highlight: true },
+          { id: 3, game_character_id: peter, voice_actor: voiceActor, highlight: true },
+          // A credit without a catalog character is never ranked.
+          { id: 4, character_name: "Yuri", game_character_id: null, voice_actor: voiceActor },
+        ],
+      },
+    );
+
+    expect(cards.map(({ name }) => name)).toEqual([
+      "Peter Parker",
+      "Miles Morales",
+      "Aunt May",
+      "Martin Li",
+      "Yuri",
+    ]);
+    expect(cards.map(({ castRank }) => castRank)).toEqual([1, 2, undefined, undefined, undefined]);
+  });
+
   it("matches local game characters by UUID and never by null provider IDs", () => {
     const cards = formatGameDetailCastCards(
       [

@@ -71,6 +71,8 @@ export type GameDetailCastCard = {
   work_id?: number;
   /** Editors flagged this role as a main/relevant character. */
   highlighted?: boolean;
+  /** Position of the character in the game's cast order (1 = first), shared by every language. */
+  castRank?: number;
   voiceActor: DetailVoiceActor | null;
 };
 
@@ -177,6 +179,7 @@ export function formatGameDetailCastCards(
     stable_id?: string;
     game_character_id?: string | null;
     igdb_character_id?: number | null;
+    cast_rank?: number | null;
   })[],
   project: unknown,
 ): GameDetailCastCard[] {
@@ -238,18 +241,23 @@ export function formatGameDetailCastCards(
       matchingWorks.push(work);
     }
     const cardsForCharacter = matchingWorks.length > 0 ? matchingWorks : [null];
-    return cardsForCharacter.map((work) => ({
-      ...character,
-      id: work ? `${characterKey}-${String(work.id)}` : characterKey,
-      name: character.name,
-      ...(work && numberValue(work.id) !== undefined ? { work_id: numberValue(work.id) } : {}),
-      ...(work?.highlight === true ? { highlighted: true } : {}),
-      voiceActor: work ? formatGameVoiceActor(work) : null,
-    }));
+    return cardsForCharacter.map((work) => {
+      const castRank = numberValue(character.cast_rank);
+      return {
+        ...character,
+        id: work ? `${characterKey}-${String(work.id)}` : characterKey,
+        name: character.name,
+        ...(work && numberValue(work.id) !== undefined ? { work_id: numberValue(work.id) } : {}),
+        ...(work?.highlight === true ? { highlighted: true } : {}),
+        ...(castRank !== undefined ? { castRank } : {}),
+        voiceActor: work ? formatGameVoiceActor(work) : null,
+      };
+    });
   });
 
   const unmatchedCards = works
     .filter((work) => !matchedWorkIds.has(work.id))
+    // Credits without a catalog character are never ranked: the cast order lists game characters.
     .map((work) => ({
       id: `work-${String(work.id)}`,
       name: stringValue(work.character_name) || "Unknown character",
@@ -259,11 +267,19 @@ export function formatGameDetailCastCards(
       voiceActor: formatGameVoiceActor(work),
     }));
 
-  // Main (highlighted) characters first, then voiced ones; the sort is stable, so each group
-  // keeps the catalog's alphabetical order.
-  const rank = (card: GameDetailCastCard): number =>
+  // Explicitly ranked characters first, by rank. Then main (highlighted) characters, then voiced
+  // ones; the sort is stable, so ties and each group keep the catalog's alphabetical order.
+  const relevance = (card: GameDetailCastCard): number =>
     (card.highlighted ? 2 : 0) + (card.voiceActor ? 1 : 0);
-  return [...cards, ...unmatchedCards].sort((left, right) => rank(right) - rank(left));
+  const allCards: GameDetailCastCard[] = [...cards, ...unmatchedCards];
+  return allCards.sort((left, right) => {
+    if (left.castRank !== undefined || right.castRank !== undefined) {
+      if (left.castRank === undefined) return 1;
+      if (right.castRank === undefined) return -1;
+      if (left.castRank !== right.castRank) return left.castRank - right.castRank;
+    }
+    return relevance(right) - relevance(left);
+  });
 }
 
 function formatGameVoiceActor(work: DetailRecord): GameDetailCastCard["voiceActor"] {

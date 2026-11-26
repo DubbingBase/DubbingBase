@@ -62,6 +62,7 @@ function processIgdbCharacter(char: ResolvedGameCharacter, pageProjection: boole
     igdb_character_id: char.igdb_character_id,
     identity_source: char.identity_source,
     local_name: char.local_name,
+    cast_rank: char.cast_rank,
     mug_shot: mugShot,
   };
 }

@@ -5,7 +5,7 @@ import { useSupabaseAdmin } from "./db/client";
 type LocalGameCharacter = Pick<
   Tables<"game_characters">,
   "id" | "name" | "igdb_character_id" | "wikidata_qid" | "updated_at"
-> & { igdb_game_id: number };
+> & { igdb_game_id: number; cast_rank: number | null };
 
 export interface ResolvedGameCharacter extends Omit<IgdbCharacter, "id"> {
   id: number | null;
@@ -17,6 +17,8 @@ export interface ResolvedGameCharacter extends Omit<IgdbCharacter, "id"> {
   local_name: string | null;
   local_updated_at: string | null;
   igdb_candidate_ids: number[];
+  /** Position in the game's cast order (local characters only); null when unranked. */
+  cast_rank: number | null;
 }
 
 export function mergeGameCharacters(
@@ -61,6 +63,7 @@ export function mergeGameCharacters(
       local_name: local.name,
       local_updated_at: local.updated_at,
       igdb_candidate_ids: candidateIds,
+      cast_rank: local.cast_rank,
     });
   }
 
@@ -76,6 +79,7 @@ export function mergeGameCharacters(
       local_name: null,
       local_updated_at: null,
       igdb_candidate_ids: [],
+      cast_rank: null,
     });
   }
 
@@ -108,7 +112,7 @@ export async function loadGameCharacterCatalog(
     const { data, error } = await useSupabaseAdmin(event)
       .from("game_characters")
       .select(
-        "id, name, igdb_character_id, wikidata_qid, updated_at, media:media_id!inner(content_id)",
+        "id, name, igdb_character_id, wikidata_qid, updated_at, cast_order:game_cast_order_entries(position), media:media_id!inner(content_id)",
       )
       .eq("media.kind", "video_game")
       .eq("media.content_id", gameId)
@@ -116,8 +120,9 @@ export async function loadGameCharacterCatalog(
       .order("id");
 
     if (error) throw error;
-    localCharacters = data.map(({ media: _media, ...character }) => ({
+    localCharacters = data.map(({ media: _media, cast_order: castOrder, ...character }) => ({
       ...character,
+      cast_rank: castOrder?.position ?? null,
       igdb_game_id: gameId,
     }));
   } catch (error) {
