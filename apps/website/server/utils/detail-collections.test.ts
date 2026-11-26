@@ -486,6 +486,79 @@ describe("GET /api/detail-collections", () => {
     expect(cards.map(({ name }) => name)).toEqual(["Dan", "Cara", "Zed", "Alice", "Bob"]);
   });
 
+  it("prefers the credit's character name over the linked IGDB name, keeping the IGDB image", () => {
+    const childId = "11111111-1111-4111-8111-111111111111";
+    const adultId = "22222222-2222-4222-8222-222222222222";
+    const peterId = "33333333-3333-4333-8333-333333333333";
+    const mugShot = { image_id: "ciri" };
+    const cards = formatGameDetailCastCards(
+      [
+        {
+          id: 4889,
+          name: "Ciri",
+          game_character_id: childId,
+          igdb_character_id: 4889,
+          local_name: "Ciri (child)",
+          mug_shot: mugShot,
+        },
+        {
+          id: 4889,
+          name: "Ciri",
+          game_character_id: adultId,
+          igdb_character_id: 4889,
+          local_name: "Ciri",
+          mug_shot: mugShot,
+        },
+        {
+          id: 50,
+          name: "Spider-Man",
+          game_character_id: peterId,
+          igdb_character_id: 50,
+          local_name: "Spider-Man",
+        },
+        {
+          id: 51,
+          name: "Miles Morales",
+          game_character_id: null,
+          igdb_character_id: 51,
+          local_name: null,
+        },
+      ],
+      {
+        works: [
+          { id: 75407, game_character_id: childId, character_name: "Ciri (child)" },
+          { id: 75110, game_character_id: adultId, character_name: "Ciri" },
+          { id: 601, game_character_id: peterId, character_name: "Peter Parker" },
+          { id: 602, actor_id: 51, character_name: "  " },
+        ],
+      },
+    );
+
+    const byWork = new Map(cards.map((card) => [card.work_id, card]));
+    expect(byWork.get(75407)?.name).toBe("Ciri (child)");
+    expect(byWork.get(75407)?.mug_shot).toEqual(mugShot);
+    expect(byWork.get(75110)?.name).toBe("Ciri");
+    expect(byWork.get(601)?.name).toBe("Peter Parker");
+    expect(byWork.get(602)?.name).toBe("Miles Morales");
+  });
+
+  it("falls back to the local game character name before the IGDB name without a credit", () => {
+    const cards = formatGameDetailCastCards(
+      [
+        {
+          id: 4889,
+          name: "Ciri",
+          game_character_id: "11111111-1111-4111-8111-111111111111",
+          igdb_character_id: 4889,
+          local_name: "Ciri (child)",
+        },
+      ],
+      { works: [] },
+    );
+
+    expect(cards.map(({ name }) => name)).toEqual(["Ciri (child)"]);
+  });
+
   it("matches local game characters by UUID and never by null provider IDs", () => {
     const cards = formatGameDetailCastCards(
       [

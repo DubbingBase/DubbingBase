@@ -177,6 +177,8 @@ export function formatGameDetailCastCards(
     stable_id?: string;
     game_character_id?: string | null;
     igdb_character_id?: number | null;
+    /** The local game character's own name; `name` may be the linked IGDB character's. */
+    local_name?: string | null;
   })[],
   project: unknown,
 ): GameDetailCastCard[] {
@@ -238,10 +240,13 @@ export function formatGameDetailCastCards(
       matchingWorks.push(work);
     }
     const cardsForCharacter = matchingWorks.length > 0 ? matchingWorks : [null];
+    // Several credits (and game characters) can link to one IGDB character, so the credit's own
+    // name wins; the local game character name, then the IGDB name, are only fallbacks.
+    const fallbackName = character.local_name?.trim() || character.name;
     return cardsForCharacter.map((work) => ({
       ...character,
       id: work ? `${characterKey}-${String(work.id)}` : characterKey,
-      name: character.name,
+      name: stringValue(work?.character_name).trim() || fallbackName,
       ...(work && numberValue(work.id) !== undefined ? { work_id: numberValue(work.id) } : {}),
       ...(work?.highlight === true ? { highlighted: true } : {}),
       voiceActor: work ? formatGameVoiceActor(work) : null,
