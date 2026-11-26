@@ -3,7 +3,6 @@
     <button
       id="home-search-type"
       type="button"
-      role="combobox"
       data-testid="home-search-type"
       aria-haspopup="listbox"
       :aria-expanded="open"
