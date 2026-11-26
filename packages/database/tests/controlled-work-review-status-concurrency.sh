@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+stack_port=$(node "$(dirname "$0")/../../../scripts/local-supabase.mjs" db-port)
+
 # Uses the local disposable Supabase instance and two independent PostgreSQL
 # sessions to prove stale review-status writers serialize on the work row.
 DB_HOST=127.0.0.1
-DB_PORT=${T10_TEST_DB_PORT:-55322}
+DB_PORT=${T10_TEST_DB_PORT:-$stack_port}
 DB_NAME=${PGDATABASE:-postgres}
 DB_USER=postgres
 DB_PASSWORD=${T10_TEST_DB_PASSWORD:-postgres}

@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+stack_port=$(node "$(dirname "$0")/../../../scripts/local-supabase.mjs" db-port)
+
 # Run only against a fresh, seed-disabled local Supabase database. Audit rows
 # are intentionally immutable, so this test leaves synthetic rows for the
 # caller to remove with a local database reset after verification.
 db_host="${DB_HOST:-127.0.0.1}"
-db_port="${DB_PORT:-55322}"
+db_port="${DB_PORT:-$stack_port}"
 db_user="${DB_USER:-postgres}"
 db_name="${DB_NAME:-${PGDATABASE:-postgres}}"
 export PGPASSWORD="${PGPASSWORD:-postgres}"

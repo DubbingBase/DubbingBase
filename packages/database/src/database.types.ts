@@ -10,12 +10,7 @@ export type Database = {
     };
     Functions: {
       graphql: {
-        Args: {
-          extensions?: Json;
-          operationName?: string;
-          query?: string;
-          variables?: Json;
-        };
+        Args: { extensions?: Json; operationName?: string; query?: string; variables?: Json };
         Returns: Json;
       };
     };
@@ -41,6 +36,7 @@ export type Database = {
           token_hash: string;
           user_id: string;
         };
+        ComputedFields: never;
         Insert: {
           created_at?: string;
           expires_at?: string | null;
@@ -75,7 +71,7 @@ export type Database = {
           entity_id: string;
           entity_type: string;
           id: string;
-          metadata: Json;
+          metadata: NonNullable<Json>;
           new_value: Json | null;
           points_awarded: number | null;
           previous_value: Json | null;
@@ -84,6 +80,7 @@ export type Database = {
           reverted_at: string | null;
           user_id: string;
         };
+        ComputedFields: never;
         Insert: {
           action: string;
           changed_fields?: string[];
@@ -91,7 +88,7 @@ export type Database = {
           entity_id: string;
           entity_type: string;
           id?: string;
-          metadata?: Json;
+          metadata?: NonNullable<Json>;
           new_value?: Json | null;
           points_awarded?: number | null;
           previous_value?: Json | null;
@@ -107,7 +104,7 @@ export type Database = {
           entity_id?: string;
           entity_type?: string;
           id?: string;
-          metadata?: Json;
+          metadata?: NonNullable<Json>;
           new_value?: Json | null;
           points_awarded?: number | null;
           previous_value?: Json | null;
@@ -121,23 +118,24 @@ export type Database = {
       dubbing_language_reviews: {
         Row: {
           applied_at: string;
-          decision: Json;
+          decision: NonNullable<Json>;
           id: number;
-          source_snapshot: Json;
+          source_snapshot: NonNullable<Json>;
           target_snapshot: Json | null;
         };
+        ComputedFields: never;
         Insert: {
           applied_at?: string;
-          decision: Json;
+          decision: NonNullable<Json>;
           id?: never;
-          source_snapshot: Json;
+          source_snapshot: NonNullable<Json>;
           target_snapshot?: Json | null;
         };
         Update: {
           applied_at?: string;
-          decision?: Json;
+          decision?: NonNullable<Json>;
           id?: never;
-          source_snapshot?: Json;
+          source_snapshot?: NonNullable<Json>;
           target_snapshot?: Json | null;
         };
         Relationships: [];
@@ -150,6 +148,7 @@ export type Database = {
           job_id: number;
           person_id: number;
         };
+        ComputedFields: never;
         Insert: {
           created_at?: string | null;
           dubbing_project_id: number;
@@ -197,7 +196,9 @@ export type Database = {
           status: string | null;
           studio_id: number | null;
           updated_at: string | null;
+          dubbing_project_completeness: number | null;
         };
+        ComputedFields: "dubbing_project_completeness";
         Insert: {
           created_at?: string | null;
           id?: number;
@@ -245,6 +246,7 @@ export type Database = {
           updated_by: string;
           wikidata_qid: string | null;
         };
+        ComputedFields: never;
         Insert: {
           created_at?: string;
           created_by: string;
@@ -287,6 +289,7 @@ export type Database = {
           locked_at: string | null;
           user_id: string | null;
         };
+        ComputedFields: never;
         Insert: {
           category: string;
           claim_id?: string;
@@ -315,6 +318,7 @@ export type Database = {
           submission_fingerprint: string;
           user_id: string;
         };
+        ComputedFields: never;
         Insert: {
           claim_id: string;
           created_at?: string;
@@ -337,6 +341,7 @@ export type Database = {
           id: number;
           name: string;
         };
+        ComputedFields: never;
         Insert: {
           created_at?: string | null;
           id?: number;
@@ -357,6 +362,7 @@ export type Database = {
           queued_msg_id: number;
           tmdb_id: number;
         };
+        ComputedFields: never;
         Insert: {
           archived_msg_id: number;
           outcome: string;
@@ -381,6 +387,7 @@ export type Database = {
           kind: string;
           wikidata_qid: string | null;
         };
+        ComputedFields: never;
         Insert: {
           content_id: number;
           created_at?: string;
@@ -407,6 +414,7 @@ export type Database = {
           file_path: string;
           id: number;
         };
+        ComputedFields: never;
         Insert: {
           created_at?: string | null;
           created_by?: string | null;
@@ -448,6 +456,7 @@ export type Database = {
           updated_at: string;
           website_url: string | null;
         };
+        ComputedFields: never;
         Insert: {
           city?: string | null;
           country?: string | null;
@@ -488,6 +497,7 @@ export type Database = {
           updated_at: string;
           updated_by: string | null;
         };
+        ComputedFields: never;
         Insert: {
           cover_url?: string | null;
           created_at?: string;
@@ -537,6 +547,7 @@ export type Database = {
           updated_by: string | null;
           user_id: string;
         };
+        ComputedFields: never;
         Insert: {
           bio?: string | null;
           created_at?: string | null;
@@ -573,6 +584,7 @@ export type Database = {
           status: Database["public"]["Enums"]["user_report_status"];
           target_url: string;
         };
+        ComputedFields: never;
         Insert: {
           created_at?: string;
           details?: string | null;
@@ -608,6 +620,7 @@ export type Database = {
           target_user_id: string;
           voice_actor_id: number;
         };
+        ComputedFields: never;
         Insert: {
           actor_id: string;
           audit_log_id?: string | null;
@@ -648,6 +661,7 @@ export type Database = {
           user_id: string;
           voice_actor_id: number;
         };
+        ComputedFields: never;
         Insert: {
           created_at?: string | null;
           created_by?: string | null;
@@ -682,6 +696,7 @@ export type Database = {
           user_id: string;
           voice_actor_id: number;
         };
+        ComputedFields: never;
         Insert: {
           created_at?: string;
           user_id: string;
@@ -723,16 +738,18 @@ export type Database = {
           updated_by: string | null;
           wikidata_id: string | null;
           years_active: string | null;
+          voice_actor_completeness: number | null;
           voice_actor_name: string | null;
         };
+        ComputedFields: "voice_actor_completeness" | "voice_actor_name";
         Insert: {
           awards?: string | null;
           bio?: string | null;
           created_at?: string | null;
           created_by?: string | null;
           date_of_birth?: string | null;
-          duplicate_first_name_tokens?: string[] | null;
-          duplicate_last_name_tokens?: string[] | null;
+          duplicate_first_name_tokens?: never;
+          duplicate_last_name_tokens?: never;
           firstname: string;
           id?: number;
           lastname: string;
@@ -752,8 +769,8 @@ export type Database = {
           created_at?: string | null;
           created_by?: string | null;
           date_of_birth?: string | null;
-          duplicate_first_name_tokens?: string[] | null;
-          duplicate_last_name_tokens?: string[] | null;
+          duplicate_first_name_tokens?: never;
+          duplicate_last_name_tokens?: never;
           firstname?: string;
           id?: number;
           lastname?: string;
@@ -777,6 +794,7 @@ export type Database = {
           vote_type: string;
           work_id: number;
         };
+        ComputedFields: never;
         Insert: {
           created_at?: string | null;
           id?: never;
@@ -819,6 +837,7 @@ export type Database = {
           updated_by: string | null;
           voice_actor_id: number | null;
         };
+        ComputedFields: never;
         Insert: {
           actor_id?: number | null;
           character_name?: string | null;
@@ -953,12 +972,7 @@ export type Database = {
         Returns: Json;
       };
       api_update_dubbing_project: {
-        Args: {
-          p_actor_id: string;
-          p_project_id: number;
-          p_request_id: string;
-          p_updates: Json;
-        };
+        Args: { p_actor_id: string; p_project_id: number; p_request_id: string; p_updates: Json };
         Returns: Json;
       };
       api_update_game_character_references: {
@@ -1043,7 +1057,7 @@ export type Database = {
           task: Json;
         }[];
       };
-      clear_media_queue: { Args: never; Returns: boolean };
+      clear_media_queue: { Args: Record<PropertyKey, never>; Returns: boolean };
       consume_gamification_task_claim: {
         Args: { p_claim_id: string; p_user_id: string };
         Returns: {
@@ -1052,12 +1066,7 @@ export type Database = {
         }[];
       };
       controlled_save_metadata: {
-        Args: {
-          p_actor_id: string;
-          p_entity_type: string;
-          p_payload: Json;
-          p_request_id?: string;
-        };
+        Args: { p_actor_id: string; p_entity_type: string; p_payload: Json; p_request_id?: string };
         Returns: Json;
       };
       controlled_save_studio: {
@@ -1107,12 +1116,7 @@ export type Database = {
         Returns: Json;
       };
       create_game_character: {
-        Args: {
-          p_actor_id: string;
-          p_igdb_game_id: number;
-          p_name: string;
-          p_request_id: string;
-        };
+        Args: { p_actor_id: string; p_igdb_game_id: number; p_name: string; p_request_id: string };
         Returns: {
           audit_log_id: string;
           game_character_id: string;
@@ -1201,17 +1205,10 @@ export type Database = {
             }[];
           };
       delay_media_queue_message: {
-        Args: {
-          p_delay_seconds?: number;
-          p_msg_id: number;
-          p_queue_name: string;
-        };
+        Args: { p_delay_seconds?: number; p_msg_id: number; p_queue_name: string };
         Returns: boolean;
       };
-      delete_media_queue_item: {
-        Args: { p_id: number; p_queue_name?: string };
-        Returns: boolean;
-      };
+      delete_media_queue_item: { Args: { p_id: number; p_queue_name?: string }; Returns: boolean };
       delete_media_queue_item_without_scan: {
         Args: { p_id: number; p_queue_name?: string };
         Returns: boolean;
@@ -1244,7 +1241,12 @@ export type Database = {
         }[];
       };
       dubbing_project_completeness: {
-        Args: { dp: Database["public"]["Tables"]["dubbing_projects"]["Row"] };
+        Args: {
+          dp: Omit<
+            Database["public"]["Tables"]["dubbing_projects"]["Row"],
+            Database["public"]["Tables"]["dubbing_projects"]["ComputedFields"]
+          >;
+        };
         Returns: number;
       };
       enqueue_media_extract: {
@@ -1282,7 +1284,7 @@ export type Database = {
         };
         Returns: number;
       };
-      find_duplicate_voice_actors_rpc: { Args: never; Returns: Json };
+      find_duplicate_voice_actors_rpc: { Args: Record<PropertyKey, never>; Returns: Json };
       find_duplicate_work_groups: {
         Args: { p_after_group_id?: number; p_limit?: number };
         Returns: Json;
@@ -1324,18 +1326,10 @@ export type Database = {
           user_name: string;
         }[];
       };
-      get_known_content_ids: { Args: never; Returns: Json };
-      get_media_queue_depth: {
-        Args: { p_queue_name?: string };
-        Returns: number;
-      };
+      get_known_content_ids: { Args: Record<PropertyKey, never>; Returns: Json };
+      get_media_queue_depth: { Args: { p_queue_name?: string }; Returns: number };
       get_media_queue_items: {
-        Args: {
-          p_limit?: number;
-          p_offset?: number;
-          p_queue_name?: string;
-          p_status?: string;
-        };
+        Args: { p_limit?: number; p_offset?: number; p_queue_name?: string; p_status?: string };
         Returns: {
           archive_details: string;
           archive_reason: string;
@@ -1359,12 +1353,7 @@ export type Database = {
         }[];
       };
       get_media_queue_items_without_scan: {
-        Args: {
-          p_limit?: number;
-          p_offset?: number;
-          p_queue_name?: string;
-          p_status?: string;
-        };
+        Args: { p_limit?: number; p_offset?: number; p_queue_name?: string; p_status?: string };
         Returns: {
           archive_details: string;
           archive_reason: string;
@@ -1387,12 +1376,9 @@ export type Database = {
           wikipedia_language: string;
         }[];
       };
-      get_media_queue_locked_count: {
-        Args: { p_queue_name?: string };
-        Returns: number;
-      };
-      get_media_queue_stats: { Args: never; Returns: Json };
-      get_media_queue_stats_without_scan: { Args: never; Returns: Json };
+      get_media_queue_locked_count: { Args: { p_queue_name?: string }; Returns: number };
+      get_media_queue_stats: { Args: Record<PropertyKey, never>; Returns: Json };
+      get_media_queue_stats_without_scan: { Args: Record<PropertyKey, never>; Returns: Json };
       get_media_queue_status: {
         Args: {
           p_dubbing_language?: string;
@@ -1405,7 +1391,7 @@ export type Database = {
         };
         Returns: string;
       };
-      get_ready_media_queues: { Args: never; Returns: string[] };
+      get_ready_media_queues: { Args: Record<PropertyKey, never>; Returns: string[] };
       get_recent_contributions: {
         Args: { limit_param?: number };
         Returns: {
@@ -1450,10 +1436,7 @@ export type Database = {
           work_id: number;
         }[];
       };
-      is_valid_dubbing_language: {
-        Args: { p_language: string };
-        Returns: boolean;
-      };
+      is_valid_dubbing_language: { Args: { p_language: string }; Returns: boolean };
       lock_media_queue_identity: {
         Args: {
           p_dubbing_language: string;
@@ -1501,12 +1484,7 @@ export type Database = {
         Returns: Json;
       };
       merge_work_duplicates_atomic: {
-        Args: {
-          p_admin_id: string;
-          p_canonical_id: number;
-          p_updates: Json;
-          p_work_ids: number[];
-        };
+        Args: { p_admin_id: string; p_canonical_id: number; p_updates: Json; p_work_ids: number[] };
         Returns: Json;
       };
       normalize_actor_name: { Args: { str: string }; Returns: string };
@@ -1521,11 +1499,7 @@ export type Database = {
         }[];
       };
       pop_media_queue_batch: {
-        Args: {
-          p_batch_size: number;
-          p_queue_name: string;
-          p_vt_seconds: number;
-        };
+        Args: { p_batch_size: number; p_queue_name: string; p_vt_seconds: number };
         Returns: {
           enqueued_at: string;
           message: Json;
@@ -1545,7 +1519,7 @@ export type Database = {
         }[];
       };
       reprocess_legacy_wiki_check_reviews: {
-        Args: never;
+        Args: Record<PropertyKey, never>;
         Returns: {
           archived_msg_id: number;
           outcome: string;
@@ -1644,12 +1618,7 @@ export type Database = {
         }[];
       };
       submit_gamification_task_contribution: {
-        Args: {
-          p_claim_id: string;
-          p_is_admin?: boolean;
-          p_updates: Json;
-          p_user_id: string;
-        };
+        Args: { p_claim_id: string; p_is_admin?: boolean; p_updates: Json; p_user_id: string };
         Returns: {
           points_awarded: number;
           status: string;
@@ -1728,7 +1697,12 @@ export type Database = {
         }[];
       };
       voice_actor_completeness: {
-        Args: { va: Database["public"]["Tables"]["voice_actors"]["Row"] };
+        Args: {
+          va: Omit<
+            Database["public"]["Tables"]["voice_actors"]["Row"],
+            Database["public"]["Tables"]["voice_actors"]["ComputedFields"]
+          >;
+        };
         Returns: number;
       };
       voice_actor_name: {
@@ -1738,11 +1712,7 @@ export type Database = {
         } & "the function public.voice_actor_name with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache";
       };
       work_assignment_role_identity_key: {
-        Args: {
-          p_character_id: number;
-          p_character_name: string;
-          p_game_character_id: string;
-        };
+        Args: { p_character_id: number; p_character_name: string; p_game_character_id: string };
         Returns: string;
       };
       work_contribution_privilege: {
@@ -1778,9 +1748,7 @@ export type Tables<
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never) = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
-}
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
       DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R;
@@ -1804,9 +1772,7 @@ export type TablesInsert<
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never) = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
-}
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I;
     }
@@ -1829,9 +1795,7 @@ export type TablesUpdate<
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never) = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
-}
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U;
     }
@@ -1854,9 +1818,7 @@ export type Enums<
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never) = never,
-> = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
-}
+> = DefaultSchemaEnumNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
@@ -1871,9 +1833,7 @@ export type CompositeTypes<
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never) = never,
-> = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
-}
+> = PublicCompositeTypeNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]

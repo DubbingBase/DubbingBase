@@ -1,16 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+stack_port=$(node "$(dirname "$0")/../../../scripts/local-supabase.mjs" db-port)
+
 # Local-only two-session proof that concurrent wiki_scan enqueue requests share
 # the same advisory identity lock and produce one active message.
 db_host="${DB_HOST:-127.0.0.1}"
-db_port="${DB_PORT:-55322}"
+db_port="${DB_PORT:-$stack_port}"
 db_user="${DB_USER:-postgres}"
 db_name="${DB_NAME:-postgres}"
 export PGPASSWORD="${PGPASSWORD:-postgres}"
 
-if [[ "$db_host" != "127.0.0.1" && "$db_host" != "localhost" ]] || [[ "$db_port" != "55322" ]] || [[ "$db_name" != "postgres" ]]; then
-  printf '%s\n' 'This regression fixture only permits the local Supabase database at 127.0.0.1:55322/postgres.' >&2
+if [[ "$db_host" != "127.0.0.1" && "$db_host" != "localhost" ]] || [[ "$db_port" != "$stack_port" ]] || [[ "$db_name" != "postgres" ]]; then
+  printf '%s\n' 'This regression fixture only permits the local Supabase database at 127.0.0.1/postgres.' >&2
   exit 2
 fi
 

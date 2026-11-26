@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+stack_port=$(node "$(dirname "$0")/../../../scripts/local-supabase.mjs" db-port)
+
 readonly db_host="127.0.0.1"
-readonly db_port="55322"
+readonly db_port="$stack_port"
 readonly content_id="991234568"
 readonly actor_id="999999997"
 readonly firstname="ConcurrentBulk"

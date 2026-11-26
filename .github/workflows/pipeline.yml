@@ -66,6 +66,9 @@ jobs:
             database_validation:
               - 'packages/database/**'
               - '.github/workflows/pipeline.yml'
+              - 'mise.toml'
+              - 'pnpm-workspace.yaml'
+              - 'scripts/local-supabase.mjs'
             website:
               - 'apps/website/**'
               - 'packages/shared-logic/**'
@@ -141,11 +144,14 @@ jobs:
 
       - name: Run credit import transaction and concurrency regressions
         run: |
-          PGPASSWORD=postgres psql -X -v ON_ERROR_STOP=1 \
-            -h 127.0.0.1 -p 55322 -U postgres -d postgres \
-            -f tests/admin-credit-imports.sql
+          db_url="$(node ../../scripts/local-supabase.mjs db-url)"
+          psql "$db_url" -X -v ON_ERROR_STOP=1 -f tests/admin-credit-imports.sql
           bash tests/admin-credit-imports-concurrency.sh
         working-directory: packages/database
+
+      - name: Stop isolated local Supabase
+        if: always() && steps.local-supabase.outcome != 'skipped'
+        run: mise run backend-stop
 
   # Job 3: E2E Tests
   e2e-tests:

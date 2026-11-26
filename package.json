@@ -9,7 +9,7 @@
   "scripts": {
     "build": "turbo run build",
     "build:website": "turbo run build --filter=@app/website",
-    "dev": "turbo run dev",
+    "dev": "mise run website",
     "lint": "oxlint -c .oxlintrc.json",
     "format": "oxfmt --write",
     "format:check": "oxfmt --check",
