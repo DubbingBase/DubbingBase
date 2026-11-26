@@ -29,6 +29,11 @@ const BatchItem = v.strictObject({
   actor_id: v.optional(v.nullable(v.pipe(v.number(), v.integer(), v.minValue(1))), null),
   /** A character registered for this game (see the characters endpoint). Games only. */
   game_character_id: v.optional(v.nullable(v.pipe(v.string(), v.uuid(), v.toLowerCase())), null),
+  /**
+   * Flags the credit as a main character. Applies to credits this request creates; a credit that
+   * already exists is not changed (use PATCH to flag it).
+   */
+  highlight: v.optional(v.boolean(), false),
 });
 
 export const route = defineApiRoute({
@@ -65,6 +70,7 @@ export const route = defineApiRoute({
             performance: performanceSchema,
             actor_id: v.nullable(v.number()),
             game_character_id: v.nullable(v.string()),
+            highlight: v.boolean(),
           }),
         ),
       }),
@@ -215,6 +221,7 @@ export const route = defineApiRoute({
               performance: item.performance,
               actor_id: item.actor_id,
               game_character_id: item.game_character_id,
+              highlight: item.highlight,
             },
           };
         }),
@@ -240,6 +247,7 @@ export const route = defineApiRoute({
             game_character_id: item.game_character_id,
             character_name: item.character_name,
             performance: item.performance,
+            highlight: item.highlight,
           })),
           (position) => `credits.${toWrite[position]?.index ?? position}`,
         )
