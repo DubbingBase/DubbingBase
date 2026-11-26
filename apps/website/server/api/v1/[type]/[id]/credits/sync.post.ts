@@ -1,4 +1,5 @@
 import { eqMediaRef, MEDIA_FILTER_EMBED } from "@app/shared-logic";
+import type { Json } from "@app/supabase/types";
 import * as v from "valibot";
 import { defineApiRoute } from "../../../../../utils/api-v1/define";
 import { ApiError } from "../../../../../utils/api-v1/errors";
@@ -287,54 +288,52 @@ export const route = defineApiRoute({
       };
     }
 
-    // One transaction: a rejected item rolls the whole batch back. Items that matched an
-    // existing credit by name are not sent, so they cannot be duplicated.
-    const toWrite = body.credits
-      .map((item, index) => ({ item, index }))
-      .filter(({ index }) => existing[index]?.linked == null);
-    const written = toWrite.length
+    // One call, one transaction: creates and in-place updates are applied together, so a
+    // rejected item rolls back the whole request. Matched credits that already agree are not sent.
+    const toSend = body.credits.flatMap<{ index: number; payload: Json }>((item, index) => {
+      const match = existing[index];
+      if (!match) {
+        return [
+          {
+            index,
+            payload: {
+              voice_actor_id: item.voice_actor_id,
+              content_id: key.contentId,
+              content_type: key.contentType,
+              language: item.language,
+              actor_person_id: item.actor_id,
+              game_character_id: item.game_character_id,
+              character_name: item.character_name,
+              performance: item.performance ?? "dialogues",
+              highlight: item.highlight ?? false,
+            },
+          },
+        ];
+      }
+      const change = diffCredit(item, match);
+      if (!change) return [];
+      return [
+        {
+          index,
+          payload: {
+            work_id: match.id,
+            expected_updated_at: match.updatedAt,
+            ...(change.performance ? { performance: change.performance.to } : {}),
+            ...(change.highlight ? { highlight: change.highlight.to } : {}),
+          },
+        },
+      ];
+    });
+    const written = toSend.length
       ? await mutateCredits(
           event,
           auth.userId,
-          "create",
-          toWrite.map(({ item }) => ({
-            voice_actor_id: item.voice_actor_id,
-            content_id: key.contentId,
-            content_type: key.contentType,
-            language: item.language,
-            actor_person_id: item.actor_id,
-            game_character_id: item.game_character_id,
-            character_name: item.character_name,
-            performance: item.performance ?? "dialogues",
-            highlight: item.highlight ?? false,
-          })),
-          (position) => `credits.${toWrite[position]?.index ?? position}`,
+          "sync",
+          toSend.map(({ payload }) => payload),
+          (position) => `credits.${toSend[position]?.index ?? position}`,
         )
       : [];
-    // Matched credits whose flag differs from the one sent are updated in place, in the same
-    // request, so a re-run of a fill converges instead of silently keeping the old flag.
-    const toUpdate = body.credits.flatMap((item, index) => {
-      const match = existing[index];
-      const change = match ? diffCredit(item, match) : null;
-      return match && change ? [{ match, change }] : [];
-    });
-    if (toUpdate.length) {
-      await mutateCredits(
-        event,
-        auth.userId,
-        "update",
-        toUpdate.map(({ match, change }) => ({
-          work_id: match.id,
-          expected_updated_at: match.updatedAt,
-          ...(change.performance ? { performance: change.performance.to } : {}),
-          ...(change.highlight ? { highlight: change.highlight.to } : {}),
-        })),
-        (position) => `credits.${position}`,
-      );
-    }
-    const writtenByIndex = new Map(
-      toWrite.map(({ index }, position) => [index, written[position]]),
-    );
+    const writtenByIndex = new Map(toSend.map(({ index }, position) => [index, written[position]]));
     const results = body.credits.map((_, index) => {
       const name = existing[index];
       if (name) {
@@ -368,14 +367,15 @@ export const route = defineApiRoute({
         // One line per new credit: who voices whom, so the admin can judge it without opening the page.
         fields: written
           .flatMap((credit, position) => {
-            const entry = toWrite[position];
+            const entry = toSend[position];
+            const item = entry ? body.credits[entry.index] : undefined;
             const actor = entry ? actors[entry.index] : undefined;
-            if (!credit.created || !entry || !actor) return [];
+            if (!credit.created || !item || !actor) return [];
             return [
               {
                 name: shortText(`${actor.firstname} ${actor.lastname}`.trim(), 80),
                 value: shortText(
-                  `${entry.item.character_name} · ${entry.item.language}${entry.item.performance ? ` · ${entry.item.performance}` : ""}`,
+                  `${item.character_name} · ${item.language}${item.performance ? ` · ${item.performance}` : ""}`,
                   200,
                 ),
               },

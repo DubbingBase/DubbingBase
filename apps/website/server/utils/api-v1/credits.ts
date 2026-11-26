@@ -140,7 +140,7 @@ const MutationResults = v.array(
   }),
 );
 
-type CreditOperation = "create" | "update";
+type CreditOperation = "create" | "update" | "sync";
 
 /**
  * Applies credit changes as the token's owner through `api_mutate_credits`: one transaction,
