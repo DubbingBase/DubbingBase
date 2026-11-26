@@ -20,6 +20,11 @@ on:
         description: "For the website override, latest successful main release commit to verify no database changes are pending."
         required: false
         type: string
+      force_database_deploy:
+        description: "Run all release checks, then apply pending production migrations from the current main commit even when the push touched no packages/database files. Does not deploy the website. Ignored when force_website_deploy is set."
+        required: false
+        type: boolean
+        default: false
 
 # Keep branch checks current and serialize main releases around production migrations.
 concurrency:
@@ -43,8 +48,8 @@ jobs:
   detect:
     runs-on: ubuntu-latest
     outputs:
-      database: ${{ steps.filter.outputs.database == 'true' && !(github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.force_website_deploy) }}
-      database_validation: ${{ steps.filter.outputs.database_validation }}
+      database: ${{ (steps.filter.outputs.database == 'true' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.force_database_deploy)) && !(github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.force_website_deploy) }}
+      database_validation: ${{ steps.filter.outputs.database_validation == 'true' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.force_database_deploy && !inputs.force_website_deploy) }}
       website: ${{ steps.filter.outputs.website == 'true' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.force_website_deploy) }}
       website_validation: ${{ steps.filter.outputs.website_validation == 'true' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.force_website_deploy) }}
     steps:
