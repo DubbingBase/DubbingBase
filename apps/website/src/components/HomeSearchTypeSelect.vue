@@ -4,7 +4,6 @@
       id="home-search-type"
       type="button"
       data-testid="home-search-type"
-      aria-haspopup="listbox"
       :aria-expanded="open"
       aria-controls="home-search-type-list"
       :aria-label="t('home.hero.searchTypeLabel')"
@@ -30,26 +29,24 @@
     <ul
       v-show="open"
       id="home-search-type-list"
-      role="listbox"
-      :aria-label="t('home.hero.searchTypeLabel')"
       class="absolute left-0 top-full z-20 mt-2 min-w-48 rounded-2xl border p-1 shadow-xl theme-surface-raised theme-border"
     >
-      <li
-        v-for="option in searchTypeOptions"
-        :key="option"
-        role="option"
-        :aria-selected="option === modelValue"
-        class="flex cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium transition theme-hover-surface-muted"
-        :class="option === modelValue ? 'theme-selected' : 'theme-text-secondary'"
-        @click="select(option)"
-      >
-        <component
-          :is="searchTypeIcons[option]"
-          class="h-4 w-4"
-          :class="searchTypeColors[option]"
-          aria-hidden="true"
-        />
-        {{ labelFor(option) }}
+      <li v-for="option in searchTypeOptions" :key="option">
+        <button
+          type="button"
+          :aria-current="option === modelValue ? 'true' : undefined"
+          class="flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-medium transition theme-hover-surface-muted theme-focus"
+          :class="option === modelValue ? 'theme-selected' : 'theme-text-secondary'"
+          @click="select(option)"
+        >
+          <component
+            :is="searchTypeIcons[option]"
+            class="h-4 w-4"
+            :class="searchTypeColors[option]"
+            aria-hidden="true"
+          />
+          {{ labelFor(option) }}
+        </button>
       </li>
     </ul>
   </div>
