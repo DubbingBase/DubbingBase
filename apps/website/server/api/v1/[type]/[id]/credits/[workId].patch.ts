@@ -1,7 +1,10 @@
+import { getHeader, setHeader } from "h3";
 import * as v from "valibot";
 import { defineApiRoute } from "../../../../../utils/api-v1/define";
+import { ApiError } from "../../../../../utils/api-v1/errors";
 import {
   Credit,
+  creditEtag,
   mutateCredits,
   notifyCreditChange,
   requireCredit,
@@ -45,6 +48,17 @@ export const route = defineApiRoute({
   handler: async ({ event, auth, params, body }) => {
     const key = mediaKey(params.type, params.id);
     const row = await requireCredit(event, key, params.workId);
+    // With If-Match the caller's version must still be the current one; without it the write
+    // applies to whatever is current.
+    const ifMatch = getHeader(event, "if-match");
+    if (ifMatch !== undefined && ifMatch !== creditEtag(row.updated_at)) {
+      throw new ApiError(
+        412,
+        "precondition_failed",
+        "The credit changed since you read it; read it again and retry.",
+        { ETag: creditEtag(row.updated_at) },
+      );
+    }
     const [written] = await mutateCredits(
       event,
       auth.userId,
@@ -78,6 +92,7 @@ export const route = defineApiRoute({
       }),
       written?.after,
     );
+    setHeader(event, "ETag", creditEtag(after.updated_at));
     return toCredit({ ...row, ...after }, key.segment, key.contentId);
   },
 });

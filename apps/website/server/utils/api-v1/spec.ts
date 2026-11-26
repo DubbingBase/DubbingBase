@@ -25,7 +25,7 @@ export function buildOpenApiSpec() {
         "Media lives at `/api/v1/{movies|shows|games|podcasts|audiobooks|advertisements|toys}/{id}`: " +
           "TMDB (movies, shows), IGDB (games), iTunes (podcasts) or Open Library (audiobooks) ids; " +
           "ads and toys use their DubbingBase id. Follow the `path` fields in responses instead of building URLs. " +
-          "Media reads, credit batches (including previews) and game character writes require a local DubbingBase record. " +
+          "Media reads, credit syncs (including previews) and game character writes require a local DubbingBase record. " +
           "A missing external media record returns `404 not_found` with `Media not imported yet.`. " +
           "Create a dubbing project to register that media before writing characters or credits. " +
           "Unknown ads and toys return `404 not_found` with `Media not found.`. " +
@@ -48,14 +48,19 @@ export function buildOpenApiSpec() {
           "link it to its IGDB character with `igdb_character_id` or `PATCH /games/{id}/characters/{characterId}`; ids are stored as given, " +
           "so copy them from IGDB. Then reference it as `game_character_id` on credits. Characters that share an actor, such as Taylor and Tanya, are separate characters. " +
           "Reuse existing character names exactly: a credit is identified by media, language, voice actor, cast id and character name.\n" +
-          "3. Preview with `POST /{type}/{id}/credits/batch?dry_run=true` (up to 50 credits), which writes nothing and reports `create` or `unchanged` per item; " +
-          "a `create` item carries `would_create` (character, voice actor, language, performance, cast ids, highlight).\n" +
-          "4. Send the same body without `dry_run`. The batch is all or nothing: if one item is rejected, " +
-          "nothing is written and the error names it (`credits.2`). Sending a batch again is safe: roles that exist come back `unchanged`. " +
-          "If you leave `game_character_id` out and one credit with that name, voice actor and cast id is already linked to a game character, it comes back `unchanged` with that `linked_game_character_id` and nothing is added; several such credits give 409 `ambiguous_credit`.\n" +
-          "5. Fix a credit in place with `PATCH /{type}/{id}/credits/{workId}`: `performance`, `character_name`, `actor_id`, `game_character_id` and `highlight` (send only what changes). `highlight: true` marks a main character, who is listed first on the game page; on a batch `create` item it flags the credit being created, never one that already exists. " +
+          "3. Sync with `POST /{type}/{id}/credits/sync` (up to 50 credits). A credit is identified by language, voice actor, cast id and character name. " +
+          "Each item comes back `create` (missing, added), `update` (it exists but `performance` or `highlight` differs, so `changes` lists `from`/`to` and it is changed) or `unchanged`. " +
+          "Omit `performance` or `highlight` to leave an existing credit's value alone; a new credit gets `dialogues` and `false`. " +
+          "Credits you do not list are never touched. The call is idempotent: sending the same body again returns `unchanged` for everything.\n" +
+          "4. Add `?dry_run=true` to preview the same result without writing; a `create` item carries `would_create`. " +
+          "The sync is all or nothing: if one item is rejected, nothing is written and the error names it (`credits.2`). " +
+          "If you leave `game_character_id` out and one credit with that name, voice actor and cast id is already linked to a game character, it is matched to that credit and `linked_game_character_id` returns the character; several such credits give 409 `ambiguous_credit`. " +
+          "The token needs both `credits:create` and `credits:update`.\n" +
+          "5. Fix a single credit with `PATCH /{type}/{id}/credits/{workId}`: `performance`, `character_name`, `actor_id`, `game_character_id` and `highlight` (send only what changes). " +
+          "`highlight: true` marks a main character, who is listed first on the game page. " +
+          "`GET` and `PATCH` return an `ETag`; send it back as `If-Match` on PATCH and a credit changed in the meantime is refused with 412 `precondition_failed` instead of being overwritten. " +
           "This is how to complete a credit that has no character name: it keeps its id, history and review state. " +
-          "A batch item for a voice actor who already has a nameless credit with the same cast id is refused with 409 `nameless_credit_exists` naming that credit, so complete it with PATCH. " +
+          "A sync item for a voice actor who already has a nameless credit with the same cast id is refused with 409 `nameless_credit_exists` naming that credit, so complete it with PATCH. " +
           "The API cannot delete credits; leave that to the website.",
         "## Rules",
         "Writes behave as if the token's owner made them. Credits carry a `reviewed_status`: `waiting` (added by someone " +

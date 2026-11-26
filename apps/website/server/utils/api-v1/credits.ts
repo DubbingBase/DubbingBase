@@ -140,7 +140,7 @@ const MutationResults = v.array(
   }),
 );
 
-type CreditOperation = "create" | "update";
+type CreditOperation = "create" | "update" | "sync";
 
 /**
  * Applies credit changes as the token's owner through `api_mutate_credits`: one transaction,
@@ -200,4 +200,9 @@ export function notifyCreditChange(
     { id: userId, app_metadata: {} },
     { via: "api", ...edit, entity: edit.entity ?? "media" },
   );
+}
+
+/** The entity tag of a credit: its last change, quoted as HTTP requires. */
+export function creditEtag(updatedAt: string): string {
+  return `"${updatedAt}"`;
 }
