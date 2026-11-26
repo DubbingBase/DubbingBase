@@ -57,6 +57,7 @@ function processIgdbCharacter(char: ResolvedGameCharacter, pageProjection: boole
   return {
     id: char.id,
     name: char.name,
+    url: char.url,
     stable_id: char.stable_id,
     game_character_id: char.game_character_id,
     igdb_character_id: char.igdb_character_id,

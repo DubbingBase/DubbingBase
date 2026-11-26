@@ -14,8 +14,8 @@ import {
   RetryableMediaRequestError,
 } from "../retryable-request";
 
-// Game metadata: one day absorbs repeat lookups without any KV write.
-const IGDB_EDGE_TTL = 24 * 60 * 60;
+// Game metadata and characters change rarely: 30 days absorbs repeat lookups without any KV write.
+const IGDB_EDGE_TTL = 30 * 24 * 60 * 60;
 
 interface IgdbCachedToken {
   accessToken: string;
@@ -61,7 +61,12 @@ export function isIgdbGame(value: unknown): value is IgdbGame {
 }
 
 export function isIgdbCharacter(value: unknown): value is IgdbCharacter {
-  return isRecord(value) && typeof value.id === "number" && typeof value.name === "string";
+  return (
+    isRecord(value) &&
+    typeof value.id === "number" &&
+    typeof value.name === "string" &&
+    (value.url === undefined || typeof value.url === "string")
+  );
 }
 
 function isIgdbPopularityPrimitive(value: unknown): value is IgdbPopularityPrimitive {
@@ -318,7 +323,7 @@ export class IgdbClient {
       }
       const page = await this.query(
         "characters",
-        `fields ${pageProjection ? "id, name, mug_shot.image_id" : "id, name, description, species, gender, mug_shot.image_id, games"};
+        `fields ${pageProjection ? "id, name, url, mug_shot.image_id" : "id, name, url, description, species, gender, mug_shot.image_id, games"};
          where games = (${gameId});
          sort id asc;
          limit ${pageSize};
