@@ -59,7 +59,13 @@ registerEndpoint("/api/game/14362", () => ({
   game: { id: 14362, name: "Detroit: Become Human" },
   game_data_status: "available",
   characters: [
-    { id: 5009, name: "Alice", game_character_id: aliceId, mug_shot: { image_id: "abc123" } },
+    {
+      id: 5009,
+      name: "Alice",
+      url: "https://www.igdb.com/characters/alice",
+      game_character_id: aliceId,
+      mug_shot: { image_id: "abc123" },
+    },
     { id: 11768, name: "Amanda" },
   ],
   dubbingProjects: [],
@@ -68,11 +74,28 @@ registerEndpoint("/api/game/14362", () => ({
 describe("game detail", () => {
   it("links the character name and portrait when a character page exists", async () => {
     const page = await mountSuspended(GameDetail, { route: "/game/14362" });
-    const link = page.get(`a[href="/character/game/${aliceId}"]`);
+    const [portraitLink, nameLink] = page.findAll(`a[href="/character/game/${aliceId}"]`);
 
-    expect(link.get('[title="Alice"]').classes()).toContain("underline");
-    expect(link.get("img").attributes("src")).toContain("abc123");
+    expect(portraitLink?.get("img").attributes("src")).toContain("abc123");
+    expect(nameLink?.text()).toBe("Alice");
+    expect(nameLink?.classes()).toContain("hover:underline");
+    expect(nameLink?.classes()).not.toContain("underline");
     expect(page.get('[title="Amanda"]').element.closest("a")).toBeNull();
+    expect(page.get('[title="Amanda"]').find("a").exists()).toBe(false);
+  });
+
+  it("links the character's IGDB page from the IGDB logo", async () => {
+    const page = await mountSuspended(GameDetail, { route: "/game/14362" });
+    const igdbLinks = page.findAll('a[href^="https://www.igdb.com/characters/"]');
+
+    expect(igdbLinks).toHaveLength(1);
+    expect(igdbLinks[0]?.attributes()).toMatchObject({
+      href: "https://www.igdb.com/characters/alice",
+      target: "_blank",
+      rel: "noopener noreferrer",
+      "aria-label": "Alice (IGDB)",
+    });
+    expect(igdbLinks[0]?.get("svg").attributes("aria-hidden")).toBe("true");
   });
 
   it("omits the empty release-year pill and shows an empty Cast & Crew section", async () => {

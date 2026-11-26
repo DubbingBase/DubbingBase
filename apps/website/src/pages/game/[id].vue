@@ -157,12 +157,12 @@
                 <!-- 2 Column Layout for Games (Character -> Voice Actor) -->
                 <div class="flex flex-col sm:grid sm:grid-cols-2 gap-4">
                   <!-- Character -->
-                  <component
-                    :is="char.characterDetailPath ? NuxtLink : 'div'"
-                    :to="char.characterDetailPath"
+                  <div
                     class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start"
                   >
-                    <div
+                    <component
+                      :is="char.characterDetailPath ? NuxtLink : 'div'"
+                      :to="char.characterDetailPath"
                       class="w-16 sm:w-full relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
                     >
                       <img
@@ -183,7 +183,7 @@
                       >
                         <UserIcon class="w-8 h-8 opacity-50" />
                       </div>
-                    </div>
+                    </component>
                     <div class="flex flex-col min-w-0 flex-1 w-full overflow-hidden">
                       <div
                         class="flex items-center gap-1.5 text-[10px] theme-text-muted uppercase tracking-widest font-semibold mb-1"
@@ -192,14 +192,31 @@
                         <span class="truncate block w-full">{{ $t("details.character") }}</span>
                       </div>
                       <div
-                        class="font-bold text-sm theme-text truncate block w-full"
-                        :class="{ 'underline underline-offset-2': char.characterDetailPath }"
+                        class="flex items-center gap-1 font-bold text-sm theme-text w-full min-w-0"
                         :title="char.name"
                       >
-                        {{ char.name }}
+                        <component
+                          :is="char.characterDetailPath ? NuxtLink : 'span'"
+                          :to="char.characterDetailPath"
+                          class="truncate"
+                          :class="{ 'hover:underline': char.characterDetailPath }"
+                        >
+                          {{ char.name }}
+                        </component>
+                        <a
+                          v-if="char.url"
+                          :href="char.url"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          :aria-label="`${char.name} (IGDB)`"
+                          title="IGDB"
+                          class="flex-shrink-0 rounded theme-text-muted theme-hover-text transition-colors"
+                        >
+                          <IgdbIcon class="w-5 h-5" />
+                        </a>
                       </div>
                     </div>
-                  </component>
+                  </div>
 
                   <!-- Voice Actor -->
                   <div
@@ -379,6 +396,7 @@ import DetailsExternalLink from "../../components/layout/details/DetailsExternal
 import DetailsSynopsis from "../../components/layout/details/DetailsSynopsis.vue";
 import DetailsCastHeader from "../../components/layout/details/DetailsCastHeader.vue";
 import DetailsEmptyState from "../../components/layout/details/DetailsEmptyState.vue";
+import IgdbIcon from "../../components/IgdbIcon.vue";
 import { NuxtLink } from "#components";
 import { useRoute, useRouter } from "vue-router";
 import {

@@ -275,6 +275,8 @@ export interface IgdbGame {
 export interface IgdbCharacter {
   id: number;
   name: string;
+  /** IGDB's public page for the character (slug-based). */
+  url?: string;
   description?: string;
   mug_shot?: IgdbMugShot;
   species?: { id: number; name: string };

@@ -67,6 +67,8 @@ export type GameDetailCastCard = {
   id: number | string;
   name: string;
   game_character_id?: string | null;
+  /** IGDB's public page for the character, when it comes from IGDB. */
+  url?: string;
   mug_shot?: { image_id?: string; url?: string | null } | null;
   work_id?: number;
   /** Editors flagged this role as a main/relevant character. */
