@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Component inventory and prop signatures extracted via AST. Read the source files before adding props or modifying component logic.
 
-**145 components** (vue)
+**146 components** (vue)
 
 ## Client Components
 
@@ -18,6 +18,7 @@
 - **HeaderPreferenceSelects** — props: initialOpen — `apps/website/src/components/HeaderPreferenceSelects.vue`
 - **HeaderPreferences** — `apps/website/src/components/HeaderPreferences.vue`
 - **HomeBelowFoldSections** — `apps/website/src/components/HomeBelowFoldSections.vue`
+- **HomeSearchTypeSelect** — props: modelValue — `apps/website/src/components/HomeSearchTypeSelect.vue`
 - **ImageCropperDialog** — props: file, outputSize, title — `apps/website/src/components/ImageCropperDialog.vue`
 - **LanguageBanner** — `apps/website/src/components/LanguageBanner.vue`
 - **MediaCatalogPage** — props: type — `apps/website/src/components/MediaCatalogPage.vue`
