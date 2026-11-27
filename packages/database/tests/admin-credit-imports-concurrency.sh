@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+stack_port=$(node "$(dirname "$0")/../../../scripts/local-supabase.mjs" db-port)
+
 DB_HOST=127.0.0.1
-DB_PORT=${T84_TEST_DB_PORT:-55322}
+DB_PORT=${T84_TEST_DB_PORT:-$stack_port}
 DB_NAME=${PGDATABASE:-postgres}
 DB_USER=postgres
 DB_PASSWORD=${T84_TEST_DB_PASSWORD:-postgres}

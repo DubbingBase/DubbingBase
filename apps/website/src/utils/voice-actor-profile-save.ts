@@ -1,10 +1,13 @@
-import type { Json, Tables } from "@app/supabase/types";
+import type { Database, Json, Tables } from "@app/supabase/types";
 import type { VoiceActorCreationPayload } from "../composables/useMetadataCreation";
 import { createStableRequestIdFactory } from "./dubbing-project-save";
 import { readProperty } from "@app/shared-logic";
 
-// The database client omits the computed voice_actor_name field for select('*').
-export type VoiceActorProfile = Omit<Tables<"voice_actors">, "voice_actor_name">;
+// PostgREST omits computed fields from select("*").
+export type VoiceActorProfile = Omit<
+  Tables<"voice_actors">,
+  Database["public"]["Tables"]["voice_actors"]["ComputedFields"]
+>;
 
 export interface DisplayedSocialLinks {
   instagram: string;

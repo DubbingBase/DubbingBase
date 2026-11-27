@@ -61,11 +61,11 @@ When testing the website from a mobile device or other clients over Tailscale/LA
 
 ### Website Development with Doppler
 
-Doppler is the source of truth for website environment variables. Use the unprefixed secret names consumed by `apps/website/nuxt.config.ts` (for example, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `TMDB_API_KEY`, `TVDB_API_KEY`, `IGDB_CLIENT_ID`, and `IGDB_CLIENT_SECRET`); do not duplicate values under `NUXT_*` names.
+Doppler supplies external API keys for local website development. Use the unprefixed secret names consumed by `apps/website/nuxt.config.ts` (for example, `TMDB_API_KEY`, `TVDB_API_KEY`, `IGDB_CLIENT_ID`, and `IGDB_CLIENT_SECRET`).
 
 Configure once from the repository root with `doppler setup`, selecting project `dubbingbase` and config `dev` for local development. Never print secret values; inspect names only with `doppler secrets --only-names`.
 
-`mise run website` installs dependencies, links Doppler, starts the local Supabase backend, checks that Doppler's Supabase settings match it, and runs the website. In dev the browser reaches Supabase through the website's `/supabase` proxy, so the site works from any host (localhost, Tailscale, LAN) with `SUPABASE_URL` left at the loopback address. Stop the local backend with `mise run backend-stop` when finished.
+`mise run website` installs dependencies, starts the Docker-backed Supabase stack for the current worktree, and populates the website’s Supabase URL and keys from stack status. The development browser reaches Supabase through the website’s `/supabase` proxy. Run `mise run backend-stop` before removing a worktree or switching its branch. See the [README](README.md) for local data migration.
 
 ---
 
@@ -104,8 +104,7 @@ Configure once from the repository root with `doppler setup`, selecting project 
   - To create a new migration: Run `pnpm supabase migration new <migration_name>` in the appropriate directory.
   - Migration files are stored in `packages/database/supabase/migrations`.
 - **Querying Local Database**:
-  - The local Supabase database runs on port `55322` (you can verify this by running `npx supabase status`).
-  - To query the local DB from the terminal, use: `PGPASSWORD=postgres psql -h 127.0.0.1 -p 55322 -U postgres -d postgres -c "<query>"`.
+  - Supabase assigns ports per worktree. From the repository root, query the current stack with `db_url=$(node scripts/local-supabase.mjs db-url) && psql "$db_url" -c "<query>"`.
 - **Seed Data**:
   - `seed.sql` is a production-derived local copy of mutable business data. Migrations own schema and constrain `dubbing_projects.language` to the supported regional dubbing-language set; shared TypeScript validates membership in the same set at application boundaries.
 

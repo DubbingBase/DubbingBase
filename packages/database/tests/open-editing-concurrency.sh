@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+stack_port=$(node "$(dirname "$0")/../../../scripts/local-supabase.mjs" db-port)
+
 # Uses the local disposable Supabase instance and independent PostgreSQL sessions to prove the
 # open-editing writes serialize correctly:
 #   1. a community edit and a trusted validation of the same credit cannot both win;
 #   2. two simultaneous identical credit creations leave exactly one credit;
 #   3. two simultaneous first picture uploads leave exactly one winner and one audit row.
 DB_HOST=127.0.0.1
-DB_PORT=${T10_TEST_DB_PORT:-55322}
+DB_PORT=${T10_TEST_DB_PORT:-$stack_port}
 DB_NAME=${PGDATABASE:-postgres}
 DB_USER=postgres
 export PGPASSWORD=${T10_TEST_DB_PASSWORD:-postgres}

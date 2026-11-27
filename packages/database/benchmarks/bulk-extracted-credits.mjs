@@ -1,13 +1,6 @@
-import { execFileSync } from "node:child_process";
+import { localSupabaseStatus } from "../../../scripts/local-supabase.mjs";
 
-const databaseDirectory = new URL("../", import.meta.url);
-const output = execFileSync("pnpm", ["supabase", "status", "-o", "env"], {
-  cwd: databaseDirectory,
-  encoding: "utf8",
-});
-const environment = Object.fromEntries(
-  [...output.matchAll(/^([A-Z_]+)="([^"]+)"$/gm)].map((match) => [match[1], match[2]]),
-);
+const environment = localSupabaseStatus();
 const apiUrl = environment.API_URL;
 const serviceKey = environment.SERVICE_ROLE_KEY;
 if (!apiUrl || !serviceKey || !/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(apiUrl)) {

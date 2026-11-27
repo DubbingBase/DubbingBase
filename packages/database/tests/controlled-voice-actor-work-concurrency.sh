@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+stack_port=$(node "$(dirname "$0")/../../../scripts/local-supabase.mjs" db-port)
+
 # This test is intentionally pinned to loopback and a dedicated disposable
 # Supabase port. It opens independent psql sessions for every racing request.
 DB_HOST=127.0.0.1
-DB_PORT=${T08_TEST_DB_PORT:-55322}
+DB_PORT=${T08_TEST_DB_PORT:-$stack_port}
 DB_NAME=${PGDATABASE:-postgres}
 DB_USER=postgres
 DB_PASSWORD=${T08_TEST_DB_PASSWORD:-postgres}

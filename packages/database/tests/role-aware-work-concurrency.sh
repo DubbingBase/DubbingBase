@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-db_port="${LOCAL_SUPABASE_DB_PORT:-55322}"
+stack_port=$(node "$(dirname "$0")/../../../scripts/local-supabase.mjs" db-port)
+
+db_port="${LOCAL_SUPABASE_DB_PORT:-$stack_port}"
 db_password="${LOCAL_SUPABASE_DB_PASSWORD:-postgres}"
 connection=( -h 127.0.0.1 -p "$db_port" -U postgres -d "${PGDATABASE:-postgres}" -v ON_ERROR_STOP=1 )
 content_id="$(date +%s)000"

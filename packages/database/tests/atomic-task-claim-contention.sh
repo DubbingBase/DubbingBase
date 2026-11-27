@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+stack_port=$(node "$(dirname "$0")/../../../scripts/local-supabase.mjs" db-port)
+
 # Two independent PostgreSQL sessions compete while many unrelated task
 # claims are already active. Run only against an isolated local Supabase DB.
 db_host="${DB_HOST:-127.0.0.1}"
-db_port="${DB_PORT:-55322}"
+db_port="${DB_PORT:-$stack_port}"
 db_user="${DB_USER:-postgres}"
 db_name="${DB_NAME:-postgres}"
 export PGPASSWORD="${PGPASSWORD:-postgres}"

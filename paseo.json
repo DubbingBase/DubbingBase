@@ -1,5 +1,6 @@
 {
   "worktree": {
-    "setup": "pnpm i"
+    "setup": "pnpm i && mise run backend",
+    "teardown": "mise run backend-stop"
   }
 }

@@ -66,6 +66,9 @@ jobs:
             database_validation:
               - 'packages/database/**'
               - '.github/workflows/pipeline.yml'
+              - 'mise.toml'
+              - 'pnpm-workspace.yaml'
+              - 'scripts/local-supabase.mjs'
             website:
               - 'apps/website/**'
               - 'packages/shared-logic/**'
@@ -141,11 +144,14 @@ jobs:
 
       - name: Run credit import transaction and concurrency regressions
         run: |
-          PGPASSWORD=postgres psql -X -v ON_ERROR_STOP=1 \
-            -h 127.0.0.1 -p 55322 -U postgres -d postgres \
-            -f tests/admin-credit-imports.sql
+          db_url="$(node ../../scripts/local-supabase.mjs db-url)"
+          psql "$db_url" -X -v ON_ERROR_STOP=1 -f tests/admin-credit-imports.sql
           bash tests/admin-credit-imports-concurrency.sh
         working-directory: packages/database
+
+      - name: Stop isolated local Supabase
+        if: always() && steps.local-supabase.outcome != 'skipped'
+        run: mise run backend-stop
 
   # Job 3: E2E Tests
   e2e-tests:
@@ -614,16 +620,11 @@ jobs:
       - name: Install database dependencies
         run: pnpm install --filter @app/supabase... --config.minimum-release-age=0 --config.minimum-release-age-strict=false
 
-      - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v3
-        with:
-          version: 2.111.0
-
       - name: Link Project
         if: github.ref == 'refs/heads/main'
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        run: supabase link --project-ref $PROJECT_ID
+        run: pnpm exec supabase link --project-ref "$PROJECT_ID"
         working-directory: packages/database
 
       - name: Run database migrations
@@ -631,7 +632,7 @@ jobs:
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         # Keep stacked migrations deployable when their timestamps merge out of order.
-        run: supabase db push --include-all
+        run: pnpm exec supabase db push --include-all --yes --remote
         working-directory: packages/database
 
   # Job 8: Deploy website to Cloudflare Workers (main only)
