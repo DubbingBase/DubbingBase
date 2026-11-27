@@ -6,7 +6,7 @@ cd "$(dirname "$0")"
 temp_dir=$(mktemp -d)
 trap 'rm -rf "$temp_dir"' EXIT
 
-npx supabase storage cp --experimental --linked --recursive ss:/// "$temp_dir/"
+pnpm exec supabase storage cp --experimental --recursive ss:/// "$temp_dir/" --remote
 
 # Recursive removal of a bucket root deletes the bucket itself. Remove only
 # these project buckets, then restore their local definitions from config.toml.
@@ -15,12 +15,12 @@ for bucket in \
   project_attachments \
   studio_logos \
   voice_actor_profile_pictures; do
-  npx supabase storage rm --experimental --local --recursive --yes "ss:///$bucket"
+  pnpm exec supabase storage rm --experimental --recursive --yes "ss:///$bucket"
 done
 
-npx supabase seed buckets --local --yes
+pnpm exec supabase seed buckets --yes
 
 for bucket_path in "$temp_dir"/*; do
   [ -d "$bucket_path" ] || continue
-  npx supabase storage cp --experimental --local --yes --recursive "$bucket_path" ss:///
+  pnpm exec supabase storage cp --experimental --yes --recursive "$bucket_path" ss:///
 done

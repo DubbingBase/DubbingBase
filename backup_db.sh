@@ -22,19 +22,19 @@ echo "Starting database backup to $BACKUP_DIR"
 
 # Run supabase dump commands
 echo "Dumping roles..."
-if ! pnpm --filter @app/supabase exec supabase db dump --linked --password "$SUPABASE_PASSWORD" -f "../../$BACKUP_DIR/roles.sql" --role-only; then
+if ! pnpm --filter @app/supabase exec supabase db dump --password "$SUPABASE_PASSWORD" -f "../../$BACKUP_DIR/roles.sql" --role-only --remote; then
     echo "Error: Failed to dump roles"
     exit 1
 fi
 
 echo "Dumping schema..."
-if ! pnpm --filter @app/supabase exec supabase db dump --linked --password "$SUPABASE_PASSWORD" -f "../../$BACKUP_DIR/schema.sql"; then
+if ! pnpm --filter @app/supabase exec supabase db dump --password "$SUPABASE_PASSWORD" -f "../../$BACKUP_DIR/schema.sql" --remote; then
     echo "Error: Failed to dump schema"
     exit 1
 fi
 
 echo "Dumping data..."
-if ! pnpm --filter @app/supabase exec supabase db dump --linked --password "$SUPABASE_PASSWORD" -f "../../$BACKUP_DIR/data.sql" --use-copy --data-only; then
+if ! pnpm --filter @app/supabase exec supabase db dump --password "$SUPABASE_PASSWORD" -f "../../$BACKUP_DIR/data.sql" --use-copy --data-only --remote; then
     echo "Error: Failed to dump data"
     exit 1
 fi

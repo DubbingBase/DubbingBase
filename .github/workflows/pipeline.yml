@@ -620,16 +620,11 @@ jobs:
       - name: Install database dependencies
         run: pnpm install --filter @app/supabase... --config.minimum-release-age=0 --config.minimum-release-age-strict=false
 
-      - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v3
-        with:
-          version: 2.111.0
-
       - name: Link Project
         if: github.ref == 'refs/heads/main'
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        run: supabase link --project-ref $PROJECT_ID
+        run: pnpm exec supabase link --project-ref "$PROJECT_ID"
         working-directory: packages/database
 
       - name: Run database migrations
@@ -637,7 +632,7 @@ jobs:
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         # Keep stacked migrations deployable when their timestamps merge out of order.
-        run: supabase db push --include-all
+        run: pnpm exec supabase db push --include-all --yes --remote
         working-directory: packages/database
 
   # Job 8: Deploy website to Cloudflare Workers (main only)

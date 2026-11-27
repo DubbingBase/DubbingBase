@@ -3,4 +3,4 @@
 "@app/website": patch
 ---
 
-Use the native Supabase Docker stack to isolate local development by Git worktree.
+Use Supabase CLI v3’s native Docker stack to isolate local development by Git worktree.

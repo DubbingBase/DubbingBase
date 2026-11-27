@@ -39,7 +39,9 @@ Run the website locally with the repository's standard environment setup:
 mise run website
 ```
 
-Docker must be running. Each Git worktree gets its own Supabase database, Storage,
+Docker must be running. The workspace pins Supabase CLI 3.4.0. Database commands
+target the current local stack by default. Use `--remote` for an intentional
+hosted operation. Each Git worktree gets its own Supabase database, Storage,
 and automatically assigned ports. Postgres starts immediately and the other services
 start on first use. The website uses Doppler’s `dubbingbase/dev` configuration for
 external API keys and gets its Supabase URL and keys directly from the worktree’s
@@ -55,7 +57,7 @@ running stack. No local Supabase environment file is needed.
   from `packages/database` before removing the worktree. The CLI asks for confirmation.
 - `mise run db-reset` replays the migrations without loading the optional local
   `packages/database/supabase/seed.sql`. To reset a disposable stack with that
-  seed, run `pnpm exec supabase db reset --local` from `packages/database`.
+  seed, run `pnpm exec supabase db reset` from `packages/database`.
 
 #### Moving data from the previous local stack
 

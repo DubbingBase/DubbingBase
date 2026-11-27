@@ -54,13 +54,13 @@ run = "pnpm --filter @app/website build"
 description = "Runs the database migration"
 depends = ["database-install"]
 dir = "packages/database"
-run = "pnpm exec supabase migration up --local"
+run = "pnpm exec supabase migration up"
 
 [tasks.migrate-down]
 description = "Reverts the database migration"
 depends = ["database-install"]
 dir = "packages/database"
-run = "pnpm exec supabase migration down --local"
+run = "pnpm exec supabase migration down"
 
 [tasks.database-install]
 description = "Installs only the database workspace dependencies"
@@ -76,7 +76,7 @@ run = "pnpm install --filter @app/website..."
 description = "Resets local schema and applies migrations without the production data seed"
 depends = ["database-install"]
 dir = "packages/database"
-run = "pnpm exec supabase db reset --local --no-seed --yes"
+run = "pnpm exec supabase db reset --no-seed --yes"
 
 [tasks.backup-db]
 description = "Dumps the linked production database (read-only) to backup_<timestamp>/ using the password from Doppler prd"
@@ -119,7 +119,7 @@ git push && git push origin --tags
 description = "Generates database types from Supabase"
 depends = ["database-install", "backend"]
 dir = "packages/database"
-run = "pnpm exec supabase gen types --lang=typescript --local > src/database.types.ts && pnpm exec oxfmt src/database.types.ts && node scripts/normalize-nullable-rpc-args.mjs"
+run = "pnpm exec supabase gen types --lang=typescript > src/database.types.ts && pnpm exec oxfmt src/database.types.ts && node scripts/normalize-nullable-rpc-args.mjs"
 
 [tasks.supabase-link]
 description = "Links the local Supabase CLI to the production project (read-only use)"
@@ -132,7 +132,7 @@ run = "doppler run --project dubbingbase --config prd -- pnpm exec supabase link
 description = "Dumps production application data for a local reseed"
 depends = ["supabase-link"]
 dir = "packages/database"
-run = "doppler run --project dubbingbase --config prd -- pnpm exec supabase db dump --data-only -x storage.buckets --file supabase/seed.sql --linked"
+run = "doppler run --project dubbingbase --config prd -- pnpm exec supabase db dump --data-only -x storage.buckets --file supabase/seed.sql --remote"
 
 [tasks.sync-storage]
 description = "Refreshes local Storage bucket files from the linked production project"
@@ -151,12 +151,12 @@ dir = "packages/database"
 # cannot receive a dump taken before it).
 run = """
 set -e
-PROD_VERSION=$(doppler run --project dubbingbase --config prd -- pnpm exec supabase migration list --linked --output-format json | node scripts/production-schema-version.mjs)
-pnpm exec supabase db reset --local --no-seed --yes --version "$PROD_VERSION"
+PROD_VERSION=$(doppler run --project dubbingbase --config prd -- pnpm exec supabase migration list --output-format json --remote | node scripts/production-schema-version.mjs)
+pnpm exec supabase db reset --no-seed --yes --version "$PROD_VERSION"
 DB_URL=$(node ../../scripts/local-supabase.mjs db-url)
 psql "$DB_URL" -v ON_ERROR_STOP=1 -q -1 -f supabase/seed.sql
-pnpm exec supabase migration up --local
-pnpm exec supabase seed buckets --local
+pnpm exec supabase migration up
+pnpm exec supabase seed buckets
 """
 
 [tasks.pull-production]
